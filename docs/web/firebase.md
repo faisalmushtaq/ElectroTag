@@ -21,7 +21,9 @@ Allow an afternoon for the first set-up. Steps 1 to 8 are done once per Firebase
 project can hold several studies; steps 9 to 14 are done once per study. Once you have signed in
 with your own administrator account (step 11), the study is run from the **admin area** of the
 browser application (docs/web/admin.md): adding recordings, accounts, assignments, reference sets,
-settings, the analyses and the results. The commands below remain an alternative for each of these.
+settings, the analyses and the results. The commands below remain an alternative for each of these,
+and "Coming back to a study later", after step 14, explains how to open a terminal for them again
+on a later day.
 
 Commands are typed in a terminal: Terminal on macOS and Linux, and PowerShell on Windows. Where a
 command differs between the two, the guide gives both versions, one after the other; where only
@@ -383,6 +385,118 @@ the completion register, the training progress, the competency reports, the quiz
 like; it adds what is new and never replaces a file with different contents. Results saved by the
 desktop application (version 1.1.0 and earlier) have the same layout, so the analyses can read
 them together with the browser's.
+
+## Coming back to a study later
+
+Once a study is set up, most of its day-to-day work needs only the browser. Sign in at the study's
+link (step 11) and use the admin area to make accounts and new password links, change roles, add
+recordings, assign work, follow progress and download the results. The terminal is needed for the
+commands of this guide: exporting a large study's results (step 14), making the first
+administrator of a new study in the same project (steps 9 and 10), checking the functions, and
+updating ElectroTag. A new terminal remembers nothing from the last one, so it needs the
+following each time, on the same computer where steps 1 and 7 were done.
+
+**Open the terminal in the ElectroTag folder and activate its environment.** Use the folder you
+downloaded in step 1; on Windows, keep the quotation marks, which a folder name with spaces needs.
+
+macOS and Linux (Terminal):
+
+```bash
+cd ~/ElectroTag
+source .venv/bin/activate
+```
+
+Windows (PowerShell):
+
+```powershell
+cd "C:\Users\you\Documents\ElectroTag"
+.venv\Scripts\activate
+```
+
+The prompt then starts with `(.venv)`. If PowerShell says that running scripts is disabled, use
+the `Set-ExecutionPolicy` line of step 1 once and activate again.
+
+**Name the key, the project and the study.** The key is the file saved in step 7; naming the
+project and the study here lets every command below leave out `--firebase-project` and `--study`.
+
+macOS and Linux (Terminal):
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my-eeg-study-key.json
+export ELECTROTAG_FIREBASE_PROJECT=my-eeg-study
+export ELECTROTAG_STUDY=pilot
+```
+
+Windows (PowerShell):
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\my-eeg-study-key.json"
+$env:ELECTROTAG_FIREBASE_PROJECT = "my-eeg-study"
+$env:ELECTROTAG_STUDY = "pilot"
+```
+
+To save typing next time, keep these lines in a text file and paste them in, with your own path,
+project and study. A project with several studies is worked on one study at a time: set
+`ELECTROTAG_STUDY` again to move to another.
+
+**Check that everything is in place.** This command lists what the study holds:
+
+```
+electrotag web list
+```
+
+If the terminal does not know the command `electrotag`, the environment is not active: run the
+activation line again. If the command cannot find or use the key, check the path to it; a key
+that is lost can be replaced by generating a new one (step 7) and deleting the old one in the same
+place in the console. A study ID that does not exist is reported as such: check
+`ELECTROTAG_STUDY`.
+
+**Then use the commands as before.** For example, to give a new annotator an account and their
+recordings, see who has done what, and export the results:
+
+```
+electrotag web add-user A02 --email a02@example.ac.uk --name "Annotator two"
+electrotag web assign A02 --all
+electrotag web progress
+electrotag web export --to Pilot-results
+```
+
+`add-user` prints the link with which the person chooses their password, as in step 10; send it
+with the study's link (step 13). Every command lists its options with `--help`, for example
+`electrotag web assign --help`.
+
+**Updating ElectroTag.** When a newer version of ElectroTag is out, update your copy, the Python
+package and the functions' environment, deploy again (step 8) and check the functions. Deploying
+also publishes the new version of the application, so everyone signing in from then on uses it.
+
+macOS and Linux (Terminal):
+
+```bash
+git pull
+pip install -r requirements.txt
+pip install -e .
+electrotag/web/firebase/functions/venv/bin/python -m pip install -r electrotag/web/firebase/functions/requirements.txt
+npx firebase-tools deploy --only "functions,firestore,hosting"
+electrotag web check-functions
+```
+
+Windows (PowerShell):
+
+```powershell
+git pull
+pip install -r requirements.txt
+pip install -e .
+electrotag\web\firebase\functions\venv\Scripts\python -m pip install -r electrotag\web\firebase\functions\requirements.txt
+npx firebase-tools deploy --only "functions,firestore,hosting"
+electrotag web check-functions
+```
+
+If `git pull` stops because a file was changed on this computer, `git status` names it, and
+`git restore` followed by its name puts back the downloaded version, so that the pull can go on.
+If ElectroTag was downloaded as a source archive rather than cloned, download and unpack the new
+archive instead, then run the other lines in its folder after making its environment as in step 1.
+Firebase's tool keeps your sign-in from step 8; if it says that you are not signed in or that the
+sign-in has expired, run `npx firebase-tools login --reauth` and deploy again.
 
 ## Deploying updates from GitHub (optional)
 

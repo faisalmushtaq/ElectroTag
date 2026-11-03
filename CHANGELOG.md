@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The Firebase guide (docs/web/firebase.md) has a new section, "Coming back to a study later", for
+administrators who return to a study that is already running: which work the admin area does in the
+browser, how to open a terminal again in ElectroTag's folder with its environment, the service
+account key, the project and the study (for macOS and Linux and for Windows PowerShell), how to check
+that all is in place with `electrotag web list`, and how to update ElectroTag, deploy again and check
+the functions.
+
 On a study on Firebase, an error from the study's functions no longer reaches the screen as
 Firebase's raw text, such as "internal [0]". Firebase's library now ends its messages with the HTTP
 status in brackets, which the application leaves out; a call that Google refused before ElectroTag
