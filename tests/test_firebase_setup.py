@@ -30,9 +30,23 @@ def test_the_predeploy_step_runs_with_node_and_names_existing_scripts():
     (functions,) = firebase_json()["functions"]
     (step,) = functions["predeploy"]
     assert step.startswith("node "), "Node.js is there wherever Firebase's tool runs; python3 is not on Windows"
-    script = re.search(r'"\$RESOURCE_DIR/([^"]+)"', step).group(1)
-    assert (REPO / functions["source"] / script).resolve() == REPO / "scripts" / "predeploy_functions.mjs"
-    assert (REPO / "scripts" / "vendor_functions.py").is_file()
+    script = re.search(r'"\$PROJECT_DIR/([^"]+)"', step).group(1)
+    assert REPO / script == REPO / "scripts" / "predeploy_functions.mjs"
+    assert (REPO / script).is_file() and (REPO / "scripts" / "vendor_functions.py").is_file()
+
+
+def test_no_predeploy_command_climbs_folders():
+    # On Windows, Firebase's tool runs a hook through cross-env, which tidies the whole command
+    # line as one path: each ".." then removes the text before it, and the command is cut short
+    # ("spawn ..\\..\\..\\scripts\\predeploy_functions.mjs ... ENOENT"). Name files from
+    # $PROJECT_DIR instead.
+    config = firebase_json()
+    hooks = [cmd for target in ("functions", "hosting", "firestore")
+             for block in (config.get(target) if isinstance(config.get(target), list) else [config.get(target) or {}])
+             for key in ("predeploy", "postdeploy") for cmd in block.get(key, [])]
+    assert hooks
+    for cmd in hooks:
+        assert ".." not in cmd, cmd
 
 
 def test_no_config_json_is_committed():

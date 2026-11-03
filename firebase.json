@@ -5,7 +5,7 @@
       "codebase": "electrotag",
       "runtime": "python313",
       "ignore": ["venv", ".git", "__pycache__", "*.pyc"],
-      "predeploy": ["node \"$RESOURCE_DIR/../../../../scripts/predeploy_functions.mjs\" \"$RESOURCE_DIR\""]
+      "predeploy": ["node \"$PROJECT_DIR/scripts/predeploy_functions.mjs\" \"$RESOURCE_DIR\""]
     }
   ],
   "firestore": {
