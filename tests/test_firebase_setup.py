@@ -82,7 +82,8 @@ def test_the_guide_pairs_every_macos_and_linux_block_with_a_powershell_one():
     unlabelled = "\n".join(body for lang, _, body in blocks if lang == "")
     # A block shown once works as it stands in both terminals: no variables set the Unix way,
     # no ~ (which PowerShell does not expand for other programs) and no Unix-only commands.
-    for bad in ("export ", "~/", "source ", "cp ", "python3", "/bin/"):
+    assert not re.search(r"^export \w+=", unlabelled, flags=re.MULTILINE)
+    for bad in ("~/", "source ", "cp ", "python3", "/bin/"):
         assert bad not in unlabelled, bad
 
 
@@ -95,3 +96,18 @@ def test_the_guide_quotes_the_deploy_list_and_signs_in_before_the_admin_area():
     titles = {title: int(n) for n, title in steps}
     assert titles["Sign in to the application"] < titles["Set the study up in the admin area"]
     assert "config.json first" not in text
+
+
+def test_coming_back_later_restores_the_environment_and_variables_in_both_terminals():
+    text = GUIDE.read_text(encoding="utf-8")
+    section = text.split("## Coming back to a study later", 1)[1].split("\n## ", 1)[0]
+    blocks = code_blocks(section)
+    bash = "\n".join(body for lang, _, body in blocks if lang == "bash")
+    powershell = "\n".join(body for lang, _, body in blocks if lang == "powershell")
+    for name in ("GOOGLE_APPLICATION_CREDENTIALS", "ELECTROTAG_FIREBASE_PROJECT", "ELECTROTAG_STUDY"):
+        assert f"export {name}=" in bash and f"$env:{name} = " in powershell, name
+    assert "source .venv/bin/activate" in bash and ".venv\\Scripts\\activate" in powershell
+    for shell in (bash, powershell):
+        assert "git pull" in shell and "pip install -e ." in shell
+        assert 'deploy --only "functions,firestore,hosting"' in shell and "electrotag web check-functions" in shell
+    assert "electrotag web list" in section and "electrotag web add-user" in section
