@@ -176,6 +176,30 @@ analyses, and `et_expert`, which answers the expert area, a little more than the
 experts' corrections. **Firestore Database**, **Rules**, shows ElectroTag's rules, which deny all
 direct access, in place of the default ones. **Hosting** shows a release published a moment ago.
 
+Finally, check that every function is open to the application:
+
+```
+electrotag web check-functions --firebase-project my-eeg-study
+```
+
+The command asks each of the twenty-six functions from outside, as a browser does, and lists any
+that Google turns away. Every function must be open to the public, because each one checks for
+itself who is signed in and what they may do. Firebase's tool opens a function when it creates it,
+and later deployments leave that setting as it is, so a function that was created while Google was
+slowing down the first deployment can stay closed: the application then signs a person in and stops
+with a message that the study's server turned the request away. The command prints, for each
+closed function, the Google Cloud command (`gcloud`, from
+[Google Cloud's command-line tools](https://cloud.google.com/sdk/docs/install)) that opens it, for
+example
+
+```
+gcloud functions add-invoker-policy-binding et_me --region=europe-west2 --member=allUsers --project=my-eeg-study
+```
+
+or the same in the Google Cloud console: **Cloud Run**, the function's service (its name with
+hyphens, such as `et-me`), **Security**, then **Allow public access**. Each function needs opening
+only once; run the check again afterwards.
+
 Deploy again with the same `deploy` line after updating ElectroTag, so that the functions and the
 application stay at the same version (or use the GitHub workflow at the end of this guide).
 
@@ -233,8 +257,11 @@ If the page offers the demonstration, or asks for a study address, rather than a
 the application has not found the project's settings. Open
 `https://my-eeg-study.web.app/__/firebase/init.json`: it should show your project ID among a few
 other values. If it does not, check that step 6 registered a web app with Hosting and deploy again
-(step 8). If signing in says that it did not work, check the email address, and make a new password
-link with the command of step 10 if the first one was used or lost.
+(step 8). If signing in says that the email address or password is not right, check them, and make
+a new password link with the command of step 10 if the first one was used or lost. If it says
+instead that they were accepted but the study could not be opened because its server turned the
+request away, the password is fine and some functions are closed: run
+`electrotag web check-functions` (step 8) and open the ones it lists.
 
 ## 12. Set the study up in the admin area
 

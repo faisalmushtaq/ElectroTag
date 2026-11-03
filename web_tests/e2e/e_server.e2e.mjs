@@ -50,6 +50,25 @@ const FAKE_FIREBASE = {
     export function httpsCallable() { return async () => ({ data: {} }); }`,
 };
 
+/** The SDK with a sign-in that works and functions that turn every call away as Firebase 12 reports it. */
+const FIREBASE_REFUSING = {
+  ...FAKE_FIREBASE,
+  'firebase-auth.js': `export const browserSessionPersistence = 'SESSION';
+    const auth = { currentUser: null, authStateReady: async () => {} };
+    export function getAuth() { return auth; }
+    export async function setPersistence() {}
+    export async function signInWithEmailAndPassword(a, email) {
+      auth.currentUser = { email, displayName: '', getIdTokenResult: async () => ({ claims: { annotator_id: 'ADMIN', roles: { pilot: ['admin'] }, studies: ['pilot'] } }) };
+      return { user: auth.currentUser };
+    }
+    export async function sendPasswordResetEmail() {}
+    export async function signOut() { auth.currentUser = null; }`,
+  'firebase-functions.js': `export function getFunctions(app, region) { return { region }; }
+    export function httpsCallable() {
+      return async () => { const e = new Error('internal [0]'); e.code = 'functions/internal'; throw e; };
+    }`,
+};
+
 export const tests = [
   {
     name: '?server= picks the study server; requests carry the token and the header',
@@ -140,6 +159,32 @@ export const tests = [
       await demo.goto(t.base);
       await demo.waitForSelector('form.signin-form');
       t.assert.equal(loaded, false);
+    },
+  },
+  {
+    name: 'a password that works and functions that turn the call away: the message says the password was accepted',
+    async run(t) {
+      t.cfg.config = null;
+      t.cfg.init = { apiKey: 'test-key', authDomain: 'my-eeg-study.firebaseapp.com', projectId: 'my-eeg-study', appId: '1:2:web:3' };
+      try {
+        const page = await t.newPage({ url: null });
+        await page.route('https://www.gstatic.com/firebasejs/**', (route) => {
+          route.fulfill({ status: 200, contentType: 'text/javascript', body: FIREBASE_REFUSING[route.request().url().split('/').pop()] || '' });
+        });
+        await page.goto(`${t.cfgBase}?study=pilot`);
+        await page.waitForSelector('#signin-id');
+        await page.fill('#signin-id', 'admin@example.org');
+        await page.fill('#signin-password', 'right');
+        await page.click('form.signin-form button[type="submit"]');
+        await page.waitForSelector('form.signin-form .error:not([hidden])', { timeout: 15000 });
+        const said = await page.textContent('form.signin-form .error');
+        t.assert.match(said, /email address and password were accepted, but the study could not be opened/);
+        t.assert.match(said, /turned the request away/);
+        t.assert.doesNotMatch(said, /internal|\[0\]/);
+        await t.screenshot(page, 'signin_firebase_refused');
+      } finally {
+        t.cfg.init = null;
+      }
     },
   },
   {

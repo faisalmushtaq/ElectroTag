@@ -223,7 +223,13 @@ export class App {
 
   async signIn(id, password) {
     await this.backend.login(id, password);
-    await this._afterSignIn({ quiet: false });
+    try {
+      await this._afterSignIn({ quiet: false });
+    } catch (exc) {
+      // The password was right: say so, so that nobody resets a password that works.
+      exc.message = `Your ${this.backend.signInWith === 'email' ? 'email address' : 'annotator ID'} and password were accepted, but the study could not be opened. ${exc.message || ''}`.trim();
+      throw exc;
+    }
   }
 
   async _afterSignIn({ quiet }) {

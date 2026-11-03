@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { FirebaseBackend, toApiError, authError, isExpertRead, claimedRoles, onlyStudy } from '../../electrotag/web/static/js/api/firebase.js';
+import { FirebaseBackend, toApiError, authError, isExpertRead, claimedRoles, onlyStudy, sdkMessage, NO_ANSWER_MESSAGE } from '../../electrotag/web/static/js/api/firebase.js';
 
 class FakeHttpsError extends Error {
   constructor(code, message, details) { super(message); this.code = `functions/${code}`; this.details = details; }
@@ -232,4 +232,27 @@ test('a link without a study: after a reload, a signed-in account opens its only
   const again = await FirebaseBackend.create({ config: { projectId: 'p' }, study: '', sdk }); // the same browser, reloaded
   assert.equal(again.signedIn, true);
   assert.equal(again.study, 'pilot');
+});
+
+test('the HTTP status Firebase\'s library adds in brackets never reaches the person', () => {
+  // Firebase JS SDK 12 ends its messages with the status: "Please sign in (again): ... [401]".
+  const e = toApiError(new FakeHttpsError('unauthenticated', 'Please sign in (again): your session has ended. [401]', { error: 'not_signed_in' }));
+  assert.equal(e.message, 'Please sign in (again): your session has ended.');
+  assert.equal(sdkMessage({ message: 'Eye-blink-artifact at sample 3 [index 2] [400]' }), 'Eye-blink-artifact at sample 3 [index 2]');
+  const invalid = toApiError(new FakeHttpsError('invalid-argument', 'Ends after the recording [400]', { error: 'invalid_annotation' }));
+  assert.equal(invalid.message, 'Ends after the recording');
+});
+
+test('a function that turns the request away before ElectroTag answers says what to check, not "internal [0]"', () => {
+  // A function not open to the public answers 403 without CORS headers; the SDK reports "internal [0]".
+  const refused = toApiError(new FakeHttpsError('internal', 'internal [0]'));
+  assert.equal(refused.code, 'no_answer');
+  assert.equal(refused.status, 500, 'a call that only reads is still asked once more');
+  assert.equal(refused.message, NO_ANSWER_MESSAGE);
+  assert.doesNotMatch(refused.message, /internal|\[\d+\]/);
+  assert.match(refused.message, /study team/);
+  // ElectroTag's own "internal" errors carry details and keep their message.
+  const own = toApiError(new FakeHttpsError('internal', 'Something went wrong on the server. Please try again. [500]', { error: 'internal' }));
+  assert.equal(own.code, 'internal');
+  assert.equal(own.message, 'Something went wrong on the server. Please try again.');
 });

@@ -65,17 +65,36 @@ const STATUS = {
   cancelled: 0, unavailable: 0, 'deadline-exceeded': 0, internal: 500, unknown: 500, 'data-loss': 500, unimplemented: 501,
 };
 
+/** What the person reads when a function call ends without an answer from ElectroTag's code. */
+export const NO_ANSWER_MESSAGE = 'The study\'s server turned the request away before ElectroTag could answer it. '
+  + 'If this keeps happening, tell your study team: some of the study\'s functions may not be open to the '
+  + 'application (docs/web/firebase.md, step 8, explains the check and the fix).';
+
+/**
+ * The SDK's message without the HTTP status that Firebase's library (version 12 and later) adds in
+ * brackets at its end ("internal [0]", "Please sign in again. [401]").
+ */
+export function sdkMessage(exc) {
+  return String((exc && exc.message) || '').replace(/\s*\[\d{1,3}\]$/, '');
+}
+
 /** An HttpsError (or a network failure) as an ApiError. */
 export function toApiError(exc) {
   const code = String((exc && exc.code) || 'unknown').replace(/^functions\//, '');
   const details = (exc && exc.details) || {};
   const status = STATUS[code] ?? 500;
   let error = typeof details.error === 'string' ? details.error : code;
-  if (status === 422 || error === 'invalid_annotation') return new ApiError(422, error, exc.message, details);
-  let message = exc && exc.message;
+  let message = sdkMessage(exc);
+  if (status === 422 || error === 'invalid_annotation') return new ApiError(422, error, message, details);
   if (status === 0) {
     error = 'network';
     message = 'The study could not be reached. Check your internet connection and try again.';
+  } else if (code === 'internal' && typeof details.error !== 'string') {
+    // No answer from ElectroTag's code (its errors always carry details.error): the request was
+    // refused on the way, for example by a function that is not open to the public (a 403 without
+    // the headers a browser needs, which the SDK reports as "internal").
+    error = 'no_answer';
+    message = NO_ANSWER_MESSAGE;
   } else if (!message || message === code || /^internal$/i.test(message)) {
     message = 'The study answered with an error. Please try again in a moment.';
   }
