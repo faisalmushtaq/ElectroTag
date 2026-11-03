@@ -7,17 +7,25 @@ annotate them; the EEG never leaves their computer. Their results, training prog
 interaction logs are kept in your own Firebase project, in Google's London region, and one command
 turns them into ElectroTag's usual folders for the agreement and activity analyses.
 
-The pieces are Firebase Authentication (accounts), Firestore (the study's records), and
+The pieces are Firebase Authentication (accounts), Firestore (the study's records),
 ElectroTag's Cloud Functions (the private work: matching a file to the study, checking and saving
 annotations, the training coach and practice scores, so the experts' answers never reach a
-browser). The application itself is published on GitHub Pages. You run ElectroTag's administrator
-command, `electrotag web`, on your own computer, where the recordings are.
+browser) and Firebase Hosting, which publishes the browser application from the same project at
+`https://<project-id>.web.app`. Each Firebase project therefore serves its own copy of the
+application, which finds its project by itself, so several research groups, or one group's
+separate projects, can each run ElectroTag without sharing a website or a settings file. You run
+ElectroTag's administrator command, `electrotag web`, on your own computer, where the recordings
+are.
 
-Allow an afternoon for the first set-up. Steps 1 to 8 are done once per Firebase project; steps 9
-to 14 once per study. After step 11, when your own administrator account exists, the study is run
-from the **admin area** of the browser application (docs/web/admin.md): adding recordings, accounts,
-assignments, reference sets, settings, the analyses and the results. The commands below remain an
-alternative for each of these.
+Allow an afternoon for the first set-up. Steps 1 to 8 are done once per Firebase project, and one
+project can hold several studies; steps 9 to 14 are done once per study. Once you have signed in
+with your own administrator account (step 11), the study is run from the **admin area** of the
+browser application (docs/web/admin.md): adding recordings, accounts, assignments, reference sets,
+settings, the analyses and the results. The commands below remain an alternative for each of these.
+
+Commands are typed in a terminal: Terminal on macOS and Linux, and PowerShell on Windows. Where a
+command differs between the two, the guide gives both versions, one after the other; where only
+one block is shown, it works as it stands in both.
 
 ## What you need
 
@@ -30,26 +38,42 @@ and the recordings of the study.
 Download ElectroTag (clone the repository, or download and unpack its source archive): the
 deployment in step 8 uses its files. ElectroTag's Python package is installed from this copy, since
 it is not on PyPI. In a terminal in its folder, make a virtual environment for it, activate it and
-install the package:
+install the package.
 
-```
-python3 -m venv .venv            # Windows: py -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+macOS and Linux (Terminal):
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 electrotag web --help
 ```
 
-The [README](../../README.md#installing-the-python-package) explains each line, with the Windows
-details. In a new terminal later on, only the activation line is needed again. The last command
-lists everything `electrotag web` can do. Every command used below also has its own help, for
-example `electrotag web add-user --help`.
+Windows (PowerShell):
+
+```powershell
+py -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+pip install -e .
+electrotag web --help
+```
+
+If PowerShell says that running scripts is disabled, allow scripts you have made yourself once with
+`Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` and activate again; the same
+setting lets PowerShell run `npx` in step 8. The
+[README](../../README.md#installing-the-python-package) explains each line. In a new terminal later
+on, only the activation line is needed again. The last command lists everything `electrotag web`
+can do. Every command used below also has its own help, for example
+`electrotag web add-user --help`.
 
 ## 2. Create the Firebase project
 
 Open the [Firebase console](https://console.firebase.google.com/), choose **Create a project** and
 give it a name. Firebase proposes a project ID (for example `my-eeg-study`); note it down, because
-every command needs it. Google Analytics is not needed and can be switched off.
+every command needs it, and the application will be published at
+`https://my-eeg-study.web.app`. Google Analytics is not needed and can be switched off.
 
 ## 3. Choose the pay-as-you-go plan and set a budget alert
 
@@ -70,18 +94,21 @@ database**. For the location choose **europe-west2 (London)**; it cannot be chan
 ## 5. Turn on sign-in with email and password
 
 Open **Build**, then **Authentication**, choose **Get started**, then **Sign-in method**, and
-enable **Email/Password** (the first switch only; the passwordless email link is not used). Then,
-under **Settings**, **Authorized domains**, add `faisalmushtaq.github.io`, the address the
-application is published at.
+enable **Email/Password** (the first switch only; the passwordless email link is not used). The
+project's own addresses, `my-eeg-study.web.app` and `my-eeg-study.firebaseapp.com`, are already
+listed under **Settings**, **Authorized domains**, so the application published in step 8 can sign
+people in without further settings.
 
-## 6. Register the web application
+## 6. Register the web application and its website
 
 Open **Project settings** (the cog beside Project overview), and under **Your apps** add a **Web**
-app (the `</>` button) with any nickname; Firebase Hosting is not needed. Firebase shows a
-`firebaseConfig` block with `apiKey`, `authDomain`, `projectId`, `appId` and a few more values.
-Copy the block into a text file, for example `firebase-config.txt`; step 12 uses it. These values
-identify the project to browsers and are not secret: what protects the study is that every request
-goes through ElectroTag's functions, which check who is signed in.
+app (the `</>` button) with any nickname. Tick **Also set up Firebase Hosting for this app**, which
+gives the project its website, and choose **Register app**. Firebase then shows a configuration
+block and instructions for installing its tool and deploying; choose **Next** through them and
+**Continue to console**, since step 8 does all of this for you. There is nothing to copy: once the
+application is published from this project, it reads these settings from the project's website
+itself. They identify the project to browsers and are not secret; what protects the study is that
+every request goes through ElectroTag's functions, which check who is signed in.
 
 ## 7. A key for the administrator's command
 
@@ -89,35 +116,68 @@ goes through ElectroTag's functions, which check who is signed in.
 **Service accounts**, choose **Generate new private key** and save the file somewhere private
 (not in a shared or synchronised folder). It gives full access to the project: keep it like a
 password, and delete it from the console if it is ever lost. Then tell the command where it is,
-in each terminal you use:
+in each terminal you use.
 
-```
-export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my-eeg-study-key.json          (macOS, Linux)
-$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\my-eeg-study-key.json"      (Windows PowerShell)
+macOS and Linux (Terminal):
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/my-eeg-study-key.json
 ```
 
-## 8. Deploy the rules and the functions
+Windows (PowerShell):
+
+```powershell
+$env:GOOGLE_APPLICATION_CREDENTIALS = "C:\path\to\my-eeg-study-key.json"
+```
+
+## 8. Deploy the rules, the functions and the application
 
 In the ElectroTag folder, sign in to Firebase's tool with your Google account, name your project,
-and prepare the functions' own Python environment (Firebase reads it to find the functions):
+prepare the functions' own Python environment (Firebase reads it to find the functions) and
+deploy. The second line makes the file `.firebaserc`: open it in a text editor and replace
+`YOUR-FIREBASE-PROJECT-ID` with your project ID before running the lines after it.
 
-```
+macOS and Linux (Terminal):
+
+```bash
 npx firebase-tools login
-cp .firebaserc.template .firebaserc            then replace YOUR-FIREBASE-PROJECT-ID in .firebaserc
+cp .firebaserc.template .firebaserc
 python3.13 -m venv electrotag/web/firebase/functions/venv
 electrotag/web/firebase/functions/venv/bin/python -m pip install -r electrotag/web/firebase/functions/requirements.txt
-npx firebase-tools deploy --only functions,firestore
+npx firebase-tools deploy --only "functions,firestore,hosting"
 ```
 
-On Windows the environment's Python is `electrotag\web\firebase\functions\venv\Scripts\python`.
-Before uploading, the deployment copies the ElectroTag code the functions need into their folder
-(`scripts/vendor_functions.py`, which needs only Python itself). The first deployment takes several
-minutes, because Google switches on the services the functions use; later ones are quicker. When it
-ends, the console's **Functions** page lists ElectroTag's twenty-six functions, whose names start with `et_`, all in
-europe-west2; `et_admin`, which answers the admin area, has more memory and time than the others
-for the analyses, and `et_expert`, which answers the expert area, a little more than the rest for
-saving experts' corrections. Deploy again after updating ElectroTag (or use the GitHub workflow at the end of
-this guide).
+Windows (PowerShell):
+
+```powershell
+npx firebase-tools login
+Copy-Item .firebaserc.template .firebaserc
+py -3.13 -m venv electrotag\web\firebase\functions\venv
+electrotag\web\firebase\functions\venv\Scripts\python -m pip install -r electrotag\web\firebase\functions\requirements.txt
+npx firebase-tools deploy --only "functions,firestore,hosting"
+```
+
+Keep the quotation marks around `functions,firestore,hosting`: without them PowerShell splits the
+list at the commas and deploys only part of it. Before uploading, the deployment copies the
+ElectroTag code the functions need into their folder (`scripts/vendor_functions.py`, started by
+`scripts/predeploy_functions.mjs` with the functions' own Python, on every system).
+
+The first deployment takes several minutes, because Google switches on the services the functions
+use and builds every function. On a new project it is common for some functions to fail on this
+first attempt, with messages about a quota, "429" or "Too Many Requests", or a project that failed
+to initialise: Google limits how many functions a new project may create at once while those
+services start. Wait a few minutes and run the same `deploy` line again; the functions already in
+place are skipped when nothing in them has changed, and the missing ones are created.
+
+When it ends, the deployment prints the **Hosting URL**, `https://my-eeg-study.web.app`, where the
+application now lives. Check three things in the console. The **Functions** page lists ElectroTag's twenty-six functions, whose names start with `et_`, all in europe-west2;
+`et_admin`, which answers the admin area, has more memory and time than the others for the
+analyses, and `et_expert`, which answers the expert area, a little more than the rest for saving
+experts' corrections. **Firestore Database**, **Rules**, shows ElectroTag's rules, which deny all
+direct access, in place of the default ones. **Hosting** shows a release published a moment ago.
+
+Deploy again with the same `deploy` line after updating ElectroTag, so that the functions and the
+application stay at the same version (or use the GitHub workflow at the end of this guide).
 
 ## 9. Create the study
 
@@ -143,14 +203,42 @@ Start with yourself as administrator:
 electrotag web add-user ADMIN --email you@example.ac.uk --admin --firebase-project my-eeg-study --study pilot
 ```
 
-Without `--password` the command prints a link with which you choose your password (it works once;
-run the command again for a new one). This is the one account that has to be made with the command:
-once you can sign in to the admin area, it makes the others.
+Without `--password` the command prints a link with which you choose your password. Open it in
+your browser: a Firebase page asks for a new password, and after **Save** it says that you can now
+sign in with it. The link works once; run the command again for a new one. This is the one account
+that has to be made with the command: once you can sign in to the admin area, it makes the others.
 
-## 11. Set the study up in the admin area
+## 11. Sign in to the application
 
-Publish `config.json` first (step 12), then open the application, sign in with your administrator
-account and choose the admin area (docs/web/admin.md explains each part). There you:
+Open the study's link in your browser: the application's address followed by `?study=` and the
+study ID, for example
+
+```
+https://my-eeg-study.web.app/?study=pilot
+```
+
+The page shows **Sign in**, with **Study: pilot** under it and two fields, **Email address** and
+**Password**. Enter the email address you gave in step 10 and the password you chose with its
+link, then choose **Sign in**. An administrator goes straight to the admin area; the header offers
+**My recordings**, to annotate as anyone else does, and **Admin**, to come back. Bookmark the link:
+it is the same one you send to the study's annotators in step 13.
+
+A link without `?study=` (just `https://my-eeg-study.web.app`) works too, for an account that
+belongs to one study of the project: the sign-in page then says that your study opens once you sign
+in, and the application opens that study. An account in several studies of the project needs the
+link that names the study. Sign-in lasts as long as the browser tab: closing the tab signs you out,
+and **Forgot password?** on the sign-in page emails a link for a new password.
+
+If the page offers the demonstration, or asks for a study address, rather than an email address,
+the application has not found the project's settings. Open
+`https://my-eeg-study.web.app/__/firebase/init.json`: it should show your project ID among a few
+other values. If it does not, check that step 6 registered a web app with Hosting and deploy again
+(step 8). If signing in says that it did not work, check the email address, and make a new password
+link with the command of step 10 if the first one was used or lost.
+
+## 12. Set the study up in the admin area
+
+Signed in as in step 11, you use the admin area (docs/web/admin.md explains each part) to:
 
 * **add the recordings**: choose the dataset folder on your computer. The browser reads each
   recording there, runs ElectroTag's checks and sends only what the study needs to show the
@@ -181,10 +269,23 @@ Each of these can also be done from the command line, and the audit log records 
 loader (`electrotag/app/eeg/loading.py`, which reads the files with MNE-Python), on the computer
 that holds the recordings; training reference sets in the dataset
 (`derivatives/electrotag_reference_sets/`) are stored too, with their experts' annotations but
-without their recordings:
+without their recordings. The dataset's folder is written in each system's own way.
+
+macOS and Linux (Terminal):
+
+```bash
+electrotag web register /data/Pilot --firebase-project my-eeg-study --study pilot
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag web register C:\data\Pilot --firebase-project my-eeg-study --study pilot
+```
+
+The other commands are the same on both:
 
 ```
-electrotag web register /data/Pilot --firebase-project my-eeg-study --study pilot
 electrotag web create-example-set --firebase-project my-eeg-study --study pilot --recordings-to ./example-set
 electrotag web add-user A01 --email a01@example.ac.uk --name "Annotator one" --firebase-project my-eeg-study --study pilot
 electrotag web assign A01 --all --firebase-project my-eeg-study --study pilot
@@ -195,8 +296,21 @@ electrotag web assign T01 --programme example --firebase-project my-eeg-study --
 `electrotag web list --firebase-project my-eeg-study --study pilot` shows what the study holds.
 When the computer with the recordings cannot reach the Internet, `export-manifests` writes the
 registrations to a file and `import-manifests` stores them from another computer. To save typing,
-set `ELECTROTAG_FIREBASE_PROJECT=my-eeg-study` and `ELECTROTAG_STUDY=pilot` in the terminal;
-the options can then be left out.
+name the project and the study once in the terminal; the options can then be left out.
+
+macOS and Linux (Terminal):
+
+```bash
+export ELECTROTAG_FIREBASE_PROJECT=my-eeg-study
+export ELECTROTAG_STUDY=pilot
+```
+
+Windows (PowerShell):
+
+```powershell
+$env:ELECTROTAG_FIREBASE_PROJECT = "my-eeg-study"
+$env:ELECTROTAG_STUDY = "pilot"
+```
 
 The example set's recordings are simulated by ElectroTag itself. The Cloud Functions do not
 include MNE-Python, so for them ElectroTag keeps the registrations of those recordings
@@ -204,30 +318,14 @@ include MNE-Python, so for them ElectroTag keeps the registrations of those reco
 before adding the set; should they ever differ, the admin area says so and
 `electrotag web create-example-set` adds the set instead.
 
-## 12. Tell the application about the project
-
-The application reads a `config.json` beside it. Write it from the configuration you copied in
-step 6:
-
-```
-electrotag web config --firebase-project my-eeg-study --study pilot --web-config firebase-config.txt --out electrotag/web/static/config.json
-```
-
-Commit `electrotag/web/static/config.json` and push it. The GitHub Pages workflow
-(`.github/workflows/pages.yml`) publishes the application with it on the repository's `gh-pages`
-branch; the first time, in the repository's **Settings**, **Pages**, choose **Deploy from a
-branch**, branch `gh-pages`, folder `/ (root)`. It is published from `main` at `https://faisalmushtaq.github.io/ElectroTag/`, and previews of work
-in progress at `https://faisalmushtaq.github.io/ElectroTag/preview/`. The study in
-`config.json` is the default; a link can name another study of the same project with
-`?study=<id>`.
-
 ## 13. Send the link and the recordings
 
-Send each annotator the link (for example `https://faisalmushtaq.github.io/ElectroTag/?study=pilot`),
-their password link from step 11, and their recordings, in the way your data protection
-arrangements require (for example on an encrypted drive). In the application they sign in, see their
-list, and open each recording from their own disk; ElectroTag checks that the file is the
-registered one before they start, and keeps a draft of unfinished work.
+Send each annotator the study's link from step 11 (for example
+`https://my-eeg-study.web.app/?study=pilot`), their password link from step 12, and their
+recordings, in the way your data protection arrangements require (for example on an encrypted
+drive). They open the password link, choose a password, then open the study's link and sign in as
+in step 11; they see their list and open each recording from their own disk. ElectroTag checks
+that the file is the registered one before they start, and keeps a draft of unfinished work.
 
 Follow progress in the admin area, or with `electrotag web progress --firebase-project my-eeg-study
 --study pilot`, which lists each annotator's recordings (to do, in progress or done, with the time of
@@ -235,10 +333,20 @@ their last activity) and their training stages.
 
 ## 14. Export the results for the analyses
 
-```
+macOS and Linux (Terminal):
+
+```bash
 electrotag web export --firebase-project my-eeg-study --study pilot --to ~/Pilot-results
 electrotag agreement ~/Pilot-results/Annotated_Events
 electrotag activity ~/Pilot-results/Annotated_Events
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag web export --firebase-project my-eeg-study --study pilot --to $HOME\Pilot-results
+electrotag agreement $HOME\Pilot-results\Annotated_Events
+electrotag activity $HOME\Pilot-results\Annotated_Events
 ```
 
 The export writes `Annotated_Events/` in ElectroTag's results layout: per annotator and
@@ -254,13 +362,36 @@ them together with the browser's.
 After the first deployment from your computer, later ones can run on GitHub. In the
 [Google Cloud console](https://console.cloud.google.com/iam-admin/serviceaccounts), for the project,
 create a service account for deployments and give it the roles **Cloud Functions Developer**,
-**Service Account User**, **Firebase Rules Admin** and **Cloud Datastore Index Admin** (the roles
-the [firebase-action](https://github.com/w9jds/firebase-action) documentation lists for these
-deployments), then create a JSON key for it. In the GitHub repository, under **Settings**,
-**Secrets and variables**, **Actions**, add the key as the secret `FIREBASE_SERVICE_ACCOUNT` and the
-project ID as the variable `FIREBASE_PROJECT`. The workflow **Firebase deploy** (Actions tab, Run
-workflow) then deploys the functions, the rules or both; without the secret it only explains what
-is missing.
+**Service Account User**, **Firebase Rules Admin**, **Cloud Datastore Index Admin** and
+**Firebase Hosting Admin** (the roles the [firebase-action](https://github.com/w9jds/firebase-action)
+documentation lists for these deployments), then create a JSON key for it. In the GitHub repository, under
+**Settings**, **Secrets and variables**, **Actions**, add the key as the secret
+`FIREBASE_SERVICE_ACCOUNT` and the project ID as the variable `FIREBASE_PROJECT`. The workflow
+**Firebase deploy** (Actions tab, Run workflow) then deploys the functions, the rules, the
+application or all three; without the secret it only explains what is missing.
+
+## Publishing the application elsewhere (optional)
+
+Firebase Hosting is the simplest home for a study's application, because it gives the application
+its project's settings by itself. The same application can also be published on another website,
+such as a fork of the repository on GitHub Pages or a university web server. It then reads a
+`config.json` beside its `index.html`, which names the project and the default study, and takes
+precedence over the project's own settings.
+
+To write one, copy the project's configuration from the console (**Project settings**, **Your
+apps**, the web app, **SDK setup and configuration**, **Config**) into a text file, for example
+`firebase-config.txt`, and run:
+
+```
+electrotag web config --firebase-project my-eeg-study --study pilot --web-config firebase-config.txt --out config.json
+```
+
+Put `config.json` beside the application's files on that website, and add the website's address
+under **Authentication**, **Settings**, **Authorized domains** so that people can sign in there.
+ElectroTag's own repository never holds a `config.json` (`.gitignore` leaves it out, and Firebase
+Hosting does not publish one), so that each project's settings stay with that project; its GitHub
+Pages site, `https://faisalmushtaq.github.io/ElectroTag/`, opens the demonstration. A link can name
+another study of the same project with `?study=<id>`.
 
 ## Trying it without a Firebase project
 
@@ -270,7 +401,8 @@ the Firebase side on Google's Firebase Emulator Suite, which needs Java but no F
 `scripts/test_web_firebase.sh` goes further: on the same emulators it sets up a study with the
 commands above, then drives the browser application in Chromium (signing in with an email address,
 opening a recording from disk, saving it, guided training, a practice recording and its review) and
-exports the results. To try the application by hand on the emulators, give `config.json` an
+exports the results. Both scripts run in a Bash terminal: on macOS and Linux, and on Windows in the
+Windows Subsystem for Linux. To try the application by hand on the emulators, give `config.json` an
 `"emulators"` entry beside the usual ones:
 `"emulators": {"auth": "http://127.0.0.1:9099", "functions": "127.0.0.1:5001"}` (never in a
 published `config.json`).
@@ -285,8 +417,10 @@ contact details they gave (collections `questionnaires` and `contacts`), their d
 results, training progress and quiz answers, the interaction logs (times, clicks, keys and what was on
 screen; never typed text or passwords) and the audit log of the administrators' changes (which
 never holds a password or a password link). Firebase Authentication holds each
-person's email address and a hash of their password. Everything is in Google's London region, in a
-project only you administer; browsers can read or write none of it directly. Firestore holds no
+person's email address and a hash of their password. The study's records are all in Google's
+London region, in a project only you administer; browsers can read or write none of them directly.
+Firebase Hosting holds only the application's own files, the same for every study and free of any
+study data, and serves them from Google's network worldwide. Firestore holds no
 EEG: annotators open the recordings from their own computers, or from a Dropbox or OneDrive link
 that their browser reads straight from that service, and neither the file nor the link reaches
 Firebase. The EEG stays on the device: copies kept there, to open a recording again without

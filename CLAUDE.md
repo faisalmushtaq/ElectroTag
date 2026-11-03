@@ -150,6 +150,9 @@ every push; Windows, macOS and Linux for `main`, pull requests and runs started 
 version tests* runs the browser modules, the application in Chromium and the Firebase emulator
 tests, and *GitHub Pages* publishes the application to the `gh-pages` branch: from `main` at the
 site's root, and from `claude/electroclean-web`, kept for previews, under `preview/` (never edit
-`gh-pages` by hand). *Firebase deploy*, run by hand, deploys the functions and rules once the
-repository's `FIREBASE_SERVICE_ACCOUNT` secret and `FIREBASE_PROJECT` variable are set
-(docs/web/firebase.md).
+`gh-pages` by hand), where it opens the demonstration. A study on Firebase publishes the application
+with Firebase Hosting from its own project, which serves the project's configuration at
+`/__/firebase/init.json`; never commit `electrotag/web/static/config.json`, since the end-to-end
+tests serve that folder and expect the demonstration. *Firebase deploy*, run by hand, deploys the
+functions, rules and application once the repository's `FIREBASE_SERVICE_ACCOUNT` secret and
+`FIREBASE_PROJECT` variable are set (docs/web/firebase.md).

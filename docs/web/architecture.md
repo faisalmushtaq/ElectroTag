@@ -8,10 +8,12 @@ records and receives the results.
 
 ## Where it runs
 
-The browser application is a set of static files (no build step), published
-on **GitHub Pages**: the released version at the site's root and previews of
-work in progress under `preview/`. Pages only serves files, so it runs the
-application in one of two ways:
+The browser application is a set of static files (no build step). **GitHub
+Pages** publishes it for everyone, the released version at the site's root
+and previews of work in progress under `preview/`, where it opens the
+demonstration; a study on Firebase publishes the same files with **Firebase
+Hosting** from its own project. Both only serve files, so the application runs
+in one of three ways:
 
 * **Demonstration**, with no server at all: built-in example recordings, demo
   accounts and the training rules run in the browser, and results stay in the
@@ -22,9 +24,14 @@ application in one of two ways:
   that reuse ElectroTag's own code: matching a file against the register,
   validating and storing results, checking guided training attempts and scoring
   practice recordings, so the experts' answers never reach the browser. The
-  Firebase project's public web configuration is given in `config.json` beside
-  the application (`{"firebase": {...}, "study": "<study id>"}`); a link may
-  pick another study of the same project with `?study=<id>`. A command exports
+  application finds the Firebase project's public web configuration at
+  `/__/firebase/init.json`, which Firebase Hosting serves for its own project,
+  so one copy of the files serves any project; a copy published elsewhere
+  reads it from `config.json` beside the application
+  (`{"firebase": {...}, "study": "<study id>"}`), which is never committed. A
+  link names the study with `?study=<id>`; without one, an account that belongs
+  to a single study of the project opens that study once it signs in
+  (`js/api/choose.js`, `js/api/firebase.js`). A command exports
   the results from Firestore into ElectroTag's usual folders for the
   agreement and activity analyses.
 * **Study on an ElectroTag server** (`electrotag web`, Python): the same

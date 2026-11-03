@@ -29,6 +29,24 @@ export function claimedRoles(claims, study) {
   return out.length ? out : ['annotator'];
 }
 
+/**
+ * The study to use when the link named none: the account's only study (its claims list the studies
+ * it belongs to), or '' when it belongs to none or to several.
+ */
+export function onlyStudy(claims) {
+  const list = claims && Array.isArray(claims.studies) ? claims.studies
+    : Object.keys((claims && claims.roles && typeof claims.roles === 'object' && claims.roles) || {});
+  return list.length === 1 ? String(list[0]) : '';
+}
+
+/** Why signing in cannot go on when the link named no study and the account's claims do not settle it. */
+export function studyNeededError(claims) {
+  const several = claims && Array.isArray(claims.studies) && claims.studies.length > 1;
+  return new ApiError(400, 'study_needed', several
+    ? 'Your account takes part in more than one study. Open the link your study team sent you: it names the study.'
+    : 'Your account is not part of a study yet. Ask your study team for the link to your study.');
+}
+
 export const FIREBASE_VERSION = '12.19.0';
 export const SDK_BASE = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
 export const DEFAULT_REGION = 'europe-west2';
@@ -140,6 +158,20 @@ export class FirebaseBackend {
     if (typeof this.auth.authStateReady === 'function') {
       try { await this.auth.authStateReady(); } catch { /* treated as signed out */ }
     }
+    // Still signed in after a reload, from a link that named no study: the account's only study.
+    if (!this.study && this.auth.currentUser) {
+      let claims = {};
+      try { claims = (await this.auth.currentUser.getIdTokenResult()).claims || {}; } catch { /* signed out below */ }
+      if (!this._useStudy(onlyStudy(claims))) await this.logout();
+    }
+  }
+
+  /** Takes `study` as this backend's study (once the person's claims name it); false when it is ''. */
+  _useStudy(study) {
+    if (!study) return false;
+    this.study = study;
+    this.health = { ...this.health, study };
+    return true;
   }
 
   async getHealth() { return this.health; }
@@ -154,6 +186,10 @@ export class FirebaseBackend {
     const user = cred.user || this.auth.currentUser;
     let claims = {};
     try { claims = (await user.getIdTokenResult()).claims || {}; } catch { /* read from et_me below */ }
+    if (!this.study && !this._useStudy(onlyStudy(claims))) {
+      await this.logout();
+      throw studyNeededError(claims);
+    }
     return {
       annotator_id: claims.annotator_id || '', display_name: user.displayName || '', role: claims.role || 'annotator',
       roles: claimedRoles(claims, this.study), email: user.email || String(email).trim(),

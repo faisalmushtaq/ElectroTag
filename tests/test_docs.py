@@ -47,9 +47,11 @@ def test_no_file_names_the_old_ec_functions():
 
 def test_the_old_name_remains_only_where_it_belongs():
     allowed = ("claude/electroclean-web", "was called ElectroClean until")
+    # A study's own config.json (never committed) names its Firebase project, whatever it is called.
+    own_config = REPO / "electrotag" / "web" / "static" / "config.json"
     found = []
     for p in text_files():
-        if p.name == "CHANGELOG.md" or p == Path(__file__):
+        if p.name == "CHANGELOG.md" or p == Path(__file__) or p == own_config:
             continue
         for i, line in enumerate(p.read_text(encoding="utf-8").splitlines(), 1):
             rest = line
