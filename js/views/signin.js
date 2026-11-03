@@ -57,7 +57,7 @@ export function signinView(app, { message = '', error = '' } = {}) {
   let studyLine;
   if (!b) studyLine = h('p.subtitle', {}, where.error ? 'Not connected' : 'Connecting…');
   else if (b.isDemo) studyLine = h('p.subtitle', {}, 'Demonstration: everything stays in this browser.');
-  else if (b.kind === 'firebase') studyLine = h('p.subtitle', {}, `Study: ${b.study || 'not named'}`);
+  else if (b.kind === 'firebase') studyLine = h('p.subtitle', {}, b.study ? `Study: ${b.study}` : 'Your study opens once you sign in');
   else studyLine = h('p.subtitle', {}, `Study: ${(b.health && b.health.study) || 'ElectroTag study'}`, h('br'), h('span.caption', {}, b.server || 'this site'));
 
   const demoHint = b && b.isDemo ? h('div.note.demo-hint', {},
