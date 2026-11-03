@@ -99,12 +99,19 @@ function stubStudy(catalogue) {
 }
 
 // ------------------------------------------------- a static server with its own config.json
+// (and, for Firebase Hosting, the project's settings at /__/firebase/init.json when `init` is set)
 function configStatic() {
-  const state = { config: null };
+  const state = { config: null, init: null };
   const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml' };
   const server = http.createServer((req, res) => {
     const url = new URL(req.url, 'http://x');
     let p = decodeURIComponent(url.pathname);
+    if (p === '/__/firebase/init.json') {
+      if (!state.init) { res.writeHead(404); res.end('not on Firebase Hosting'); return; }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(state.init));
+      return;
+    }
     if (p === '/config.json') {
       if (!state.config) { res.writeHead(404); res.end('no config'); return; }
       res.writeHead(200, { 'Content-Type': 'application/json' });

@@ -142,4 +142,29 @@ export const tests = [
       t.assert.equal(loaded, false);
     },
   },
+  {
+    name: 'on Firebase Hosting, without config.json, the project\'s own settings give an email sign-in',
+    async run(t) {
+      t.cfg.config = null;
+      t.cfg.init = { apiKey: 'test-key', authDomain: 'my-eeg-study.firebaseapp.com', projectId: 'my-eeg-study', appId: '1:2:web:3', storageBucket: 'b' };
+      try {
+        const page = await t.newPage({ url: null });
+        await page.route('https://www.gstatic.com/firebasejs/**', (route) => {
+          route.fulfill({ status: 200, contentType: 'text/javascript', body: FAKE_FIREBASE[route.request().url().split('/').pop()] || '' });
+        });
+        await page.goto(`${t.cfgBase}?study=pilot`);
+        await page.waitForSelector('#signin-id');
+        t.assert.equal(await page.getAttribute('#signin-id', 'type'), 'email');
+        t.assert.match(await page.textContent('.signin-card'), /Study: pilot/);
+        // A link without ?study= leaves the study to the account, which names it once signed in.
+        await page.goto(t.cfgBase);
+        await page.waitForSelector('#signin-id');
+        t.assert.match(await page.textContent('.signin-card'), /Your study opens once you sign in/);
+        t.assert.doesNotMatch(await page.textContent('.signin-card'), /Demonstration/);
+        await t.screenshot(page, 'signin_firebase_hosting');
+      } finally {
+        t.cfg.init = null;
+      }
+    },
+  },
 ];

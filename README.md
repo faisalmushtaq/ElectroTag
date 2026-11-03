@@ -79,8 +79,9 @@ Firestore in Google's London region (europe-west2) for the study's records,
 and ElectroTag's Python Cloud Functions for the private work (matching a file
 to the study, validating and saving results with ElectroTag's own code,
 checking guided training steps and scoring practice, so the experts' answers
-never reach a browser). [docs/web/firebase.md](docs/web/firebase.md) sets one
-up step by step. A study can instead run on the **ElectroTag server**
+never reach a browser), with Firebase Hosting publishing the application from
+the same project, so each project serves its own copy at its own address.
+[docs/web/firebase.md](docs/web/firebase.md) sets one up step by step. A study can instead run on the **ElectroTag server**
 (`electrotag web serve`, [docs/web/server.md](docs/web/server.md)), on a
 computer the study controls; both run the same Python service layer.
 

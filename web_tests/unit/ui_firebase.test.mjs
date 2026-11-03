@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { FirebaseBackend, toApiError, authError, isExpertRead, claimedRoles } from '../../electrotag/web/static/js/api/firebase.js';
+import { FirebaseBackend, toApiError, authError, isExpertRead, claimedRoles, onlyStudy } from '../../electrotag/web/static/js/api/firebase.js';
 
 class FakeHttpsError extends Error {
   constructor(code, message, details) { super(message); this.code = `functions/${code}`; this.details = details; }
@@ -182,4 +182,54 @@ test('expert operations: only those that read are asked again, and the claims gi
   const e = await FirebaseBackend.create({ config: {}, study: 's', sdk: sdk2 });
   const who = await e.login('e@example.org', 'p');
   assert.deepEqual([who.role, who.roles], ['expert', ['expert', 'annotator']]);
+});
+
+test('onlyStudy: the account\'s single study, or none when it has several or none', () => {
+  assert.equal(onlyStudy({ studies: ['pilot'] }), 'pilot');
+  assert.equal(onlyStudy({ roles: { pilot: ['annotator'] } }), 'pilot');
+  assert.equal(onlyStudy({ studies: ['pilot', 'main'] }), '');
+  assert.equal(onlyStudy({}), '');
+  assert.equal(onlyStudy(null), '');
+});
+
+test('a link without a study: signing in opens the account\'s only study', async () => {
+  const users = { 'ann@example.org': { password: 'right', claims: { annotator_id: 'A07', role: 'annotator', roles: { pilot: ['annotator'] }, studies: ['pilot'] } } };
+  const { sdk, calls } = fakeSdk({ users, handlers: { et_me: () => ({ annotator_id: 'A07' }) } });
+  const b = await FirebaseBackend.create({ config: { projectId: 'p' }, study: '', sdk });
+  assert.equal(b.study, '');
+  const who = await b.login('ann@example.org', 'right');
+  assert.equal(b.study, 'pilot');
+  assert.equal((await b.getHealth()).study, 'pilot');
+  assert.deepEqual(who.roles, ['annotator']);
+  await b.me();
+  assert.equal(calls.at(-1).data.study, 'pilot');
+});
+
+test('a link without a study: an account in several studies is asked for the study\'s link and signed out', async () => {
+  const users = { 'ann@example.org': { password: 'right', claims: { annotator_id: 'A07', roles: { pilot: ['annotator'], main: ['admin'] }, studies: ['main', 'pilot'] } } };
+  const { sdk } = fakeSdk({ users });
+  const b = await FirebaseBackend.create({ config: { projectId: 'p' }, study: '', sdk });
+  await assert.rejects(() => b.login('ann@example.org', 'right'),
+    (e) => e.status === 400 && e.code === 'study_needed' && /more than one study/.test(e.message));
+  assert.equal(b.signedIn, false);
+  assert.equal(b.study, '');
+});
+
+test('a link that names the study keeps it, whatever studies the account has', async () => {
+  const users = { 'ann@example.org': { password: 'right', claims: { annotator_id: 'A07', roles: { pilot: ['annotator'], main: ['admin'] }, studies: ['main', 'pilot'] } } };
+  const { sdk } = fakeSdk({ users });
+  const b = await FirebaseBackend.create({ config: { projectId: 'p' }, study: 'main', sdk });
+  const who = await b.login('ann@example.org', 'right');
+  assert.equal(b.study, 'main');
+  assert.deepEqual(who.roles, ['admin']);
+});
+
+test('a link without a study: after a reload, a signed-in account opens its only study again', async () => {
+  const users = { 'ann@example.org': { password: 'right', claims: { annotator_id: 'A07', studies: ['pilot'], roles: { pilot: ['annotator'] } } } };
+  const { sdk } = fakeSdk({ users });
+  const first = await FirebaseBackend.create({ config: { projectId: 'p' }, study: '', sdk });
+  await first.login('ann@example.org', 'right');
+  const again = await FirebaseBackend.create({ config: { projectId: 'p' }, study: '', sdk }); // the same browser, reloaded
+  assert.equal(again.signedIn, true);
+  assert.equal(again.study, 'pilot');
 });

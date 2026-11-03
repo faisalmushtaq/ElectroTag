@@ -9,6 +9,10 @@
 //                                {"auth": "http://127.0.0.1:9099", "functions": "127.0.0.1:5001"} for
 //                                testing on the Firebase Emulator Suite)
 //       {"server": "https://…"}  a study server
+//   /__/firebase/init.json       a study on Firebase when the application is published with Firebase
+//                                Hosting, which serves the project's own settings at that address;
+//                                ?study=<id> names the study (otherwise the account's only study is
+//                                used once the person signs in)
 //   the server remembered in this browser
 //   the server that serves this page itself (api/v1/health beside index.html); once it has
 //                                answered, this browser remembers that the page's own site is a study
@@ -27,9 +31,9 @@ function queryParams() {
   try { return new URLSearchParams(globalThis.location ? globalThis.location.search : ''); } catch { return new URLSearchParams(''); }
 }
 
-async function readConfigFile() {
+async function readConfigFile(url = 'config.json') {
   try {
-    const res = await fetch('config.json', { cache: 'no-store', credentials: 'omit' });
+    const res = await fetch(url, { cache: 'no-store', credentials: 'omit' });
     if (!res.ok) return null;
     const data = await res.json();
     return data && typeof data === 'object' ? data : null;
@@ -63,7 +67,7 @@ function sameSiteBase() {
  *   {kind: 'demo', source}
  *   {kind: 'server', address, source, health?}
  *   {kind: 'firebase', config, study, region, source}
- * where source is 'query', 'config', 'remembered', 'same-site', 'forced-demo' or 'none'.
+ * where source is 'query', 'config', 'hosting', 'remembered', 'same-site', 'forced-demo' or 'none'.
  */
 export async function findBackend() {
   const q = queryParams();
@@ -84,6 +88,12 @@ export async function findBackend() {
   }
   if (cfg && typeof cfg.server === 'string' && cfg.server) {
     return { kind: 'server', address: normaliseServer(cfg.server), source: 'config' };
+  }
+  if (!cfg) {
+    const init = await readConfigFile('/__/firebase/init.json');
+    if (init && init.apiKey && init.projectId) {
+      return { kind: 'firebase', config: init, study: q.get('study') || '', region: 'europe-west2', emulators: null, source: 'hosting' };
+    }
   }
   const remembered = rememberedServer();
   if (remembered) return { kind: 'server', address: remembered, source: 'remembered' };

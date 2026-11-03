@@ -5,6 +5,24 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+A study on Firebase now publishes the browser application from its own Firebase project with
+Firebase Hosting, at `https://<project-id>.web.app`, in the same deployment as the functions and
+rules (`npx firebase-tools deploy --only "functions,firestore,hosting"`). The application finds the
+project's settings there by itself, so nothing is copied from the console and no `config.json` is
+committed: each research group, and each of a group's projects, has its own copy of the application
+without sharing a website. A link names the study with `?study=<id>`; a link without one opens the
+account's study after sign-in when the account belongs to a single study of the project, and asks
+for the study's link when it belongs to several. `config.json` remains for publishing the
+application elsewhere, and is left out of the repository (`.gitignore`) and of Firebase Hosting.
+The predeploy step that prepares the functions now finds Python on Windows as well as on macOS and
+Linux (`scripts/predeploy_functions.mjs`), and the *Firebase deploy* workflow can deploy the
+application too. The Firebase guide (docs/web/firebase.md) has been reworked to match: signing in
+to the application has a step of its own, which now comes before setting the study up in the admin
+area; every command that differs on Windows is given for PowerShell beside the macOS and Linux
+version; the deploy command keeps its list in quotation marks, which PowerShell needs; and the guide
+explains that on a new project some functions can fail on the first deployment and that running the
+same command again completes it.
+
 The study team can keep the study's recordings in source datasets ("Youth low-density 2026",
 "OpenNeuro ds003420") with their description, origin, licence, citation, contact and notes, gather
 recordings from any datasets into collections, make groups of people, and hand a dataset or a

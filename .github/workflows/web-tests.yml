@@ -17,6 +17,7 @@ on:
       - "scripts/make_web_fixtures.py"
       - "scripts/test_*firebase*.sh"
       - "scripts/vendor_functions.py"
+      - "scripts/predeploy_functions.mjs"
       - "firebase.json"
       - "firestore.rules"
       - "requirements*.txt"

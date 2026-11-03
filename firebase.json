@@ -5,13 +5,20 @@
       "codebase": "electrotag",
       "runtime": "python313",
       "ignore": ["venv", ".git", "__pycache__", "*.pyc"],
-      "predeploy": ["python3 \"$RESOURCE_DIR/../../../../scripts/vendor_functions.py\" \"$RESOURCE_DIR\""]
+      "predeploy": ["node \"$RESOURCE_DIR/../../../../scripts/predeploy_functions.mjs\" \"$RESOURCE_DIR\""]
     }
   ],
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json",
     "location": "europe-west2"
+  },
+  "hosting": {
+    "public": "electrotag/web/static",
+    "ignore": ["config.json", "**/.*"],
+    "headers": [
+      {"source": "**", "headers": [{"key": "Cache-Control", "value": "no-cache"}]}
+    ]
   },
   "emulators": {
     "auth": {"port": 9099},

@@ -180,18 +180,20 @@ Firebase tests need Java 21 for Google's emulators; `npx` fetches the Firebase t
 The [testing guide](docs/testing_guide.md) lists the checks that need a person before a study
 starts. *GitHub Pages* publishes the application (from `main` at the site's root, from
 `claude/electroclean-web` under `preview/`), and *Firebase deploy*, run by hand, deploys the
-functions and rules to a real project once it exists (see below).
+functions, rules and application (Firebase Hosting) to a real project (see below).
 
 ## Setting up a real study on Firebase
 
-Nobody has created the study's Firebase project yet. [docs/web/firebase.md](docs/web/firebase.md)
+The group's first Firebase project was created on 3 November 2026 and its functions deployed; its
+studies are still to be set up. [docs/web/firebase.md](docs/web/firebase.md)
 takes you through it step by step, in about an afternoon the first time: create the project, choose
 the pay-as-you-go Blaze plan with a budget alert, create Firestore in europe-west2 (London), turn on
-email and password sign-in, register the web application, deploy the rules and functions, create
-the study and your own administrator account, and then do the rest in the admin area: add the
-recordings from your computer, invite the annotators, assign the recordings, set up the reference
-sets and choose the settings. Publish `config.json` so the application finds the project, send the
-annotators the link and their recordings (on an encrypted drive, for example), and use
+email and password sign-in, register the web application with Firebase Hosting, deploy the rules,
+the functions and the application (Firebase Hosting publishes it at `https://<project-id>.web.app`,
+where it finds its project by itself), create the study and your own administrator account, sign
+in, and then do the rest in the admin area: add the recordings from your computer, invite the
+annotators, assign the recordings, set up the reference sets and choose the settings. Send the
+annotators the study's link and their recordings (on an encrypted drive, for example), and use
 `electrotag-web export` or the admin area's zip file for the analyses. The *Firebase deploy*
 workflow can deploy updates once the secret `FIREBASE_SERVICE_ACCOUNT` and the variable
 `FIREBASE_PROJECT` are set in the repository; neither is set yet.
@@ -540,7 +542,8 @@ guides. Any literature cited must be checked against the original source before 
 ## Access and accounts
 
 The repository is public, under the PolyForm Noncommercial licence. Nothing secret is stored in it:
-the demonstration passwords above are for simulated data only, the Firebase web configuration that
-`config.json` will hold is public by design, and the Firebase service-account key, when one is made,
+the demonstration passwords above are for simulated data only, the Firebase web configuration
+(served by Firebase Hosting, or kept in an uncommitted `config.json` where the application is
+published elsewhere) is public by design, and the Firebase service-account key, when one is made,
 belongs in the repository's Actions secrets. Changing GitHub Pages, secrets or branch settings needs
 admin rights on the repository, which the repository owner holds.
