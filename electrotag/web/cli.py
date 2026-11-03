@@ -32,6 +32,7 @@ examples:
   electrotag-web assign A01 --all --firebase-project my-eeg --study pilot
   electrotag-web progress --firebase-project my-eeg --study pilot      who has done what so far
   electrotag-web export --firebase-project my-eeg --study pilot --to ~/Pilot-results
+  electrotag-web check-functions --firebase-project my-eeg   after a deployment: is every function open?
   electrotag-web serve --study-dir ~/pilot-server          the ElectroTag server instead of Firebase
 
 exit status: 0 on success, 2 for a mistake in the command or the study, 1 when something failed.
@@ -458,6 +459,18 @@ def cmd_config(a: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check_functions(a: argparse.Namespace) -> int:
+    from electrotag.web.firebase.access import OPEN, check_functions, report
+
+    if not a.firebase_project:
+        raise CommandError("Give --firebase-project (or set ELECTROTAG_FIREBASE_PROJECT)")
+    print(f"Asking each function of {a.firebase_project}, as the browser application does (this can take a minute "
+          "while they start)...", flush=True)
+    states = check_functions(a.firebase_project)
+    print(report(a.firebase_project, states))
+    return 0 if all(s == OPEN for s in states.values()) else 1
+
+
 def cmd_serve(a: argparse.Namespace) -> int:
     import uvicorn
 
@@ -582,6 +595,11 @@ def build_parser(prog: str = "electrotag-web") -> argparse.ArgumentParser:
     s.add_argument("--web-config", type=Path, help="a file holding the SDK configuration copied from the console")
     s.add_argument("--out", type=Path, help="write to this file instead of printing")
     s.set_defaults(func=cmd_config)
+
+    s = sub.add_parser("check-functions", help="Firebase: check that every function is open to the browser application")
+    s.add_argument("--firebase-project", default=os.environ.get("ELECTROTAG_FIREBASE_PROJECT") or None,
+                   help="Firebase project ID (default: $ELECTROTAG_FIREBASE_PROJECT)")
+    s.set_defaults(func=cmd_check_functions)
 
     s = sub.add_parser("serve", help="run the ElectroTag server for a study folder")
     s.add_argument("study_dir_pos", nargs="?", type=Path, metavar="STUDY_DIR", help="the study folder")

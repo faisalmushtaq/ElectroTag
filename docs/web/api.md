@@ -1836,7 +1836,12 @@ The HTTP status of an error becomes the `HttpsError` code: 400 and 413
 `resource-exhausted`, 500 `internal`, 501 `unimplemented`. `details` is the error body
 (`{"error": "<code>", "message": "…", …}`). A caller whose claims do not name
 the study, or who has no account in it, gets `permission-denied` with error
-`not_in_study`.
+`not_in_study`. Every error of ElectroTag's own carries `details.error`; an `internal` error
+without it means that the call was refused before ElectroTag's code ran (for example by a function
+that is not open to the public, which answers 403 without the headers a browser needs), and the
+browser's `js/api/firebase.js` reports it as error `no_answer`. The browser also leaves out the
+HTTP status that Firebase's library (version 12 and later) adds in brackets at the end of its
+messages.
 
 The custom claims are `{"annotator_id": "A01", "role": "annotator", "roles": {"<study>": ["annotator", …]},
 "studies": ["<study>"]}`: for each study the person's roles, as a list (claims

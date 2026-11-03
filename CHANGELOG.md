@@ -5,6 +5,17 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+On a study on Firebase, an error from the study's functions no longer reaches the screen as
+Firebase's raw text, such as "internal [0]". Firebase's library now ends its messages with the HTTP
+status in brackets, which the application leaves out; a call that Google refused before ElectroTag
+could answer says that the study's server turned the request away and to tell the study team; and
+when signing in fails after the email address and password were accepted, the message says so, so
+that nobody resets a password that works. A new command, `electrotag web check-functions`, asks
+each of the twenty-six functions from outside, as a browser does, and lists those that are not open
+to the public with the Google Cloud command that opens each (docs/web/firebase.md, step 8). A
+function can stay closed when Google slows down a project's first deployment, because Firebase's
+tool opens a function only when it creates it.
+
 A study on Firebase now publishes the browser application from its own Firebase project with
 Firebase Hosting, at `https://<project-id>.web.app`, in the same deployment as the functions and
 rules (`npx firebase-tools deploy --only "functions,firestore,hosting"`). The application finds the
