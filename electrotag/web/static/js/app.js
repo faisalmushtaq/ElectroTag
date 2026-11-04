@@ -586,7 +586,15 @@ export class App {
 
   showHome() {
     this._fromTraining = false;
-    return this._withParts(['home'], 'home', ({ homeView }) => this._render(homeView(this), 'home'));
+    const show = () => this._withParts(['home'], 'home', ({ homeView }) => this._render(homeView(this), 'home'));
+    // Back from the admin or expert area: the recordings are asked again, since the person may have just given themselves some.
+    if (!this.me || !(ADMIN_ROUTE.test(this.route || '') || EXPERT_ROUTE.test(this.route || ''))) return show();
+    this._render(loadingPage(), 'home');
+    const mine = this._renders;
+    return this.loadAssignments().then(() => (this._renders === mine ? show() : undefined), (exc) => {
+      if (exc.status !== 401 && this._renders === mine) return show();
+      return undefined;
+    });
   }
 
   /**

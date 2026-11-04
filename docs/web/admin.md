@@ -16,7 +16,9 @@ another way, for example on an encrypted drive, and open them in their own brows
 
 Accounts with the role of administrator see the admin area. Sign in as usual: an administrator goes
 straight to the admin area, and the header offers My recordings to annotate (an administrator can
-annotate too) and Admin to come back. A person can hold several roles: annotator, expert and
+annotate too) and Admin to come back. My recordings asks the study for your recordings each time you
+come back from the admin area or the expert area, so recordings you have just given yourself, by a
+hand-out or an assignment, are listed straight away. A person can hold several roles: annotator, expert and
 administrator. Experts open the expert area from the Expert work card on their home page or the
 Expert work button in the header (see "The expert area" below); an administrator may use it too. The study's administrator accounts are made when the study is
 set up (docs/web/firebase.md and docs/web/server.md), and from then on you can make more in the
