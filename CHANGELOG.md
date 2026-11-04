@@ -5,6 +5,11 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+In the annotation view, a click on the empty space of the Annotations panel, around the list, now
+ends the selection, as Esc and a click on empty EEG already did. A type chosen on the top bar then
+applies to the next mark instead of changing the annotation that had been selected. A click on a
+row or on one of the panel's buttons keeps the selection as before.
+
 An administrator who gives themselves recordings in the admin area, by handing out a dataset or a
 collection or by assigning recordings, now finds them under My recordings at once. My recordings
 used to show the list read at sign-in, which for an administrator was taken before anything was
