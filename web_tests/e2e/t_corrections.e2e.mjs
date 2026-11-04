@@ -417,7 +417,9 @@ export const tests = [
       await page.evaluate(() => globalThis.ElectroTag.flushLog());
       const folder = path.join(t.study.dir, 'study', 'Annotated_Events', 'annotator-K01', 'sub-003', 'eeg');
       const before = checksums(folder);
-      assert.equal(Object.keys(before).length, 5);
+      // the five result files, and the session's own interaction log beside them (made from the visit's log)
+      assert.equal(Object.keys(before).length, 6);
+      assert.equal(Object.keys(before).filter((f) => f.endsWith('_interaction_log.jsonl')).length, 1);
 
       const expert = await t.newPage({ url: t.study.base, width: 1440, height: 900 });
       await signIn(expert, 'E01', PASSWORD);
