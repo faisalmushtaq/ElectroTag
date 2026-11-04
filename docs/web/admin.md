@@ -1,7 +1,7 @@
 # The admin area
 
-This guide is for the lead researchers who run a study of ElectroTag in the browser. The admin
-area is the part of the browser application where you add the study's recordings and accounts,
+This guide is for the lead researchers who run a study of ElectroTag. The admin area is the part
+of the application where you add the study's recordings and accounts,
 decide who annotates what, set up the training programme and its reference sets, run the agreement
 and activity analyses, follow everyone's progress and keep the study's records. Only administrators
 see it.

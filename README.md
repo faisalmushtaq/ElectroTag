@@ -17,18 +17,12 @@ from the admin area of the same application.
 
 | Part | What it does | Where |
 |---|---|---|
-| **Annotation** | View continuous EEG (EDF, EDF+, BDF or BrainVision), mark artifacts by mouse, keyboard or touch (on a computer or an iPad), and save with Save and Finish; unfinished work is kept as a draft. | The browser application |
+| **Annotation** | View continuous EEG (EDF, EDF+, BDF or BrainVision), mark artifacts by mouse, keyboard or touch (on a computer or an iPad), and save with Save and Finish; unfinished work is kept as a draft. | The application |
 | **Inter-rater agreement** | Compare annotators by category, time and channel: time-resolved and event-based agreement, with an HTML report and tables. | The admin area, or `electrotag agreement` |
-| **Training and assessment** | A five-stage training programme, from a tour of the platform and examples of each artifact type through guided learning with the experts and practice with a pass mark to a blinded competency assessment with criteria set by the study, which study work waits for; and a short-segment quiz. | The browser application; set up in the admin area or with `electrotag admin` |
+| **Training and assessment** | A five-stage training programme, from a tour of the platform and examples of each artifact type through guided learning with the experts and practice with a pass mark to a blinded competency assessment with criteria set by the study, which study work waits for; and a short-segment quiz. | The application; set up in the admin area or with `electrotag admin` |
 | **Interaction logs** | A time-stamped record of how each annotator works, as research data, with tables and learning curves. | The admin area, or `electrotag activity` |
 
 The original EEG files and their metadata are never modified.
-
-Version 1.1.0, released on 27 October 2026, was the last version of the
-desktop application (Windows, macOS and Linux, built on MNE-Python's Qt
-browser). It remains available on the
-[Releases page](https://github.com/faisalmushtaq/ElectroTag/releases); its
-results folders are read by the analyses below unchanged.
 
 ## Documentation
 
@@ -52,7 +46,7 @@ own computer and a study on a server of your own. Developers start with the
 
 ## Trying it
 
-The browser application is published at
+The application is published at
 <https://faisalmushtaq.github.io/ElectroTag/>. Opened without a study, it is
 a demonstration that needs no server and keeps everything in the browser: sign
 in as A01 to annotate, as T01 for the training programme or as E01 for the
@@ -147,7 +141,7 @@ pip install "electrotag @ git+https://github.com/faisalmushtaq/ElectroTag"
 On a computer without Git, the second line can name GitHub's archive of the
 code instead:
 `pip install "electrotag @ https://github.com/faisalmushtaq/ElectroTag/archive/refs/heads/main.zip"`.
-Either way the package includes the browser application, so
+Either way the package includes the application, so
 `electrotag web demo` and the analyses work as they do from a copy.
 
 `requirements.txt` pins every package ElectroTag uses, and the packages those
@@ -158,7 +152,7 @@ recommended for a study: the browser reproduces MNE-Python's reading and
 filtering of recordings, the tests check that against these versions, and so
 every computer of the study builds the same manifests and results.
 `pyproject.toml` gives the compatible ranges, so `pip install -e .` on its own
-also works, with the newest versions in those ranges. The browser application
+also works, with the newest versions in those ranges. The application
 itself needs nothing installed: it is static files
 (`electrotag/web/static`) with no build step.
 
@@ -275,14 +269,14 @@ curves, to show for example whether annotators got faster. See
 | Document | For |
 |---|---|
 | [Using ElectroTag](docs/web/using.md) | Annotators |
-| [The admin area](docs/web/admin.md) | Lead researchers running a study in the browser |
+| [The admin area](docs/web/admin.md) | Lead researchers running a study |
 | [Running a study on Firebase](docs/web/firebase.md) | Setting up a real study, step by step |
 | [The ElectroTag server](docs/web/server.md) | The demonstration, and a study on your own server |
 | [Administrator guide](docs/administrator_guide.md) | What every setting and choice of a study means: channels, filters, allocation, reference sets, competency criteria, the training programme |
 | [Reliability analysis guide](docs/reliability_guide.md) | Agreement measures and their interpretation |
 | [Interaction logs](docs/activity_logs.md) | What is recorded about annotators' work, and the activity tables and learning curves |
 | [File formats](docs/file_formats.md) | Every output and configuration file |
-| [Architecture](docs/web/architecture.md) and [API](docs/web/api.md) | How the browser application works, and the contract between browser and server |
+| [Architecture](docs/web/architecture.md) and [API](docs/web/api.md) | How the application works, and the contract between browser and server |
 | [Developer guide](docs/developer_guide.md) | The Python core, the save transaction, extension points |
 | [Testing guide](docs/testing_guide.md) | Running the tests, synthetic data, checks that need a person |
 | [Design decisions](docs/design_decisions.md) | How the specification was interpreted, the decisions taken, and questions for the research team |
@@ -299,11 +293,11 @@ electrotag/
     reliability/    inter-rater agreement
     training/       reference sets, the training programme, competency assessment, the quiz
     activity/       interaction logs turned into tables and learning curves
-    web/            the study server, the Firebase functions and the browser application (web/static)
+    web/            the study server, the Firebase functions and the application (web/static)
     config/         label catalogue, default settings, HED-SCORE validation snapshot
     synthetic.py    synthetic BrainVision, EDF and BDF data with known artifacts
 tests/              Python tests (pytest)
-web_tests/          tests of the browser application (node --test and Playwright)
+web_tests/          tests of the application (node --test and Playwright)
 examples/           demonstration scripts and example outputs
 docs/               documentation
 scripts/            maintenance scripts (label validation, test recordings, third-party notices)
@@ -312,7 +306,7 @@ scripts/            maintenance scripts (label validation, test recordings, thir
 ## Acknowledgements
 
 ElectroTag is built on [MNE-Python](https://mne.tools) (Gramfort et al.,
-2013), whose reading and filtering of recordings the browser application
+2013), whose reading and filtering of recordings the application
 reproduces, uses the HED-SCORE artifact vocabulary (Hermes et al., 2025) and
 follows the EEG-BIDS conventions (Pernet et al., 2019). Full references are in
 [docs/references.md](docs/references.md).

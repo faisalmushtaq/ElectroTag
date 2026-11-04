@@ -68,7 +68,7 @@ the guides in `docs/` and `docs/web/`) is updated in the same commit, with a par
 researchers, in plain words.
 
 The application's look is one design system, described at the top of `app.css` and in
-`docs/design_decisions.md` ("Visual design of the browser application"): warm off-white pages,
+`docs/design_decisions.md` ("Visual design"): warm off-white pages,
 hairlines, square panels and pill-shaped buttons, black for the step forward and one ink-blue
 accent, flat (no shadows), one typeface (Newsreader, served from `static/fonts`) with tabular
 figures, sizes from the `--t-*` scale of whole pixels, drawn icons from `icon()` in
@@ -76,7 +76,7 @@ figures, sizes from the `--t-*` scale of whole pixels, drawn icons from `icon()`
 tokens rather than new colours or sizes, and run `web_tests/unit/ui_design.test.mjs`, which checks
 contrast and these rules.
 
-The browser application has no build step: plain ES modules under `electrotag/web/static`, with
+The application has no build step: plain ES modules under `electrotag/web/static`, with
 every path relative so that it works under `/preview/` on GitHub Pages (workers are created with
 `new URL("./worker.js", import.meta.url)`), and plain `#name` routes only. External scripts come
 only from fixed, versioned URLs (the Firebase SDK from gstatic.com, loaded only for Firebase

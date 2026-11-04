@@ -1,9 +1,9 @@
 # The ElectroTag server
 
-Real studies of ElectroTag in the browser run on Firebase (docs/web/firebase.md). The ElectroTag
+Real studies of ElectroTag run on Firebase (docs/web/firebase.md). The ElectroTag
 server is the other back end: the same operations (docs/web/api.md) over HTTP, from a study folder on
 a computer you control. It is how the whole system is tried on one computer (`electrotag web
-demo`), how the browser application is tested, and it suits a study that prefers its own machine,
+demo`), how the application is tested, and it suits a study that prefers its own machine,
 for example a university server.
 
 ## Install
@@ -22,7 +22,7 @@ This installs ElectroTag's Python code with the server and the `electrotag` comm
 are the administrator's `electrotag web`, the analyses `electrotag agreement` and
 `electrotag activity`, and `electrotag admin` for reference sets in a folder, together with
 MNE-Python for registering recordings. The README also shows how to install straight from GitHub.
-The browser application itself needs nothing installed.
+The application itself needs nothing installed.
 
 ## The demonstration
 
@@ -31,7 +31,7 @@ electrotag web demo
 ```
 
 makes a demonstration study in `./electrotag-demo` (once; `--fresh` makes it again) and serves the
-browser application and the API at `http://localhost:8000/`. It holds three simulated study
+application and the API at `http://localhost:8000/`. It holds three simulated study
 recordings (two BrainVision, one EDF+), ElectroTag's example training set and four accounts, all
 with the password `electrotag`: ADMIN (the administrator's account, for the admin area in the
 browser), A01 and A02 (annotators with every study recording) and T01 (a trainee in the example
@@ -86,7 +86,7 @@ The commands remain an alternative for each of these, and the audit log records 
   `--programme <set>` for a trainee, assigns the work; `electrotag web list --study-dir /srv/pilot`
   shows the study.
 
-The server serves the browser application from `/` when the application is included
+The server serves the application from `/` when the application is included
 (`electrotag/web/static/`), so annotators can simply open the server's address. To use the
 application on GitHub Pages instead, list its origin in `ELECTROTAG_ALLOWED_ORIGINS`
 (comma-separated, for example `ELECTROTAG_ALLOWED_ORIGINS=https://faisalmushtaq.github.io`) and send

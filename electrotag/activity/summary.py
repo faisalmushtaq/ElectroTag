@@ -55,15 +55,15 @@ ANNOTATION_CHANGES = frozenset({"annotation_created", "annotation_deleted", "ann
                                 "undo", "redo", "annotations_merged", "annotations_reset"})
 
 VISIT_COLUMNS: list[tuple[str, str]] = [
-    ("visit_id", "Identifier of the visit (one log file: in the browser, from signing in until signing out "
-                 "or closing the page)."),
+    ("visit_id", "Identifier of the visit (one log file: from signing in until signing out or closing the "
+                 "page)."),
     ("annotator_id", "The annotator's ID."),
     ("mode", "standard, practice, assessment (or a training mode)."),
     ("context_id", "Reference set of a training visit (empty for standard annotation)."),
     ("file", "The log file."),
     ("started_at", "Local date and time the visit started, with its UTC offset."),
-    ("ended", "How the visit ended: sign_out or page_closed in the browser (back_to_start, quit, exit or "
-              "new_visit in logs of the desktop application), or 'not closed' when the log stopped unexpectedly."),
+    ("ended", "How the visit ended: sign_out or page_closed, or 'not closed' when the log stopped "
+              "unexpectedly."),
     ("wall_s", "Seconds from the start of the visit to its last event."),
     ("active_s", "Active seconds in the visit (see 'Active time')."),
     ("recordings_opened", "Recordings opened for annotation."),

@@ -1,6 +1,6 @@
 # ElectroTag web API (version 1)
 
-The contract between the browser application and the server. All paths start
+The contract between the application and the server. All paths start
 with `/api/v1`. Requests and responses are JSON (UTF-8). Times on the wire are
 in **samples** of the recording where an annotation is concerned, and in
 seconds elsewhere. Errors are `{"error": "<code>", "message": "<text for the
@@ -802,7 +802,7 @@ events (409 `visit_closed`); another annotator's visit is 404 `unknown_visit`.
 ## Administration
 
 Lead researchers (accounts with the role `admin`) run the study from the
-**admin area** of the browser application. Every administrative operation is
+**admin area** of the application. Every administrative operation is
 `POST /admin/{op}` with a JSON body (403 `forbidden` for anyone else, 404
 `not_found` for an `op` the server does not offer, as an older server answers;
 the admin area then says the operation is not offered yet) and, on Firebase,
@@ -952,7 +952,7 @@ Authentication where it is not available answers 503 `auth_unavailable`.
 
 ```jsonc
 {"kind": "annotator", "annotator_id": "E1", "mode": "standard", "context_id": ""}   // that person's saved annotations of the recording
-{"kind": "document", "document": {...}}          // an _annotations.json (from a results folder, or saved by the desktop application, 1.1.0 or earlier)
+{"kind": "document", "document": {...}}          // an _annotations.json (from a results folder)
 {"kind": "consensus", "annotator_ids": ["E1", "E2", "E3"], "min_agreement": null, "merge_gap_s": 0.0, "min_duration_s": 0.0, "weights": null}
 {"kind": "adjudicated", "adjudicator_id": "E4", "expert_ids": ["E1", "E2", "E3"]}
 ```
@@ -1209,7 +1209,7 @@ computer as for training.
 ## Experts
 
 Experts (accounts with the role `expert`) and administrators work in the
-**expert area** of the browser application. Every operation of it is
+**expert area** of the application. Every operation of it is
 `POST /expert/{op}` with a JSON body and, on Firebase, the one callable
 function `et_expert` with `{"study", "op", ...the body}` (1 GB of memory and up
 to 300 s, for saving corrections and adjudicated versions); in the service

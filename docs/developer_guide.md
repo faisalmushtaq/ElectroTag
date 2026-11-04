@@ -71,7 +71,7 @@ electrotag/
                            checks of guided steps), review.py (the disagreements flagged in a
                            practice review), examples.py (the placeholder example set)
     activity/              logs.py, summary.py, report.py, cli.py (electrotag activity)
-    web/                   the browser version (web/architecture.md): service.py (the operations,
+    web/                   the application (web/architecture.md): service.py (the operations,
                            shared by the server and the Firebase functions), coach.py, visits.py,
                            manifest.py and registration.py, saving.py, store_files.py and
                            store_firestore.py, app.py (FastAPI), cli.py (electrotag web),
@@ -217,7 +217,7 @@ Type hints throughout; `from __future__ import annotations`; errors that can
 reach a person are raised with messages written for annotators. Times in files
 are local time with UTC offset (ISO 8601). User-facing text uses UK English,
 while label strings keep the HED spelling *artifact*. The conventions of the
-browser application (relative paths, no build step, behaviour when a Firebase
+application (relative paths, no build step, behaviour when a Firebase
 answer arrives late) are in [CLAUDE.md](../CLAUDE.md) and
 [web/architecture.md](web/architecture.md).
 
@@ -259,5 +259,5 @@ by hand, because the commands run on researchers' own computers. *Browser
 version tests* (`web-tests.yml`) runs the browser modules (against Python 3.13
 and 3.12, since the browser builds manifests as Python does), the application
 in Chromium and WebKit, and the Firebase emulators. *GitHub Pages*
-(`pages.yml`) publishes the browser application, and *Firebase deploy*
+(`pages.yml`) publishes the application, and *Firebase deploy*
 (`firebase-deploy.yml`) deploys the functions and rules on demand.
