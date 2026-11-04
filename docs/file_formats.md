@@ -32,8 +32,7 @@ into place in one step, so a file is either complete or absent.
 
 The results of a study are kept in this layout: in the study folder of an
 ElectroTag server as each recording is saved, and for a study on Firebase in
-the folder that `electrotag web export` writes. Results folders of the
-desktop application (version 1.1.0 and earlier) have the same layout.
+the folder that `electrotag web export` writes.
 
 ```text
 Annotated_Events/
@@ -303,9 +302,9 @@ A single number: seconds spent annotating, to the nearest millisecond, e.g.
 | `annotator` | ID and display name |
 | `recording` | Recording ID, `format` (`BrainVision`, `EDF` or `BDF`), `file` and the BrainVision file names (`vhdr`, `eeg`, `vmrk`, null for EDF and BDF), BIDS sidecars used, timing, channel names, `hidden_channels`, `trigger_channels` (the hidden channels that are trigger channels), `acquisition_gaps_samples` (stretches marked `BAD_ACQ_SKIP`, as [start, stop) samples), source fingerprints |
 | `timing` | `session_opened`, `start_timestamp` (viewer ready), `finish_timestamp` (Save and Finish), `elapsed_seconds` (all the time spent on the recording, including earlier unfinished sessions; for work saved from the browser, the time the page measured while the recording was open), clock used, `elapsed_in_earlier_sessions_seconds` and `resumed_from_autosave` (the earlier sessions continued from an autosave) |
-| `application` | ElectroTag version, platform, versions of Python, MNE, NumPy, SciPy, pandas and matplotlib; for work saved from the browser also `client` (`web`), the study's back end (`server`), the annotator's browser (`browser`: its user agent and screen) and a `note` saying that the recording never left the annotator's computer. Files written by the desktop application (version 1.1.0 and earlier) also list the versions of its display libraries. |
+| `application` | ElectroTag version, platform, versions of Python, MNE, NumPy, SciPy, pandas and matplotlib; `client` (`web`), the study's back end (`server`), the annotator's browser (`browser`: its user agent and screen) and a `note` saying that the recording never left the annotator's computer. |
 | `display` | `scalings` used (the study's, or for a type with an implausible amplitude the scale chosen for this recording), `amplitude_check` (the measured amplitude per channel type and any scale set automatically), and the amplitude factor, seconds and channels on screen at Save and Finish |
-| `filters` | Selected settings, whether fixed by the administrator, and `design`. For work saved from the browser, `design` names the filters the browser applied for display (`applied_in`, `settings`); in files written by MNE-based loading (the desktop application, and scripts), it holds the exact MNE calls and parameters, filter lengths, MNE's own description of each filter, edge-transient duration, discontinuities filtered separately, channels filtered, the number of blocks of channels they were filtered in, and how the display data were stored |
+| `filters` | Selected settings, whether fixed by the administrator, and `design`. `design` names the filters the browser applied for display (`applied_in`, `settings`); in files written by MNE-based loading from scripts, it holds the exact MNE calls and parameters, filter lengths, MNE's own description of each filter, edge-transient duration, discontinuities filtered separately, channels filtered, the number of blocks of channels they were filtered in, and how the display data were stored |
 | `bad_channels` | `marked_by_annotator` (as in the annotations file) and its count, `in_study_channels_tsv` (the dataset's own bad channels among those shown, which the annotator saw greyed) and a `note` saying which is which |
 | `annotations` | Counts in total, by label, whole-montage and channel-specific; `confidence` (the study's `setting`, `optional` or `every_mark`, what it means, the `scale` with its anchors, `n_given`, `n_not_given` and the counts `by_level`, `"1"` to `"5"`) and `n_with_note` |
 | `label_catalogue` | As in the annotations file |
@@ -607,8 +606,8 @@ the training path may be skipped, and what real study work waits for) and
 `replay` (who may watch replays of sessions).
 `electrotag admin` validates the file before saving it. `annotators`,
 `allow_unlisted_annotators`, `allocation.assignments` and `admin_passphrase`
-were read by the desktop application only: in the browser, accounts and their
-assignments take their place.
+are not used by the application: accounts and their assignments take their
+place.
 
 ## `electrotag/config/artifact_labels.json`
 
@@ -637,8 +636,8 @@ share has the same code; files made with compatible versions (for example
 ## Autosave files (`.electrotag/autosave/<annotator>-<key>.json`)
 
 Unfinished work, written by the core's `AnnotationSession` when its autosave is
-on (the desktop application used it; the browser keeps drafts instead, in the
-browser and with the study), every few seconds while a recording is open (only
+on (the application keeps drafts instead, in the browser and with the
+study), every few seconds while a recording is open (only
 when something changed, and at least once a minute while the timer runs):
 `schema` (`electrotag.autosave`), `saved_at`, `session_id`, `elapsed_s` (all
 time spent on the recording so far), `filters`, `previous_sessions`, the
@@ -674,10 +673,9 @@ was made from), `practice_pass`, `recordings_dir` for a self-contained set,
 artifacts* that the study team added or promoted from the library of conflicts: `snippet_id`, `recording_id`,
 `start_s`, `end_s`, `label`, `explanation`, `context_s`, `channels` and `source`;
 those made from the guided references are not stored), and
-`show_full_report_to_annotator` (false by default; it
-let the desktop application offer annotators the full report, while the browser
-application shows them their result and the criteria only, and the full report
-with the missed and extra artifacts is for the administrator; the older key
+`show_full_report_to_annotator` (false by default; annotators are shown their
+result and the criteria only, and the full report with the missed and extra
+artifacts is for the administrator; the older key
 `quiz.show_report_to_annotator` is still read). A reference file whose checksum
 no longer matches is refused.
 

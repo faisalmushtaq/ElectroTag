@@ -1,4 +1,4 @@
-# Using ElectroTag in the browser
+# Using ElectroTag
 
 This guide is for annotators. ElectroTag runs in your web browser: you open an EEG recording, mark
 the artifacts you see with their type, and press Save and Finish. The recording stays on your own

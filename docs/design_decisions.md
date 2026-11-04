@@ -3,10 +3,7 @@
 This document records how the specification was interpreted: what MNE-Python
 already provides, what had to be added, the ambiguities and data-integrity
 risks that were found, how each was handled, and the decisions that need the
-research team. ElectroTag began as a desktop application and has run in the
-browser since 28 October 2026 (see "Web-only" below); the sections written for
-the desktop application are kept as the record of how the rules came about,
-and the rules themselves apply unchanged in the browser.
+research team.
 
 ## What MNE-Python provides and what ElectroTag adds
 
@@ -20,16 +17,15 @@ copy itself, reproducing MNE's results ([web/architecture.md](web/architecture.m
 | Reading EDF, EDF+ and BDF | `mne.io.read_raw_edf`, `read_raw_bdf` (EDF+ annotations become `raw.annotations`) | A check of the header against the file size, because MNE silently infers the number of data records from the size when they disagree; refusing EDF+D; hidden headset channels; `BAD_ACQ_SKIP` stretches treated as gaps |
 | BIDS sidecars | (MNE-BIDS is not used, to keep dependencies minimal) | Entity parsing and the inheritance principle for `channels.tsv`, `events.tsv`, `events.json`, `eeg.json` |
 | Display filters | `Raw.filter`, `Raw.notch_filter`, `skip_by_annotation` | Applying them to a display copy only (in memory or memory-mapped), recording MNE's filter design, marking edge zones |
-| Continuous EEG viewer | mne-qt-browser, in the desktop application up to version 1.1.0: scrolling, zoom, scaling, channel paging, overview bar, time cursor, events | Annotation interaction (below), toolbar, panels, Save and Finish; since 28 October 2026 the browser application's own viewer |
+| Continuous EEG viewer | not used (see below) | The application's own viewer: scrolling, zoom, scaling, channel paging, overview bar, time cursor, events, annotation interaction (below), toolbar, panels, Save and Finish |
 | Annotation container | `mne.Annotations` with `ch_names` (channel-specific) and `extras` | Conversion both ways (`mne_bridge`), sample-exact model, undoable store |
 | Experimental events | `events_from_annotations` (BrainVision marker codes) | Preservation of `events.tsv` rows as text, a separate `artifact_code` column, consistency checks |
 | Export, completion, reliability, training | not provided | Everything in `io`, `session`, `validation`, `reliability`, `training` |
 
-## Limitations of the standard MNE browser (desktop application)
+## Limitations of the standard MNE browser
 
-The desktop application, up to version 1.1.0, showed recordings in
-mne-qt-browser. Reading mne-qt-browser 0.7.5 showed that its annotation mode
-cannot be used unchanged:
+Reading mne-qt-browser 0.7.5, MNE-Python's own viewer, showed that its
+annotation mode cannot be used unchanged:
 
 1. A free-text box lets users add any annotation label.
 2. Drawing or moving an annotation merges it with every overlapping
@@ -43,11 +39,10 @@ cannot be used unchanged:
 6. Escape closes the window; there is no Save and Finish, no undo and no close
    confirmation.
 
-The desktop application therefore left MNE's annotation mode off and added its
-own interaction through subclasses of the browser's classes. A plain drag
-always draws (also over existing annotations, so that overlaps are easy to
-make); edges resize; Shift+drag moves. Channel clicks select channels for
-annotation. The browser application's viewer keeps these rules: a fixed list
+ElectroTag's own viewer therefore sets its own rules. A plain drag always
+draws (also over existing annotations, so that overlaps are easy to make);
+edges resize; Shift+drag moves. Channel clicks select channels for
+annotation. The viewer also keeps a fixed list
 of labels, merging only as described below, overlaps allowed, annotations
 identified by their own identifier, undo and redo, and Save and Finish.
 
@@ -112,21 +107,17 @@ to try again. A recording
 is only marked complete after its five files are verified, and interrupted
 saves are rolled forward or back.
 
-**Failed recordings.** In the desktop application, "excluded until their
-problems have been resolved" was implemented by remembering the size and
-modification time of the recording's files and the settings involved: a
-failure stopped applying when the files or the setting changed, or when an
-administrator marked it resolved. In a browser study a recording that cannot
-be read is refused when it is registered, so it is never offered.
+**Failed recordings.** A recording that cannot be read is refused when it is
+registered, so it is never offered.
 
 **Incomplete sessions and drafts.** Unfinished work is saved automatically
-while a recording is open (the desktop application's autosave; in the browser,
-a draft kept in the browser and with the study) and offered back when the
+while a recording is open (a draft kept in the browser and with the study)
+and offered back when the
 recording is opened again, with the time already spent carried over. Drafts
 never count as results.
 
 **Time measurement.** The monotonic clock starts when the viewer is on screen
-and stops at Save and Finish; in the browser the page measures it and sends it
+and stops at Save and Finish; the page measures it and sends it
 with the annotations. If saving fails the clock continues. Time when the
 annotator is away from the computer is included.
 
@@ -177,10 +168,7 @@ administrator decision for each such dataset. At the research team's request
 artifact codes now have their own `artifact_code` column, and `value` keeps
 only the dataset's markers, so a clash cannot occur.
 
-**Blinding.** In the desktop application, reference annotations were files on
-disk that annotators who looked for them could find; they could be kept in a
-separate location (`training.reference_sets_dir`). In the browser the experts'
-annotations stay with the study and never reach an annotator's browser: the
+**Blinding.** The experts' annotations stay with the study and never reach an annotator's browser: the
 study's server or functions check guided steps, score practice and make the
 competency reports.
 
@@ -201,33 +189,7 @@ EDF, EDF+ and BDF support, the `channels.hide` setting for the headset's
 housekeeping channels, the handling of `BAD_ACQ_SKIP` padding and of a
 `sample` column that holds timestamps, all described above.
 
-## Visual design (27 October 2026)
-
-This section describes the desktop application's windows, whose colours and
-principles the browser application took until it was given its own design
-(the next section). The windows follow
-principles that well-designed desktop software shares; Apple's Human Interface
-Guidelines have long named clarity and deference among them. The EEG is the content, so the controls around it are quiet: light grey
-surfaces, white cards with thin outlines, grey secondary text and one accent
-colour, blue. Each window has one primary action in that blue (Begin, Open
-recording, Save and Finish, Submit answer, Run analysis); other buttons are
-plain, links and minor actions are blue text, and destructive actions are red.
-Text has four levels (title, heading, body and caption) in the system font.
-Options appear when they apply, such as the reference set and activity on the
-start window, which appear only for practice and assessment. The choice
-between the whole montage and selected channels is a two-part switch, so the
-current choice is visible at a glance. Every text colour meets the WCAG 2.1 AA
-contrast ratio of 4.5:1 against its background, and colour is never the only
-signal (selected channels are also named in the toolbar).
-
-The same Fusion style and light palette were used on Windows, macOS and Linux,
-so the application looked the same everywhere. The overview bar under the EEG is plain by default
-(the `display.overview_mode` setting, `empty`), so the annotations in it stand
-out; mne-qt-browser kept its own saved mode and ignored the setting until this
-change.
-
-
-## Visual design of the browser application (28 October 2026)
+## Visual design (28 October 2026)
 
 When the desktop application was retired, the project lead asked for a more
 distinctive look, and the design was worked out in two steps. A first brief
@@ -336,12 +298,10 @@ and the synthetic data), because the server and the functions save results
 with it and the commands `electrotag agreement`, `electrotag admin` and
 `electrotag activity` work on exported results. Nothing in the package
 imports a desktop toolkit any more, and the requirements no longer include Qt.
-The open decision on code signing of the stand-alone applications no longer
-applies.
 
 ## Touch screens and iPads (28 October 2026)
 
-The project lead asked for the browser application to work on iPads as well as on computers. On a
+The project lead asked for the application to work on iPads as well as on computers. On a
 touch screen, one finger (or the Apple Pencil) does what the mouse does, so that marking an
 artifact is the same movement everywhere and the Pencil can draw precisely; moving the view
 therefore needs two fingers, which also gives the pinch for showing more or less time, centred on

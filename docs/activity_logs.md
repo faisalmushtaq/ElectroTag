@@ -11,9 +11,8 @@ changes this.
 
 This document describes what is recorded, the file format, and the tables and
 report that `electrotag activity` and the admin area ([web/admin.md](web/admin.md))
-make from the logs. The logs are recorded by the browser application, which
-sends them to the study in batches; the desktop application (version 1.1.0 and
-earlier) wrote logs in the same format, and the analysis reads both.
+make from the logs. The application records the logs and sends them to the
+study in batches.
 
 ## Switching logging on and off
 
@@ -65,8 +64,7 @@ themselves are research data kept by annotator ID with the study's records
 ## Where the logs are
 
 One log is kept per visit, from signing in until signing out or closing the
-page (in the desktop application, from pressing **Begin** on the start window
-until going back to it or quitting). The ElectroTag server writes each
+page. The ElectroTag server writes each
 visit's log into the study's results as the events arrive; a study on Firebase
 keeps the events in Firestore, and `electrotag web export` writes the same
 files:
@@ -95,9 +93,7 @@ height and device pixel ratio), `settings_sha256` (a checksum of the study
 settings in force), `filters` (the default viewing filters), `logging` (the
 pointer rate and idle threshold), `client` (`"web"`) and `browser` (what the
 page reported about itself: the back end, user agent, screen and window size).
-`dataset_root` and `output_root` are empty for visits in the browser. Logs of
-the desktop application have the same header with the desktop's own
-`versions`, `os` and `screens`.
+`dataset_root` and `output_root` are empty.
 
 **Every other line** is an event with these fields, followed by the event's own:
 
@@ -113,43 +109,41 @@ the desktop application have the same header with the desktop's own
 ### Event kinds
 
 **The visit.** `visit_started` (mode, whether the annotator chose the
-recording, reference set, and `client`: `web` in the browser);
-`questionnaire_answered` (in the browser, since 30 October 2026: the sign-up
+recording, reference set, and `client`: `web`);
+`questionnaire_answered` (since 30 October 2026: the sign-up
 questionnaire was saved, at the first sign-in or when the answers were changed
 from the home page; `n_answered`, the number of questions answered, and nothing
 of the answers); `log_closed`
-(`reason`: `sign_out` or `page_closed` in the browser; `back_to_start`, `quit`,
-`exit`, `new_visit` or `quiz_not_started` in logs of the desktop application);
+(`reason`: `sign_out` or `page_closed`);
 `error` (an unexpected error, with its details); `log_problem` (something the
 logger itself could not record).
 
 **Recordings.** `recording_loading` (`recording_id`); `recording_opened`
-(`session_id`, which in logs of the desktop application is also in the
-recording's `_session.json`, `mode`,
+(`session_id`, `mode`,
 `duration_s`, `sfreq`, `n_samples`, `n_channels_shown`, `n_channels_hidden`,
 `format`, `filters` and `filter_settings`, `original_events`, `resumed`,
-`annotations_restored`, `window_px`, and in the browser `comfort`, the
+`annotations_restored`, `window_px`, `comfort`, the
 annotator's display choices, `overlay` and `value_readout` (whether the recording opened in the
 overlay and with the value under the pointer shown), and for work that is saved `elapsed_restored_s`, the
 time worked before when a draft was restored, `viewed_fraction`, and `revision`, the
 version a revision will save); `viewer_ready` (the viewer is on screen and
-the clock starts); `annotations_snapshot` (in the browser, since 30 October 2026: the annotations
+the clock starts); `annotations_snapshot` (since 30 October 2026: the annotations
 present when a recording opens, logged right after `recording_opened` when there are any, as after a
 restored draft, in a revision or in a correction; `part` and `n_parts`, at most 60 annotations an
 event, `n_total`, `reason` (`draft`, `revision`, `correction` or the view's kind) and `annotations`,
 each summarised as in the events below, so that a replay starts from them); `autosave` (`n_annotations`,
 when a draft is sent to the study); `recording_finished`
-(`session_id`, the same ID the save carries, and in the browser `attempt`, the version saved,
+(`session_id`, the same ID the save carries, `attempt`, the version saved,
 `n_annotations`, `counts_by_label`, `elapsed_s` as measured by the
-session clock, which in the browser leaves out the time paused, and in the browser also
+session clock, which leaves out the time paused,
 `viewed_fraction`, the proportion of the recording that was on the screen, from 0 to 1, leaving out
 stretches without data, `paused_s`, the seconds paused while the recording was open,
 `n_pauses`, and `version` for a revision); `closed_without_saving` (`n_annotations`,
-and in the browser `kept` and, for a revision, `revises`); `load_failed`
+`kept` and, for a revision, `revises`); `load_failed`
 (`recording_id`, `kind`, `reason`); `recording_unavailable` (`recording_id`,
 `reason`).
 
-**Drafts (browser).** `draft_discarded` (`recording_id`, `n_annotations`,
+**Drafts.** `draft_discarded` (`recording_id`, `n_annotations`,
 `elapsed_s`, and `revises` for a revision) records Start afresh (or Start again
 from the saved version) when a draft was offered for restoring; the work is set
 aside in the browser tab. `discarded_work_restored` (`n_annotations`,
@@ -159,17 +153,17 @@ believed it was connected) is logged once when drafts stop reaching the study,
 and `draft_sent_again` when one reaches it again; the draft is in the browser
 meanwhile.
 
-**Own files (browser).** `own_results_downloaded` (`recording_id`, `mode`,
+**Own files.** `own_results_downloaded` (`recording_id`, `mode`,
 `version`, `n_files`, and `as`: `zip` or `files`) records that the annotator
 downloaded their own saved files of a recording, from the Saved dialog or the
 History.
 
-**The artifact reference guide (browser).** `guide_opened` (`where`: `panel`,
+**The artifact reference guide.** `guide_opened` (`where`: `panel`,
 the annotation view's Guide tab, `tab`, a new tab, or `page`; and `label`, the
 type it opened at, or null); `guide_search` (`n_chars`, the length of what was
 typed, never the words, and `n_matches`); `guide_printed`.
 
-**Revisions (browser).** An annotator may open a recording they finished and
+**Revisions.** An annotator may open a recording they finished and
 submit it again as a new version (docs/web/using.md, "History and revisions").
 `revision_started` (`session_id`, `recording_id`, `version`, the version a
 submission will save, `revises`, the version opened, `revises_saved_at`,
@@ -183,7 +177,7 @@ version revised, and `elapsed_s`, the time spent revising) follows its
 answer never arrived: the first had most likely been saved. The time spent revising is measured
 by the session clock as for any recording.
 
-**Problem reports and feedback (browser).** An annotator may report a problem
+**Problem reports and feedback.** An annotator may report a problem
 with a recording (docs/web/using.md, "When a recording cannot be annotated"):
 `problem_reported` (`recording_id`, `mode`, `reason`, `outcome`, `noted` or
 `unusable`, `where`, `home` or `annotate`, `already`, true when the study had
@@ -199,7 +193,7 @@ the interaction log: the reviews given are in the study's review records
 ([file formats](file_formats.md)), and the activity tables count the reviews
 each annotator received and read.
 
-**Corrections and replays (browser).** An expert's correction of someone's saved work
+**Corrections and replays.** An expert's correction of someone's saved work
 (docs/web/admin.md, "Correcting saved work") is logged in the expert's own log, in place of
 `recording_opened`: `correction_started` (`annotator_id`, `recording_id`, `attempt`, the version
 corrected, `n_annotations`, `session_id`, `resumed` when work kept in the browser was continued),
@@ -222,7 +216,7 @@ session (docs/web/admin.md, "Replaying a session") is logged in the watcher's lo
 `next_event`, `prev_event`, `next_change`, `prev_change`, `scrub`, `scrub_key` or `end`, with `speed`,
 `t`, the replay's time, `on` or `via` as they apply, and for `end` whether the replay matched the
 saved version, `same` and `differing`) and `replay_closed` (`watched_s`, `ended`, `same`); the
-replayed annotations are only shown, never logged as the watcher's. The browser now also logs
+replayed annotations are only shown, never logged as the watcher's. The application also logs
 Bring it back, the work set aside in a tab returning, as `annotations_reset` (`added`, `removed`,
 `changed`).
 
@@ -235,7 +229,7 @@ recording") is logged in the viewer's log as `overlay_opened` (`recording_id`, `
 `lanes`, `s`); its ? key logs `key_sheet_shown` with `view` `overlay`. Nothing typed in its search is
 logged, and it logs no `recording_opened`, so it never counts as an annotation session.
 
-**Milestones and goals (browser).** When the game elements are on
+**Milestones and goals.** When the game elements are on
 (docs/web/admin.md, "Study settings"), `milestone_reached` (`milestone`, such
 as `recordings-10`, `streak-3`, `thorough-5` or `team-50`, its `kind`, `name`
 and `target`) records each milestone that a Save and Finish reached, once;
@@ -245,11 +239,10 @@ that reports the effect of game elements can find in these events when each
 annotator saw a milestone.
 
 **Mouse, touch and keys.** `mouse_press`, `mouse_release` and `double_click` (`button`,
-in the browser `pointer`, which is `mouse`, `touch` for a finger or `pen` for a
-stylus such as the Apple Pencil, `modifiers`, the `widget` (in the browser the kind of control, such as
-`button`, `input`, `select`, `canvas` or a menu item; in the desktop
-application the widget class), its `name` and `text` where it has them, the
-`top_window` (in the browser the page: `signin`, `home`, `annotate`, `training`
+`pointer`, which is `mouse`, `touch` for a finger or `pen` for a
+stylus such as the Apple Pencil, `modifiers`, the `widget` (the kind of control, such as
+`button`, `input`, `select`, `canvas` or a menu item), its `name` and `text` where it has them, the
+`top_window` (the page: `signin`, `home`, `annotate`, `training`
 and so on), the position `x` and `y` in that window, and for lists and tables
 the `row`, `column` and the `item`'s text). On the EEG they also have `area`
 (`eeg`, `channel_names` or `axes`), `eeg_t` (the time under the pointer, in
@@ -274,14 +267,14 @@ settled for a quarter of a second, whether by keys, wheel, overview bar, the
 buttons under the EEG on a touch screen, or two fingers on it: `t_start` and `duration` (the time shown, in
 seconds), `ch_start` and `n_channels` (the channels shown), `first_channel` and
 `last_channel`, `scale_factor` (the amplitude scale, 1 at the start) and
-`butterfly`, which in the browser is true while the overlay draws the channels on screen on one
+`butterfly`, which is true while the overlay draws the channels on screen on one
 shared axis. `status_message` (`text` shown in the status line).
-`window_activated` and `window_deactivated` (`top_window`, `title`; in the
-browser, when the page gains or loses the focus).
+`window_activated` and `window_deactivated` (`top_window`, `title`; when the
+page gains or loses the focus).
 `app_state` (`state`: `active`, `inactive`, `hidden` or `suspended`).
 `idle_start` (`last_input_t`, `after_s`) and `idle_end` (`idle_s`).
 
-**Pauses, breaks and what has been viewed (in the browser).** `pause` (`reason`:
+**Pauses, breaks and what has been viewed.** `pause` (`reason`:
 `button` or `key` when the annotator paused, `idle` after the study's minutes without input,
 `hidden` when the page was out of sight for more than ten seconds, `break` for Take a break; the
 `elapsed_s` worked so far; for `idle` also `idle_s`, the seconds since the last input, of which
@@ -298,7 +291,7 @@ and `via`). `coverage_check`, before Save and Finish (`viewed_fraction`, `n_unvi
 change of the annotator's display comfort is a `state` event with `comfort` (`trace`, `names`
 and `panel`).
 
-**Viewing tools (in the browser).** Switching the overlay on or off is a `state` event with
+**Viewing tools.** Switching the overlay on or off is a `state` event with
 `overlay` (true or false) and `via` (`key` for O, `button` for the toolbar or the touch button);
 showing one channel alone is a `state` event with `isolated_channel` (its name, or null when all the
 channels are shown again) and `via` (`key`, `button`, or `view` when moving the channels on screen
@@ -312,7 +305,7 @@ Show all (`on`: true when the whole recording came on the screen, with its `dura
 the view went back; and `via`); a view of the whole recording opened this way does not count as
 viewed.
 
-**The channel map (in the browser).** In the channel chooser, `channel_chooser_view` (`view`:
+**The channel map.** In the channel chooser, `channel_chooser_view` (`view`:
 `list` or `map`) records a switch between the list and the map, and `channel_map` each change made
 on the map: `action` (`toggle` for a click or tap on one electrode, with its `channel` and whether
 it is now `chosen`; `box` for a box dragged with the mouse or the Pencil, with `chosen` and the
@@ -392,8 +385,8 @@ screen also `eeg_double_tap` and `eeg_long_press`),
 
 **Quiz.** `quiz_item_shown` (`item_id`, `index`, `n_items`, `quiz_mode`),
 `quiz_answer` (`item_id`, `answer`, `correct`, `response_time_s`) and
-`quiz_finished` (`n_items`, `n_correct`, `proportion_correct`). In the browser
-each also carries `set_id`, and the quiz adds `quiz_opened` (`n_items`,
+`quiz_finished` (`n_items`, `n_correct`, `proportion_correct`). Each also
+carries `set_id`, and the quiz adds `quiz_opened` (`n_items`,
 `answered`, `quiz_mode`, `finished`), `quiz_recording_checked` (`recording_id`,
 `file_name`, `matched`: whether the file opened is the study's copy),
 `quiz_answer_refused` (`item_id`, `reason`, `kept_answer`: an answer the study
@@ -459,7 +452,7 @@ with how many were seen). In a guided recording, with the `recording` and
 `guidance` level), `guided_check` after every change (`matched`, `problems`
 such as `type`, `start`, `end`, `scope` or `channels`, the differences in
 seconds and the messages shown), `guided_show_me`, `guided_step_completed`
-(`attempts`, `failed_attempts`, `stars`, `seconds`, which in the browser leaves out the time
+(`attempts`, `failed_attempts`, `stars`, `seconds`, which leaves out the time
 paused during the step, `used_show_me`) and
 `guided_recording_completed` (steps, stars, attempts and time for the
 recording). After a practice recording: `practice_scored` (`event_f1`,
@@ -566,13 +559,13 @@ name `training_stage_skipped`) is counted in `stages_skipped` of the visit's
 
 | Column | Meaning |
 |---|---|
-| `visit_id` | Identifier of the visit (one log file: in the browser, from signing in until signing out or closing the page). |
+| `visit_id` | Identifier of the visit (one log file: from signing in until signing out or closing the page). |
 | `annotator_id` | The annotator's ID. |
 | `mode` | standard, practice, assessment (or a training mode). |
 | `context_id` | Reference set of a training visit (empty for standard annotation). |
 | `file` | The log file. |
 | `started_at` | Local date and time the visit started, with its UTC offset. |
-| `ended` | How the visit ended: sign_out or page_closed in the browser (back_to_start, quit, exit or new_visit in logs of the desktop application), or 'not closed' when the log stopped unexpectedly. |
+| `ended` | How the visit ended: sign_out or page_closed, or 'not closed' when the log stopped unexpectedly. |
 | `wall_s` | Seconds from the start of the visit to its last event. |
 | `active_s` | Active seconds in the visit (see 'Active time'). |
 | `recordings_opened` | Recordings opened for annotation. |
@@ -728,9 +721,7 @@ random effect) describes the typical curve and how much annotators differ.
 Order counts each annotator's rows across visits and modes; use
 `order_in_mode` to count, say, only standard annotation. To relate the logs to
 the annotations themselves, match the annotator, the recording and the mode
-with the recording's `_session.json`; in logs of the desktop application,
-`session_id` in `recording_opened` (in `events.tsv`) also matches `session_id`
-in the `_session.json`.
+with the recording's `_session.json`.
 
 The events table has one row per event (with `--events`); its `data` column
 holds the event's own fields as JSON, which `json.loads` in Python and

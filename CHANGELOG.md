@@ -5,6 +5,14 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The documentation no longer refers to the retired desktop application where it describes how
+ElectroTag works today, and no longer qualifies the application as the "browser" version. The guide
+to interaction logs describes only the events the application records, and the activity tables'
+descriptions of `visit_id` and `ended` (in `about_these_tables.txt` and the report) match. The
+administrator guide's section on settings and commands from the desktop application, and the
+design decisions' section on the desktop application's visual design, are gone; the history of the
+change remains in "Web-only" in the design decisions and in the handover notes.
+
 In the annotation view, a click on the empty space of the Annotations panel, around the list, now
 ends the selection, as Esc and a click on empty EEG already did. A type chosen on the top bar then
 applies to the next mark instead of changing the annotation that had been selected. A click on a

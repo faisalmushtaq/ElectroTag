@@ -121,7 +121,7 @@ There are no open pull requests or issues on GitHub.
 
 | Branch | What it holds | What to do with it |
 | --- | --- | --- |
-| `main` | The browser application, its admin area, the server, the Firebase functions and the Python core | Work on a branch from here. Pushes run *Tests* on Windows, macOS and Linux and *Browser version tests*, and publish the application at the site's root. |
+| `main` | The application, its admin area, the server, the Firebase functions and the Python core | Work on a branch from here. Pushes run *Tests* on Windows, macOS and Linux and *Browser version tests*, and publish the application at the site's root. |
 | `claude/electroclean-web` | The branch the browser version was built on; merged into `main` and identical to it | Keep it for previews or delete it: pushes to it publish the application under `preview/` without touching the site's root, a way to show work in progress before it reaches `main` (bring it up to date with `main` first). |
 | `claude/eager-bardeen-33qhkb` | The branch earlier AI sessions worked on; identical to `main` | Nothing; it can be deleted. |
 | `gh-pages` | The published web pages, written by `.github/workflows/pages.yml` | Never edit it by hand. GitHub Pages serves it (Settings, Pages: deploy from branch `gh-pages`, folder `/ (root)`). |
@@ -174,7 +174,7 @@ Firebase tests need Java 21 for Google's emulators; `npx` fetches the Firebase t
 | --- | --- | --- |
 | Python (core, agreement, training, activity, the server, the admin and quiz operations, registration, the Firebase store and the functions) | `python -m pytest` (about 790 tests) | *Tests*: Linux on every push; Windows, macOS and Linux for `main`, pull requests into `main` and runs started by hand |
 | Browser modules | `node --test web_tests/unit/*.test.mjs` (about 610 tests; the data tests write their recordings with `scripts/make_web_fixtures.py`, and a parity test checks that the browser's manifests match Python's) | *Browser version tests* |
-| The browser application in Chromium | `ELECTROTAG_PYTHON=python node web_tests/run_e2e.mjs` (about 155 tests in 48 files, against the demonstration and against the real `electrotag-web demo`; add `--browser webkit` for Safari's engine, `--only name` for one file) | *Browser version tests* |
+| The application in Chromium | `ELECTROTAG_PYTHON=python node web_tests/run_e2e.mjs` (about 155 tests in 48 files, against the demonstration and against the real `electrotag-web demo`; add `--browser webkit` for Safari's engine, `--only name` for one file) | *Browser version tests* |
 | Firebase on the emulators | `bash scripts/test_firebase_emulators.sh` (the functions and the Firestore store) and `bash scripts/test_web_firebase.sh` (the application signing in, annotating, training, exporting and running the admin area) | *Browser version tests* |
 
 The [testing guide](docs/testing_guide.md) lists the checks that need a person before a study
@@ -241,18 +241,16 @@ where the study keeps them, demographic answers, and their names and contact det
 exactly what is stored; check the arrangements with the university's research data and ethics
 processes before the first real study.
 
-**5. Loose ends in the browser version.** These are known, and none of them blocks a pilot. It is
+**5. Loose ends.** These are known, and none of them blocks a pilot. It is
 tested in Chromium (Chrome and Edge) and in WebKit (Safari's engine), with emulated iPads upright
 and on their side, so Firefox and a real iPad (with fingers and the Pencil) need a run-through. On the test machine, the first 10-second screen of a 128-channel
 recording with filters took about 0.3 s to appear and the following screen, prepared in advance,
 about 0.02 s; check this on the computers annotators will use. A reference set's
-`show_full_report_to_annotator` setting has no effect in the browser, where competency reports are
+`show_full_report_to_annotator` setting has no effect: competency reports are
 for administrators and trainees see their result; decide whether trainees should ever see the full
 report, and either offer it or retire the setting. `electrotag-admin` still offers a few options
-that only mattered to the desktop application (`set-passphrase` and `resolve-failure`); the
-administrator guide says so, and they can be removed. The README has no
-picture of the browser application yet. Three small differences from the desktop application's
-display are documented in [docs/web/architecture.md](docs/web/architecture.md). After the usability review of 29 October, the
+that only mattered to the desktop application (`set-passphrase` and `resolve-failure`); they are no longer documented and can be removed. The
+README has no picture of the application yet. After the usability review of 29 October, the
 annotation view's layout and the EEG drawing were reworked for small, zoomed and dense cases (see
 the CHANGELOG); two things were left. The marks on the overview bar are still told apart by colour
 alone (the nine types of the numbered buttons now stay apart under red-green colour blindness, the
@@ -484,7 +482,7 @@ second time after a failure, while calls that save, score, register or count an 
 (`js/api/firebase.js`). Test with the emulators, which behave more like Firebase than the local
 server does.
 
-**The browser application has no build step**: plain ES modules with relative paths, so that the
+**The application has no build step**: plain ES modules with relative paths, so that the
 same files work at the site's root and under `/preview/`, and plain `#name` routes (the admin area's
 sections are `#admin-…`). External scripts come only from fixed, versioned URLs.
 
@@ -522,11 +520,11 @@ guides. Any literature cited must be checked against the original source before 
 | Document | For |
 | --- | --- |
 | [README.md](README.md) | What ElectroTag is, trying it, running a study, the outputs |
-| [docs/web/using.md](docs/web/using.md) | Annotators and trainees using the browser application |
+| [docs/web/using.md](docs/web/using.md) | Annotators and trainees using the application |
 | [docs/web/admin.md](docs/web/admin.md) | Lead researchers using the admin area |
 | [docs/web/firebase.md](docs/web/firebase.md) | Setting up a real study on Firebase, step by step |
 | [docs/web/server.md](docs/web/server.md) | The demonstration and a study on ElectroTag's own server |
-| [docs/web/architecture.md](docs/web/architecture.md) | How the browser application, the server and Firebase fit together |
+| [docs/web/architecture.md](docs/web/architecture.md) | How the application, the server and Firebase fit together |
 | [docs/web/api.md](docs/web/api.md) | The contract between browser and server, and the Firebase functions |
 | [docs/administrator_guide.md](docs/administrator_guide.md) | Every study setting, reference sets, competency criteria, the training programme |
 | [docs/reliability_guide.md](docs/reliability_guide.md) | The agreement measures and how to read them |

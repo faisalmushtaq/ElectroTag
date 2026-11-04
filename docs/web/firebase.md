@@ -1,6 +1,6 @@
 # Running a study on Firebase
 
-This guide sets up a real study of ElectroTag in the browser, step by step, for a study
+This guide sets up a real study of ElectroTag, step by step, for a study
 administrator who is not a software developer. At the end, annotators open a link, sign in with an
 email address and a password, open the recordings they were given on their own computer and
 annotate them; the EEG never leaves their computer. Their results, training progress and
@@ -10,7 +10,7 @@ turns them into ElectroTag's usual folders for the agreement and activity analys
 The pieces are Firebase Authentication (accounts), Firestore (the study's records),
 ElectroTag's Cloud Functions (the private work: matching a file to the study, checking and saving
 annotations, the training coach and practice scores, so the experts' answers never reach a
-browser) and Firebase Hosting, which publishes the browser application from the same project at
+browser) and Firebase Hosting, which publishes the application from the same project at
 `https://<project-id>.web.app`. Each Firebase project therefore serves its own copy of the
 application, which finds its project by itself, so several research groups, or one group's
 separate projects, can each run ElectroTag without sharing a website or a settings file. You run
@@ -20,7 +20,7 @@ are.
 Allow an afternoon for the first set-up. Steps 1 to 8 are done once per Firebase project, and one
 project can hold several studies; steps 9 to 14 are done once per study. Once you have signed in
 with your own administrator account (step 11), the study is run from the **admin area** of the
-browser application (docs/web/admin.md): adding recordings, accounts, assignments, reference sets,
+application (docs/web/admin.md): adding recordings, accounts, assignments, reference sets,
 settings, the analyses and the results. The commands below remain an alternative for each of these,
 and "Coming back to a study later", after step 14, explains how to open a terminal for them again
 on a later day.
@@ -284,8 +284,7 @@ Signed in as in step 11, you use the admin area (docs/web/admin.md explains each
   sign-in);
 * **assign the work**: recordings to annotate, or a training programme;
 * **build reference sets** for training and assessment: from an expert's saved annotations, an
-  uploaded annotation file (an `_annotations.json`, including those the desktop application saved
-  up to version 1.1.0), a consensus of several experts or an adjudicator's final annotations, with
+  uploaded annotation file (an `_annotations.json`), a consensus of several experts or an adjudicator's final annotations, with
   their uses, the guided notes, the practice pass mark, the competency criteria and a short-segment
   quiz. *Add the example set* adds ElectroTag's simulated example set and gives you its
   recordings as a zip to pass on to trainees;
@@ -382,9 +381,7 @@ The export writes `Annotated_Events/` in ElectroTag's results layout: per annota
 recording the five result files (written by ElectroTag's own code when each recording was saved),
 the completion register, the training progress, the competency reports, the quiz results and
 `interaction_logs/`. The admin area's results zip holds the same files. Run it again whenever you
-like; it adds what is new and never replaces a file with different contents. Results saved by the
-desktop application (version 1.1.0 and earlier) have the same layout, so the analyses can read
-them together with the browser's.
+like; it adds what is new and never replaces a file with different contents.
 
 ## Coming back to a study later
 
@@ -540,7 +537,7 @@ another study of the same project with `?study=<id>`.
 of Firebase (docs/web/server.md). `scripts/test_firebase_emulators.sh` runs ElectroTag's tests of
 the Firebase side on Google's Firebase Emulator Suite, which needs Java but no Firebase project.
 `scripts/test_web_firebase.sh` goes further: on the same emulators it sets up a study with the
-commands above, then drives the browser application in Chromium (signing in with an email address,
+commands above, then drives the application in Chromium (signing in with an email address,
 opening a recording from disk, saving it, guided training, a practice recording and its review) and
 exports the results. Both scripts run in a Bash terminal: on macOS and Linux, and on Windows in the
 Windows Subsystem for Linux. To try the application by hand on the emulators, give `config.json` an

@@ -247,9 +247,9 @@ stay available from the menu and the searchable list (the / key).
 `annotation.min_duration_samples` (1 by default) is the shortest annotation
 that is accepted.
 
-### Long sessions in the browser
+### Long sessions
 
-Three settings of the browser version make long sessions easier for annotators.
+Three settings make long sessions easier for annotators.
 `annotation.break_reminder_minutes` (50 by default, from 0 to 240) is how many
 minutes of work since the last break pass before a gentle reminder offers a
 break; a pause of five minutes or more counts as a break. `annotation.idle_pause_minutes`
@@ -273,8 +273,7 @@ mark and add a short note; the setting is recorded in every saved result
 
 The time worked on a recording, saved in the session file (`timing.elapsed_seconds`),
 the `_time_viewed.txt` file and the completion register (`elapsed_s`), leaves out
-every pause in the browser: those the annotator chose, those
-after the minutes without input, and the time the page was out of sight for
+every pause: those the annotator chose, those after the minutes without input, and the time the page was out of sight for
 more than ten seconds. The interaction log records each pause and its length
 ([activity logs](activity_logs.md)).
 
@@ -404,8 +403,8 @@ There are three ways to establish a reference.
 
 1. **One designated expert.** The expert annotates the recording in standard
    mode, as an annotator of the study, and their saved annotations become the
-   reference. An `_annotations.json` file made elsewhere (for example with the
-   desktop application or in another study) can be used in the same way.
+   reference. An `_annotations.json` file made elsewhere (for example in another
+   study) can be used in the same way.
 2. **Consensus of several experts.** A sample is in the consensus for a
    category when at least the chosen number of experts (`min_agreement`, a
    strict majority by default) marked it. For each consensus interval the
@@ -827,20 +826,6 @@ without input counts as idle. The admin area shows the tables and report of
 time, clicks, keys and learning curves, and `electrotag activity` makes them
 from exported results; every event and column is described in
 [interaction logs](activity_logs.md).
-
-## Settings and commands from the desktop application
-
-A study file written for the desktop application (version 1.1.0 and earlier)
-can hold three things the browser does not use: the administrator passphrase
-(`admin_passphrase`, set with `electrotag admin set-passphrase`), which kept
-annotators out of the desktop's administrator tools, where accounts with the
-administrator role now do that; the list of annotators with
-`allow_unlisted_annotators`, where accounts now decide who annotates; and
-manual assignments in its `allocation` block, where the study's assignments now
-decide. `electrotag admin resolve-failure` marks a load failure in a results
-folder of the desktop application as resolved; in a browser study a recording
-that cannot be read is reported when it is registered. The settings blocks of
-such a file apply unchanged.
 
 ## Before a study starts
 

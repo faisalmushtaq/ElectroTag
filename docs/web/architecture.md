@@ -1,4 +1,4 @@
-# ElectroTag in the browser: architecture
+# ElectroTag: architecture
 
 ElectroTag keeps every EEG recording on the annotator's own computer.
 The annotator receives the recordings locally (for example on an encrypted
@@ -8,7 +8,7 @@ records and receives the results.
 
 ## Where it runs
 
-The browser application is a set of static files (no build step). **GitHub
+The application is a set of static files (no build step). **GitHub
 Pages** publishes it for everyone, the released version at the site's root
 and previews of work in progress under `preview/`, where it opens the
 demonstration; a study on Firebase publishes the same files with **Firebase
@@ -136,7 +136,7 @@ electrotag/web/                 the server (FastAPI), the service layer it share
                                   saved work, tasks.py for tasks, their windows and known answers),
                                   and the administrator's command, electrotag web
 electrotag/web/firebase/        the Cloud Functions (functions/main.py) and the administrator's access
-electrotag/web/static/          the browser application (plain ES modules, no build step)
+electrotag/web/static/          the application (plain ES modules, no build step)
     index.html, app.css           the page and the application's design system (tokens, components)
     icon.svg, icon-*.png          the mark as the tab and home-screen icons (PNGs made by
                                   scripts/make_web_icons.mjs)
@@ -282,7 +282,7 @@ is a part of its own (`js/expert/area.js`), with the sections listed in
 `js/expert/sections.js`, one line each; its routes are not the admin area's, so
 expert work is logged like annotation work.
 
-## The Recording interface (browser)
+## The Recording interface
 
 `js/eeg/recording.js` exports `openRecording(files: File[]) -> Promise<Recording>`
 (one file for EDF and BDF; the .vhdr, .vmrk and .eeg for BrainVision, picked
@@ -582,7 +582,7 @@ engine, which iPads use. `scripts/test_web_firebase.sh` does the same for a stud
 on Firebase, on the Firebase Emulator Suite. The workflow **Browser version
 tests** runs all of them on GitHub.
 
-## The Backend interface (browser)
+## The Backend interface
 
 `js/api/http.js` talks to the server (docs/web/api.md). `js/api/demo.js`
 implements the same methods entirely in the browser, for the demonstration
@@ -686,8 +686,7 @@ in `electrotag/training/quiz.py`, which uses Python's random generator), and
 answers with the study server's fields and errors (`electrotag/web/quiz.py`).
 
 The channel chooser (`chooseChannels` in `js/annotate/dialogs.js`, behind
-Channels… and Edit channels…) follows the channel dialog of the desktop
-application (version 1.1.0 and earlier). Its rules are exported and tested in
+Channels… and Edit channels…) has its rules exported and tested in
 Node (`web_tests/unit/ui_channels.test.mjs`): `findChannels` (names or their
 beginnings, also after a leading "EEG " in EDF names, the names containing a
 term that begins none, quotes and wildcards), `tenTwentyPosition` and
@@ -851,9 +850,7 @@ The browser records the events that docs/activity_logs.md describes
 `idle_start`, the training events ...) with `t` measured from the start of the
 visit, and sends them in batches. The server writes them as JSON Lines files in
 `interaction_logs/`, which `electrotag activity` and the admin area's
-activity analysis summarise. Logs written by the desktop application (version
-1.1.0 and earlier) have the same format, so the analysis reads them together
-with the browser's. Typed text and passwords are never recorded.
+activity analysis summarise. Typed text and passwords are never recorded.
 
 The study also keeps, for each visit, an index of the recordings it opened
 (`Store.visit_index`: from each `recording_opened` to the `recording_finished`

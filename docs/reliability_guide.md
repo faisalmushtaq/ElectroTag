@@ -34,7 +34,7 @@ empty category. The exit status is 0 when the analysis ran, 2 for a mistake in
 the command and 3 when it ran but no recording was annotated by two of the
 annotators being compared.
 
-The admin area of the browser application ([web/admin.md](web/admin.md)) runs
+The admin area ([web/admin.md](web/admin.md)) runs
 the same analysis on the study's saved results, for the annotators, recordings
 and settings chosen there, and offers the report and the tables to download.
 For a study on Firebase, `electrotag web export` writes the results into an
