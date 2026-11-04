@@ -119,8 +119,9 @@ it again to mark artifacts.</p>
 <ul>
 <li><b>Click</b> it to select it (or pick it in the Annotations list). While annotations
 are selected the toolbar reads <i>Change to</i>: a number key, a type button or the
-menu changes their type. <kbd>Esc</kbd>, a click on empty EEG or a new drag ends the
-selection, and the toolbar reads <i>Draw as</i> again.</li>
+menu changes their type. <kbd>Esc</kbd>, a click on empty EEG, a click on the empty space
+of the Annotations panel around the list or a new drag ends the selection, and the toolbar reads
+<i>Draw as</i> again.</li>
 <li><b>Double-click</b> it to choose its new type from the searchable list, or
 <b>right-click</b> it for its menu: the common types, Other type, Edit times…, Edit channels…,
 Confidence, Add a note…, Apply to whole montage (for a channel-specific annotation) and Delete.</li>

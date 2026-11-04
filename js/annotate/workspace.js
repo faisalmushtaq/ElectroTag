@@ -521,6 +521,14 @@ export class Workspace {
       ...this._confidenceButtons(btn));
     p.append(h('div.ann-body', {}, this.countLabel, this.tableWrap,
       this.readOnly ? h('div.btn-row', {}, this.btnGoto) : this.btnGrid, this.readOnly ? null : this.selectHint));
+    // A click on the panel's empty space around the list (not on an annotation's row or a control) ends the selection,
+    // so that the type chosen next on the top bar is for the next mark rather than a change to the selected one.
+    p.addEventListener('click', (e) => {
+      if (!this.selection.length || e.target.closest('tr[data-id], button, input, select, textarea, a, label, [role="button"]')) return;
+      logger.noteInput('list:annotations');
+      this.listAnchor = null;
+      this.select(null, { via: 'list:annotations' });
+    });
   }
 
   _recordingPanel() {
