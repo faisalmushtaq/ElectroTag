@@ -530,7 +530,8 @@ the channels (or Whole montage), the rating and note sign when there are any, an
 in seconds; hold the pointer over a row for the type's code and description. Click an annotation to
 select it, or pick it in the Annotations list. While annotations are
 selected the second row reads "Change to", and a number key, a type button or the menu changes their
-type. Esc, a click on empty EEG or a new drag ends the selection, and the row reads "Draw as" again.
+type. Esc, a click on empty EEG, a click on the empty space of the Annotations panel around the list,
+or a new drag ends the selection, and the row reads "Draw as" again.
 N and P select the next and previous annotation and bring it into view. With nothing selected, N
 starts from the first annotation that reaches into the screen; after the last annotation N comes
 round to the first, and P after the first to the last.

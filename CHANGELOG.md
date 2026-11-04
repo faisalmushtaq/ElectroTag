@@ -5,6 +5,11 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+In the annotation view, a click on the empty space of the Annotations panel, around the list, now
+ends the selection, as Esc and a click on empty EEG already did. A type chosen on the top bar then
+applies to the next mark instead of changing the annotation that had been selected. A click on a
+row or on one of the panel's buttons keeps the selection as before.
+
 The Firebase guide (docs/web/firebase.md) has a new section, "Coming back to a study later", for
 administrators who return to a study that is already running: which work the admin area does in the
 browser, how to open a terminal again in ElectroTag's folder with its environment, the service
