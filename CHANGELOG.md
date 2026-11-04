@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+An administrator who gives themselves recordings in the admin area, by handing out a dataset or a
+collection or by assigning recordings, now finds them under My recordings at once. My recordings
+used to show the list read at sign-in, which for an administrator was taken before anything was
+given, so the new recordings appeared only after the page was reloaded. Coming back from the admin
+area or the expert area now asks the study for the person's recordings again.
+
 The Firebase guide (docs/web/firebase.md) has a new section, "Coming back to a study later", for
 administrators who return to a study that is already running: which work the admin area does in the
 browser, how to open a terminal again in ElectroTag's folder with its environment, the service
