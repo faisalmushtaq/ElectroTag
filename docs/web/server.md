@@ -113,7 +113,8 @@ manifests/                       one file per registered recording
 drafts/                          unfinished work
 derivatives/electrotag_reference_sets/   training sets (their experts' annotations)
 Annotated_Events/                the results, in ElectroTag's results layout
-    interaction_logs/            one log per visit
+    interaction_logs/            one log per visit (and beside each saved recording's files, its own
+                                 part of them: _interaction_log.jsonl)
     training_progress/           stars, scores and times of each trainee
     training/<set>/quiz/         the short-segment quiz results
 ```

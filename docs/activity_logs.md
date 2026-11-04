@@ -76,6 +76,16 @@ files:
 for example `Annotated_Events/interaction_logs/annotator-A01/20261027T140311_standard.jsonl`.
 The analyses of annotations (agreement, competency) never read these files.
 
+Beside the result files of each saved version of a recording, the study also
+keeps that version's share of the logs, `<output basename>_interaction_log.jsonl`
+(for example `Annotated_Events/annotator-A01/sub-001/eeg/sub-001_task-rest_eeg_annotator-A01_interaction_log.jsonl`):
+the events of every time the annotator had the recording open since the version
+before it was saved, from the visits in which that happened, with a header that
+lists those times and how long each lasted. It is made from the visits' logs, so
+the visits' logs remain the complete record; [file formats](file_formats.md)
+describes it. `electrotag activity` reads the visits' logs only, so nothing is
+counted twice.
+
 ## File format
 
 Each log is a [JSON Lines](https://jsonlines.org/) file: one JSON object per

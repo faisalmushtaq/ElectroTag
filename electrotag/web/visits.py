@@ -9,6 +9,10 @@ Either way ``electrotag-activity`` reads them like desktop logs.
 
 Only what the browser sends is recorded, apart from ``visit_started`` and ``log_closed``. Fields
 that could hold a password or a sign-in token are dropped, whatever the browser sends.
+
+The part of these logs that belongs to each saved version of a recording is also kept beside that
+version's result files (electrotag/web/recording_logs.py); on the ElectroTag server it is brought up to
+date here, when a recording is finished or closed and when the visit's log closes.
 """
 
 from __future__ import annotations
@@ -35,6 +39,8 @@ VISIT_RE = re.compile(r"^[0-9a-f]{32}$")
 TYPE_RE = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 MAX_EVENTS = 2000
 MAX_EVENT_BYTES = 16 * 1024
+#: Events that end a recording's segment, after which its saved version's log is brought up to date.
+SEGMENT_ENDS = {"recording_finished", "closed_without_saving"}
 DROPPED = {"password", "token", "id_token", "authorization", "seq"}
 
 
@@ -139,7 +145,22 @@ class Visits:
                 continue
             clean.append(ev)
         n = self.store.visit_append(visit_id, clean)
+        if any(e["type"] in SEGMENT_ENDS for e in clean):
+            self._recording_logs(user, visit_id, ended_only=True)
         return {"received": n, "skipped": skipped}
+
+    def _recording_logs(self, user: User, visit_id: str, *, ended_only: bool = False) -> None:
+        """Bring up to date the logs of the saved versions of the recordings this visit opened (those whose
+        segment has ended, with ``ended_only``)."""
+        from electrotag.web.recording_logs import refresh_files_store, visit_keys
+
+        if getattr(self.store, "kind", "") != "files":
+            return
+        try:
+            rows = [r for r in self.store.visit_index(visit_id) if not ended_only or r.get("outcome")]
+        except Exception:  # noqa: BLE001 - the event batch is kept; the files are made again later
+            return
+        refresh_files_store(self.store, user.annotator_id, visit_keys(rows))
 
     def close(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         """``POST /visits/{visit_id}/close``: the closing line (closing twice does nothing)."""
@@ -155,4 +176,5 @@ class Visits:
         reason = str(body.get("reason") or "closed")[:200]
         self.store.visit_close(visit_id, {"t": round(t, 4), "wall": now_local_iso(), "type": "log_closed",
                                           "reason": reason})
+        self._recording_logs(user, visit_id)
         return {}

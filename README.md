@@ -183,8 +183,9 @@ the application in Chromium and on Firebase's emulators.
 
 ## What is saved
 
-For each recording and annotator ElectroTag writes five files whose names
-start with the recording's name and the annotator, for example
+For each recording and annotator ElectroTag writes five result files, and the
+recording's own interaction log, whose names start with the recording's name
+and the annotator, for example
 `sub-001_task-rest_eeg_annotator-A01`, into an `Annotated_Events` folder: in
 the study folder of an ElectroTag server as each recording is saved, and for
 a study on Firebase when `electrotag web export` writes the study's results
@@ -197,10 +198,12 @@ to your computer.
 | `…_annotations.json` | The canonical, lossless record of the annotations, used by the agreement and training tools. |
 | `…_time_viewed.txt` | One number: seconds spent annotating, measured on a monotonic clock while the recording was open. |
 | `…_session.json` | Session metadata: times, software versions, filter design, checks and warnings. |
+| `…_interaction_log.jsonl` | The interaction log of this recording alone: every time the annotator had it open until this version was saved, gathered from the visits' logs, which are also kept whole. |
 
 A recording is marked complete for that annotator, in
 `completion_register.tsv` and in the annotator's `completed_datasets.txt`, only
-after all five files have been written, read back and verified. Another
+after the five result files have been written, read back and verified; the
+interaction log is made from the visits' logs afterwards. Another
 annotator can still annotate the same recording. The formats are specified in
 [docs/file_formats.md](docs/file_formats.md); a real example is in
 [`examples/example_output`](examples/example_output/Annotated_Events/annotator-A01/sub-001/eeg).
