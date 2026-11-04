@@ -419,7 +419,8 @@ def cmd_export(a: argparse.Namespace) -> int:
         raise CommandError(str(exc)) from exc
     root = Path(a.to).resolve()
     print(f"Exported into {root}: {counts['recordings']} saved recording(s) ({counts['written']} new file(s)), "
-          f"{counts['visits']} interaction log(s), {counts['progress']} training progress file(s), "
+          f"{counts['visits']} interaction log(s) of visits and {counts.get('recording_logs', 0)} of saved "
+          f"recordings, {counts['progress']} training progress file(s), "
           f"{counts['reports']} competency report(s).")
     print(f"Analyse them with: electrotag-agreement {root / store.settings.output_directory_name}")
     return 0

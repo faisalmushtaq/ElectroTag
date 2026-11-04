@@ -49,6 +49,7 @@ Annotated_Events/
             sub-001_task-rest_eeg_annotator-A01_time_viewed.txt
             sub-001_task-rest_eeg_annotator-A01_session.json
             sub-001_task-rest_eeg_annotator-A01_channels.tsv   (only when channels were marked bad)
+            sub-001_task-rest_eeg_annotator-A01_interaction_log.jsonl   (this version's part of the interaction logs)
     training/<reference set>/practice/annotator-A01/...
     training/<reference set>/assessment/annotator-A01/...
     training/<reference set>/reports/annotator-A01_competency_report.{json,html}
@@ -293,6 +294,41 @@ a save without bad channels must have no `_channels.tsv`.
 
 A single number: seconds spent annotating, to the nearest millisecond, e.g.
 `512.348`.
+
+## `…_interaction_log.jsonl`
+
+The part of the interaction logs that belongs to this saved version of the
+recording, kept beside its result files so that the work on one recording can
+be studied without the whole visit around it. It holds every time the annotator
+had this recording open (in this mode and context) since the version before it
+was saved, up to and including the time it was saved: work kept as a draft in
+one visit and saved in a later one, and the times the recording was opened and
+closed without saving in between, all come together here. Each such time is a
+*segment*: one recording open in one browser window of a visit, from
+`recording_opened` to `recording_finished`, `closed_without_saving` or the end
+of the visit.
+
+The file is JSON Lines. The first line is a header: `type` (`"header"`),
+`schema` (`"electrotag.recording_log"`), `schema_version` (`"1.0.0"`),
+`annotator_id`, `recording_id`, `mode`, `context_id`, `attempt` (the version),
+`session_id` and `output_basename` (as in the completion register),
+`completed_at`, `elapsed_s` (the time worked, as in `_time_viewed.txt`),
+`open_s` (the seconds the recording was open in all, pauses included),
+`segments` (each with its `visit_id`, `window_no`, `session_id`, `started_at`,
+`ended_at`, `outcome`, `open_s` and `n_events`) and `visits` (for each visit,
+what its own log's header says of the browser, screen, settings and logging).
+Every other line is one of the segments' events exactly as it is in the visit's
+log, with the `visit_id` added, since `seq` and `t` count from the start of each
+visit; [interaction logs](activity_logs.md) describes the events.
+
+The file is made from the visits' logs and the completion register, so it is
+always the same for the same logs: the ElectroTag server writes it as soon as the
+version is saved and its segment has ended (and brings it up to date when the
+visit's log closes), and for a study on Firebase `electrotag web export` and the
+results zip write it. It is none of the result files checked by the save, and
+it is absent when the study keeps no interaction logs. The whole visit's log
+stays in `interaction_logs/`, with everything done outside the recording and any
+visit that ended in an error.
 
 ## `…_session.json`
 
@@ -570,7 +606,9 @@ recording IDs completed in standard mode by that annotator, one per line
 * `interaction_logs/annotator-<ID>/<YYYYMMDDTHHMMSS>_<mode>.jsonl`: one log per
   visit of everything the annotator did (JSON Lines: a header, then one event
   per line). The format, every event kind and the tables made from the logs
-  are described in [interaction logs](activity_logs.md).
+  are described in [interaction logs](activity_logs.md). Each saved version's
+  share of these logs is also kept beside its result files, as
+  `…_interaction_log.jsonl` (above).
 
 ## `electrotag_study.json` (a study's settings)
 

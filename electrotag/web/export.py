@@ -16,6 +16,8 @@
             datasets/datasets.json, .tsv, collections.json, groups.json, group_members.tsv, handouts.json, .tsv,
                      tracking.tsv, recording_ratings.tsv     datasets, collections, groups, hand-outs and tracking
             interaction_logs/annotator-<ID>/<time>_<mode>.jsonl
+            annotator-<ID>/.../<output basename>_interaction_log.jsonl   each saved version's own part of the
+                                             interaction logs, beside its result files (recording_logs.py)
 
 The result files are exactly those the desktop application's code wrote when each recording was
 saved (kept in Firestore since); the completion register is updated with ElectroTag's own
@@ -120,7 +122,8 @@ def export_study(store: Any, to: Path | str) -> dict[str, int]:
         if report.get("html"):
             atomic_write_text(base.with_suffix(".html"), report["html"])
         counts["reports"] += 1
-    for visit, header, events in sorted(store.visit_logs(), key=lambda v: v[0].get("opened_at", "")):
+    visit_logs = list(store.visit_logs())
+    for visit, header, events in sorted(visit_logs, key=lambda v: v[0].get("opened_at", "")):
         folder = layout.interaction_logs / f"annotator-{visit['annotator_id']}"
         stem = str(visit.get("stem") or visit["visit_id"])
         path = folder / f"{stem}.jsonl"
@@ -132,6 +135,12 @@ def export_study(store: Any, to: Path | str) -> dict[str, int]:
         folder.mkdir(parents=True, exist_ok=True)
         atomic_write_text(path, text)
         counts["visits"] += 1
+    from electrotag.web.recording_logs import recording_log_files, write_files
+
+    logs = recording_log_files(store, visits=[({**v, "started_at": v.get("opened_at", "")}, h, e)
+                                              for v, h, e in visit_logs])
+    write_files(layout.root, logs)  # made again from the visits' logs each time, so they grow as visits go on
+    counts["recording_logs"] = len(logs)
     for rel, data in sorted(store.result_files()):  # quiz results and other files kept as they were written
         _put(safe_path(layout.root, rel), data, counts)
         counts["other"] += 1
@@ -210,6 +219,9 @@ def results_zip_file(store: Any, *, include_contacts: bool = False) -> Path:
             export_study(store, work)
             root = Path(work) / store.settings.output_directory_name
         else:
+            from electrotag.web.recording_logs import refresh_files_store
+
+            refresh_files_store(store)  # each saved version's interaction log, as the visits' logs stand now
             root = store.layout.root
         from electrotag.web.tasks import task_files
         from electrotag.web.tracking import dataset_files
@@ -265,7 +277,8 @@ def results_readme(study_name: str, base: str, when: str) -> str:
     return (
         f"Results of the ElectroTag study {study_name}, downloaded {when}.\n\n"
         f"{base}/ holds the saved annotations of each annotator (an _annotations.json, _events.tsv, _events.json\n"
-        "and _session.json for each recording), the completion register, the interaction logs, the training\n"
+        "and _session.json for each recording, with _interaction_log.jsonl, the interaction log of that\n"
+        "recording alone), the completion register, the interaction logs of whole visits, the training\n"
         "progress and competency reports, the quiz results, the problem reports, the reviews, and the tasks\n"
         "that shared recordings out with their known-answer scores (tasks/).\n"
         f"{base}/datasets/ holds the source datasets, collections, groups (with who joined and left) and\n"

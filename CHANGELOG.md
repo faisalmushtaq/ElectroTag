@@ -5,6 +5,16 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Each saved recording now has its own interaction log beside its result files,
+`<output basename>_interaction_log.jsonl`. It holds the events of every time the annotator had the
+recording open until that version was saved, gathered from the logs of the visits in which that
+happened (a draft left in one visit and saved in a later one comes together in one file), with a
+header listing those times and how long each lasted. The ElectroTag server writes it as soon as the
+version is saved and the recording is finished; for a study on Firebase, `electrotag web export` and
+the admin area's results zip write it. The log of each whole visit is kept as before in
+`interaction_logs/`, and remains what `electrotag activity` reads (docs/file_formats.md,
+"`…_interaction_log.jsonl`").
+
 The documentation no longer refers to the retired desktop application where it describes how
 ElectroTag works today, and no longer qualifies the application as the "browser" version. The guide
 to interaction logs describes only the events the application records, and the activity tables'

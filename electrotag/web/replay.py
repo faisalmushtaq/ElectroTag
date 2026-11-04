@@ -141,19 +141,12 @@ def segments_of(service: StudyService, annotator_id: str, recording_id: str, mod
                         "last_seq": int(last) if last is not None else None,
                         "n_events": (int(last) if last is not None else int(v.get("n_events") or 0))
                         - int(row.get("first_seq") or 0) + 1})
-    entries = sorted((e for e in store.completion_entries(annotator_id) if e.get("recording_id") == recording_id
-                      and e.get("mode", "standard") == mode and e.get("status") == "completed"
-                      and (mode == "standard" or e.get("context", "") == context_id)), key=attempt_of)
-    by_session = {str(e.get("session_id") or ""): attempt_of(e) for e in entries if e.get("session_id")}
-    claimed: set[int] = set()
-    for s in out:
-        if s["outcome"] == "finished" and s["session_id"] in by_session:
-            s["attempt"] = by_session[s["session_id"]]
-            claimed.add(s["attempt"])
-    free = [attempt_of(e) for e in entries if attempt_of(e) not in claimed]
-    for s in out:  # logs from before the browser sent its session's ID with the save: in order
-        if s["outcome"] == "finished" and s["attempt"] is None and free:
-            s["attempt"] = free.pop(0)
+    from electrotag.web.recording_logs import assign_attempts
+
+    entries = [e for e in store.completion_entries(annotator_id) if e.get("recording_id") == recording_id
+               and e.get("mode", "standard") == mode and e.get("status") == "completed"
+               and (mode == "standard" or e.get("context", "") == context_id)]
+    assign_attempts(out, entries)
     return out
 
 

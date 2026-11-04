@@ -16,6 +16,8 @@ Layout below the output root (``Annotated_Events`` by default)::
                 sub-001_task-rest_eeg_annotator-A01_time_viewed.txt
                 sub-001_task-rest_eeg_annotator-A01_session.json
                 sub-001_task-rest_eeg_annotator-A01_channels.tsv   (only with channels marked bad)
+                sub-001_task-rest_eeg_annotator-A01_interaction_log.jsonl   (the interaction log of this
+                                                 version, made from the visits' logs: electrotag/web/recording_logs.py)
         training/<reference_set_id>/<practice|assessment>/annotator-A01/...
         .electrotag/                   locks and export staging (internal)
 
@@ -44,6 +46,10 @@ OUTPUT_SUFFIXES: dict[str, str] = {
 }
 #: The output files every save writes; the others are written when they have something to say.
 ALWAYS_WRITTEN = ("events_tsv", "events_json", "annotations_json", "time_viewed", "session_json")
+#: The interaction log of one saved version, beside its result files. It is not one of the saved files above:
+#: it is made from the visits' logs afterwards (electrotag/web/recording_logs.py), so it never counts as a
+#: result file, an attempt or part of the journalled save.
+RECORDING_LOG_SUFFIX = "_interaction_log.jsonl"
 
 INTERNAL_DIR = ".electrotag"
 

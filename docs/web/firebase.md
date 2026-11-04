@@ -380,7 +380,8 @@ electrotag activity $HOME\Pilot-results\Annotated_Events
 The export writes `Annotated_Events/` in ElectroTag's results layout: per annotator and
 recording the five result files (written by ElectroTag's own code when each recording was saved),
 the completion register, the training progress, the competency reports, the quiz results and
-`interaction_logs/`. The admin area's results zip holds the same files. Run it again whenever you
+`interaction_logs/`, with beside each saved recording its own part of the interaction logs
+(`_interaction_log.jsonl`, docs/file_formats.md). The admin area's results zip holds the same files. Run it again whenever you
 like; it adds what is new and never replaces a file with different contents.
 
 ## Coming back to a study later

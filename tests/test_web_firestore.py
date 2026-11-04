@@ -378,6 +378,43 @@ def test_export_writes_the_files_store_layout(service: StudyService, recordings:
     assert agreement([str(layout.root), "--out", str(tmp_path / "agreement"), "--no-html"]) == 0
 
 
+def test_export_writes_each_saved_versions_interaction_log(service: StudyService, recordings: Path,
+                                                         tmp_path: Path) -> None:
+    """A study on Firebase keeps its visits' logs; the export (and the results zip) makes each saved version's own
+    log beside its files from them (electrotag/web/recording_logs.py)."""
+    import zipfile
+
+    from electrotag.web.export import results_zip_file
+
+    ctx = {"recording": SUB1, "window_no": 1}
+    SID = "5" * 32  # noqa: N806 - the browser's session ID
+    v = ok(service, "visit_open", A01, {})["visit_id"]
+    ok(service, "visit_events", A01, {"visit_id": v, "events": [
+        {"t": 1.0, "type": "recording_opened", **ctx, "session_id": SID, "mode": "standard"},
+        {"t": 2.0, "type": "view", **ctx, "t_start": 0.0, "duration": 10},
+        {"t": 3.0, "type": "key", "key": "B"}]})
+    body = submission(recordings, SUB1, [BLINK])
+    body["session"]["session_id"] = SID
+    ok(service, "submit", A01, body)
+    ok(service, "visit_events", A01, {"visit_id": v, "events": [
+        {"t": 20.0, "type": "recording_finished", **ctx, "session_id": SID}]})
+    ok(service, "visit_close", A01, {"visit_id": v})
+    out = tmp_path / "export"
+    for _ in range(2):  # made again on a second export, with the same contents
+        assert cli(["export", "--firebase-project", PROJECT, "--study", service.store.study_id, "--to", str(out)]) == 0
+    rel = "annotator-A01/sub-001/eeg/sub-001_task-rest_eeg_annotator-A01_interaction_log.jsonl"
+    head, *events = [json.loads(line) for line in (out / "Annotated_Events" / rel).read_text().splitlines()]
+    assert (head["attempt"], head["session_id"], [s["visit_id"] for s in head["segments"]]) == (1, SID, [v])
+    assert [e["type"] for e in events] == ["recording_opened", "view", "recording_finished"]
+    path = results_zip_file(service.store)
+    try:
+        with zipfile.ZipFile(path) as zf:
+            names = zf.namelist()
+    finally:
+        path.unlink(missing_ok=True)
+    assert f"Annotated_Events/{rel}" in names
+
+
 def test_a_late_draft_of_a_closed_session_is_refused_and_the_record_leaves_with_the_account(
         service: StudyService, study: str) -> None:
     body = {"recording_id": SUB1, "draft": {"annotations": [], "elapsed_s": 9.0, "session_id": "s-closed"}}

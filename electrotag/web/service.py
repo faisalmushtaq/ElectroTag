@@ -886,6 +886,10 @@ class StudyService:
 
         saved = self.store.save_results(make_session, elapsed_s=elapsed, started_at=_stamp(info.get("started_at")))
         self.store.delete_draft(user.annotator_id, item.key)
+        from electrotag.web.recording_logs import recording_key, refresh_files_store
+
+        # this version's interaction log, beside its files (once the browser's log says the segment ended)
+        refresh_files_store(self.store, user.annotator_id, {recording_key(rid, item.mode, item.context_id)})
         out: dict[str, Any] = {"saved": True, "files": sorted(saved.files), "attempt": saved.attempt,
                                "feedback": None, "guided": None, "assessment": None,
                                "revision": ({"version": saved.attempt, "revises": revision["revises_version"]}
