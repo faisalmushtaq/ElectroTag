@@ -51,6 +51,9 @@ export class GuidedCoach {
     this.acting = false; // Continue or Show me is waiting for the study's answer
     this.pending = false;
     this.continueWanted = false; // Continue was pressed while a check was on its way
+    // Show me pressed while a check was on its way: it is sent once the check has answered, so that the study never
+    // handles the two at once (a check saved after Show me would lose the step's "shown", and score it as found alone).
+    this.showMeWanted = false;
     this.flashed = false;
     this.stepT0 = performance.now();
     this.stepPausedS = 0; // time paused during the step (the annotation view's Pause), not counted
@@ -204,11 +207,13 @@ export class GuidedCoach {
     } catch (exc) {
       this.busy = false;
       this.continueWanted = false;
+      if (this.showMeWanted) { this.showMeWanted = false; this.showMe(); return; }
       if (exc.status === 409) { await this.refresh(); return; }
       this._feedback(`The coach could not check your work: ${exc.message}`, 'banner');
       return;
     }
     this.busy = false;
+    if (this.showMeWanted) { this.showMeWanted = false; this.showMe(); return; } // it checks again with the answer in place
     if (this.pending && !this.acting) { this.pending = false; this.check(); return; }
     this.last = r;
     if (!initial) {
@@ -327,6 +332,11 @@ export class GuidedCoach {
 
   async showMe() {
     if (this.complete || !this.step || !this.ws.editable || this.acting) return;
+    if (this.busy) { // a check is on its way: Show me follows its answer
+      this.showMeWanted = true;
+      this.showMeBtn.disabled = true;
+      return;
+    }
     const step = this.step;
     let r;
     this._acting(true);

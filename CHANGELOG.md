@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+On a study on Firebase, a trainee who pressed Show me while the coach was still checking their last
+change could be given the stars of an artifact found alone (3 instead of 1): the functions handled the
+check and Show me side by side, and the check, saved last, took away the step's record that Show me was
+used. The coach now sends Show me only once the check has answered, and the study keeps a step's Show
+me when a check is saved after it.
+
 The longer guides (the README, the handover notes and every guide in `docs/` and `docs/web/` with five
 sections or more) now open with a list of contents linking to each section and its subsections, made
 from their headings by `scripts/docs_contents.py`; the test-suite checks that every list is up to date.
