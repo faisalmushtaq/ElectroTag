@@ -621,7 +621,7 @@ with `electrotag web init-study --settings` or changed in the admin area.
 {
   "study_id": "pilot-2026",
   "annotators": [{"annotator_id": "A01", "display_name": "First annotator"},
-                 {"annotator_id": "CAM", "display_name": "Cameron"}],
+                 {"annotator_id": "A02", "display_name": "Second annotator"}],
   "allow_unlisted_annotators": false,
   "allocation": {"strategy": "manual", "seed": 7,
                  "assignments": {"A01": ["sub-001/eeg/sub-001_task-rest_eeg.vhdr"]}},
