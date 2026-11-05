@@ -25,8 +25,8 @@ change remains in "Web-only" in the design decisions and in the handover notes.
 
 The documentation, the demonstration and the tests no longer use a person's name in their examples.
 The trainee in the administrator guide's commands, in the example study file and in
-`examples/demo_end_to_end.py` is annotator A04, and the example competency report in
-`examples/example_output` was made again for A04.
+`examples/demo_end_to_end.py` is annotator A04. The example outputs in `examples/example_output`
+were made again, so they also show the agreement tables added since they were last made.
 
 In the annotation view, a click on the empty space of the Annotations panel, around the list, now
 ends the selection, as Esc and a click on empty EEG already did. A type chosen on the top bar then
