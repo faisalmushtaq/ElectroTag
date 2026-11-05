@@ -5,7 +5,7 @@
 
 import { h, clear } from '../ui/dom.js';
 import { card, chip, loading, messageArea, recordingName, sectionHead } from '../admin/ui.js';
-import { madeText, plantedPanel, startPlantedTry } from '../admin/planted.js';
+import { madeText, plantedPanel, startPlantedMake, startPlantedTry } from '../admin/planted.js';
 
 export class PlantedSection {
   constructor(area) {
@@ -65,6 +65,7 @@ export class PlantedSection {
     const api = { read: (op, b) => this.area.read(op, b), write: (op, b) => this.area.write(op, b) };
     const panel = plantedPanel({ api, setId: s.set_id, recordingId: r.recording_id,
       onTry: (target) => startPlantedTry(this.area.app, target, { route: 'expert-planted', params: { recording: r.recording_id } }),
+      onMake: (target, start) => startPlantedMake(this.area.app, target, start, api, { route: 'expert-planted', params: { recording: r.recording_id } }),
       onChanged: () => this._list() });
     const c = card(null, h('div.card-head', {}, h('h3', {}, recordingName(r.recording_id)),
       h('button.btn.quiet', { type: 'button', onclick: () => clear(this.detail) }, 'Close')), panel);

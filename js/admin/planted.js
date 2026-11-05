@@ -1,8 +1,11 @@
 // Correct the marks, as the study team and the experts make it (docs/web/admin.md, "Correct the marks"):
 // for a guided recording of a reference set, a copy of the experts' marks with deliberate mistakes that
 // trainees put right. The study plants the mistakes from a seed (electrotag/training/planted.py), or
-// finds them in an expert's own deliberately flawed annotation file; the panel lists them, makes the
-// exercise again with another seed, removes it, and opens it to try (js/training/correct.js). It talks to
+// finds them in an expert's own version with mistakes: made here with Make my own version with mistakes
+// (the recording opens with the experts' marks or none, js/training/correct.js, mode "author") or given as
+// an annotation file. The study keeps that version with the reference set under a _flawed name, which no
+// analysis reads. The panel lists the mistakes, makes the exercise again with another seed, removes it,
+// and opens it to try (js/training/correct.js). It talks to
 // the expert channel, which administrators use too: planted_get, set_planted_make, set_planted_from and
 // set_planted_remove. Used by the expert area's Correct the marks and by Training's Manage.
 
@@ -43,9 +46,10 @@ export function madeText(p) {
 
 /**
  * The panel for one guided recording. `api` is {read(op, body), write(op, body)} on the expert channel;
- * `onTry(target)` opens the exercise to try.
+ * `onTry(target)` opens the exercise to try, and `onMake(target, start)` opens the recording for the expert
+ * to make their own version with mistakes (start: 'reference' or 'empty').
  */
-export function plantedPanel({ api, setId, recordingId, onTry, onChanged = null }) {
+export function plantedPanel({ api, setId, recordingId, onTry, onMake = null, onChanged = null }) {
   const host = h('div.admin-stack.planted-admin', { 'data-recording': recordingId });
   const msg = messageArea();
   const body = h('div.admin-stack', {}, loading());
@@ -105,9 +109,17 @@ export function plantedPanel({ api, setId, recordingId, onTry, onChanged = null 
         h('div.form-grid', {}, field('Seed', seed, { hint: 'Empty: the study chooses one.' }),
           ...KINDS.map((k) => field(KIND_TEXT[k], counts[k]))),
         h('div.btn-row', {}, make)),
+      onMake ? h('details.admin-details', { 'data-part': 'planted-own' }, h('summary', {}, 'Make my own version with mistakes'),
+        h('p.caption', {}, 'Open the recording from this computer and put in the mistakes you want trainees to find, starting from the experts\' '
+          + 'marks or from none. Save as the exercise keeps your version with the reference set as a version with deliberate mistakes '
+          + '(its file name ends in _flawed_annotations.json), which no analysis reads, and the study finds the mistakes by comparing it with the reference.'),
+        h('div.btn-row', {},
+          h('button.btn.primary', { type: 'button', 'data-log': 'planted-own-reference', onclick: () => onMake(got, 'reference') }, 'Start from the experts\' marks'),
+          h('button.btn', { type: 'button', 'data-log': 'planted-own-empty', onclick: () => onMake(got, 'empty') }, 'Start from no marks'))) : null,
       h('details.admin-details', {}, h('summary', {}, 'Use an annotation file with deliberate mistakes'),
-        h('p.caption', {}, 'An expert can make the exercise themselves: annotate the recording with the mistakes they want trainees to find, save the '
-          + '_annotations.json, and give it here. The study finds the mistakes by comparing it with the reference.'),
+        h('p.caption', {}, 'An annotation file (_annotations.json) made outside this study, with the mistakes you want trainees to find. The study finds the '
+          + 'mistakes by comparing it with the reference and keeps the file with the set as a version with deliberate mistakes. A file of work saved in this '
+          + 'study is refused, as it counts in the analyses: make your version with Make my own version with mistakes instead.'),
         h('div.row.wrap', {}, file, fromFile)),
       removeHost]);
   };
@@ -138,6 +150,27 @@ export function startPlantedTry(app, target, back = { route: 'expert-planted', p
       title: `Try the exercise: ${target.file_name}`,
       note: 'Open the recording from this computer: its fingerprint is checked against the study\'s copy. The exercise\'s copy of the experts\' marks '
         + 'then opens for you to correct as a trainee would; nothing you change is saved.' } });
+}
+
+/**
+ * Open the recording for the expert to make their own version with mistakes (purpose "planted", with
+ * `target.author`): the file from this computer, checked against the study's copy, then the annotation view
+ * with the experts' marks (start 'reference') or none ('empty'). Save as the exercise sends the marks to
+ * set_planted_from through `api` (Source "marks"), then goes back.
+ */
+export function startPlantedMake(app, target, start, api, back = { route: 'expert-planted', params: null }) {
+  const m = target.manifest || {};
+  const author = {
+    start,
+    save: (annotations) => api.write('set_planted_from', { set_id: target.set_id, recording_id: target.recording_id, source: { kind: 'marks', annotations } }),
+    done: () => app.showExpert(back.route, back.params),
+  };
+  return app.openFromComputer({ recording_id: target.recording_id, file_name: target.file_name, format: m.format },
+    { purpose: { kind: 'planted', route: 'expert-planted-make', target: { ...target, author }, back, onBack: () => app.showExpert(back.route, back.params),
+      title: `Make my own version with mistakes: ${target.file_name}`,
+      note: 'Open the recording from this computer: its fingerprint is checked against the study\'s copy. '
+        + (start === 'empty' ? 'It then opens with no marks' : 'It then opens with the experts\' marks')
+        + ' for you to put in the mistakes trainees will correct; Save as the exercise keeps your version.' } });
 }
 
 export { card };

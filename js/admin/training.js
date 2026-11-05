@@ -197,11 +197,13 @@ export class TrainingSection {
     // Correct the marks (js/admin/planted.js): an exercise made from a guided recording's reference
     const plantedHost = h('div.admin-stack');
     const plantedBtn = actionButton('Correct the marks…', { working: 'Loading…', msg, log: 'planted-manage', onClick: async () => {
-      const { plantedPanel, startPlantedTry } = await import('./planted.js');
+      const { plantedPanel, startPlantedMake, startPlantedTry } = await import('./planted.js');
       const b = this.area.app.backend;
+      const api = { read: (op, x) => b.expert(op, x), write: (op, x) => b.expert(op, x) };
       clear(plantedHost);
-      plantedHost.append(plantedPanel({ api: { read: (op, x) => b.expert(op, x), write: (op, x) => b.expert(op, x) }, setId: s.set_id, recordingId: r.recording_id,
+      plantedHost.append(plantedPanel({ api, setId: s.set_id, recordingId: r.recording_id,
         onTry: (target) => startPlantedTry(this.area.app, target, { route: 'expert-planted', params: { recording: r.recording_id } }),
+        onMake: (target, start) => startPlantedMake(this.area.app, target, start, api, { route: 'expert-planted', params: { recording: r.recording_id } }),
         onChanged: () => {} }));
     } });
     const removeHost = h('div.btn-row');
