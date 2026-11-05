@@ -1,7 +1,7 @@
 {
   "schema": "electrotag.session",
   "schema_version": "1.1.0",
-  "session_id": "20261029T194003Z-b2f33816",
+  "session_id": "20261105T141240Z-c5cba43e",
   "mode": "standard",
   "context": {},
   "annotator": {
@@ -62,51 +62,51 @@
       "vhdr": {
         "path": "sub-001/eeg/sub-001_task-rest_eeg.vhdr",
         "size": 1041,
-        "mtime_ns": 1793302801907280233,
+        "mtime_ns": 1793887960108151856,
         "sha256": "2ba95031595b2557e0c22c1431979db0d4c2a4da4bc3fd814792b727f738bfeb"
       },
       "eeg": {
         "path": "sub-001/eeg/sub-001_task-rest_eeg.eeg",
         "size": 1320000,
-        "mtime_ns": 1793302801906475611,
+        "mtime_ns": 1793887960107232262,
         "sha256": "16abcf633941c703b992579bc05fc3d8d08d2c71c567a22956ffe05c581f84eb"
       },
       "vmrk": {
         "path": "sub-001/eeg/sub-001_task-rest_eeg.vmrk",
         "size": 1392,
-        "mtime_ns": 1793302801907078641,
+        "mtime_ns": 1793887960108044316,
         "sha256": "22fa2ca5f58043a805e73b001f51443864117904f8d9a0fd882ab8078214e1f5"
       },
       "channels_tsv": {
         "path": "sub-001/eeg/sub-001_task-rest_channels.tsv",
         "size": 384,
-        "mtime_ns": 1793302801907809172,
+        "mtime_ns": 1793887960108365830,
         "sha256": "2606e8830e14c65eed97ea25c80f9f56708eb24e26134f516b754234c6927d82"
       },
       "events_tsv": {
         "path": "sub-001/eeg/sub-001_task-rest_events.tsv",
         "size": 928,
-        "mtime_ns": 1793302801907627087,
+        "mtime_ns": 1793887960108276536,
         "sha256": "23fbd318246db707134f26fd35f535df2bd25580d7cf8c17e33066b3b744c0a8"
       },
       "events_json": {
         "path": "sub-001/eeg/sub-001_task-rest_events.json",
         "size": 289,
-        "mtime_ns": 1793302801907736371,
+        "mtime_ns": 1793887960108334597,
         "sha256": "203b47891160359d51301343101c20872de346b32b5a97b29a70139958c62f00"
       },
       "eeg_json": {
         "path": "sub-001/eeg/sub-001_task-rest_eeg.json",
         "size": 255,
-        "mtime_ns": 1793302801907968391,
+        "mtime_ns": 1793887960108400511,
         "sha256": "b4261e68d3afe2c97349082cc1460d8fb6e73c9427090698dd1e1ec35b914cac"
       }
     }
   },
   "timing": {
-    "session_opened": "2026-10-29T19:40:03.021+00:00",
-    "start_timestamp": "2026-10-29T19:40:03.021+00:00",
-    "finish_timestamp": "2026-10-29T19:40:03.022+00:00",
+    "session_opened": "2026-11-05T14:12:40.626+00:00",
+    "start_timestamp": "2026-11-05T14:12:40.626+00:00",
+    "finish_timestamp": "2026-11-05T14:12:40.626+00:00",
     "elapsed_seconds": 0.0,
     "clock": "time.monotonic (started when the viewer became usable, stopped at Save and Finish)",
     "elapsed_in_earlier_sessions_seconds": 0.0,
@@ -115,9 +115,9 @@
   "application": {
     "name": "ElectroTag",
     "version": "1.1.0",
-    "platform": "Linux-6.18.44-fc-v185-x86_64-with-glibc2.39",
+    "platform": "Linux-7.0.0-1017-azure-x86_64-with-glibc2.39",
     "libraries": {
-      "python": "3.13.17",
+      "python": "3.13.18",
       "electrotag": "1.1.0",
       "mne": "1.13.2",
       "numpy": "2.5.4",
@@ -293,6 +293,12 @@
       }
     },
     "n_with_note": 0
+  },
+  "bad_channels": {
+    "marked_by_annotator": [],
+    "n_marked_by_annotator": 0,
+    "in_study_channels_tsv": [],
+    "note": "marked_by_annotator: the annotator's judgement for the whole recording (also in the annotations file and, when not empty, in the _channels.tsv beside it); in_study_channels_tsv: the dataset's own bad channels, input that the annotator saw greyed out."
   },
   "label_catalogue": {
     "catalogue_id": "electrotag-hed-score-artifacts",

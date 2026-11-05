@@ -298,7 +298,7 @@ those recordings to each annotator in the admin area or with
 `electrotag web assign`.
 
 ```bash
-electrotag admin allocate /data/MyStudy --annotators A01 A02 A03 CAM \
+electrotag admin allocate /data/MyStudy --annotators A01 A02 A03 A04 \
     --raters-per-recording 2 --seed 7
 ```
 
@@ -382,8 +382,8 @@ Save and Finish.
 A reference set is a group of recordings with expert reference annotations,
 each marked for **guided** learning (learning with the experts, the third stage of the training path, below),
 **practice** or **assessment**. The references must be prepared independently
-of the people being assessed, so that, for example, Cameron can be trained and
-assessed without having produced any of the reference material himself. The
+of the people being assessed, so that an annotator can be trained and
+assessed without having produced any of the reference material themselves. The
 method used is stored as provenance with each reference. Each reference is
 given its use by an explicit choice, without a default, because a reference
 imported for practice by mistake would give annotators feedback on an
@@ -450,7 +450,7 @@ reference sets are kept in `derivatives/electrotag_reference_sets` unless
 
 A reference set can be restricted to particular annotators (none means
 anyone): in the admin area, or with `electrotag admin assign /data/MyStudy
-pilot CAM A03`. `practice_review` (on by default) offers a side-by-side review
+pilot A03 A04`. `practice_review` (on by default) offers a side-by-side review
 against the reference after each practice recording.
 
 ### Competency criteria
@@ -641,8 +641,8 @@ every input file. It is in the admin area, in the exported results
 (`training/<set>/reports/`), and can be made again from a results folder:
 
 ```bash
-electrotag admin progress /data/MyStudy pilot --annotators CAM A03
-electrotag admin report /data/MyStudy pilot CAM
+electrotag admin progress /data/MyStudy pilot --annotators A03 A04
+electrotag admin report /data/MyStudy pilot A04
 ```
 
 Each competency report carries a `results_sha256` digest of its contents.

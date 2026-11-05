@@ -68,14 +68,14 @@ def test_reference_set_report_setting_defaults_off_and_reads_the_old_key(ref_set
 def test_report_gives_each_assessment_references_provenance_and_stays_reproducible(ref_set):
     root, truths, rs = ref_set
     layout = OutputLayout(root / "Annotated_Events")
-    write_annotations_json(layout.annotator_dir("CAM", "assessment", "pilot") / "x_annotations.json",
-                           AnnotationDocument(truths[SUB2].recording, "CAM", list(truths[SUB2].annotations), CAT,
+    write_annotations_json(layout.annotator_dir("A04", "assessment", "pilot") / "x_annotations.json",
+                           AnnotationDocument(truths[SUB2].recording, "A04", list(truths[SUB2].annotations), CAT,
                                               session_id="s", mode="assessment"))
-    rep = competency_report(layout, rs, "CAM")
+    rep = competency_report(layout, rs, "A04")
     prov = rep["reference_provenance"][SUB2]
     assert prov["method"] == "consensus" and prov["experts"] == ["E1", "E2", "E3"] and prov["min_agreement"] == 2
     assert "declared" in rep["reference_set"]["provenance_note"]
-    again = competency_report(layout, rs, "CAM")
+    again = competency_report(layout, rs, "A04")
     assert again["results_sha256"] == rep["results_sha256"]
     assert verify_competency_report(rep["paths"]["json"])
     import html as html_module

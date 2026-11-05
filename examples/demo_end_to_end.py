@@ -12,7 +12,7 @@
    registered exactly as in real use.
 3. Runs the inter-rater agreement analysis and writes its report.
 4. Builds a training reference set from the ground truth, sets competency
-   criteria, lets annotator CAM complete the assessment and produces the
+   criteria, lets annotator A04 complete the assessment and produces the
    competency report.
 
 With ``--save-examples`` a selection of the outputs is copied to
@@ -110,7 +110,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"   {r.reference}-{r.compared}: event F1 {r.f1:.3f} (IoU >= 0.2)")
     print(f"   report: {paths['report']}")
 
-    print("4. Training and competency assessment for annotator CAM")
+    print("4. Training and competency assessment for annotator A04")
     rs = ReferenceSet.create(reference_sets_dir(root, study), "demo-set", name="Demonstration reference set",
                              method="single_expert", experts=["TRUTH"], notes="Synthetic ground truth used as the reference")
     ids = sorted(truths)
@@ -122,11 +122,11 @@ def main(argv: list[str] | None = None) -> int:
                                   {"metric": "label_accuracy", "threshold": 0.85}],
                      "min_reference_events": 3})
     for k, rid in enumerate(rs.assessment_recordings):
-        sim = simulate_rater(truths[rid], "CAM", seed=900 + k, boundary_jitter_s=0.06, miss_probability=0.08,
+        sim = simulate_rater(truths[rid], "A04", seed=900 + k, boundary_jitter_s=0.06, miss_probability=0.08,
                              false_alarms=1, confusion=confusion, confusion_probability=0.1)
-        annotate(root, layout, settings, catalogue, rid, "CAM", sim.annotations, mode="assessment",
-                 context={"reference_set_id": rs.set_id}, display_name="Cameron")
-    rep = competency_report(layout, rs, "CAM")
+        annotate(root, layout, settings, catalogue, rid, "A04", sim.annotations, mode="assessment",
+                 context={"reference_set_id": rs.set_id}, display_name="Demo A04")
+    rep = competency_report(layout, rs, "A04")
     print(f"   {rep['status_text']}")
     for ch in rep.get("checks", []):
         print(f"   - {ch['criterion']} [{ch['where']}]: {ch['value']:.3f} -> {'pass' if ch['passed'] else 'FAIL'}")
