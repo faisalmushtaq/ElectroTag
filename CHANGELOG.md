@@ -5,6 +5,14 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+An administrator who annotates is now asked the sign-up questionnaire, whether or not their account
+has the Annotator role. As soon as they have recordings of their own (an assignment, a hand-out, a
+task's share or a training programme), the questionnaire opens when they next sign in or go to My
+recordings from the admin area, their recordings and training wait for the answers as an annotator's
+do, and the Questionnaire section lists them among the people who have not answered. The admin area and
+the expert operations stay open to them meanwhile. An administrator who only administers is still never
+asked (docs/web/admin.md, "Questionnaire").
+
 Each saved recording now has its own interaction log beside its result files,
 `<output basename>_interaction_log.jsonl`. It holds the events of every time the annotator had the
 recording open until that version was saved, gathered from the logs of the visits in which that

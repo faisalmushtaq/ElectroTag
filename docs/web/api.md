@@ -549,8 +549,12 @@ any work. Until they have answered, the study refuses `match`, drafts
 (`PUT /drafts`), `submit`, the training programme (`GET /training`, the guided
 calls, `POST /training/stage`, `GET /training/snippets`), the quiz and every
 operation of the expert area with 403 `questionnaire_required` and a sentence
-that says so. Someone whose only role is `admin` is never asked, and nobody is
-when the study's setting `questionnaire.enabled` is false. `GET /me` says
+that says so. Someone whose only role is `admin` is asked only once they annotate:
+when they have an assignment (from a hand-out or a task too), a training
+programme or saved work. Their own recordings, training and quiz then wait for
+the answers in the same way, while the expert operations stay open to them as
+to any administrator. Nobody is asked when the study's setting
+`questionnaire.enabled` is false. `GET /me` says
 where the person stands in `questionnaire`: `asked`, `answered`, when
 (`answered_at`) and to which version of the questions (`version`), the
 version asked now (`current_version`) and how many of the questions marked

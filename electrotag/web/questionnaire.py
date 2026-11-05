@@ -4,8 +4,11 @@ Annotators and experts answer a short questionnaire about their experience of EE
 stage and field and (where the study's ethics approval covers it) a few demographic questions,
 together with their full name and contact details, once, at their first sign-in. Until they have
 answered, the study refuses their recordings, training and expert work with 403
-``questionnaire_required`` (:data:`GATED_OPERATIONS`, checked in ``StudyService.call``); an
-administrator who does not annotate is never asked. People can change their answers later from
+``questionnaire_required`` (:data:`GATED_OPERATIONS`, checked in ``StudyService.call``). An
+administrator who does not annotate is never asked; one who annotates, without the annotator role (an
+administrator given recordings or a training programme, or who has saved work), is asked as annotators are,
+and their own recordings and training wait for the answers while the expert operations they use as
+administrators do not (:meth:`QuestionnaireService.annotates`). People can change their answers later from
 their home page: every change is kept with its date, as a history, so that the analyses can use the
 answers current at the time of each piece of work (:func:`answers_at`).
 
@@ -202,8 +205,23 @@ class Questionnaire:
 
     # ------------------------------------------------------------ who is asked
     def asked(self, user: User) -> bool:
-        """Annotators and experts are asked (participants too); an administrator who does not annotate is not."""
-        return bool(self.settings.enabled) and any(user.has_role(r) for r in ("annotator", "expert", "participant"))
+        """Annotators and experts are asked (participants too), and an administrator who annotates; an administrator
+        who does not annotate is not."""
+        if not self.settings.enabled:
+            return False
+        return self._works(user) or (user.is_admin and self.annotates(user))
+
+    @staticmethod
+    def _works(user: User) -> bool:
+        return any(user.has_role(r) for r in ("annotator", "expert", "participant"))
+
+    def annotates(self, user: User) -> bool:
+        """True when the person has recordings of their own to annotate: an assignment (a hand-out or a task's
+        share too), a training programme, or saved work. An administrator without the annotator role who annotates
+        is asked the questionnaire for that work."""
+        aid = user.annotator_id
+        return bool(self.store.assignments(aid) or self.store.programme(aid)
+                    or any(e.get("status") == "completed" for e in self.store.completion_entries(aid)))
 
     def record(self, aid: str) -> dict[str, Any] | None:
         rows = self.store.records(ANSWERS_KIND, aid)
@@ -223,9 +241,13 @@ class Questionnaire:
             return True
         return False
 
-    def require_answered(self, user: User) -> None:
-        """403 ``questionnaire_required`` while someone who is asked has not answered yet."""
-        if self.asked(user) and not self.answered(user):
+    def require_answered(self, user: User, operation: str = "") -> None:
+        """403 ``questionnaire_required`` while someone who is asked has not answered yet. An administrator who
+        annotates without the annotator or expert role waits only for their own recordings and training: the expert
+        channel stays open to them, as to every administrator."""
+        if operation == "expert" and user.is_admin and not self._works(user):
+            return
+        if not self.answered(user) and self.asked(user):
             raise ApiError(403, "questionnaire_required", REQUIRED_TEXT)
 
     def status(self, user: User) -> dict[str, Any]:

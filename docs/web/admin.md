@@ -18,7 +18,8 @@ Accounts with the role of administrator see the admin area. Sign in as usual: an
 straight to the admin area, and the header offers My recordings to annotate (an administrator can
 annotate too) and Admin to come back. My recordings asks the study for your recordings each time you
 come back from the admin area or the expert area, so recordings you have just given yourself, by a
-hand-out or an assignment, are listed straight away. A person can hold several roles: annotator, expert and
+hand-out or an assignment, are listed straight away. The first time you have recordings of your own,
+the sign-up questionnaire opens before them (see "Questionnaire" below). A person can hold several roles: annotator, expert and
 administrator. Experts open the expert area from the Expert work card on their home page or the
 Expert work button in the header (see "The expert area" below); an administrator may use it too. The study's administrator accounts are made when the study is
 set up (docs/web/firebase.md and docs/web/server.md), and from then on you can make more in the
@@ -266,7 +267,12 @@ an account is removed, its rows in every group's history are closed as removed w
 
 Annotators and experts answer the sign-up questionnaire at their first sign-in, before any recording,
 training or expert work opens, and can change their answers later from their home page; an
-administrator who does not annotate is never asked. The Questionnaire section, under People, shows
+administrator who does not annotate is never asked. An administrator who annotates is asked as soon as
+they have recordings of their own (an assignment, a hand-out, a task's share or a training programme),
+whether or not their account has the Annotator role: the questionnaire opens when they next sign in, or
+when they go to My recordings from the admin area, and their recordings and training open once it is
+answered. The admin area and the expert operations stay open to them meanwhile. Their answers can be
+changed later from My recordings, under the recordings list, as everyone's can. The Questionnaire section, under People, shows
 what they said. Answers lists each person's current answers by annotator ID, with when they answered,
 the first questions of the questionnaire and how many times they changed their answers; Open goes to
 their page in Annotators, which has every answer, the earlier versions and their contact details. The

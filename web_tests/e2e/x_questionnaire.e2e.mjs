@@ -206,4 +206,41 @@ export const tests = [
       for (const w of TYPED) assert.ok(!said.includes(w), `the audit log holds ${w}`);
     },
   },
+  {
+    name: 'study server: an administrator without the Annotator role is asked once they have recordings of their own',
+    needs: 'study',
+    async run(t) {
+      const { assert } = t;
+      const page = await t.newPage({ url: t.study.base });
+      await signIn(page, 'ADMIN', 'electrotag');
+      await waitForRoute(page, 'admin');
+      await page.evaluate(() => globalThis.ElectroTag.backend.admin('user_add', { annotator_id: 'L01', display_name: 'Lead', password: 'long enough', roles: ['admin'], email: 'l01@example.org' }));
+      await page.evaluate(() => globalThis.ElectroTag.signOut());
+      await waitForRoute(page, 'signin');
+      // only administering: straight to the admin area, not asked
+      await signIn(page, 'L01', 'long enough', { questionnaire: 'stay' });
+      await waitForRoute(page, 'admin', 30000);
+      assert.equal(await page.evaluate(() => globalThis.ElectroTag.me.questionnaire.asked), false);
+      // recordings of their own, then My recordings: the questionnaire comes first
+      await page.evaluate(() => globalThis.ElectroTag.backend.admin('assign', { annotator_ids: ['L01'], all: true }));
+      await page.evaluate(() => globalThis.ElectroTag.showHome());
+      await waitForRoute(page, 'questionnaire', 30000);
+      assert.equal(await page.textContent('.q-page h1'), 'A few questions before you start');
+      const refused = await page.evaluate(() => globalThis.ElectroTag.backend.match({ sha256: '0'.repeat(64), size_bytes: 1 }).then(() => null, (e) => e.code));
+      assert.equal(refused, 'questionnaire_required');
+      const admin = await page.evaluate(() => globalThis.ElectroTag.backend.admin('users_list', {}).then((r) => r.users.length, (e) => e.code));
+      assert.ok(admin > 0, 'the admin area stays open');
+      await fillIn(page);
+      await page.click('[data-log="questionnaire-save"]');
+      await waitForRoute(page, 'home', 30000);
+      assert.match(await page.textContent('.q-home'), /You answered the sign-up questionnaire/);
+      const ok = await page.evaluate(() => globalThis.ElectroTag.backend.match({ sha256: '0'.repeat(64), size_bytes: 1 }).then((r) => r.status, (e) => e.code));
+      assert.equal(ok, 'unknown', 'their recordings open once it is answered');
+      // signing in again: no questions, straight to the admin area
+      await page.evaluate(() => globalThis.ElectroTag.signOut());
+      await waitForRoute(page, 'signin');
+      await signIn(page, 'L01', 'long enough', { questionnaire: 'stay' });
+      await waitForRoute(page, 'admin', 30000);
+    },
+  },
 ];

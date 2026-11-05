@@ -125,6 +125,30 @@ def test_administrators_who_do_not_annotate_are_not_asked(client: TestClient) ->
     assert (r.status_code, r.json()["error"]) == (409, "questionnaire_off")
 
 
+def test_an_administrator_who_annotates_without_the_annotator_role_is_asked(client: TestClient,
+                                                                            recordings: Path) -> None:
+    admin = Api(client, "ADMIN")
+    admin.admin_ok("user_add", {"annotator_id": "D02", "display_name": "Lead who annotates", "password": "long enough",
+                                "roles": ["admin"]})
+    lead = Api(client, "D02", "long enough")
+    assert lead.ok("get", "/me")["questionnaire"]["asked"] is False  # only administering, so not asked
+    assert "D02" not in admin.admin_ok("questionnaire_summary", {})["not_answered"]
+    # given recordings of their own: asked, and their own work waits for the answers
+    admin.admin_ok("assign", {"annotator_ids": ["D02"], "recording_ids": [SUB1]})
+    me = lead.ok("get", "/me")["questionnaire"]
+    assert me["asked"] is True and me["answered"] is False
+    r = lead.post("/match", match_body(recordings, SUB1))
+    assert r.status_code == 403 and r.json()["error"] == "questionnaire_required"
+    assert "D02" in admin.admin_ok("questionnaire_summary", {})["not_answered"]
+    # the expert operations they use as an administrator stay open, and so does the admin area
+    assert lead.ok("post", "/expert/replay_consent_get", {})
+    assert lead.admin_ok("users_list", {})["users"]
+    answer(lead)
+    assert lead.ok("get", "/me")["questionnaire"]["answered"] is True
+    assert lead.ok("post", "/match", match_body(recordings, SUB1))["status"] == "matched"
+    assert "D02" not in admin.admin_ok("questionnaire_summary", {})["not_answered"]
+
+
 def test_answers_are_checked_with_prefer_not_to_say_on_every_question(client: TestClient) -> None:
     a03 = newcomer(client)
 

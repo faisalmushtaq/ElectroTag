@@ -181,6 +181,24 @@ function games(app) {
 }
 
 /**
+ * Coming to My recordings from the admin or expert area: the questionnaire's status is asked again, since an
+ * administrator who has just given themselves recordings is now asked it (electrotag/web/questionnaire.py asked),
+ * and when it is due the questionnaire opens, then My recordings. True when it opened.
+ */
+export async function questionnaireDue(app) {
+  try {
+    const me = await app.backend.me();
+    if (me && me.questionnaire && app.me) app.me.questionnaire = me.questionnaire;
+  } catch {
+    // My recordings works without it; the study still waits for the answers before any work opens
+  }
+  const q = app.me && app.me.questionnaire;
+  if (!q || !q.asked || q.answered) return false;
+  await app.showQuestionnaire({ first: true, then: () => app.showHome() });
+  return true;
+}
+
+/**
  * The sign-up questionnaire (js/views/questionnaire.js): when it was answered, with the way to change the answers;
  * before it is answered, the way to answer it (the study refuses work until then).
  */
