@@ -1,5 +1,17 @@
 # Testing guide
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Running the tests](#running-the-tests)
+- [Synthetic data](#synthetic-data)
+- [Real recordings](#real-recordings)
+- [Coverage of the required tests](#coverage-of-the-required-tests)
+- [Windows, macOS and Linux](#windows-macos-and-linux)
+- [Checks that need a person](#checks-that-need-a-person)
+- [Performance (measured on the development machine)](#performance-measured-on-the-development-machine)
+<!-- /contents -->
+
 ## Running the tests
 
 In an active virtual environment (the [README](../README.md) shows how to make

@@ -12,6 +12,52 @@ computer and sends the study only a description of each one (its manifest: the f
 data file, the timing, the channels and the original events). Annotators receive the files in
 another way, for example on an encrypted drive, and open them in their own browsers.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Getting in](#getting-in)
+- [Trying it in the demonstration](#trying-it-in-the-demonstration)
+- [Overview](#overview)
+- [Progress](#progress)
+- [Annotators](#annotators)
+  - [Inviting people](#inviting-people)
+  - [Adding several people](#adding-several-people)
+  - [Several people at once](#several-people-at-once)
+- [Groups](#groups)
+- [Questionnaire](#questionnaire)
+- [Datasets](#datasets)
+  - [Tracking](#tracking)
+- [Recordings](#recordings)
+  - [Adding recordings from this computer](#adding-recordings-from-this-computer)
+  - [Notes, retiring and removing](#notes-retiring-and-removing)
+- [Assignments](#assignments)
+- [Hand-outs](#hand-outs)
+  - [What would be notified](#what-would-be-notified)
+- [Tasks](#tasks)
+- [Training](#training)
+  - [Recordings and references](#recordings-and-references)
+  - [Settings](#settings)
+  - [Competency criteria](#competency-criteria)
+  - [Quiz](#quiz)
+  - [Snippets](#snippets)
+  - [The example training set](#the-example-training-set)
+- [Analyses](#analyses)
+- [Results](#results)
+- [Reviewing saved work](#reviewing-saved-work)
+- [Problems](#problems)
+- [Records](#records)
+- [Study settings](#study-settings)
+- [The expert area](#the-expert-area)
+  - [Saved work](#saved-work)
+  - [Correcting saved work](#correcting-saved-work)
+  - [Replaying a session](#replaying-a-session)
+  - [Everyone's marks on one recording](#everyones-marks-on-one-recording)
+- [Adjudication](#adjudication)
+- [Library](#library)
+- [Correct the marks](#correct-the-marks)
+- [When something goes wrong](#when-something-goes-wrong)
+<!-- /contents -->
+
 ## Getting in
 
 Accounts with the role of administrator see the admin area. Sign in as usual: an administrator goes

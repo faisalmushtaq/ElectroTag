@@ -5,6 +5,30 @@ already provides, what had to be added, the ambiguities and data-integrity
 risks that were found, how each was handled, and the decisions that need the
 research team.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [What MNE-Python provides and what ElectroTag adds](#what-mne-python-provides-and-what-electrotag-adds)
+- [Limitations of the standard MNE browser](#limitations-of-the-standard-mne-browser)
+- [Ambiguities and data-integrity issues](#ambiguities-and-data-integrity-issues)
+- [Decisions taken by the research team (27 October 2026)](#decisions-taken-by-the-research-team-27-october-2026)
+- [Changes after a test on the group's own data (27 October 2026)](#changes-after-a-test-on-the-groups-own-data-27-october-2026)
+- [Visual design (28 October 2026)](#visual-design-28-october-2026)
+- [Web-only (28 October 2026)](#web-only-28-october-2026)
+- [Touch screens and iPads (28 October 2026)](#touch-screens-and-ipads-28-october-2026)
+- [Recordings from cloud links, and copies kept on the device (28 October 2026)](#recordings-from-cloud-links-and-copies-kept-on-the-device-28-october-2026)
+- [Channels coloured by group (29 October 2026)](#channels-coloured-by-group-29-october-2026)
+- [Viewing tools: the head map, the readout, the overlay and Go to time (29 October 2026)](#viewing-tools-the-head-map-the-readout-the-overlay-and-go-to-time-29-october-2026)
+- [Revisions and game elements (28 October 2026)](#revisions-and-game-elements-28-october-2026)
+- [Confidence and notes (29 October 2026)](#confidence-and-notes-29-october-2026)
+- [Problem reports and reviews of saved work (29 October 2026)](#problem-reports-and-reviews-of-saved-work-29-october-2026)
+- [The annotation view on small, zoomed and large screens (29 October 2026)](#the-annotation-view-on-small-zoomed-and-large-screens-29-october-2026)
+- [Screening-style adjudication and the library of conflicts (30 October 2026)](#screening-style-adjudication-and-the-library-of-conflicts-30-october-2026)
+- [Recordings of every channel count up to 256 (30 October 2026)](#recordings-of-every-channel-count-up-to-256-30-october-2026)
+- [The sign-up questionnaire and contact details (30 October 2026)](#the-sign-up-questionnaire-and-contact-details-30-october-2026)
+- [Decisions still open](#decisions-still-open)
+<!-- /contents -->
+
 ## What MNE-Python provides and what ElectroTag adds
 
 The table describes the Python core, which registers recordings and writes

@@ -8,6 +8,46 @@ and a record of how you used the tools if your study asks for one, go to the stu
 The application links to this guide from the sign-in page, under the greeting of your home page and
 at the end of the Help tab of the annotation view; each link opens the guide in a new tab.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Opening ElectroTag](#opening-electrotag)
+- [Signing in](#signing-in)
+- [Before your first recording](#before-your-first-recording)
+- [Your recordings](#your-recordings)
+- [Due dates](#due-dates)
+- [History and revisions](#history-and-revisions)
+  - [Your own files](#your-own-files)
+- [When a recording cannot be annotated](#when-a-recording-cannot-be-annotated)
+- [Reviews of your work](#reviews-of-your-work)
+- [Corrections of your work](#corrections-of-your-work)
+- [Decisions on your disagreements](#decisions-on-your-disagreements)
+- [Progress and milestones](#progress-and-milestones)
+- [Opening a recording](#opening-a-recording)
+- [Opening a recording from a link](#opening-a-recording-from-a-link)
+- [Recordings kept on this device](#recordings-kept-on-this-device)
+- [The annotation view](#the-annotation-view)
+  - [The artifact reference guide](#the-artifact-reference-guide)
+- [Marking an artifact](#marking-an-artifact)
+- [Changing annotations](#changing-annotations)
+- [Bad channels](#bad-channels)
+- [Confidence and notes](#confidence-and-notes)
+- [Moving around the recording](#moving-around-the-recording)
+- [Seeing the whole recording](#seeing-the-whole-recording)
+- [A part of a recording](#a-part-of-a-recording)
+- [Pausing and breaks](#pausing-and-breaks)
+- [Comfort for long sessions](#comfort-for-long-sessions)
+- [On an iPad](#on-an-ipad)
+- [Saving](#saving)
+- [On a phone](#on-a-phone)
+- [The training programme](#the-training-programme)
+  - [Watching an expert at work](#watching-an-expert-at-work)
+  - [How everyone marked a training recording](#how-everyone-marked-a-training-recording)
+- [The short-segment quiz](#the-short-segment-quiz)
+- [The demonstration](#the-demonstration)
+- [If something goes wrong](#if-something-goes-wrong)
+<!-- /contents -->
+
 ## Opening ElectroTag
 
 Your study team sends you a link. Opening it shows the sign-in page of your study, with the study's

@@ -126,7 +126,9 @@ Interface text and documentation are in UK English (colour, licence, organise, p
 the HED spelling *artifact* kept in label names. Documentation is written in prose paragraphs in
 the voice of the existing guides, rather than as lists of bullet points; tables and code blocks are
 fine where the content is genuinely tabular or a command. Avoid em dashes, and state points
-positively rather than through "it is not X, it is Y" contrasts. Before citing any paper,
+positively rather than through "it is not X, it is Y" contrasts. The long guides open with a list of
+contents made from their headings: after adding, removing or renaming a heading, run
+`python scripts/docs_contents.py` (`tests/test_docs.py` fails while a list is out of date). Before citing any paper,
 standard or web page, check it against the original source online, and add it to
 `docs/references.md` only once checked.
 

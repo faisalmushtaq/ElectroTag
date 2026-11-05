@@ -24,6 +24,23 @@ from the admin area of the same application.
 
 The original EEG files and their metadata are never modified.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Documentation](#documentation)
+- [Trying it](#trying-it)
+- [Running a study](#running-a-study)
+- [Installing the Python package](#installing-the-python-package)
+- [What is saved](#what-is-saved)
+- [Agreement analysis](#agreement-analysis)
+- [Training and assessment](#training-and-assessment)
+- [Interaction logs](#interaction-logs)
+- [All the guides](#all-the-guides)
+- [Repository layout](#repository-layout)
+- [Acknowledgements](#acknowledgements)
+- [Licence](#licence)
+<!-- /contents -->
+
 ## Documentation
 
 Each guide is written for the people who use that part of ElectroTag.

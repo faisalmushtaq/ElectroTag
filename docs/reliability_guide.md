@@ -5,6 +5,24 @@ annotators (Component B), which assumptions each measure makes and how to read
 the results. The same code compares annotators with a reference in the
 training component.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [The question being asked](#the-question-being-asked)
+- [Running an analysis](#running-an-analysis)
+- [1. Time-resolved agreement](#1-time-resolved-agreement)
+  - [Why there is no single overall agreement figure](#why-there-is-no-single-overall-agreement-figure)
+- [2. Event-based agreement](#2-event-based-agreement)
+- [3. Channels](#3-channels)
+  - [Channels marked bad and uncertain marks](#channels-marked-bad-and-uncertain-marks)
+- [4. Category disagreements](#4-category-disagreements)
+- [5. Confidence of the annotations](#5-confidence-of-the-annotations)
+- [Versions of the annotations](#versions-of-the-annotations)
+- [Choosing settings](#choosing-settings)
+- [Extending the analysis](#extending-the-analysis)
+- [References](#references)
+<!-- /contents -->
+
 ## The question being asked
 
 Two annotators reviewing the same continuous recording can disagree in three

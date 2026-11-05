@@ -14,6 +14,23 @@ report that `electrotag activity` and the admin area ([web/admin.md](web/admin.m
 make from the logs. The application records the logs and sends them to the
 study in batches.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Switching logging on and off](#switching-logging-on-and-off)
+- [What is never recorded](#what-is-never-recorded)
+- [Where the logs are](#where-the-logs-are)
+- [File format](#file-format)
+  - [Event kinds](#event-kinds)
+- [Making the tables and the report](#making-the-tables-and-the-report)
+  - [Active time](#active-time)
+  - [Ratings, notes, problems and reviews](#ratings-notes-problems-and-reviews)
+  - [Expert work and skipped stages](#expert-work-and-skipped-stages)
+  - [visits.tsv](#visitstsv)
+  - [recordings.tsv](#recordingstsv)
+- [Analysing the tables](#analysing-the-tables)
+<!-- /contents -->
+
 ## Switching logging on and off
 
 Logging is on by default. The study configuration controls it:

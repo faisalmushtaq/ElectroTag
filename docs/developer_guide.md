@@ -12,6 +12,20 @@ Python core. The browser application, the service layer and how they fit
 together are described in [web/architecture.md](web/architecture.md), and the
 contract between browser and server in [web/api.md](web/api.md).
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Principles](#principles)
+- [Package layout](#package-layout)
+- [Data flow of one recording](#data-flow-of-one-recording)
+- [Annotation store](#annotation-store)
+- [The save transaction](#the-save-transaction)
+- [Locks](#locks)
+- [Extension points](#extension-points)
+- [Conventions](#conventions)
+- [Packaging and continuous integration](#packaging-and-continuous-integration)
+<!-- /contents -->
+
 ## Principles
 
 * **The annotation store is the single source of truth.** An interface displays
