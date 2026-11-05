@@ -4,6 +4,20 @@ Every reference below was checked against publisher, Crossref, PubMed or arXiv
 records during development (October 2026). DOIs are given so that each can be
 re-checked.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Annotation vocabulary and data standards](#annotation-vocabulary-and-data-standards)
+- [EEG recordings used to test the readers](#eeg-recordings-used-to-test-the-readers)
+- [Software](#software)
+- [Web platform and cloud services](#web-platform-and-cloud-services)
+- [Filtering](#filtering)
+- [Agreement statistics](#agreement-statistics)
+- [Agreement on continuous (unitised) annotations](#agreement-on-continuous-unitised-annotations)
+- [Event matching](#event-matching)
+- [EEG training and assessment](#eeg-training-and-assessment)
+<!-- /contents -->
+
 ## Annotation vocabulary and data standards
 
 Beniczky, S., Aurlien, H., Brøgger, J. C., Fuglsang-Frederiksen, A.,

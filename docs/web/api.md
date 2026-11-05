@@ -30,6 +30,38 @@ application. Preflight requests asking `Access-Control-Request-Private-Network`
 (the application on GitHub Pages calling a server on the same computer) are
 allowed for the allowed origins.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Shared shapes](#shared-shapes)
+- [Signing in](#signing-in)
+  - [Roles](#roles)
+- [Assignments and opening a recording](#assignments-and-opening-a-recording)
+- [Saving](#saving)
+  - [Revisions](#revisions)
+  - [Your own saved files](#your-own-saved-files)
+- [Problem reports](#problem-reports)
+- [Reviews](#reviews)
+- [Feedback on one's own work](#feedback-on-ones-own-work)
+- [Achievements](#achievements)
+- [The sign-up questionnaire](#the-sign-up-questionnaire)
+- [Training programme](#training-programme)
+  - [Training stages](#training-stages)
+- [Interaction logs](#interaction-logs)
+- [Administration](#administration)
+  - [Shapes](#shapes)
+  - [Operations](#operations)
+  - [Datasets, collections, groups and hand-outs](#datasets-collections-groups-and-hand-outs)
+  - [The short-segment quiz (annotators)](#the-short-segment-quiz-annotators)
+- [Experts](#experts)
+  - [Corrections and replay](#corrections-and-replay)
+  - [Tasks, windows and known answers](#tasks-windows-and-known-answers)
+  - [Adjudication and the library](#adjudication-and-the-library)
+  - [The overlay of everyone's marks](#the-overlay-of-everyones-marks)
+  - [Derived versions in the analyses](#derived-versions-in-the-analyses)
+- [The same operations on Firebase](#the-same-operations-on-firebase)
+<!-- /contents -->
+
 ## Shared shapes
 
 ```jsonc

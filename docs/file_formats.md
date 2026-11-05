@@ -14,6 +14,35 @@ Python's `json`, reads back as a tab.
 Every output file is written to a temporary file, flushed to disk and moved
 into place in one step, so a file is either complete or absent.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Time and channel conventions (all files)](#time-and-channel-conventions-all-files)
+- [Output folder](#output-folder)
+- [`…_events.tsv`](#_eventstsv)
+- [`…_events.json`](#_eventsjson)
+- [`…_annotations.json` (canonical format)](#_annotationsjson-canonical-format)
+- [`…_channels.tsv` (channels marked bad)](#_channelstsv-channels-marked-bad)
+- [`…_time_viewed.txt`](#_time_viewedtxt)
+- [`…_interaction_log.jsonl`](#_interaction_logjsonl)
+- [`…_session.json`](#_sessionjson)
+- [Problem reports and reviews (results zip and export)](#problem-reports-and-reviews-results-zip-and-export)
+- [Corrections (results zip and export)](#corrections-results-zip-and-export)
+- [Tasks and known-answer scores (results zip and export)](#tasks-and-known-answer-scores-results-zip-and-export)
+- [The sign-up questionnaire (results zip and export)](#the-sign-up-questionnaire-results-zip-and-export)
+- [Datasets, collections, groups, hand-outs and tracking (results zip and export)](#datasets-collections-groups-hand-outs-and-tracking-results-zip-and-export)
+- [Adjudications and the library (results zip and export)](#adjudications-and-the-library-results-zip-and-export)
+- [`completion_register.tsv`](#completion_registertsv)
+- [Logs](#logs)
+- [`electrotag_study.json` (a study's settings)](#electrotag_studyjson-a-studys-settings)
+- [`electrotag/config/artifact_labels.json`](#electrotagconfigartifact_labelsjson)
+- [Autosave files (`.electrotag/autosave/<annotator>-<key>.json`)](#autosave-files-electrotagautosaveannotator-keyjson)
+- [Reference set folder](#reference-set-folder)
+- [Competency report (`…_competency_report.json`)](#competency-report-_competency_reportjson)
+- [Training progress (`training_progress/<set>/annotator-<ID>.json`)](#training-progress-training_progresssetannotator-idjson)
+- [Agreement analysis outputs](#agreement-analysis-outputs)
+<!-- /contents -->
+
 ## Time and channel conventions (all files)
 
 * **`onset`** is in seconds from the first sample stored in the recording's

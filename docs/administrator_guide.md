@@ -22,6 +22,32 @@ ElectroTag server, which keeps the study's settings in
 `electrotag_study.json` just as a dataset folder does. Each command explains
 its options, for example `electrotag admin set-criteria --help`.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [The settings](#the-settings)
+- [Recordings and their channels](#recordings-and-their-channels)
+- [The viewing filters](#the-viewing-filters)
+- [The display](#the-display)
+  - [The types on the number keys](#the-types-on-the-number-keys)
+  - [Long sessions](#long-sessions)
+- [Which recording comes next](#which-recording-comes-next)
+  - [Tracking who has rated what](#tracking-who-has-rated-what)
+- [Original event codes and artifact codes](#original-event-codes-and-artifact-codes)
+- [Saving, and unfinished work](#saving-and-unfinished-work)
+- [Training and competency assessment](#training-and-competency-assessment)
+  - [Reference sets](#reference-sets)
+  - [Competency criteria](#competency-criteria)
+  - [The training programme](#the-training-programme)
+  - [What annotators experience](#what-annotators-experience)
+  - [Competency reports](#competency-reports)
+  - [The short-segment quiz](#the-short-segment-quiz)
+- [Roles, expert work and replays](#roles-expert-work-and-replays)
+- [The sign-up questionnaire](#the-sign-up-questionnaire)
+- [Interaction logs (research data)](#interaction-logs-research-data)
+- [Before a study starts](#before-a-study-starts)
+<!-- /contents -->
+
 ## The settings
 
 Every setting has a default, in `electrotag/config/default_settings.json`,

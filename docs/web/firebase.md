@@ -29,6 +29,31 @@ Commands are typed in a terminal: Terminal on macOS and Linux, and PowerShell on
 command differs between the two, the guide gives both versions, one after the other; where only
 one block is shown, it works as it stands in both.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [What you need](#what-you-need)
+- [1. Install the administrator's tools](#1-install-the-administrators-tools)
+- [2. Create the Firebase project](#2-create-the-firebase-project)
+- [3. Choose the pay-as-you-go plan and set a budget alert](#3-choose-the-pay-as-you-go-plan-and-set-a-budget-alert)
+- [4. Create the Firestore database in London](#4-create-the-firestore-database-in-london)
+- [5. Turn on sign-in with email and password](#5-turn-on-sign-in-with-email-and-password)
+- [6. Register the web application and its website](#6-register-the-web-application-and-its-website)
+- [7. A key for the administrator's command](#7-a-key-for-the-administrators-command)
+- [8. Deploy the rules, the functions and the application](#8-deploy-the-rules-the-functions-and-the-application)
+- [9. Create the study](#9-create-the-study)
+- [10. Create your own administrator account](#10-create-your-own-administrator-account)
+- [11. Sign in to the application](#11-sign-in-to-the-application)
+- [12. Set the study up in the admin area](#12-set-the-study-up-in-the-admin-area)
+- [13. Send the link and the recordings](#13-send-the-link-and-the-recordings)
+- [14. Export the results for the analyses](#14-export-the-results-for-the-analyses)
+- [Coming back to a study later](#coming-back-to-a-study-later)
+- [Deploying updates from GitHub (optional)](#deploying-updates-from-github-optional)
+- [Publishing the application elsewhere (optional)](#publishing-the-application-elsewhere-optional)
+- [Trying it without a Firebase project](#trying-it-without-a-firebase-project)
+- [Data protection in brief](#data-protection-in-brief)
+<!-- /contents -->
+
 ## What you need
 
 A computer with Python 3.12 or 3.13 and Node.js 20 or later (Node.js provides the `npx` command

@@ -5,6 +5,10 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The longer guides (the README, the handover notes and every guide in `docs/` and `docs/web/` with five
+sections or more) now open with a list of contents linking to each section and its subsections, made
+from their headings by `scripts/docs_contents.py`; the test-suite checks that every list is up to date.
+
 Every tab-separated table ElectroTag writes now keeps each value to one cell: a tab or any line break
 in text (including a carriage return and the Unicode line separators) is written as a space, in the
 analyses' tables, the activity tables, the results folder's lists of problem reports, tasks, hand-outs

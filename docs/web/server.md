@@ -6,6 +6,17 @@ a computer you control. It is how the whole system is tried on one computer (`el
 demo`), how the application is tested, and it suits a study that prefers its own machine,
 for example a university server.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Install](#install)
+- [The demonstration](#the-demonstration)
+- [A study on your own server](#a-study-on-your-own-server)
+- [The study folder](#the-study-folder)
+- [Security](#security)
+- [Data protection in brief](#data-protection-in-brief)
+<!-- /contents -->
+
 ## Install
 
 ElectroTag's Python package is installed from its repository (it is not on PyPI). In a terminal

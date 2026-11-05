@@ -94,3 +94,20 @@ def test_the_readme_says_where_the_package_comes_from_and_links_every_guide():
 def test_the_annotators_guide_says_who_it_is_for():
     first = (REPO / "docs" / "web" / "using.md").read_text(encoding="utf-8").split("\n\n")[1]
     assert first.startswith("This guide is for annotators.")
+
+
+def test_every_long_guide_has_its_list_of_contents_up_to_date() -> None:
+    """The lists of contents at the top of the long guides are made from their headings
+    (scripts/docs_contents.py); after a heading changes, running the script brings them up to date."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("docs_contents", REPO / "scripts" / "docs_contents.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.main(["--check"]) == 0, "run python scripts/docs_contents.py"
+    for path in module.guides():
+        text = path.read_text(encoding="utf-8")
+        anchors = {a for _, _, a in module.headings(text)}
+        if module.START in text:
+            listed = re.findall(r"\]\(#([^)]+)\)", text[text.index(module.START):text.index(module.END)])
+            assert listed and set(listed) <= anchors, path

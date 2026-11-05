@@ -6,6 +6,28 @@ drive) and opens them in a web page; the page reads the file directly from
 their disk, so the EEG is never uploaded. A light server holds the study's
 records and receives the results.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [Where it runs](#where-it-runs)
+- [Who does what](#who-does-what)
+- [Folder layout](#folder-layout)
+- [Loading on demand](#loading-on-demand)
+  - [Purposes and the expert area](#purposes-and-the-expert-area)
+- [The Recording interface](#the-recording-interface)
+- [Reading recordings in the browser](#reading-recordings-in-the-browser)
+  - [What is read, and how it compares with MNE-Python](#what-is-read-and-how-it-compares-with-mne-python)
+  - [Fingerprints](#fingerprints)
+  - [Display filters](#display-filters)
+  - [Memory and speed](#memory-and-speed)
+  - [Tests](#tests)
+- [The Backend interface](#the-backend-interface)
+  - [The sandbox's stand-in for the server](#the-sandboxs-stand-in-for-the-server)
+- [Registering recordings in the browser](#registering-recordings-in-the-browser)
+  - [How the browser's manifests compare with Python's](#how-the-browsers-manifests-compare-with-pythons)
+- [Interaction logs](#interaction-logs)
+<!-- /contents -->
+
 ## Where it runs
 
 The application is a set of static files (no build step). **GitHub

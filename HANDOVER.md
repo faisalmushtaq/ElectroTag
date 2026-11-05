@@ -9,6 +9,22 @@ The project was called ElectroClean until 29 October 2026, when it was renamed E
 any study had started; the repository, the package, the commands and every name in the files
 changed together, and the 1.1.0 release and the history before it keep the old name.
 
+<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
+**Contents**
+
+- [What ElectroTag is](#what-electrotag-is)
+- [Where things stand](#where-things-stand)
+- [Branches](#branches)
+- [Setting up](#setting-up)
+- [Running it](#running-it)
+- [Tests and continuous integration](#tests-and-continuous-integration)
+- [Setting up a real study on Firebase](#setting-up-a-real-study-on-firebase)
+- [What is open](#what-is-open)
+- [Things worth knowing before changing code](#things-worth-knowing-before-changing-code)
+- [Documentation map](#documentation-map)
+- [Access and accounts](#access-and-accounts)
+<!-- /contents -->
+
 ## What ElectroTag is
 
 ElectroTag is research software for the manual annotation of artifacts in continuous EEG,
