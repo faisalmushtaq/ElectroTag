@@ -1,12 +1,12 @@
-recording_id	annotator_id	mode	context	status	session_id	completed_at	elapsed_s	n_annotations	output_dir	output_basename	app_version
-sub-001/eeg/sub-001_task-rest_eeg.vhdr	A01	standard		completed	20261029T194003Z-b2f33816	2026-10-29T19:40:03.022+00:00	0.000	11	annotator-A01/sub-001/eeg	sub-001_task-rest_eeg_annotator-A01	1.1.0
-sub-001/eeg/sub-001_task-rest_eeg.vhdr	A02	standard		completed	20261029T194003Z-6b0c6fd7	2026-10-29T19:40:03.346+00:00	0.001	11	annotator-A02/sub-001/eeg	sub-001_task-rest_eeg_annotator-A02	1.1.0
-sub-001/eeg/sub-001_task-rest_eeg.vhdr	A03	standard		completed	20261029T194003Z-5af6e283	2026-10-29T19:40:03.569+00:00	0.000	10	annotator-A03/sub-001/eeg	sub-001_task-rest_eeg_annotator-A03	1.1.0
-sub-002/eeg/sub-002_task-rest_eeg.vhdr	A01	standard		completed	20261029T194003Z-016d5ad1	2026-10-29T19:40:03.782+00:00	0.000	11	annotator-A01/sub-002/eeg	sub-002_task-rest_eeg_annotator-A01	1.1.0
-sub-002/eeg/sub-002_task-rest_eeg.vhdr	A02	standard		completed	20261029T194004Z-bdde40fa	2026-10-29T19:40:04.060+00:00	0.001	12	annotator-A02/sub-002/eeg	sub-002_task-rest_eeg_annotator-A02	1.1.0
-sub-002/eeg/sub-002_task-rest_eeg.vhdr	A03	standard		completed	20261029T194004Z-e330e209	2026-10-29T19:40:04.270+00:00	0.001	10	annotator-A03/sub-002/eeg	sub-002_task-rest_eeg_annotator-A03	1.1.0
-sub-003/eeg/sub-003_task-rest_eeg.vhdr	A01	standard		completed	20261029T194004Z-af765149	2026-10-29T19:40:04.501+00:00	0.000	11	annotator-A01/sub-003/eeg	sub-003_task-rest_eeg_annotator-A01	1.1.0
-sub-003/eeg/sub-003_task-rest_eeg.vhdr	A02	standard		completed	20261029T194004Z-cda5527e	2026-10-29T19:40:04.751+00:00	0.000	9	annotator-A02/sub-003/eeg	sub-003_task-rest_eeg_annotator-A02	1.1.0
-sub-003/eeg/sub-003_task-rest_eeg.vhdr	A03	standard		completed	20261029T194004Z-dea27368	2026-10-29T19:40:04.972+00:00	0.001	12	annotator-A03/sub-003/eeg	sub-003_task-rest_eeg_annotator-A03	1.1.0
-sub-002/eeg/sub-002_task-rest_eeg.vhdr	CAM	assessment	demo-set	completed	20261029T194011Z-649cf2d0	2026-10-29T19:40:11.278+00:00	0.000	8	training/demo-set/assessment/annotator-CAM/sub-002/eeg	sub-002_task-rest_eeg_annotator-CAM	1.1.0
-sub-003/eeg/sub-003_task-rest_eeg.vhdr	CAM	assessment	demo-set	completed	20261029T194011Z-9dd2b76a	2026-10-29T19:40:11.562+00:00	0.000	9	training/demo-set/assessment/annotator-CAM/sub-003/eeg	sub-003_task-rest_eeg_annotator-CAM	1.1.0
+recording_id	annotator_id	mode	context	status	session_id	completed_at	elapsed_s	n_annotations	output_dir	output_basename	app_version	n_needs_review	n_bad_channels
+sub-001/eeg/sub-001_task-rest_eeg.vhdr	A01	standard		completed	20261105T141240Z-c5cba43e	2026-11-05T14:12:40.626+00:00	0.000	11	annotator-A01/sub-001/eeg	sub-001_task-rest_eeg_annotator-A01	1.1.0	0	0
+sub-001/eeg/sub-001_task-rest_eeg.vhdr	A02	standard		completed	20261105T141240Z-f5556769	2026-11-05T14:12:40.789+00:00	0.000	11	annotator-A02/sub-001/eeg	sub-001_task-rest_eeg_annotator-A02	1.1.0	0	0
+sub-001/eeg/sub-001_task-rest_eeg.vhdr	A03	standard		completed	20261105T141240Z-664fa2d6	2026-11-05T14:12:40.889+00:00	0.000	10	annotator-A03/sub-001/eeg	sub-001_task-rest_eeg_annotator-A03	1.1.0	1	0
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A01	standard		completed	20261105T141240Z-bcd2ab04	2026-11-05T14:12:40.986+00:00	0.000	11	annotator-A01/sub-002/eeg	sub-002_task-rest_eeg_annotator-A01	1.1.0	0	0
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A02	standard		completed	20261105T141241Z-f2ce3c51	2026-11-05T14:12:41.086+00:00	0.000	12	annotator-A02/sub-002/eeg	sub-002_task-rest_eeg_annotator-A02	1.1.0	0	0
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A03	standard		completed	20261105T141241Z-b77286fb	2026-11-05T14:12:41.186+00:00	0.000	10	annotator-A03/sub-002/eeg	sub-002_task-rest_eeg_annotator-A03	1.1.0	1	0
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A01	standard		completed	20261105T141241Z-92f9ece2	2026-11-05T14:12:41.284+00:00	0.000	11	annotator-A01/sub-003/eeg	sub-003_task-rest_eeg_annotator-A01	1.1.0	0	0
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A02	standard		completed	20261105T141241Z-2c20e1de	2026-11-05T14:12:41.377+00:00	0.000	9	annotator-A02/sub-003/eeg	sub-003_task-rest_eeg_annotator-A02	1.1.0	0	0
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A03	standard		completed	20261105T141241Z-04b2c507	2026-11-05T14:12:41.475+00:00	0.000	12	annotator-A03/sub-003/eeg	sub-003_task-rest_eeg_annotator-A03	1.1.0	0	0
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A04	assessment	demo-set	completed	20261105T141243Z-3091a990	2026-11-05T14:12:43.946+00:00	0.000	8	training/demo-set/assessment/annotator-A04/sub-002/eeg	sub-002_task-rest_eeg_annotator-A04	1.1.0	0	0
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A04	assessment	demo-set	completed	20261105T141244Z-f3d02fea	2026-11-05T14:12:44.071+00:00	0.000	9	training/demo-set/assessment/annotator-A04/sub-003/eeg	sub-003_task-rest_eeg_annotator-A04	1.1.0	0	0

@@ -1,0 +1,10 @@
+recording	annotator	n_annotations	n_uncertain	share_uncertain	uncertain_duration_s	proportion_of_recording
+sub-001/eeg/sub-001_task-rest_eeg.vhdr	A01	11	0	0	0	0
+sub-001/eeg/sub-001_task-rest_eeg.vhdr	A02	11	0	0	0	0
+sub-001/eeg/sub-001_task-rest_eeg.vhdr	A03	10	1	0.1	0.868	0.0144667
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A01	11	0	0	0	0
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A02	12	0	0	0	0
+sub-002/eeg/sub-002_task-rest_eeg.vhdr	A03	10	1	0.1	0.996	0.0166
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A01	11	0	0	0	0
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A02	9	0	0	0	0
+sub-003/eeg/sub-003_task-rest_eeg.vhdr	A03	12	0	0	0	0

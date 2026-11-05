@@ -1,6 +1,6 @@
 {
   "schema": "electrotag.annotations",
-  "schema_version": "1.1.0",
+  "schema_version": "1.2.0",
   "recording": {
     "recording_id": "sub-003/eeg/sub-003_task-rest_eeg.vhdr",
     "relative_path": "sub-003/eeg/sub-003_task-rest_eeg.vhdr",
@@ -37,43 +37,43 @@
       "vhdr": {
         "path": "sub-003/eeg/sub-003_task-rest_eeg.vhdr",
         "size": 1041,
-        "mtime_ns": 1793302801990022025,
+        "mtime_ns": 1793887960143416055,
         "sha256": "e94f94e8e65f96d325d9c1eb420bbd288fb47ae4cfc816a28820a5327eaa4cc8"
       },
       "eeg": {
         "path": "sub-003/eeg/sub-003_task-rest_eeg.eeg",
         "size": 1320000,
-        "mtime_ns": 1793302801988942346,
+        "mtime_ns": 1793887960142911635,
         "sha256": "1812b25c12511762c34b09132a86a747d2fbca39686d0f5f87d9e4949ccc4d22"
       },
       "vmrk": {
         "path": "sub-003/eeg/sub-003_task-rest_eeg.vmrk",
         "size": 1392,
-        "mtime_ns": 1793302801989831297,
+        "mtime_ns": 1793887960143336534,
         "sha256": "6b96ee0685a1ca8e58d1a3cd816968de3c423c8f050ce756954ca24b7e0c5f77"
       },
       "channels_tsv": {
         "path": "sub-003/eeg/sub-003_task-rest_channels.tsv",
         "size": 384,
-        "mtime_ns": 1793302801990473455,
+        "mtime_ns": 1793887960143624419,
         "sha256": "2606e8830e14c65eed97ea25c80f9f56708eb24e26134f516b754234c6927d82"
       },
       "events_tsv": {
         "path": "sub-003/eeg/sub-003_task-rest_events.tsv",
         "size": 928,
-        "mtime_ns": 1793302801990251144,
+        "mtime_ns": 1793887960143514011,
         "sha256": "23fbd318246db707134f26fd35f535df2bd25580d7cf8c17e33066b3b744c0a8"
       },
       "events_json": {
         "path": "sub-003/eeg/sub-003_task-rest_events.json",
         "size": 289,
-        "mtime_ns": 1793302801990362632,
+        "mtime_ns": 1793887960143588062,
         "sha256": "203b47891160359d51301343101c20872de346b32b5a97b29a70139958c62f00"
       },
       "eeg_json": {
         "path": "sub-003/eeg/sub-003_task-rest_eeg.json",
         "size": 255,
-        "mtime_ns": 1793302801990575769,
+        "mtime_ns": 1793887960143656390,
         "sha256": "b4261e68d3afe2c97349082cc1460d8fb6e73c9427090698dd1e1ec35b914cac"
       }
     }
@@ -83,9 +83,9 @@
     "display_name": "Demo A01"
   },
   "session": {
-    "session_id": "20261029T194004Z-af765149",
+    "session_id": "20261105T141241Z-92f9ece2",
     "mode": "standard",
-    "created_at": "2026-10-29T19:40:04.501+00:00",
+    "created_at": "2026-11-05T14:12:41.284+00:00",
     "app_version": "1.1.0",
     "context": {},
     "confidence": "optional"
@@ -307,7 +307,7 @@
   "n_annotations": 11,
   "annotations": [
     {
-      "annotation_id": "22d1f246f5a34c34ac9fb8154fea78b5",
+      "annotation_id": "2683130226a94b05b40a3e7c32807631",
       "label": "Eye-blink-artifact",
       "value": 103,
       "onset": 2.984,
@@ -321,13 +321,13 @@
         "VEOG"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "145866a800a1426faeb74035e916bd35",
+      "annotation_id": "5adb0c612b5343748ddabb3ecf1916dc",
       "label": "EMG-artifact",
       "value": 102,
       "onset": 9.168,
@@ -341,13 +341,13 @@
         "T8"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "668ecab784ce4a5284db242f3660066e",
+      "annotation_id": "36abb4ca09284f98baef0989766e99d4",
       "label": "Eye-blink-artifact",
       "value": 103,
       "onset": 9.424,
@@ -360,13 +360,13 @@
         "Fp2"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "239f4a6df89649e1a651397f996c2d03",
+      "annotation_id": "d35f9e7a446e43eb83a6a9ff2fcb9a7f",
       "label": "Electrode-pops-artifact",
       "value": 114,
       "onset": 13.948,
@@ -378,13 +378,13 @@
         "C3"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "66f69c507f084e06b76c0881a81df0b9",
+      "annotation_id": "eec996e6fdd448068135c670bed542a7",
       "label": "Horizontal-eye-movement-artifact",
       "value": 104,
       "onset": 18.124,
@@ -400,13 +400,13 @@
         "HEOG"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "b9161fb6639b4ddfbc5b5014b73a60f3",
+      "annotation_id": "29704f1007404d29b41e2d71f2476b58",
       "label": "Movement-artifact",
       "value": 107,
       "onset": 23.936,
@@ -416,13 +416,13 @@
       "end_sample": 6484,
       "channels": [],
       "scope": "whole_montage",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "cc340ae6cbb74549ac2754ef71442252",
+      "annotation_id": "c335463639e946828ba120b781a84cef",
       "label": "Chewing-artifact",
       "value": 100,
       "onset": 29.996,
@@ -435,13 +435,13 @@
         "T8"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "55894f371d254a36b1258287da26e88a",
+      "annotation_id": "acaa3f6168d3476c96259bf20b53da92",
       "label": "Eye-blink-artifact",
       "value": 103,
       "onset": 35.232,
@@ -455,13 +455,13 @@
         "VEOG"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "e966c670a331445b8181f7a40991aa78",
+      "annotation_id": "28d0551ec9ab4ae9adcd31e0faf703a2",
       "label": "Slow-eye-movement-artifact",
       "value": 105,
       "onset": 39.968,
@@ -477,13 +477,13 @@
         "HEOG"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "dea10502e8c1471aa8187f075812ee73",
+      "annotation_id": "43f1285b52654128b46b4f07678fd679",
       "label": "ECG-artifact",
       "value": 101,
       "onset": 47.04,
@@ -497,13 +497,13 @@
         "O1"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     },
     {
-      "annotation_id": "201bca5909ad4c78a1b6b877ea78fce7",
+      "annotation_id": "ed1d16e584744d4fb84cbb7814a23d6e",
       "label": "Electrode-pops-artifact",
       "value": 114,
       "onset": 53.532,
@@ -515,10 +515,16 @@
         "O2"
       ],
       "scope": "channels",
-      "created_at": "2026-10-29T19:40:04.501+00:00",
-      "modified_at": "2026-10-29T19:40:04.501+00:00",
+      "created_at": "2026-11-05T14:12:41.284+00:00",
+      "modified_at": "2026-11-05T14:12:41.284+00:00",
       "confidence": null,
       "note": ""
     }
-  ]
+  ],
+  "bad_channel_convention": {
+    "meaning": "Channels this annotator marked as bad (unusable) for the whole recording, in recording order.",
+    "source": "The annotator's own judgement while annotating; the study's own bad channels (the dataset's channels.tsv) are input and are recorded in the session file, never here.",
+    "channels_tsv": "When the list is not empty, a BIDS-style _channels.tsv beside this file gives every shown channel with status good or bad and a status_description."
+  },
+  "bad_channels": []
 }

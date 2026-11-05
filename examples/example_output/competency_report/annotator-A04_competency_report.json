@@ -1,7 +1,7 @@
 {
   "schema": "electrotag.competency_report",
   "schema_version": "1.0.0",
-  "annotator_id": "CAM",
+  "annotator_id": "A04",
   "reference_set": {
     "set_id": "demo-set",
     "name": "Demonstration reference set",
@@ -21,7 +21,7 @@
         "TRUTH"
       ],
       "adjudicator": "",
-      "added_at": "2026-10-29T19:40:11.181+00:00"
+      "added_at": "2026-11-05T14:12:43.904+00:00"
     },
     "sub-003/eeg/sub-003_task-rest_eeg.vhdr": {
       "method": "single_expert",
@@ -29,7 +29,7 @@
         "TRUTH"
       ],
       "adjudicator": "",
-      "added_at": "2026-10-29T19:40:11.184+00:00"
+      "added_at": "2026-11-05T14:12:43.907+00:00"
     }
   },
   "required_recordings": [
@@ -61,26 +61,28 @@
   "inputs": {
     "reference_set": {
       "file": "demo-set/reference_set.json",
-      "sha256": "6e1713ef4549160b0568914c7b9b7298d4eebf715c0c38b63e89bdb0957c98aa"
+      "sha256": "a50463c081aa87f343b333a963f740bdcc6232b178e2585c24961a6516d5cf1c"
     },
     "references": {
-      "sub-002/eeg/sub-002_task-rest_eeg.vhdr": "b29f4e002d00fa104cc85afe0cc153d4fc4c45dee74c84cd479cede1ac01b1cb",
-      "sub-003/eeg/sub-003_task-rest_eeg.vhdr": "b0180c64b7c205888df974233935327febff1e9f9fde105457a4b3678f2a4046"
+      "sub-002/eeg/sub-002_task-rest_eeg.vhdr": "af0514c8c30bfa76b8f9421245339824ed85edd0af560f38ca4372b7f56e0c98",
+      "sub-003/eeg/sub-003_task-rest_eeg.vhdr": "3439f91baeb0f92b586e7a267dfc0ef13344c733f8391d1d0197ae12d16637b9"
     },
     "annotations": {
       "sub-002/eeg/sub-002_task-rest_eeg.vhdr": {
-        "file": "training/demo-set/assessment/annotator-CAM/sub-002/eeg/sub-002_task-rest_eeg_annotator-CAM_annotations.json",
-        "sha256": "ed64bcc1cc2f9c9b052a3d92cc7225d68a3ae17cd372dd3f65b2e06de49ff8af"
+        "file": "training/demo-set/assessment/annotator-A04/sub-002/eeg/sub-002_task-rest_eeg_annotator-A04_annotations.json",
+        "sha256": "23c5fb841309de648bff056b2851e9e43d89554cd9d458b2752b231639c45d8a"
       },
       "sub-003/eeg/sub-003_task-rest_eeg.vhdr": {
-        "file": "training/demo-set/assessment/annotator-CAM/sub-003/eeg/sub-003_task-rest_eeg_annotator-CAM_annotations.json",
-        "sha256": "6b929d61a098d435d57642a66b5d30d06c6c0a8f5066f5405384a1f785c206ac"
+        "file": "training/demo-set/assessment/annotator-A04/sub-003/eeg/sub-003_task-rest_eeg_annotator-A04_annotations.json",
+        "sha256": "ebe3cda64071905681c5840ca27e235d6889fb3ec252126c86b449c8be2ddea8"
       }
     }
   },
   "software": {
     "electrotag": "1.1.0"
   },
+  "stages_skipped": [],
+  "stages_skipped_in": {},
   "metrics": {
     "overall": {
       "event_f1": 0.717948717948718,
@@ -368,6 +370,8 @@
       "reference_annotator": "REFERENCE",
       "duplicate_policy": "latest",
       "channel_exclude": [],
+      "versions": "original",
+      "unit": "recording",
       "timeline_max_recordings": 12,
       "min_events_per_category": 5,
       "extra_measures": []
@@ -411,6 +415,6 @@
     "Salt-bridge-artifact",
     "Line-noise-artifact"
   ],
-  "results_sha256": "a1f7347b58d3876543b5912d09a198e8bc6832ae5a0e2d97ff0cb616154c57c3",
-  "generated_at": "2026-10-29T19:40:12.046+00:00"
+  "results_sha256": "12ebdc2971a11f5fdf2283143e2e2e9fe518520bac27238f136d262f244b5d5a",
+  "generated_at": "2026-11-05T14:12:44.270+00:00"
 }
