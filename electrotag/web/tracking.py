@@ -591,7 +591,9 @@ def _cell_text(value: Any) -> str:
         return ""
     if isinstance(value, bool):
         return "true" if value else "false"
-    return str(value).replace("\t", " ").replace("\r", " ").replace("\n", " ")
+    from electrotag.app.io.tsv import tsv_cell
+
+    return tsv_cell(value)
 
 
 def _json(obj: Any) -> bytes:

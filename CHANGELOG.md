@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Every tab-separated table ElectroTag writes now keeps each value to one cell: a tab or any line break
+in text (including a carriage return and the Unicode line separators) is written as a space, in the
+analyses' tables, the activity tables, the results folder's lists of problem reports, tasks, hand-outs
+and tracking, and `failed_load.txt`, so that every row reads back whole with pandas, the `csv` module
+or a plain split on tabs (docs/file_formats.md).
+
 Save and Finish now reminds annotators of the marks still Uncertain / needs review before it saves,
 with their times: Go to the first selects the first of them so that it can be given a type, Save
 anyway saves them as they are for the experts to review, and Keep annotating goes back. It is asked

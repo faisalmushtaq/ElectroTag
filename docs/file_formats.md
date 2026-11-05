@@ -2,6 +2,15 @@
 
 All text files are UTF-8 with `\n` line endings. JSON files are written with
 two-space indentation and never contain `NaN` (missing numbers are `null`).
+In every tab-separated file (`.tsv`, and `failed_load.txt`), a value never
+holds a tab or a line break: the annotation files refuse them (notes are one
+line of text), and the tables made from other text, such as the analyses',
+the activity tables and the results folder's lists, write each tab or line
+break in it as a space. Every row therefore reads back as one row with its
+columns, with `pandas.read_csv(path, sep="\t")`, the `csv` module or a plain
+split on tabs. The interaction logs (`.jsonl`) are JSON: a tab in a value is
+written there as the two characters `\t`, which every JSON reader, such as
+Python's `json`, reads back as a tab.
 Every output file is written to a temporary file, flushed to disk and moved
 into place in one step, so a file is either complete or absent.
 

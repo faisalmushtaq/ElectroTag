@@ -34,6 +34,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from electrotag.app.common import now_local_iso
+from electrotag.app.io.tsv import tsv_cell
 from electrotag.web import audit
 from electrotag.web.errors import ApiError
 from electrotag.web.manifest import SCOPE_STUDY
@@ -541,7 +542,7 @@ def _tsv(columns: tuple[str, ...], rows: list[dict[str, Any]]) -> bytes:
     w.writerow(columns)
     for r in rows:
         w.writerow(["n/a" if r.get(c) is None or r.get(c) == "" else
-                    (",".join(r[c]) if isinstance(r.get(c), list) else str(r[c]).replace("\t", " ").replace("\n", " "))
+                    (",".join(tsv_cell(x) for x in r[c]) if isinstance(r.get(c), list) else tsv_cell(r[c]))
                     for c in columns])
     return buf.getvalue().encode("utf-8")
 
