@@ -429,7 +429,10 @@ was continued), with an `annotations_snapshot` of the copy it opens with, then
 `planted_reference_layer` (`shown`), `planted_item_jumped` (`kind`, `fixed`), `planted_restarted`
 and, after a trainee's save, `planted_result_shown` (`fixed`, `n_errors`, `new_mistakes`); an
 expert's try opens with `recording_opened` (`segment` `planted`). Making an exercise in the expert
-area logs `planted_made` (`set_id`, `n_errors`, `capped` or `from`) and `planted_removed`. In the library: `library_filtered` (the names of the filters used,
+area logs `planted_made` (`set_id`, `n_errors`, `capped` or `from`) and `planted_removed`. An expert
+making their own version with mistakes opens with `recording_opened` (`segment` `planted`) and
+`planted_author_opened` (`start`: `reference` or `empty`; `n_marks`), and logs `planted_author_saved`
+(`n_errors`, `n_marks`) or `planted_author_refused` (`code`, the study's reason). In the library: `library_filtered` (the names of the filters used,
 never what was typed in the search, and the number shown), `library_opened_entry`
 (`status`, `kinds`), `library_downloaded` (`kind`, `n`) and `library_promoted`
 (`to`, `already`, `explanation_length`). On an annotator's home page,

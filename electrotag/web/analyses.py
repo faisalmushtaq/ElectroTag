@@ -203,11 +203,13 @@ class Analyses:
 
     @staticmethod
     def _annotation_files(root: Path, recordings: set[str] | None, leave_out: set[str] | None = None) -> list[Path]:
-        from electrotag.app.io.naming import INTERNAL_DIR
+        from electrotag.app.io.naming import INTERNAL_DIR, is_flawed_file
         from electrotag.reliability.data import select_annotation_files
 
         out = []
         for p in sorted(root.rglob("*_annotations.json")):
+            if is_flawed_file(p):  # a version with deliberate mistakes, for a training exercise only
+                continue
             rel = p.relative_to(root).parts
             if rel and rel[0] in (INTERNAL_DIR, "interaction_logs", "activity_reports"):
                 continue

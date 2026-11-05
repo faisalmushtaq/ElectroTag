@@ -2,13 +2,17 @@
 the analyses" and "Correct the marks").
 
 The study keeps, with a reference set, a flawed copy of the experts' marks for some of its guided recordings:
-``rs.guided["planted"][recording_id] = {"annotations", "errors", "seed", "counts", "capped", "notes",
-"made_by", "made_at", "method", "reference_sha256"}``. :mod:`electrotag.training.planted` makes it (from a seed,
-so that every trainee meets the same exercise) or finds the mistakes in an expert's own deliberately flawed
-annotations, and scores a trainee's corrections. Experts and administrators make, look at, replace and remove
-the exercises through the expert channel (``planted_list``, ``planted_get``, ``set_planted_make``,
-``set_planted_from``, ``set_planted_remove``); the admin channel offers the same as ``set_planted_get``,
-``set_planted_make``, ``set_planted_from`` and ``set_planted_remove``. Every change is audited.
+``rs.guided["planted"][recording_id] = {"annotations", "errors", "seed", "counts", "capped", "notes", "made_by",
+"made_at", "method", "reference_sha256", "file"?}``. :mod:`electrotag.training.planted` makes it (from a seed, so
+that every trainee meets the same exercise) or finds the mistakes in an expert's own deliberately flawed version,
+and scores a trainee's corrections. An expert's version is made on the Correct the marks page from the marks they
+draw there (Source ``marks``) or given as an annotation file (Source ``document``), and is kept with the set as
+``flawed/<recording's folders>/<stem>_annotator-<ID>_flawed_annotations.json`` (``rec["file"]``): no analysis reads
+a file named so (:func:`electrotag.app.io.naming.is_flawed_file`), and someone's saved study work is never taken as
+one, since it counts in the analyses. Experts and administrators make, look at, replace and remove the exercises
+through the expert channel (``planted_list``, ``planted_get``, ``set_planted_make``, ``set_planted_from``,
+``set_planted_remove``); the admin channel offers the same as ``set_planted_get``, ``set_planted_make``,
+``set_planted_from`` and ``set_planted_remove``. Every change is audited.
 
 What a trainee sees is :func:`trainee_view` (the copy and one instruction, never which marks are wrong) and
 :func:`trainee_score` (practice feedback against the reference, and the planted mistakes fixed, not fixed, and
@@ -39,6 +43,10 @@ INSTRUCTION = ("Some of these marks are wrong and some artifacts are not marked.
                "the type, start, end or channels of any mark that is wrong, remove marks where there is no artifact "
                "and mark what is missing. Then press Save and Finish to see how you did.")
 SEED_MAX = 1_000_000
+#: The most marks an expert's version may hold.
+MAX_MARKS = 5000
+#: The folder of a set that keeps its experts' versions with deliberate mistakes.
+FLAWED_DIR = "flawed"
 
 
 def _bad(message: str, code: str = "bad_request", status: int = 400, **extra: Any) -> ApiError:
@@ -115,7 +123,7 @@ def planted_out(rs: ReferenceSet, rid: str, rec: dict[str, Any] | None) -> dict[
             "seed": rec.get("seed"), "counts": rec.get("counts"), "capped": bool(rec.get("capped")),
             "notes": list(rec.get("notes") or []), "method": rec.get("method", "auto"),
             "made_by": rec.get("made_by", ""), "made_at": rec.get("made_at", ""),
-            "stale": not is_current(rs, rid, rec)}
+            **({"file": rec["file"]} if rec.get("file") else {}), "stale": not is_current(rs, rid, rec)}
 
 
 def _done_by(service: StudyService, rs: ReferenceSet, rid: str) -> list[str]:
@@ -164,14 +172,39 @@ def listing(service: StudyService, user: User, body: dict[str, Any]) -> dict[str
 
 
 # ------------------------------------------------------------------ saving
+def flawed_path(rid: str, annotator_id: str) -> str:
+    """Where a set keeps an expert's version of ``rid`` with deliberate mistakes, relative to the set's folder:
+    ``flawed/sub-001/eeg/sub-001_task-rest_eeg_annotator-E01_flawed_annotations.json``."""
+    from pathlib import PurePosixPath
+
+    from electrotag.app.common import safe_component
+    from electrotag.app.io.naming import OUTPUT_SUFFIXES, flawed_basename
+
+    rel = PurePosixPath(rid)
+    folders = [safe_component(x) for x in rel.parent.parts if x not in ("", ".")]
+    if any(x == ".." for x in rel.parts):
+        raise _bad(f"Unsafe recording identifier {rid!r}")
+    name = flawed_basename(safe_component(rel.stem), safe_component(annotator_id)) + OUTPUT_SUFFIXES["annotations_json"]
+    return str(PurePosixPath(FLAWED_DIR, *folders, name))
+
+
 def _keep(service: StudyService, user: User, rs: ReferenceSet, rid: str, rec: dict[str, Any] | None,
-          op: str, summary: str, details: dict[str, Any]) -> dict[str, Any]:
-    """Store (or, with None, remove) the exercise of ``rid`` in the set, audited."""
+          op: str, summary: str, details: dict[str, Any], flawed: bytes | None = None) -> dict[str, Any]:
+    """Store (or, with None, remove) the exercise of ``rid`` in the set, audited. ``flawed`` is the file of an
+    expert's version, kept at ``rec["file"]``; the file of the exercise it replaces goes."""
     with service.administration._editing(rs.set_id) as edited:
         planted = dict(edited.guided.get("planted") or {})
+        old = planted.get(rid) if isinstance(planted.get(rid), dict) else {}
+        old_file = str(old.get("file") or "")
+        if old_file and old_file.startswith(f"{FLAWED_DIR}/") and ".." not in old_file.split("/"):
+            (edited.directory / old_file).unlink(missing_ok=True)
         if rec is None:
             planted.pop(rid, None)
         else:
+            if flawed is not None:
+                target = edited.directory / rec["file"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(flawed)
             planted[rid] = rec
         edited.guided["planted"] = planted
         edited.save()
@@ -213,38 +246,91 @@ def make(service: StudyService, user: User, body: dict[str, Any]) -> dict[str, A
                  {"seed": p.seed, "counts": p.made, "capped": p.capped})
 
 
+def _study_work(service: StudyService, doc: AnnotationDocument) -> bool:
+    """True when ``doc`` is someone's saved study work (its session is a completed research annotation)."""
+    sid = str(doc.session_id or "")
+    return bool(sid) and any(e.get("session_id") == sid and e.get("mode", "standard") == "standard"
+                             for e in service.store.completion_entries())
+
+
+def _marks(service: StudyService, raw: Any) -> list[Any]:
+    """The marks of Source ``marks``, as the API's Annotation (samples)."""
+    from electrotag.training.planted import from_wire
+
+    if not isinstance(raw, list):
+        raise _bad("source.annotations must be a list of marks")
+    if len(raw) > MAX_MARKS:
+        raise ApiError(413, "too_large", f"A version can hold at most {MAX_MARKS} marks")
+    out = []
+    for i, d in enumerate(raw, 1):
+        try:
+            out.append(from_wire(d))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise _bad(f"Mark {i} is not a mark (annotation_id, label, onset_sample, duration_samples, "
+                       "channels)") from exc
+    return out
+
+
 def make_from(service: StudyService, user: User, body: dict[str, Any]) -> dict[str, Any]:
-    """``set_planted_from``: an expert's own deliberately flawed annotations as the exercise (Source ``annotator``,
-    someone's saved annotations of the recording, or ``document``, an annotation file), the mistakes found by
-    comparing them with the reference."""
+    """``set_planted_from``: an expert's own version with deliberate mistakes as the exercise: the marks they drew on
+    the Correct the marks page (Source ``marks``) or an annotation file (Source ``document``), the mistakes found by
+    comparing it with the reference. The version is kept with the set under a ``_flawed`` name, which no analysis
+    reads. Someone's saved study work is refused (``study_work``): it counts in the analyses."""
+    from electrotag.app.annotations.model import AnnotationDocument, AnnotationError
+    from electrotag.app.io.canonical import annotations_json_bytes
     from electrotag.training.planted import errors_from, reference_sha256, wire
 
     rs, rid = _set_and_recording(service, body)
     source = body.get("source")
-    if not isinstance(source, dict) or source.get("kind") not in ("annotator", "document"):
-        raise _bad("source.kind must be annotator (someone's saved annotations) or document (an annotation file)")
+    kind = source.get("kind") if isinstance(source, dict) else None
+    if kind == "annotator":
+        raise _bad("Someone's saved study work counts in the analyses, so it cannot be an exercise. Make the version "
+                   "with mistakes on the Correct the marks page instead (Make my own version with mistakes).",
+                   "study_work", 409)
+    if kind not in ("marks", "document"):
+        raise _bad("source.kind must be marks (the marks of an expert's version) or document (an annotation file)")
     ref = _reference(rs, rid)
-    with tempfile.TemporaryDirectory(prefix="electrotag-planted-") as tmp:
-        src = service.administration._source(source, rid, Path(tmp))
-    doc = src["doc"]
-    t = doc.recording.timing
-    if abs(float(t.sfreq) - float(ref.recording.timing.sfreq)) > 1e-6 or int(t.n_samples) != \
-            int(ref.recording.timing.n_samples):
-        raise _bad(f"These annotations describe a recording of {t.n_samples} samples at {t.sfreq:g} Hz, not {rid}",
-                   "invalid_document", 422)
-    errors = errors_from(doc, ref, _tolerance(rs))
+    if kind == "marks":
+        annotations, made_by_file = _marks(service, source.get("annotations")), ""
+    else:
+        with tempfile.TemporaryDirectory(prefix="electrotag-planted-") as tmp:
+            src = service.administration._source(source, rid, Path(tmp))
+        doc = src["doc"]
+        t = doc.recording.timing
+        if abs(float(t.sfreq) - float(ref.recording.timing.sfreq)) > 1e-6 or int(t.n_samples) != \
+                int(ref.recording.timing.n_samples):
+            raise _bad(f"These annotations describe a recording of {t.n_samples} samples at {t.sfreq:g} Hz, not {rid}",
+                       "invalid_document", 422)
+        if _study_work(service, doc):
+            raise _bad("This file is someone's saved study work, which counts in the analyses, so it cannot be an "
+                       "exercise. Make the version with mistakes on the Correct the marks page instead (Make my own "
+                       "version with mistakes).", "study_work", 409)
+        annotations, made_by_file = list(doc.annotations), doc.annotator_id
+    author = user.annotator_id
+    flawed = AnnotationDocument(recording=ref.recording, annotator_id=author, annotations=annotations,
+                                catalogue=service.store.catalogue, annotator_display_name=user.display_name,
+                                session_id=f"flawed-{secrets.token_hex(8)}", mode="guided", created_at=now_local_iso(),
+                                context={"reference_set_id": rs.set_id, "deliberate_mistakes": True,
+                                         **({"from_file_of": made_by_file} if made_by_file else {})})
+    try:
+        flawed.validate()
+    except AnnotationError as exc:
+        raise _bad(f"This version cannot be kept: {exc}", "invalid_document", 422) from exc
+    errors = errors_from(flawed, ref, _tolerance(rs))
     if not errors:
         raise _bad("These annotations agree with the reference within the guided tolerance, so they hold no mistakes "
                    "to correct.", "no_mistakes", 422)
-    rec = {"annotations": [wire(a) for a in doc.sorted_annotations()], "errors": errors, "seed": None,
+    rec = {"annotations": [wire(a) for a in flawed.sorted_annotations()], "errors": errors, "seed": None,
            "counts": {k: sum(1 for e in errors if e["kind"] == k) for k in sorted({e["kind"] for e in errors})},
            "requested": None, "capped": False, "notes": [], "method": "from_annotations",
-           "source": {"kind": source.get("kind"), "experts": list(src.get("experts") or [])},
-           "made_by": user.annotator_id, "made_at": now_local_iso(), "reference_sha256": reference_sha256(ref)}
+           "source": {"kind": kind, "experts": [made_by_file or author]}, "file": flawed_path(rid, author),
+           "made_by": author, "made_at": now_local_iso(), "reference_sha256": reference_sha256(ref)}
+    how = "the marks drawn on the Correct the marks page" if kind == "marks" else "an annotation file"
     return _keep(service, user, rs, rid, rec, "set_planted_from",
-                 f"Made a correct-the-marks exercise of {rid} in {rs.set_id} from "
-                 f"{', '.join(src.get('experts') or []) or 'an annotation file'}: "
-                 f"{audit.count(len(errors), 'mistake')}", {"source": rec["source"], "n_errors": len(errors)})
+                 f"Made a correct-the-marks exercise of {rid} in {rs.set_id} from {how}: "
+                 f"{audit.count(len(errors), 'mistake')}",
+                 {"source": rec["source"], "n_errors": len(errors), "file": rec["file"]},
+                 flawed=annotations_json_bytes(flawed))
 
 
 def remove(service: StudyService, user: User, body: dict[str, Any]) -> dict[str, Any]:
@@ -361,6 +447,6 @@ def _set_planted_remove(service: StudyService, user: User, body: dict[str, Any])
     return remove(service, user, body)
 
 
-__all__ = ["CORRECT_THE_MARKS", "INSTRUCTION", "get", "is_current", "listing", "make", "make_from", "planted_out",
-           "remove", "stored",
+__all__ = ["CORRECT_THE_MARKS", "FLAWED_DIR", "INSTRUCTION", "flawed_path", "get", "is_current", "listing", "make",
+           "make_from", "planted_out", "remove", "stored",
            "trainee_score", "trainee_view"]

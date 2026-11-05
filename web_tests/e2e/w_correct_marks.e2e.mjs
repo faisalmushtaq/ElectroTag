@@ -2,7 +2,8 @@
 // an expert opens the sandbox's ready-made exercise in the expert area, tries it and checks the
 // corrections in the browser; on a study server, the study team makes an exercise for a guided
 // recording and a trainee corrects the marks on the training path, goes through the result on the EEG
-// (N and P) and finds it again on the training path's card.
+// (N and P) and finds it again on the training path's card; and an expert makes their own version with
+// mistakes, which the study keeps with the set under a _flawed name that no analysis reads.
 import fs from 'node:fs';
 import path from 'node:path';
 import { clickDialogButton, pressSave, signIn, skipFirstStages, waitForRoute, waitForTraces } from './helpers.mjs';
@@ -128,6 +129,69 @@ export const tests = [
       const prog = JSON.parse(fs.readFileSync(path.join(t.study.dir, 'study', 'Annotated_Events', 'training_progress', 'correct-check', 'annotator-T06.json'), 'utf8'));
       assert.equal(prog.guided[GUIDED].kind, 'correct');
       assert.equal(prog.guided[GUIDED].fixed, made.planted.n_errors);
+    },
+  },
+  {
+    name: 'on a study server: an expert makes their own version with mistakes, kept with the set under a _flawed name',
+    needs: 'study',
+    async run(t) {
+      const { assert } = t;
+      const call = async (token, method, p, body) => {
+        const r = await fetch(`${t.study.base}api/v1${p}`, { method, body: body ? JSON.stringify(body) : undefined,
+          headers: { 'Content-Type': 'application/json', 'X-ElectroTag': '1', ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+        const j = await r.json();
+        if (!r.ok) throw new Error(`${method} ${p}: ${r.status} ${JSON.stringify(j)}`);
+        return j;
+      };
+      const GUIDED = 'sub-example01/eeg/sub-example01_task-example_eeg.vhdr';
+      const admin = (await call(null, 'POST', '/login', { annotator_id: 'ADMIN', password: 'electrotag' })).token;
+      await call(admin, 'POST', '/admin/user_add', { annotator_id: 'E07', display_name: 'Expert seven', password: 'expert seven', roles: ['expert'] });
+      const before = await call(admin, 'POST', '/expert/planted_get', { set_id: 'example', recording_id: GUIDED });
+      const setName = (await call(admin, 'POST', '/expert/planted_list', {})).sets.find((x) => x.set_id === 'example').name;
+
+      const page = await t.newPage({ url: t.study.base, width: 1440, height: 900 });
+      await signIn(page, 'E07', 'expert seven');
+      await page.waitForFunction(() => globalThis.ElectroTag && globalThis.ElectroTag.route !== 'signin');
+      await page.evaluate(() => globalThis.ElectroTag.showExpert('expert-planted'));
+      await waitForRoute(page, 'expert-planted');
+      await page.waitForSelector('[data-section="planted"] .planted-row');
+      await page.locator('[data-section="planted"] .admin-card', { has: page.locator('h2', { hasText: setName }) })
+        .locator(`.planted-row[data-recording="${GUIDED}"] [data-log="planted-open"]`).click();
+      await page.waitForSelector('.planted-admin [data-part="planted-own"]');
+      await page.locator('.planted-admin summary', { hasText: 'Make my own version with mistakes' }).click();
+      await page.click('[data-log="planted-own-reference"]');
+      await waitForRoute(page, 'expert-planted-make');
+      const folder = path.join(t.study.dir, 'recordings', 'training', 'sub-example01', 'eeg');
+      await page.setInputFiles('input[data-log="file-input"]', fs.readdirSync(folder).filter((f) => /\.(vhdr|vmrk|eeg)$/.test(f)).map((f) => path.join(folder, f)));
+      await page.waitForSelector('.planted-author', { timeout: 30000 });
+      await waitForTraces(page);
+      assert.equal(await page.evaluate(() => globalThis.ElectroTag.ws.store.size), before.reference.length, 'it starts from the experts\' marks');
+      assert.match(await page.textContent('.planted-author'), /no analysis reads/);
+      await t.screenshot(page, 'planted_author');
+      // one mark left out: the deliberate mistake
+      await page.evaluate(() => { const ws = globalThis.ElectroTag.ws; ws.store.reset([...ws.store.annotations()].slice(1).map((a) => ({ ...a }))); });
+      await page.click('[data-log="planted-author-save"]');
+      await page.waitForSelector('.dialog .dialog-title:text("The exercise is made")', { timeout: 30000 });
+      assert.match(await page.textContent('.dialog'), /1 deliberate mistake\b/);
+      await clickDialogButton(page, 'Back to Correct the marks');
+      await waitForRoute(page, 'expert-planted');
+
+      const got = await call(admin, 'POST', '/expert/planted_get', { set_id: 'example', recording_id: GUIDED });
+      assert.equal(got.planted.method, 'from_annotations');
+      assert.equal(got.planted.n_errors, 1);
+      assert.equal(got.planted.made_by, 'E07');
+      assert.equal(got.planted.file, 'flawed/sub-example01/eeg/sub-example01_task-example_eeg_annotator-E07_flawed_annotations.json');
+      const kept = path.join(t.study.dir, 'study', 'derivatives', 'electrotag_reference_sets', 'example', got.planted.file);
+      const doc = JSON.parse(fs.readFileSync(kept, 'utf8'));
+      assert.equal(doc.annotator.annotator_id, 'E07');
+      assert.equal(doc.session.context.deliberate_mistakes, true);
+      assert.equal(doc.annotations.length, before.reference.length - 1);
+      // the sandbox's exercise of this recording as it was, for the tests that follow
+      if (before.planted && before.planted.method === 'auto') {
+        await call(admin, 'POST', '/expert/set_planted_make', { set_id: 'example', recording_id: GUIDED, seed: before.planted.seed, counts: before.planted.counts });
+      } else {
+        await call(admin, 'POST', '/expert/set_planted_remove', { set_id: 'example', recording_id: GUIDED });
+      }
     },
   },
 ];

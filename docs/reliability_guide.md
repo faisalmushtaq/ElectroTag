@@ -67,7 +67,12 @@ line; `progress` and `cancel` callbacks report each step and stop the
 analysis.
 
 Input folders are searched for `*_annotations.json` files. By default only
-standard-mode annotations are used (training files are excluded). Files are
+standard-mode annotations are used (training files are excluded). A version an
+expert made with deliberate mistakes for a training exercise, whose file name
+ends in `_flawed_annotations.json` ([file formats](file_formats.md)), is never
+read, wherever it is and even when it is named on the command line, so an
+expert's correct annotations count while their deliberately flawed versions
+do not. Files are
 grouped by recording; only recordings annotated by at least two annotators
 contribute to comparisons. When no recording has two annotators to compare,
 or only some have, the report and the command line say so first, and the

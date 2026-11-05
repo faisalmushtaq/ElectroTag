@@ -692,7 +692,17 @@ not to restore, is moved to `.electrotag/interrupted/autosave/`.
     reference_set.json
     references/<recording>_reference_annotations.json
     sources/<recording>/...    copies of the expert files used (with SHA-256 in reference_set.json)
+    flawed/<recording's folders>/<stem>_annotator-<ID>_flawed_annotations.json
+                               an expert's own version with deliberate mistakes (Correct the marks)
 ```
+
+A file whose name ends in `_flawed_annotations.json` (or `_flawed` before any other
+result suffix) is a version an expert made with deliberate mistakes for a training
+exercise. It is an ordinary ElectroTag annotation file, by that expert, in `guided`
+mode with `deliberate_mistakes: true` and the set's ID in its session context, so the
+training viewer can open it; the agreement analysis, the admin area's analyses and
+the competency reports never read a file named so, wherever it is copied, and
+`electrotag agreement` leaves it out even when it is named on the command line.
 
 `reference_set.json` holds `set_id`, `name`, `description`, `provenance`
 (method `single_expert`, `consensus` or `adjudicated`, experts, notes), the
@@ -705,8 +715,9 @@ recording: `annotations`, the copy with its mistakes; `errors`, each mistake wit
 its `kind` (`missing`, `type`, `boundary`, `extra`, or `channels` when found in an
 expert's own file), `reference_id`, `planted_id`, `label`, samples and `detail`;
 `seed`, `counts`, `capped`, `notes`, `method` (`auto` or `from_annotations`),
-`made_by`, `made_at` and `reference_sha256`, the fingerprint of the reference it
-was made from), `practice_pass`, `recordings_dir` for a self-contained set,
+`made_by`, `made_at`, `reference_sha256`, the fingerprint of the reference it
+was made from, and, for an expert's own version, `source` and `file`, the path of
+that version under `flawed/`), `practice_pass`, `recordings_dir` for a self-contained set,
 `assigned_annotators`, `snippets` (the examples of artifact types for the training path's *Meet the
 artifacts* that the study team added or promoted from the library of conflicts: `snippet_id`, `recording_id`,
 `start_s`, `end_s`, `label`, `explanation`, `context_s`, `channels` and `source`;
