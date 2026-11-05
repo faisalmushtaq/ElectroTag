@@ -140,7 +140,8 @@ def test_every_link_in_the_guides_reaches_its_page_and_heading():
     cache: dict[Path, set[str]] = {}
     broken = []
     for doc in docs():
-        for target, anchor in re.findall(r"\]\(([^)\s#]*)(?:#([^)\s]+))?\)", _outside_code(doc.read_text(encoding="utf-8"))):
+        text = _outside_code(doc.read_text(encoding="utf-8"))
+        for target, anchor in re.findall(r"\]\(([^)\s#]*)(?:#([^)\s]+))?\)", text):
             if re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
                 continue
             page = (doc.parent / target).resolve() if target else doc
