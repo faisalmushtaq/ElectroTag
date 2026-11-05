@@ -120,6 +120,78 @@ def test_an_experts_own_flawed_annotations_and_the_admin_channel(service: StudyS
                                          "recording_id": GUIDED1})["planted"] is None
 
 
+def test_an_experts_version_drawn_on_the_page_is_kept_under_a_flawed_name(service: StudyService,
+                                                                           tmp_path: Path) -> None:
+    import json
+
+    from electrotag.app.io.canonical import document_from_dict
+    from electrotag.app.io.naming import is_flawed_file
+    from electrotag.reliability.data import collect_annotation_files
+    from electrotag.training.planted import wire
+
+    ref = reference_annotations(service.store, "example", GUIDED1)
+    first = ref[0]
+    label = "Eye-movement-artifact" if first.label != "Eye-movement-artifact" else "Eye-blink-artifact"
+    # the marks an expert drew on the Correct the marks page: the first relabelled, the last left out
+    marks = [wire(replace(first, label=label)), *[wire(a) for a in ref[1:-1]]]
+    out = ex(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+             source={"kind": "marks", "annotations": marks})
+    p = out["planted"]
+    assert p["method"] == "from_annotations" and sorted(e["kind"] for e in p["errors"]) == ["missing", "type"]
+    assert p["file"] == ("flawed/sub-example01/eeg/"
+                         "sub-example01_task-example_eeg_annotator-E01_flawed_annotations.json")
+    # kept with the set under its _flawed name, as E01's version with deliberate mistakes
+    files = service.store.reference_set_payload("example")[1]
+    assert is_flawed_file(p["file"]) and p["file"] in files
+    kept = document_from_dict(json.loads(files[p["file"]]))
+    assert kept.annotator_id == "E01" and kept.mode == "guided" and len(kept.annotations) == len(ref) - 1
+    assert kept.context["deliberate_mistakes"] is True and kept.context["reference_set_id"] == "example"
+    # no analysis reads it, wherever it is copied
+    copied = tmp_path / "results" / Path(p["file"]).name
+    copied.parent.mkdir()
+    copied.write_bytes(files[p["file"]])
+    assert collect_annotation_files([tmp_path / "results"]) == []
+    # a version that is the reference itself has no mistakes; marks that are not marks are refused
+    assert err(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+               source={"kind": "marks", "annotations": [wire(a) for a in ref]}).code == "no_mistakes"
+    assert err(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+               source={"kind": "marks", "annotations": "all of them"}).status == 400
+    assert err(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+               source={"kind": "marks", "annotations": [{"label": "x"}]}).status == 400
+    unknown = [{**marks[0], "label": "Not-a-label"}, *marks[1:]]
+    assert err(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+               source={"kind": "marks", "annotations": unknown}).code == "invalid_document"
+    # making the exercise from a seed instead, or removing it, takes the version's file away
+    ex(service, E01, "set_planted_make", set_id="example", recording_id=GUIDED1, seed=3)
+    assert not any(n.startswith("flawed/") for n in service.store.reference_set_payload("example")[1])
+    ex(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+       source={"kind": "marks", "annotations": marks})
+    ex(service, E01, "set_planted_remove", set_id="example", recording_id=GUIDED1)
+    assert not any(n.startswith("flawed/") for n in service.store.reference_set_payload("example")[1])
+
+
+def test_saved_study_work_is_never_an_exercise(service: StudyService, monkeypatch: pytest.MonkeyPatch) -> None:
+    rs = service.reference_set("example")
+    ref = reference_annotations(service.store, "example", GUIDED1)
+    assert err(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+               source={"kind": "annotator", "annotator_id": "E01"}).code == "study_work"
+    # a file downloaded from saved study work: its session is a completed research annotation
+    doc = document(rs, ref[:-1])
+    doc["session"]["session_id"] = "20261105T100000Z-0a1b2c3d"
+    real = service.store.completion_entries
+    saved = {"recording_id": "sub-example02/eeg/sub-example02_task-example_eeg.vhdr", "annotator_id": "E01",
+             "mode": "standard", "context": "", "status": "completed", "session_id": "20261105T100000Z-0a1b2c3d"}
+    monkeypatch.setattr(service.store, "completion_entries",
+                        lambda annotator_id=None: [*real(annotator_id), saved])
+    assert err(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+               source={"kind": "document", "document": doc}).code == "study_work"
+    # the same marks from a file made elsewhere are taken
+    doc["session"]["session_id"] = "made-elsewhere"
+    p = ex(service, E01, "set_planted_from", set_id="example", recording_id=GUIDED1,
+           source={"kind": "document", "document": doc})["planted"]
+    assert p["n_errors"] == 1 and p["file"].endswith("_annotator-E01_flawed_annotations.json")
+
+
 def test_the_trainees_side(service: StudyService) -> None:
     from electrotag.app.annotations.model import AnnotationDocument
     from electrotag.web.correct_marks import trainee_score, trainee_view

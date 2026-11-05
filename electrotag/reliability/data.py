@@ -48,16 +48,21 @@ class AgreementDataset:
 
 
 def collect_annotation_files(paths: Iterable[Path | str]) -> list[Path]:
+    """The ``*_annotations.json`` files in the folders given (and the files given), leaving out versions made with
+    deliberate mistakes for a training exercise (``…_flawed_annotations.json``), even when named directly."""
+    from electrotag.app.io.naming import is_flawed_file
+
     out: list[Path] = []
     for p in paths:
         p = Path(p)
         if p.is_dir():
             out.extend(
                 q for q in sorted(p.rglob("*_annotations.json"))
-                if not any(part.startswith(".") for part in q.relative_to(p).parts)
+                if not any(part.startswith(".") for part in q.relative_to(p).parts) and not is_flawed_file(q)
             )
         elif p.is_file():
-            out.append(p)
+            if not is_flawed_file(p):
+                out.append(p)
         else:
             raise FileNotFoundError(f"Not found: {p}")
     return sorted(set(out))

@@ -1286,10 +1286,19 @@ every mark of the copy has a new identifier, so nothing in it shows which marks 
 how many of each kind (one each by default) and, if you want, the **seed**: the same seed always gives
 the same exercise, so every trainee meets the same one, and **Make it again** with another seed gives
 another. A small reference takes fewer mistakes than asked (at most half its marks are changed), and
-the page says so. The page lists each mistake in plain words. **Use an annotation file with
-deliberate mistakes** takes an expert's own flawed version instead (annotate the recording with the
-mistakes you want trainees to find and give its `_annotations.json`): the study finds the mistakes by
-comparing it with the reference. **Try it** opens the recording from this computer with the copy, as a
+the page says so. The page lists each mistake in plain words.
+
+An expert can also make the exercise themselves. **Make my own version with mistakes** opens the
+recording from this computer, starting from the experts' marks (**Start from the experts' marks**) or
+from none (**Start from no marks**). Put in the mistakes you want trainees to find, using **Show the
+experts' marks** to compare, and press **Save as the exercise**: the study finds the mistakes by
+comparing your version with the reference and says how many it found. **Use an annotation file with
+deliberate mistakes** does the same with an `_annotations.json` made outside this study. Either way
+the study keeps the version with the reference set as a version with deliberate mistakes, named
+`…_annotator-<ID>_flawed_annotations.json` ([file formats](../file_formats.md)), and no analysis reads
+a file named so, so the same expert's correct annotations of other recordings count in the analyses
+as usual. Work saved in the study is never used as a version with mistakes: a file of it is refused,
+since it counts in the analyses. **Try it** opens the recording from this computer with the copy, as a
 trainee sees it, but nothing is saved: correct it, press **Check my corrections** to see what a trainee
 would be told, and **Show the experts' marks** to see the reference as dashed outlines. **Remove the
 exercise** gives the recording back to the step-by-step coach.

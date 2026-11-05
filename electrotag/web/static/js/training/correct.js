@@ -9,11 +9,15 @@
 // card says the result afterwards. For an expert trying an exercise
 // (js/expert/planted.js, purpose "planted"), nothing is saved: Check my corrections scores them in the
 // browser (planted_scoring.js, the same rules as the study's), and the experts' marks can be shown as
-// dashed outlines.
+// dashed outlines. An expert making their own version with mistakes (mode "author", from Make my own
+// version with mistakes) starts from the experts' marks or from nothing, puts the mistakes in, and Save
+// as the exercise sends the marks to set_planted_from (Source "marks"); the study keeps the version with
+// the reference set under a _flawed name, which no analysis reads (docs/web/admin.md, "Correct the marks").
 //
 // Log events: planted_opened {mode, n_planted, restored}, planted_checked {fixed, n_errors, new_mistakes},
 // planted_reference_layer {shown}, planted_item_jumped {kind, fixed}, planted_restarted, planted_result_shown
-// {fixed, n_errors, new_mistakes}, planted_review_item {kind, fixed, item}.
+// {fixed, n_errors, new_mistakes}, planted_review_item {kind, fixed, item}; the author's planted_author_opened {start,
+// n_marks}, planted_author_saved {n_errors, n_marks} and planted_author_refused {code}.
 
 import { h, append, clear } from '../ui/dom.js';
 import { showDialog } from '../ui/dialog.js';
@@ -124,8 +128,9 @@ export async function openCorrectionsReview(app, session, planted) {
 export class CorrectPanel {
   /**
    * @param ws the annotation view
-   * @param o {mode: 'trainee' | 'try', view: {start_annotations, instruction, n_planted}, backend, recordingId,
-   *   target (try: planted_get's answer, with the reference and the mistakes)}
+   * @param o {mode: 'trainee' | 'try' | 'author', view: {start_annotations, instruction, n_planted}, backend,
+   *   recordingId, target (try and author: planted_get's answer, with the reference and the mistakes; author:
+   *   with `author` = {start: 'reference' | 'empty', save(marks) -> set_planted_from's answer, done()})}
    */
   constructor(ws, { mode = 'trainee', view, backend, recordingId, target = null }) {
     this.ws = ws;
@@ -141,6 +146,10 @@ export class CorrectPanel {
   }
 
   _build() {
+    if (this.mode === 'author') {
+      this._buildAuthor();
+      return;
+    }
     const n = Number(this.view.n_planted) || 0;
     this.feedback = h('div.coach-feedback', { role: 'status', 'aria-live': 'polite', hidden: true });
     this.resultHost = h('div.planted-host');
@@ -165,10 +174,67 @@ export class CorrectPanel {
       this.mode === 'try' ? h('div.coach-buttons', {}, this.restartBtn, this.layerBtn, this.checkBtn) : null);
   }
 
+  /** The expert's own version with mistakes: the marks to change, the experts' marks to compare, and the save. */
+  _buildAuthor() {
+    this.feedback = h('div.coach-feedback', { role: 'status', 'aria-live': 'polite', hidden: true });
+    this.resultHost = h('div.planted-host');
+    this.layerBtn = h('button.btn.small', { type: 'button', 'data-log': 'planted-layer', 'aria-pressed': 'false', onclick: () => this.toggleReference() }, "Show the experts' marks");
+    this.restartBtn = h('button.btn.quiet.small', { type: 'button', 'data-log': 'planted-restart', onclick: () => this.restart() }, 'Start again');
+    this.saveBtn = h('button.btn.primary', { type: 'button', 'data-log': 'planted-author-save', onclick: () => this.saveVersion() }, 'Save as the exercise');
+    for (const b of [this.layerBtn, this.restartBtn, this.saveBtn]) b.addEventListener('mousedown', (e) => e.preventDefault());
+    const fromRef = (this.target && this.target.author && this.target.author.start) !== 'empty';
+    this.el = h('section.coach.card.planted-panel.planted-author', { 'aria-label': 'Make my own version with mistakes' },
+      h('div.coach-scroll', {},
+        h('p.caption.coach-header', {}, 'Your version with deliberate mistakes'),
+        h('h2.coach-title', {}, 'Make my own version with mistakes'),
+        this.feedback,
+        h('p.coach-body', {}, `${fromRef ? "The experts' marks are shown. " : 'You start from no marks. '}Put in the mistakes you want trainees to find: `
+          + 'leave a mark out, give a mark another type, move a start or an end, change its channels, or mark where there is no artifact. '
+          + "Show the experts' marks to compare."),
+        h('p.caption', {}, 'Save as the exercise keeps your version with the reference set as a version with deliberate mistakes '
+          + '(its file name ends in _flawed_annotations.json), which no analysis reads. The study finds the mistakes by comparing it with the experts\' marks.'),
+        this.resultHost,
+        this.backend && this.backend.isDemo ? h('p.caption.demo-note', {}, DEMO_NOTICE) : null),
+      h('div.coach-buttons', {}, this.restartBtn, this.layerBtn, this.saveBtn));
+  }
+
+  /** Save as the exercise: the marks on screen go to the study, which keeps them under a _flawed name. */
+  async saveVersion() {
+    const author = (this.target && this.target.author) || {};
+    const marks = [...this.ws.store.annotations()].map((a) => ({ annotation_id: a.annotation_id, label: a.label,
+      onset_sample: a.onset_sample, duration_samples: a.duration_samples, channels: [...(a.channels || [])] }));
+    this.saveBtn.disabled = true;
+    this.saveBtn.textContent = 'Saving…';
+    let out;
+    try {
+      out = await author.save(marks);
+    } catch (exc) {
+      this._feedback(exc && exc.message ? exc.message : String(exc), 'banner');
+      logger.event('planted_author_refused', { code: (exc && exc.code) || '' });
+      this.saveBtn.disabled = false;
+      this.saveBtn.textContent = 'Save as the exercise';
+      return null;
+    }
+    const n = (out && out.planted && out.planted.n_errors) || 0;
+    logger.event('planted_author_saved', { n_errors: n, n_marks: marks.length });
+    const warn = (out && out.warnings && out.warnings.length) ? ` ${out.warnings.join(' ')}` : '';
+    await showDialog({ title: 'The exercise is made', className: 'planted-dialog',
+      logText: `${n} deliberate mistakes`,
+      body: h('div', {}, h('p.dialog-text', {}, `The study found ${plural(n, 'deliberate mistake')} by comparing your version with the experts' marks, `
+        + `and keeps it with the reference set as a version with deliberate mistakes, which no analysis reads.${warn}`)),
+      buttons: [{ label: 'Back to Correct the marks', value: true, kind: 'primary' }], cancelValue: true });
+    if (author.done) await author.done();
+    return out;
+  }
+
   async start() {
     this.ws.coachHost.appendChild(this.el);
     const restored = this.ws.store.size > 0 && this.mode === 'trainee';
     if (!restored) this._fill();
+    if (this.mode === 'author') {
+      logger.event('planted_author_opened', { start: (this.target.author || {}).start || 'reference', n_marks: this.ws.store.size });
+      return;
+    }
     logger.event('planted_opened', { mode: this.mode, n_planted: Number(this.view.n_planted) || 0, restored });
   }
 
@@ -268,7 +334,8 @@ GUIDANCE_PANELS.correct = (ws, o) => new CorrectPanel(ws, { ...o, mode: 'trainee
 
 /**
  * The expert's try of an exercise (purpose "planted", js/views/purposes.js): the file is the study's copy of
- * the guided recording; it opens as a try-out (nothing saved) with the exercise's copy of the marks.
+ * the guided recording; it opens as a try-out (nothing saved) with the exercise's copy of the marks. With
+ * `target.author`, it opens instead for the expert to make their own version with mistakes (mode "author").
  */
 export async function openPlantedTry(app, { recording, fp, view, target }) {
   const parts = await app._openingParts(['session', 'workspace'], () => openPlantedTry(app, { recording, fp, view, target }));
@@ -286,11 +353,14 @@ export async function openPlantedTry(app, { recording, fp, view, target }) {
   if (app.ws) app.ws.destroy();
   const ws = new Workspace(app, session, { kind: 'tryout' });
   app.ws = ws;
-  app._render(ws.el, 'expert-planted-try');
+  app._render(ws.el, t.author ? 'expert-planted-make' : 'expert-planted-try');
   ws.mount(app.content);
   const p = t.planted || {};
-  const panel = new CorrectPanel(ws, { mode: 'try', backend: app.backend, recordingId: t.recording_id, target: t,
-    view: { start_annotations: p.annotations || [], instruction: t.instruction, n_planted: p.n_errors || 0 } });
+  const panel = t.author
+    ? new CorrectPanel(ws, { mode: 'author', backend: app.backend, recordingId: t.recording_id, target: t,
+      view: { start_annotations: t.author.start === 'empty' ? [] : t.reference || [], instruction: '', n_planted: 0 } })
+    : new CorrectPanel(ws, { mode: 'try', backend: app.backend, recordingId: t.recording_id, target: t,
+      view: { start_annotations: p.annotations || [], instruction: t.instruction, n_planted: p.n_errors || 0 } });
   ws.coach = panel;
   await panel.start();
   ws._refreshState();

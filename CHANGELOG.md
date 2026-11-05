@@ -23,6 +23,16 @@ administrator guide's section on settings and commands from the desktop applicat
 design decisions' section on the desktop application's visual design, are gone; the history of the
 change remains in "Web-only" in the design decisions and in the handover notes.
 
+An expert can now make a correct-the-marks exercise from their own version with deliberate mistakes on
+the Correct the marks page: Make my own version with mistakes opens the guided recording from this
+computer with the experts' marks (or none), and Save as the exercise sends the marks to the study,
+which finds the mistakes by comparing them with the reference. The study keeps every expert's version
+with mistakes, whether made there or given as a file, with the reference set as
+`…_annotator-<ID>_flawed_annotations.json`, and the agreement analysis, the admin area's analyses and
+the competency reports never read a file named so, wherever it is copied. Work saved in the study is
+no longer accepted as a version with mistakes (`set_planted_from` answers 409 `study_work`), since it
+counts in the analyses (docs/web/admin.md, "Correct the marks"; docs/file_formats.md).
+
 The documentation, the demonstration and the tests no longer use a person's name in their examples.
 The trainee in the administrator guide's commands, in the example study file and in
 `examples/demo_end_to_end.py` is annotator A04. The example outputs in `examples/example_output`

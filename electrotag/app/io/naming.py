@@ -19,6 +19,8 @@ Layout below the output root (``Annotated_Events`` by default)::
                 sub-001_task-rest_eeg_annotator-A01_interaction_log.jsonl   (the interaction log of this
                                                  version, made from the visits' logs: electrotag/web/recording_logs.py)
         training/<reference_set_id>/<practice|assessment>/annotator-A01/...
+        (a version an expert made with deliberate mistakes for a training exercise is kept with its reference
+         set, as ``<recording stem>_annotator-E01_flawed_annotations.json``; no analysis reads a file named so)
         .electrotag/                   locks and export staging (internal)
 
 The recording's own sub-folders are mirrored, so recordings with identical
@@ -50,6 +52,10 @@ ALWAYS_WRITTEN = ("events_tsv", "events_json", "annotations_json", "time_viewed"
 #: it is made from the visits' logs afterwards (electrotag/web/recording_logs.py), so it never counts as a
 #: result file, an attempt or part of the journalled save.
 RECORDING_LOG_SUFFIX = "_interaction_log.jsonl"
+#: The mark of a version an expert made with deliberate mistakes for a training exercise ("Correct the marks",
+#: electrotag/web/correct_marks.py): ``<recording stem>_annotator-E01_flawed_annotations.json``. The analyses never
+#: read a file named so, wherever it is (:func:`is_flawed_file`); only the training exercise uses it.
+FLAWED_MARK = "_flawed"
 
 INTERNAL_DIR = ".electrotag"
 
@@ -139,6 +145,18 @@ def output_basename(recording_stem: str, annotator_id: str, attempt: int = 1) ->
         raise ValueError("attempt must be >= 1")
     base = f"{recording_stem}_annotator-{annotator_id}"
     return base if attempt == 1 else f"{base}_attempt-{attempt:02d}"
+
+
+def flawed_basename(recording_stem: str, annotator_id: str) -> str:
+    """E.g. ``sub-001_task-rest_eeg_annotator-E01_flawed``: the name of an expert's version with deliberate mistakes."""
+    return output_basename(recording_stem, annotator_id) + FLAWED_MARK
+
+
+def is_flawed_file(path: Path | str) -> bool:
+    """True for a file of a version with deliberate mistakes (``…_flawed_annotations.json`` and its companions),
+    which the analyses leave out."""
+    name = PurePosixPath(str(path).replace("\\", "/")).name
+    return any(name.endswith(FLAWED_MARK + suffix) for suffix in (*OUTPUT_SUFFIXES.values(), RECORDING_LOG_SUFFIX))
 
 
 def output_filenames(basename: str) -> dict[str, str]:

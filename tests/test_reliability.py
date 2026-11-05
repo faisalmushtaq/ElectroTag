@@ -485,3 +485,28 @@ def test_eog_and_ecg_channels_are_included_in_channel_analyses():
     assert (r.both, r.only_1, r.only_2) == pytest.approx((0.5, 0.5, 0.0))  # VEOG agrees, Fp1 only in A
     ev = res.table("events_summary")
     assert row(ev, category="ECG-artifact", channel_mode="time_and_channel", threshold=0.2).f1 == 1.0
+
+
+def test_versions_with_deliberate_mistakes_are_never_analysed(tmp_path):
+    """An expert's version made for a training exercise (``…_flawed_annotations.json``) is left out by its name
+    alone, wherever it is, even when its file says standard mode or is named directly (electrotag/app/io/naming.py)."""
+    from electrotag.app.io.canonical import write_annotations_json
+    from electrotag.app.io.naming import flawed_basename, is_flawed_file, output_basename
+    from electrotag.reliability.data import collect_annotation_files
+
+    blink = [("Eye-blink-artifact", 1.0, 2.0, ())]
+    folder = tmp_path / "Annotated_Events" / "sub-001" / "eeg"
+    folder.mkdir(parents=True)
+    for aid in ("A01", "A02"):
+        write_annotations_json(folder / f"{output_basename('rec', aid)}_annotations.json", doc(aid, blink))
+    flawed = folder / f"{flawed_basename('rec', 'E01')}_annotations.json"
+    write_annotations_json(flawed, doc("E01", [("EMG-artifact", 5.0, 6.0, ())]))
+    assert flawed.name == "rec_annotator-E01_flawed_annotations.json" and is_flawed_file(flawed)
+    assert not is_flawed_file(folder / "rec_annotator-A01_annotations.json")
+    assert not is_flawed_file("sub-flawed_annotator-A01_annotations.json")
+    assert [p.name for p in collect_annotation_files([tmp_path])] == ["rec_annotator-A01_annotations.json",
+                                                                     "rec_annotator-A02_annotations.json"]
+    assert collect_annotation_files([flawed]) == []
+    res = run_analysis([tmp_path], AnalysisConfig(resolutions_s=(1.0,)))
+    assert res.dataset.annotators == ["A01", "A02"]
+    assert "E01" not in json.dumps(res.dataset.files)

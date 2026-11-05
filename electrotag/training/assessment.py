@@ -24,7 +24,7 @@ from electrotag.app.annotations.model import AnnotationDocument
 from electrotag.app.common import now_local_iso
 from electrotag.app.io.atomic import atomic_write_json, atomic_write_text, sha256_file
 from electrotag.app.io.canonical import read_annotations_json
-from electrotag.app.io.naming import OutputLayout
+from electrotag.app.io.naming import OutputLayout, is_flawed_file
 from electrotag.reliability.analysis import run_analysis
 from electrotag.reliability.config import ANY_ARTIFACT, AnalysisConfig
 from electrotag.reliability.data import build_dataset
@@ -381,6 +381,8 @@ def find_assessment_documents(layout: OutputLayout, rs: ReferenceSet, annotator_
     if not base.exists():
         return out
     for p in sorted(base.rglob("*_annotations.json")):
+        if is_flawed_file(p):
+            continue
         try:
             d = read_annotations_json(p)
         except Exception:
