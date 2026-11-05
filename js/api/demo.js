@@ -222,7 +222,7 @@ export class DemoBackend {
     this.questionnaires = null;
     for (const name of QUESTIONNAIRE_GATED) {
       const call = this[name].bind(this);
-      this[name] = async (...args) => { (await this._questionnairePart()).require(); return call(...args); };
+      this[name] = async (...args) => { (await this._questionnairePart()).require(name); return call(...args); };
     }
     const saved = tokens.get(TOKEN_KEY, null);
     const user = saved ? this._admin.user(saved.annotator_id) : null;
