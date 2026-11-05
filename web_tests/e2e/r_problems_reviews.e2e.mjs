@@ -396,9 +396,13 @@ export const tests = [
       await page.waitForSelector('.dialog .dialog-title', { timeout: 30000 });
       // "Back to my recordings", or OK when that was the last recording left to do
       await page.locator('.dialog-buttons button', { hasText: /Back to my recordings|^OK$/ }).first().click();
+      // the session's own interaction log is written beside the results once the browser's log says the
+      // recording was finished, so send the log first: otherwise it can arrive during the review
+      await page.evaluate(() => globalThis.ElectroTag.flushLog());
       const folder = path.join(t.study.dir, 'study', 'Annotated_Events', 'annotator-P01', 'sub-003', 'eeg');
       const before = checksums(folder);
-      assert.equal(Object.keys(before).length, 5);
+      assert.equal(Object.keys(before).length, 6);
+      assert.equal(Object.keys(before).filter((f) => f.endsWith('_interaction_log.jsonl')).length, 1);
 
       const reviewer = await t.newPage({ url: t.study.base });
       await signIn(reviewer, 'ADMIN', PASSWORD);
@@ -423,7 +427,7 @@ export const tests = [
       const reviews = await api(t, admin, 'POST', '/admin/reviews_list', { annotator_id: 'P01' });
       assert.equal(reviews.reviews.length, 1);
       assert.equal(reviews.reviews[0].summary, '1 caveat, 1 comment, 1 agreement');
-      assert.deepEqual(checksums(folder), before, 'the annotation files are never changed by a review');
+      assert.deepEqual(checksums(folder), before, 'the result files and their interaction log are never changed by a review');
 
       // the annotator's history says so
       await page.evaluate(() => globalThis.ElectroTag.reloadHome());
