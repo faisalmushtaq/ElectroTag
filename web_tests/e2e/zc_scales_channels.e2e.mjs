@@ -272,7 +272,22 @@ export const tests = [
       await page.keyboard.press('n');
       await page.keyboard.press('0');
       assert.equal((await annotations(page)).filter((x) => x.label === 'Data-artifact').length, 2);
+      // Save and Finish reminds the annotator of the uncertain marks first: Go to the first selects it
       await pressSave(page);
+      await page.waitForSelector('.dialog.uncertain-check');
+      assert.match(await page.textContent('.dialog.uncertain-check'), /2 annotations are marked Uncertain \/ needs review/);
+      assert.match(await page.textContent('.dialog.uncertain-check'), /0:06 to 0:06/);
+      await t.screenshot(page, 'uncertain_save_check');
+      await clickDialogButton(page, 'Go to the first');
+      await page.waitForFunction(() => !document.querySelector('.dialog.uncertain-check'));
+      const selected = await page.evaluate(() => [...globalThis.ElectroTag.ws.selection].map((id) => globalThis.ElectroTag.ws.store.get(id).onset_sample));
+      assert.equal(selected.length, 1);
+      assert.equal(selected[0], Math.min(...(await annotations(page)).filter((x) => x.label === 'Data-artifact').map((x) => x.onset_sample)));
+      assert.equal(await page.evaluate(() => globalThis.ElectroTag.ws.s.submitting), false, 'nothing saved yet');
+      // then saving them as they are
+      await pressSave(page);
+      await clickDialogButton(page, 'Save anyway');
+      await page.waitForSelector('.dialog:not(.uncertain-check) .dialog-buttons');
       await clickDialogButton(page, 'Save and Finish');
       await page.waitForSelector('.dialog .dialog-title');
       await clickDialogButton(page, 'Back to my recordings');

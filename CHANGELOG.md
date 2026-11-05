@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Save and Finish now reminds annotators of the marks still Uncertain / needs review before it saves,
+with their times: Go to the first selects the first of them so that it can be given a type, Save
+anyway saves them as they are for the experts to review, and Keep annotating goes back. It is asked
+for study work, practice and assessment, and revisions; not on the guided steps of the training path
+(docs/web/using.md).
+
 An administrator who annotates is now asked the sign-up questionnaire, whether or not their account
 has the Annotator role. As soon as they have recordings of their own (an assignment, a hand-out, a
 task's share or a training programme), the questionnaire opens when they next sign in or go to My

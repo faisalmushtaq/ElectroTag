@@ -107,8 +107,9 @@ place it with <kbd>G</kbd> and move it with <kbd>,</kbd> and <kbd>.</kbd>.</li>
 <p>When you can see an artifact but cannot tell its type, mark it <b>Uncertain / needs review</b>:
 press <kbd>0</kbd> or click <b>0 Uncertain</b> at the end of the numbered types. It is saved as
 <i>Data-artifact</i>, the HED-SCORE term for an artifact of unknown type, and an expert is asked to
-review each such mark. For an artifact whose family you know but not its exact type, choose a group
-term from the menu instead, such as <i>Eye-artifact</i>.</p>
+review each such mark. Save and Finish reminds you of the marks still Uncertain before it saves:
+give any whose type you can now tell a type, or save them as they are. For an artifact whose family
+you know but not its exact type, choose a group term from the menu instead, such as <i>Eye-artifact</i>.</p>
 <p>You can also draw first and choose the type afterwards: click the new
 annotation and press a number, or double-click it to choose any type.</p>
 <p><b>Draw/edit</b>, at the top, is on while you annotate. Press it to switch to view only, in
