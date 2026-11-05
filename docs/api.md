@@ -875,7 +875,8 @@ UserRecord = {"annotator_id": "A03", "display_name": "Annotator three", "email":
 RecordingRecord = {"scope": "study" | "set:<set_id>", "recording_id": "sub-001/eeg/sub-001_task-rest_eeg.vhdr",
               "file_name", "format", "sfreq", "n_samples", "duration_s", "n_channels", "size_bytes",
               "sha256", "registered_at", "registered_by", "registered_via": "browser" | "command",
-              "notes": "", "retired": false, "assigned": 3, "done": 1, "warnings": ["…"]}
+              "notes": "", "retired": false, "assigned": 3, "done": 1, "warnings": ["…"],
+              "warnings_dismissed": null | {"by", "at"}}
 SetRecord = {"set_id", "name", "description", "created_at", "created_by",
               "practice_review": true, "allowed_annotators": [] /* empty: everyone */,
               "practice_pass": {"event_f1": 0.8, "label_accuracy": 0.8},
@@ -917,7 +918,8 @@ study's own recordings have `"self_contained": false` and `"scope": "study"`.
 | `programme_set` | `{"annotator_id", "set_id": str \| null}` | `{}`; 404 `no_reference_set`, 409 `not_allowed` |
 | `recordings_list` | `{"scope"?}` | `{"recordings": [RecordingRecord]}` (every scope when none is given) |
 | `recordings_register` | `{"scope": "study" \| "set:<id>", "manifests": [Manifest], "replace"?: false, "allow_duplicates"?: false}` | `{"added": [recording_id], "replaced": [..], "skipped": [{"recording_id", "reason", "duplicate_of"?}]}`. A manifest whose data file has the fingerprint (SHA-256 and size) of another recording of the same scope, registered already or earlier in the same request, is skipped with `duplicate_of` naming that recording, unless `allow_duplicates` is true: each copy would otherwise be assigned and annotated as a recording of its own. `Manifest` is the internal manifest of `electrotag/web/manifest.py` (`schema` `electrotag.web_manifest`) as the browser builds it; the server checks it (below), stores it with `registered_via` `browser`, keeps the notes and retirement of a recording registered again, and never replaces a recording that has results unless the fingerprint is the same. At most 500 manifests per call (413 `too_large`); a set scope must be a self-contained set's |
-| `recording_update` | `{"scope", "recording_id", "notes"?, "retired"?}` | `{"recording": RecordingRecord}`; a retired recording is offered for no new assignments; 404 `unknown_recording` |
+| `recording_update` | `{"scope", "recording_id", "notes"?, "retired"?, "warnings_dismissed"?: bool}` | `{"recording": RecordingRecord}`; a retired recording is offered for no new assignments; `warnings_dismissed` takes the recording's warnings off Problems (true) or lists them there again (false), and changes nothing for a recording without warnings. A dismissal holds while the warnings are the same: a recording registered again with other warnings gives `warnings_dismissed: null`. 404 `unknown_recording` |
+| `recording_warnings_list` | `{}` | `{"recordings": [RecordingRecord]}`: the recordings of every scope with warnings found when they were registered (Problems), those not dismissed first, then the study's before the reference sets', by ID |
 | `recording_remove` | `{"scope", "recording_id"}` | `{}`; 409 `has_results` when anyone saved it or a reference set uses it (as a reference or in a quiz item). Its unfinished assignments go with it |
 | `sets_list` | `{}` | `{"sets": [SetRecord]}` |
 | `set_create` | `{"set_id", "name"?, "description"?, "method"?: "single_expert", "experts"?: [..], "notes"?}` | `{"set": SetRecord}`; a self-contained set; `method`, `experts` and `notes` are the provenance declared for the set, as `electrotag-admin create-reference-set` records it; 409 `set_exists` |

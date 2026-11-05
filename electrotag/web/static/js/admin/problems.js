@@ -1,11 +1,13 @@
 // Problems: the problems annotators reported with recordings (docs/admin_area.md, "Problems"). A
 // table with filters (open or resolved, reason, person, recording) and a CSV download, and for each
 // report: resolve it with a note, return the recording to the annotator's to-do list (which undoes
-// "cannot be annotated"), or give it to someone else. Reports are never deleted.
+// "cannot be annotated"), or give it to someone else. Reports are never deleted. Below them, the recordings
+// with warnings found when they were added (recording_warnings_list), each of which can be dismissed from the list
+// and brought back (recording_update with warnings_dismissed); a dismissal holds while the warnings are the same.
 
 import { h, clear } from '../ui/dom.js';
 import { MODES, STATUS, rolesOf, whenText } from './model.js';
-import { actionButton, card, chip, dataTable, downloadText, field, messageArea, recordingName, sectionHead, select, textInput } from './ui.js';
+import { actionButton, card, checkbox, chip, dataTable, downloadText, field, messageArea, recordingName, sectionHead, select, textInput } from './ui.js';
 
 export const REASON_TEXT = Object.freeze({
   file_wont_open: 'The file will not open',
@@ -43,6 +45,16 @@ export function filterProblems(rows, { state = '', reason = '', person = '', rec
     && (!q || String(r.recording_id).toLowerCase().includes(q) || String(r.file_name || '').toLowerCase().includes(q)));
 }
 
+/** Where a recording is: the study, or a reference set. */
+export function scopeText(scope) {
+  return scope === 'study' ? 'The study' : `Training set ${String(scope || '').replace(/^set:/, '')}`;
+}
+
+/** The recordings with warnings a list shows: those not dismissed, or every one with `dismissed`. */
+export function warningRows(rows, { dismissed = false } = {}) {
+  return (rows || []).filter((r) => (r.warnings || []).length && (dismissed || !r.warnings_dismissed));
+}
+
 export class ProblemsSection {
   constructor(area) {
     this.area = area;
@@ -66,13 +78,28 @@ export class ProblemsSection {
       { title: '', cls: 'actions', render: (r) => (r.state === 'open' ? h('button.btn.small', { type: 'button', 'data-log': 'problem-open', onclick: () => this._showDetail(r) }, 'Deal with it…') : null) },
     ], [], { empty: 'No reports match.', pageSize: 25, sortable: true, caption: 'Problem reports', rowKey: (r) => r.problem_id });
     const csv = h('button.btn', { type: 'button', 'data-log': 'problems-csv', onclick: () => this._download() }, 'Download the table (CSV)');
+    // the warnings found when recordings were added
+    this.warnings = [];
+    this.warnMsg = messageArea();
+    this.showDismissed = checkbox('Show the dismissed ones too');
+    this.showDismissed.input.addEventListener('change', () => this._drawWarnings());
+    this.warnTable = dataTable([
+      { title: 'Recording', sort: (r) => r.recording_id, render: (r) => h('span', {}, recordingName(r.recording_id, r.file_name), h('span.caption.block', {}, scopeText(r.scope))) },
+      { title: 'Found when it was added', render: (r) => h('ul.warnings', {}, r.warnings.map((w) => h('li', {}, w))) },
+      { title: 'Added', sort: (r) => r.registered_at, render: (r) => h('span', {}, whenText(r.registered_at), r.registered_by ? h('span.caption.block', {}, `by ${r.registered_by}`) : null) },
+      { title: '', cls: 'actions', render: (r) => this._warningAction(r) },
+    ], [], { empty: 'No recording has warnings left to look at.', pageSize: 25, sortable: true, caption: 'Warnings found when recordings were added', rowKey: (r) => `${r.scope}|${r.recording_id}` });
     this.el = h('section.admin-section', { 'data-section': 'problems' },
-      sectionHead('Problems', 'Problems annotators reported with recordings: a file that will not open, the wrong recording, flat or missing channels, or one too noisy or too short to annotate.'),
+      sectionHead('Problems', 'Problems annotators reported with recordings: a file that will not open, the wrong recording, flat or missing channels, or one too noisy or too short to annotate; and the warnings found when recordings were added.'),
       this.msg, this.tiles, this.detail,
       card('Reports',
         h('div.row.filters.problem-filters', {}, field('State', this.state), field('Reason', this.reason), field('Person', this.person), field('Recording', this.recording)),
         this.table, h('div.btn-row', {}, csv),
-        h('p.caption', {}, 'A recording set aside as one that cannot be annotated counts as finished for its annotator and is left out of the agreement analyses. Returning it to the annotator\'s list undoes that. Reports are kept with the results and never deleted.')));
+        h('p.caption', {}, 'A recording set aside as one that cannot be annotated counts as finished for its annotator and is left out of the agreement analyses. Returning it to the annotator\'s list undoes that. Reports are kept with the results and never deleted.')),
+      this._warningsCard = card('Warnings when recordings were added',
+        h('p.caption', {}, 'What the checks noticed when each recording was added, such as an unusual amplitude or events outside the recording. Dismiss a recording once you have looked at it; it comes back if it is added again with other warnings.'),
+        this.warnMsg, h('div.row.filters', {}, this.showDismissed), this.warnTable));
+    this._warningsCard.dataset.part = 'import-warnings';
   }
 
   async show(params = {}) {
@@ -87,6 +114,35 @@ export class ProblemsSection {
       return;
     }
     this._draw();
+    await this._loadWarnings();
+  }
+
+  async _loadWarnings() {
+    this.warnMsg.clear();
+    try {
+      this.warnings = (await this.area.read('recording_warnings_list')).recordings || [];
+    } catch (exc) {
+      this.warnMsg.problem(exc);
+      return;
+    }
+    this._drawWarnings();
+  }
+
+  _drawWarnings() { this.warnTable.update(warningRows(this.warnings, { dismissed: this.showDismissed.input.checked })); }
+
+  _warningAction(r) {
+    const name = r.file_name || r.recording_id;
+    if (r.warnings_dismissed) {
+      return h('span', {}, h('span.caption.block', {}, `Dismissed by ${r.warnings_dismissed.by} ${whenText(r.warnings_dismissed.at)}`),
+        actionButton('List it again', { kind: 'small', working: 'Saving…', msg: this.warnMsg, log: 'warnings-undismiss', onClick: () => this._dismiss(r, false, `${name} is listed again.`) }));
+    }
+    return actionButton('Dismiss', { kind: 'small', working: 'Saving…', msg: this.warnMsg, log: 'warnings-dismiss', onClick: () => this._dismiss(r, true, `${name} is dismissed from the list.`) });
+  }
+
+  async _dismiss(r, dismissed, text) {
+    await this.area.write('recording_update', { scope: r.scope, recording_id: r.recording_id, warnings_dismissed: dismissed });
+    await this._loadWarnings();
+    this.warnMsg.show('success', text);
   }
 
   _tiles(c) {

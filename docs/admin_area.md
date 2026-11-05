@@ -422,7 +422,8 @@ The Recordings section lists the registered recordings: those of the study and t
 reference set. Filter the list by where the recordings are, by the dataset a study recording belongs
 to (Datasets, above), by whether they are in use or retired, or by name. Manage shows a recording's details (its format, length, channels, file size and
 fingerprint, who added it, when and how, and what was found when it was added) with the notes the
-study team keeps about it.
+study team keeps about it. The recordings with something found when they were added are also listed
+under Problems, where they can be dismissed once looked at.
 
 ### Adding recordings from this computer
 
@@ -895,6 +896,17 @@ their ID. Overview and
 Progress count the open reports and the recordings that cannot be annotated. Reports are kept with
 the results (the results zip holds them in `problem_reports/`), are in the audit log and are never
 deleted.
+
+Below the reports, Warnings when recordings were added lists every recording, of the study or of a
+reference set, for which the checks noticed something when it was added: an unusual amplitude, events
+outside the recording, channels or BIDS files that could not be read as expected, and so on, as the
+table under Adding recordings from this computer showed them at the time. Each row gives the
+recording, where it is, what was found, and when and by whom it was added. Once you have looked at a
+recording, Dismiss takes it off the list; tick Show the dismissed ones too to see them again, each
+with who dismissed it and when, and List it again to bring one back. A dismissal holds for the
+warnings that were dismissed: a recording added again with other warnings is listed again. The
+warnings stay with the recording (its Manage in Recordings shows them), and every dismissal is in the
+audit log.
 
 ## Records
 
