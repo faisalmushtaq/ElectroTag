@@ -1,4 +1,4 @@
-// Report a problem with a recording (docs/web/using.md, "When a recording cannot be annotated"):
+// Report a problem with a recording (docs/using.md, "When a recording cannot be annotated"):
 // the dialog that asks for the reason, an optional note and what happens next, and the report
 // sent to the study (POST /problems, et_problem_report). Used from the home page's list (a file
 // that will not even open) and from the annotation view's header.

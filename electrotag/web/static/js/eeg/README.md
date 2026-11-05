@@ -22,7 +22,7 @@ relative and the application works under `/preview/` on GitHub Pages.
 ## Reading recordings
 
 `recording.js` is the entry point: `openRecording(files)` returns the `Recording` object of
-`docs/web/architecture.md` ("The Recording interface") and decides where the reading happens, in a
+`docs/architecture.md` ("The Recording interface") and decides where the reading happens, in a
 Web Worker (`worker.js`) when the browser allows one and on the page otherwise. `engine.js` does the
 work in either place: it opens the files, scans them once for annotations and triggers while the
 fingerprint is computed, keeps decoded blocks and filtered pieces in caches of bounded size and

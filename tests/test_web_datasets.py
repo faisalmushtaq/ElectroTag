@@ -1,4 +1,4 @@
-"""Datasets, collections, groups and hand-outs (electrotag/web/datasets.py; docs/web/api.md, "Datasets, collections,
+"""Datasets, collections, groups and hand-outs (electrotag/web/datasets.py; docs/api.md, "Datasets, collections,
 groups and hand-outs")."""
 
 from __future__ import annotations

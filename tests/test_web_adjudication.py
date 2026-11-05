@@ -309,7 +309,7 @@ def test_annotators_see_the_outcome_of_their_conflicts(service: StudyService, re
 
 def test_a_task_with_a_window_is_a_unit_and_cannot_become_a_reference(service: StudyService,
                                                                       recordings: Path) -> None:
-    # a task record as the tasks part keeps it (docs/web/api.md, "Tasks"): the window of SUB2 from 0 to 30 s
+    # a task record as the tasks part keeps it (docs/api.md, "Tasks"): the window of SUB2 from 0 to 30 s
     task = {"schema": "electrotag.task", "schema_version": 1, "task_id": "t-0123456789ab", "recording_id": SUB2,
             "scope": "study", "window": {"start_sample": 0, "end_sample": 7500}, "k": 2,
             "annotators": ["A02", "A01"], "gold": None, "letters": {"A01": "B", "A02": "A"}, "status": "open"}

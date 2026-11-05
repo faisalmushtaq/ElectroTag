@@ -1,4 +1,4 @@
-"""Tasks: recordings, or stretches of them, shared out among k annotators (docs/web/api.md, "Tasks, windows and
+"""Tasks: recordings, or stretches of them, shared out among k annotators (docs/api.md, "Tasks, windows and
 known answers").
 
 A **task** is one record (kind ``tasks`` of :meth:`~electrotag.web.store.Store.update_record`, with
@@ -95,7 +95,7 @@ SKIP_REASONS = {
 }
 
 #: Counts the conflicts of a task whose annotators have all saved (None when they cannot be counted):
-#: registered by the adjudication part (docs/web/api.md, "Adjudication and the library").
+#: registered by the adjudication part (docs/api.md, "Adjudication and the library").
 ConflictCounter = Callable[["StudyService", dict[str, Any]], "int | None"]
 _counter: list[ConflictCounter] = []
 
@@ -492,7 +492,7 @@ class Tasks:
         return seen.conflicts[tid]
 
     def out(self, task: dict[str, Any], seen: _Seen | None = None, *, count_conflicts: bool = True) -> dict[str, Any]:
-        """TaskOut: the task as answered to the admin and expert areas (docs/web/api.md)."""
+        """TaskOut: the task as answered to the admin and expert areas (docs/api.md)."""
         seen = seen or _Seen()
         attempts = self.attempts(task, seen)
         people = [self._person(aid, task, attempts.get(aid), seen) for aid in task.get("annotators", [])]

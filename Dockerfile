@@ -1,4 +1,4 @@
-# The ElectroTag server in a container (optional: real studies run on Firebase, docs/web/firebase.md).
+# The ElectroTag server in a container (optional: real studies run on Firebase, docs/firebase.md).
 #
 #   docker build -t electrotag-web .
 #   docker run -p 8000:8000 -e ELECTROTAG_DEMO=1 electrotag-web                     the demonstration

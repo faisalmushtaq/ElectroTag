@@ -1,4 +1,4 @@
-// The artifact reference guide (docs/web/using.md, "The artifact reference guide"): one page with
+// The artifact reference guide (docs/using.md, "The artifact reference guide"): one page with
 // every artifact type of the catalogue, in the catalogue's order and families, each with its HED-SCORE
 // name and short name, its code and key, the catalogue's description, what it looks like (where on the
 // scalp, its frequency, its shape and typical duration), how to tell it from its look-alikes, and a

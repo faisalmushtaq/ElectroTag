@@ -3,7 +3,7 @@
 This file is for AI coding assistants working in this repository (Claude Code reads it
 automatically; [AGENTS.md](AGENTS.md) points other assistants here). Read
 [HANDOVER.md](HANDOVER.md) first: it says where the project stands, which branch holds what, and
-what is still open. [docs/web/architecture.md](docs/web/architecture.md) describes how the system
+what is still open. [docs/architecture.md](docs/architecture.md) describes how the system
 fits together and [docs/developer_guide.md](docs/developer_guide.md) the Python core.
 
 ## The project in two sentences
@@ -62,7 +62,7 @@ operations.
 ## Conventions
 
 Every change comes with tests, and the documentation that describes the changed behaviour (README,
-the guides in `docs/` and `docs/web/`) is updated in the same commit, with a paragraph in the
+the guides in `docs/`) is updated in the same commit, with a paragraph in the
 *Unreleased* section of `CHANGELOG.md` for anything a user would notice. Python uses type hints and
 `from __future__ import annotations`. Errors that can reach a person are written for annotators and
 researchers, in plain words.
@@ -82,7 +82,7 @@ every path relative so that it works under `/preview/` on GitHub Pages (workers 
 only from fixed, versioned URLs (the Firebase SDK from gstatic.com, loaded only for Firebase
 studies).
 
-The contract between browser and server is [docs/web/api.md](docs/web/api.md): the annotators'
+The contract between browser and server is [docs/api.md](docs/api.md): the annotators'
 operations, the administrator's operations (`admin(op, body)`: `POST /admin/{op}`, or the callable
 `et_admin`) and the quiz (`quiz(setId, body)`). A change to a request or response is made in the
 service layer (`electrotag/web/service.py` and the modules it calls), the HTTP route
@@ -157,4 +157,4 @@ with Firebase Hosting from its own project, which serves the project's configura
 `/__/firebase/init.json`; never commit `electrotag/web/static/config.json`, since the end-to-end
 tests serve that folder and expect the demonstration. *Firebase deploy*, run by hand, deploys the
 functions, rules and application once the repository's `FIREBASE_SERVICE_ACCOUNT` secret and
-`FIREBASE_PROJECT` variable are set (docs/web/firebase.md).
+`FIREBASE_PROJECT` variable are set (docs/firebase.md).

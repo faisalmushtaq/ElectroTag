@@ -1,5 +1,5 @@
 // The versions of the annotations an agreement analysis compares (electrotag/reliability/versions.py,
-// docs/web/api.md "Derived versions in the analyses"), and "Compare with the original versions":
+// docs/api.md "Derived versions in the analyses"), and "Compare with the original versions":
 // the key results of two analyses side by side with their differences, built here from each
 // answer's summary.key_results. Pure functions, tested in Node.
 

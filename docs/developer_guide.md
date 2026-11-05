@@ -9,8 +9,8 @@ and verifies the result files; the agreement, training and activity analyses;
 and the study's back ends, the ElectroTag server (FastAPI) and the Firebase
 Cloud Functions, which share one service layer. This guide describes the
 Python core. The browser application, the service layer and how they fit
-together are described in [web/architecture.md](web/architecture.md), and the
-contract between browser and server in [web/api.md](web/api.md).
+together are described in [architecture.md](architecture.md), and the
+contract between browser and server in [api.md](api.md).
 
 <!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
 **Contents**
@@ -85,7 +85,7 @@ electrotag/
                            checks of guided steps), review.py (the disagreements flagged in a
                            practice review), examples.py (the placeholder example set)
     activity/              logs.py, summary.py, report.py, cli.py (electrotag activity)
-    web/                   the application (web/architecture.md): service.py (the operations,
+    web/                   the application (architecture.md): service.py (the operations,
                            shared by the server and the Firebase functions), coach.py, visits.py,
                            manifest.py and registration.py, saving.py, store_files.py and
                            store_firestore.py, app.py (FastAPI), cli.py (electrotag web),
@@ -213,7 +213,7 @@ told to try again.
   extension there and in `config.settings.RECORDING_EXTENSIONS`, a header or
   size check, and a source for its markers in `eeg.events`. The browser needs
   a reader of its own in `js/eeg/` that gives the same values, with tests
-  against MNE in `web_tests/unit/` (web/architecture.md).
+  against MNE in `web_tests/unit/` ([architecture](architecture.md)).
 * **Drafts and autosave.** The browser keeps drafts of unfinished work
   (`js/annotate/session.js`) and the study stores them (`PUT /drafts/{recording_id}`).
   A session writes no draft once its view has closed or its work was discarded,
@@ -233,7 +233,7 @@ are local time with UTC offset (ISO 8601). User-facing text uses UK English,
 while label strings keep the HED spelling *artifact*. The conventions of the
 application (relative paths, no build step, behaviour when a Firebase
 answer arrives late) are in [CLAUDE.md](../CLAUDE.md) and
-[web/architecture.md](web/architecture.md).
+[architecture.md](architecture.md).
 
 ## Packaging and continuous integration
 

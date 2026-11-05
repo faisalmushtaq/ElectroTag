@@ -1,4 +1,4 @@
-"""The operations of docs/web/api.md, independent of how they are called and where records are kept.
+"""The operations of docs/api.md, independent of how they are called and where records are kept.
 
 :class:`StudyService` is called by the ElectroTag server (app.py, over HTTP) and by the Firebase
 functions (firebase/functions/main.py, as callables) with the same JSON, and keeps its records in a
@@ -285,7 +285,7 @@ class StudyService:
         from electrotag.web.tasks import Tasks
 
         self.tasks = Tasks(self)
-        # datasets, collections, groups and hand-outs, and the tracking of them (docs/web/api.md, "Datasets, ...")
+        # datasets, collections, groups and hand-outs, and the tracking of them (docs/api.md, "Datasets, ...")
         from electrotag.web.datasets import Datasets
         from electrotag.web.tracking import Tracking
 
@@ -477,7 +477,7 @@ class StudyService:
             d["revising"] = i.revising
             p = problems.get(i.key)
             d["problem"] = self.feedback.problem_out(p, mine=True) if p is not None else None
-            d["task"] = self.tasks.item_task(i, tasks)  # {task_id, window} of a task (docs/web/api.md), or null
+            d["task"] = self.tasks.item_task(i, tasks)  # {task_id, window} of a task (docs/api.md), or null
             out.append(d)
         # the hand-outs of the study team (datasets.py): titles and due dates only, never a dataset's details
         per_item, due = self.datasets.annotator_view(user, items)
@@ -608,7 +608,7 @@ class StudyService:
             i = mine[0]
             revisable = next((x for x in mine if self.can_revise(x)), None)
             viewable = next((x for x in mine if x.mode == "standard" and x.saved is not None), None)
-            if view_saved and viewable is not None:  # to read the feedback on it (docs/web/api.md, "Reviews")
+            if view_saved and viewable is not None:  # to read the feedback on it (docs/api.md, "Reviews")
                 return self._answer(status, f"Recording found: {viewable.recording_id}. Your latest saved version opens "
                                     "to read, with the feedback on it.", recording_id=viewable.recording_id,
                                     mode=viewable.mode, context_id=viewable.context_id,
@@ -1084,11 +1084,11 @@ class StudyService:
             raise ApiError(exc.status, exc.code, exc.message or "The invitation could not be used.") from exc
 
     def admin(self, op: Any, user: User, body: dict[str, Any] | None = None) -> dict[str, Any]:
-        """One operation of the admin area (docs/web/api.md, "Administration"; electrotag/web/admin.py)."""
+        """One operation of the admin area (docs/api.md, "Administration"; electrotag/web/admin.py)."""
         return self.administration.run(op, user, body or {})
 
     def expert_op(self, op: Any, user: User, body: dict[str, Any] | None = None) -> dict[str, Any]:
-        """One operation of the expert area (docs/web/api.md, "Experts"; electrotag/web/expert.py)."""
+        """One operation of the expert area (docs/api.md, "Experts"; electrotag/web/expert.py)."""
         return self.expert.run(op, user, body or {})
 
     # ------------------------------------------------------------------ quiz

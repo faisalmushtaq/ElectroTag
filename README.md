@@ -44,18 +44,18 @@ The original EEG files and their metadata are never modified.
 ## Documentation
 
 Each guide is written for the people who use that part of ElectroTag.
-Annotators need only [Using ElectroTag](docs/web/using.md), which takes them
+Annotators need only [Using ElectroTag](docs/using.md), which takes them
 from the study's link to Save and Finish, with the training programme, the
 quiz and the keys. The study team, who run a study day to day, start with
-[the admin area](docs/web/admin.md); the
-[administrator guide](docs/administrator_guide.md) explains every setting and
+[the admin area](docs/admin_area.md); the
+[study settings guide](docs/study_settings.md) explains every setting and
 choice behind it, and the [reliability guide](docs/reliability_guide.md) and
 [interaction logs](docs/activity_logs.md) explain the agreement measures and
 the activity tables. Whoever sets up a real study on Firebase follows
-[Running a study on Firebase](docs/web/firebase.md) step by step, and
-[the ElectroTag server](docs/web/server.md) covers the demonstration on your
+[Running a study on Firebase](docs/firebase.md) step by step, and
+[the ElectroTag server](docs/server.md) covers the demonstration on your
 own computer and a study on a server of your own. Developers start with the
-[architecture](docs/web/architecture.md), the [API](docs/web/api.md), the
+[architecture](docs/architecture.md), the [API](docs/api.md), the
 [developer guide](docs/developer_guide.md), the
 [testing guide](docs/testing_guide.md) and the
 [handover notes](HANDOVER.md). All the guides are listed
@@ -80,7 +80,7 @@ run:
 electrotag web demo        # the application and a study server on http://localhost:8000/
 ```
 
-[docs/web/server.md](docs/web/server.md) lists the accounts and where the
+[docs/server.md](docs/server.md) lists the accounts and where the
 recordings to open and the results are.
 
 ## Running a study
@@ -92,15 +92,15 @@ to the study, validating and saving results with ElectroTag's own code,
 checking guided training steps and scoring practice, so the experts' answers
 never reach a browser), with Firebase Hosting publishing the application from
 the same project, so each project serves its own copy at its own address.
-[docs/web/firebase.md](docs/web/firebase.md) sets one up step by step. A study can instead run on the **ElectroTag server**
-(`electrotag web serve`, [docs/web/server.md](docs/web/server.md)), on a
+[docs/firebase.md](docs/firebase.md) sets one up step by step. A study can instead run on the **ElectroTag server**
+(`electrotag web serve`, [docs/server.md](docs/server.md)), on a
 computer the study controls; both run the same Python service layer.
 
 The lead researcher adds recordings, accounts and assignments, changes the
 settings, prepares reference sets and follows progress in the admin area
-([docs/web/admin.md](docs/web/admin.md)); the
-[administrator guide](docs/administrator_guide.md) explains every setting and
-choice. Annotators follow [docs/web/using.md](docs/web/using.md).
+([docs/admin_area.md](docs/admin_area.md)); the
+[study settings guide](docs/study_settings.md) explains every setting and
+choice. Annotators follow [docs/using.md](docs/using.md).
 
 ## Installing the Python package
 
@@ -145,7 +145,7 @@ electrotag                           # lists the tools
 
 In a new terminal later on, only the activation line is needed again. A copy
 of the repository is what a study on Firebase needs, because its functions
-and rules are deployed from it ([docs/web/firebase.md](docs/web/firebase.md)).
+and rules are deployed from it ([docs/firebase.md](docs/firebase.md)).
 
 **Straight from GitHub**, without a copy of the repository, in an active
 environment made as above (this needs [Git](https://git-scm.com/)):
@@ -272,7 +272,7 @@ on their own until one reaches the pass mark, and then takes the blinded
 assessment, which ends with a reproducible competency report. The study may let
 trainees skip any stage but the assessment, and study work waits until the
 assessment is passed. The experts' annotations stay with the study and never
-reach the browser. See the [administrator guide](docs/administrator_guide.md).
+reach the browser. See the [study settings guide](docs/study_settings.md).
 
 ## Interaction logs
 
@@ -288,15 +288,15 @@ curves, to show for example whether annotators got faster. See
 
 | Document | For |
 |---|---|
-| [Using ElectroTag](docs/web/using.md) | Annotators |
-| [The admin area](docs/web/admin.md) | Lead researchers running a study |
-| [Running a study on Firebase](docs/web/firebase.md) | Setting up a real study, step by step |
-| [The ElectroTag server](docs/web/server.md) | The demonstration, and a study on your own server |
-| [Administrator guide](docs/administrator_guide.md) | What every setting and choice of a study means: channels, filters, allocation, reference sets, competency criteria, the training programme |
+| [Using ElectroTag](docs/using.md) | Annotators |
+| [The admin area](docs/admin_area.md) | Lead researchers running a study |
+| [Running a study on Firebase](docs/firebase.md) | Setting up a real study, step by step |
+| [The ElectroTag server](docs/server.md) | The demonstration, and a study on your own server |
+| [Study settings](docs/study_settings.md) | What every setting and choice of a study means: channels, filters, allocation, reference sets, competency criteria, the training programme |
 | [Reliability analysis guide](docs/reliability_guide.md) | Agreement measures and their interpretation |
 | [Interaction logs](docs/activity_logs.md) | What is recorded about annotators' work, and the activity tables and learning curves |
 | [File formats](docs/file_formats.md) | Every output and configuration file |
-| [Architecture](docs/web/architecture.md) and [API](docs/web/api.md) | How the application works, and the contract between browser and server |
+| [Architecture](docs/architecture.md) and [API](docs/api.md) | How the application works, and the contract between browser and server |
 | [Developer guide](docs/developer_guide.md) | The Python core, the save transaction, extension points |
 | [Testing guide](docs/testing_guide.md) | Running the tests, synthetic data, checks that need a person |
 | [Design decisions](docs/design_decisions.md) | How the specification was interpreted, the decisions taken, and questions for the research team |

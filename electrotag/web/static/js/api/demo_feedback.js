@@ -1,5 +1,5 @@
 // Problem reports and reviews of saved work in the demonstration, as electrotag/web/feedback.py
-// does them on a study server (docs/web/api.md, "Problem reports" and "Reviews"). The backend
+// does them on a study server (docs/api.md, "Problem reports" and "Reviews"). The backend
 // (demo.js) and its admin area (demo_admin.js) call this module; its state lives in the
 // demonstration's own state: state.problems (by problem ID), state.unusable (by assignment key)
 // and state.reviews (newest last). Records are never deleted, and a report or review sent twice

@@ -1,4 +1,4 @@
-// A click on the empty space of the Annotations panel, around the list, ends the selection (docs/web/using.md,
+// A click on the empty space of the Annotations panel, around the list, ends the selection (docs/using.md,
 // "The annotations list"): a type chosen on the top bar is then for the next mark and leaves the annotation that
 // was selected as it was. A click on a row, or on one of the panel's buttons, keeps the selection.
 import { openExample, signIn, waitForRoute } from './helpers.mjs';

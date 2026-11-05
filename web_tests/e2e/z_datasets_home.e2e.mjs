@@ -1,4 +1,4 @@
-// The annotator's home after the study team hands recordings out (docs/web/using.md, "Due dates"): the Due card
+// The annotator's home after the study team hands recordings out (docs/using.md, "Due dates"): the Due card
 // with one line per hand-out that has a due date, an Overdue badge once the day has passed, the list grouped
 // under the hand-outs' titles (earliest due first, then the recordings given without one), an Overdue badge on
 // each row of an overdue hand-out, and Show these. Annotators see a hand-out only by its title: the names,
@@ -15,7 +15,7 @@ const hex = (n) => n.toString(16).padStart(32, '0');
 /** What the study team keeps to itself: none of it may appear on the annotator's page. */
 const TEAM_ONLY = ['Secret pilot', 'hard ones', 'Only the team reads this', 'A private note', 'Recorded at the clinic'];
 
-/** A study recording's manifest (docs/web/api.md) for registering on the study server. */
+/** A study recording's manifest (docs/api.md) for registering on the study server. */
 function manifest(rid, sha) {
   return {
     schema: 'electrotag.web_manifest', schema_version: '1.0.0', scope: 'study', recording_id: rid, relative_path: rid, format: 'edf',

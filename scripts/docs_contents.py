@@ -21,7 +21,7 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 #: The guides that get a list of contents when they are long enough.
-GUIDES = ("README.md", "HANDOVER.md", "docs/*.md", "docs/web/*.md")
+GUIDES = ("README.md", "HANDOVER.md", "docs/*.md")
 #: Fewer sections than this need no list.
 MIN_SECTIONS = 5
 START = "<!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->"

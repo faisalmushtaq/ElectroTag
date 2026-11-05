@@ -1,4 +1,4 @@
-"""Everyone's marks on one recording (electrotag/web/overlay.py, docs/web/api.md "The overlay of everyone's marks").
+"""Everyone's marks on one recording (electrotag/web/overlay.py, docs/api.md "The overlay of everyone's marks").
 
 ``overlay_get`` gives each person's latest saved version compactly (five whole numbers a mark, with tables of
 the types and channel sets), the annotation IDs of the people in lanes only, the corrected and adjudicated

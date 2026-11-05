@@ -1,4 +1,4 @@
-// Adjudication and the library in the sandbox (docs/web/api.md, "Adjudication and the library"):
+// Adjudication and the library in the sandbox (docs/api.md, "Adjudication and the library"):
 // conflicts are found with ElectroTag's Python code (the agreement analysis's matching rules), which the
 // browser does not have, so each of these operations answers that a study server or Firebase is needed
 // (needsServer), in the sandbox's own words. demo_expert.js lists this part with one line.

@@ -6,7 +6,7 @@ function and leaves it alone on later deployments, so a first deployment that Go
 (quotas, 429) can leave a function created but closed. A closed function answers 403 before
 ElectroTag's code runs and without the headers a browser needs, so the application only learns
 that the call failed. ``electrotag web check-functions`` asks every function from outside, as a
-browser does, and lists the closed ones with the way to open them (docs/web/firebase.md, step 8).
+browser does, and lists the closed ones with the way to open them (docs/firebase.md, step 8).
 """
 
 from __future__ import annotations
@@ -108,7 +108,7 @@ def report(project: str, states: dict[str, str], region: str = REGION) -> str:
             "Then run this check again.",
         ]
     if missing:
-        lines += ["", "Deploy again to create the missing functions (docs/web/firebase.md, step 8):",
+        lines += ["", "Deploy again to create the missing functions (docs/firebase.md, step 8):",
                   '  npx firebase-tools deploy --only "functions,firestore,hosting"']
     if not closed and not missing and not other:
         lines += ["", "Every function is open to the application."]

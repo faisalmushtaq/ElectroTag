@@ -1,4 +1,4 @@
-// Correct the marks (docs/web/admin.md "Correct the marks", docs/web/using.md "Learn with the experts"):
+// Correct the marks (docs/admin_area.md "Correct the marks", docs/using.md "Learn with the experts"):
 // an expert opens the sandbox's ready-made exercise in the expert area, tries it and checks the
 // corrections in the browser; on a study server, the study team makes an exercise for a guided
 // recording and a trainee corrects the marks on the training path, goes through the result on the EEG

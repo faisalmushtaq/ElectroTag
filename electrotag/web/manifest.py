@@ -244,7 +244,7 @@ def register_recording(files: Any, settings: Any, catalogue: Any, *, scope: str 
 
 # ------------------------------------------------------- the browser's view of it
 def public_manifest(m: dict[str, Any], study_scalings: dict[str, float] | None = None) -> dict[str, Any]:
-    """The Manifest of docs/web/api.md: what the browser needs to show the recording."""
+    """The Manifest of docs/api.md: what the browser needs to show the recording."""
     timing = m["timing"]
     ev = events_from_dict(m["original_events"])
     fp = (m.get("fingerprint") or {}).get(FINGERPRINT_ROLE) or {}

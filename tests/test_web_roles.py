@@ -1,4 +1,4 @@
-"""Roles as a set per person, the expert channel and the new study settings (docs/web/api.md, "Roles").
+"""Roles as a set per person, the expert channel and the new study settings (docs/api.md, "Roles").
 
 A person may be an annotator, an expert and an administrator at once; "participant" is kept for a
 later crowd study and refused. Older SQLite files and Firebase claims (one role) still read; the

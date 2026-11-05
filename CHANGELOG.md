@@ -5,13 +5,23 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The guides are all in `docs/` now: the folder `docs/web/`, kept from when the browser version stood
+beside the desktop application, is gone. The annotators' guide is `docs/using.md`, the guide to the
+admin area `docs/admin_area.md`, and the administrator guide, which explains every setting and choice
+behind it, is `docs/study_settings.md`, titled *Study settings*; Firebase, the server, the
+architecture and the API are `docs/firebase.md`, `docs/server.md`, `docs/architecture.md` and
+`docs/api.md`. The application's links to the guides follow, and the test-suite now checks that every
+link in the guides reaches its page and heading, that every guide named anywhere in the repository
+exists, and that the application's links reach their headings. Links saved elsewhere to the old
+addresses on GitHub need the new ones.
+
 On a study on Firebase, a trainee who pressed Show me while the coach was still checking their last
 change could be given the stars of an artifact found alone (3 instead of 1): the functions handled the
 check and Show me side by side, and the check, saved last, took away the step's record that Show me was
 used. The coach now sends Show me only once the check has answered, and the study keeps a step's Show
 me when a check is saved after it.
 
-The longer guides (the README, the handover notes and every guide in `docs/` and `docs/web/` with five
+The longer guides (the README, the handover notes and every guide in `docs/` with five
 sections or more) now open with a list of contents linking to each section and its subsections, made
 from their headings by `scripts/docs_contents.py`; the test-suite checks that every list is up to date.
 
@@ -25,7 +35,7 @@ Save and Finish now reminds annotators of the marks still Uncertain / needs revi
 with their times: Go to the first selects the first of them so that it can be given a type, Save
 anyway saves them as they are for the experts to review, and Keep annotating goes back. It is asked
 for study work, practice and assessment, and revisions; not on the guided steps of the training path
-(docs/web/using.md).
+(docs/using.md).
 
 An administrator who annotates is now asked the sign-up questionnaire, whether or not their account
 has the Annotator role. As soon as they have recordings of their own (an assignment, a hand-out, a
@@ -33,7 +43,7 @@ task's share or a training programme), the questionnaire opens when they next si
 recordings from the admin area, their recordings and training wait for the answers as an annotator's
 do, and the Questionnaire section lists them among the people who have not answered. The admin area and
 the expert operations stay open to them meanwhile. An administrator who only administers is still never
-asked (docs/web/admin.md, "Questionnaire").
+asked (docs/admin_area.md, "Questionnaire").
 
 Each saved recording now has its own interaction log beside its result files,
 `<output basename>_interaction_log.jsonl`. It holds the events of every time the annotator had the
@@ -61,7 +71,7 @@ with mistakes, whether made there or given as a file, with the reference set as
 `…_annotator-<ID>_flawed_annotations.json`, and the agreement analysis, the admin area's analyses and
 the competency reports never read a file named so, wherever it is copied. Work saved in the study is
 no longer accepted as a version with mistakes (`set_planted_from` answers 409 `study_work`), since it
-counts in the analyses (docs/web/admin.md, "Correct the marks"; docs/file_formats.md).
+counts in the analyses (docs/admin_area.md, "Correct the marks"; docs/file_formats.md).
 
 The documentation, the demonstration and the tests no longer use a person's name in their examples.
 The trainee in the administrator guide's commands, in the example study file and in
@@ -79,7 +89,7 @@ used to show the list read at sign-in, which for an administrator was taken befo
 given, so the new recordings appeared only after the page was reloaded. Coming back from the admin
 area or the expert area now asks the study for the person's recordings again.
 
-The Firebase guide (docs/web/firebase.md) has a new section, "Coming back to a study later", for
+The Firebase guide (docs/firebase.md) has a new section, "Coming back to a study later", for
 administrators who return to a study that is already running: which work the admin area does in the
 browser, how to open a terminal again in ElectroTag's folder with its environment, the service
 account key, the project and the study (for macOS and Linux and for Windows PowerShell), how to check
@@ -93,7 +103,7 @@ could answer says that the study's server turned the request away and to tell th
 when signing in fails after the email address and password were accepted, the message says so, so
 that nobody resets a password that works. A new command, `electrotag web check-functions`, asks
 each of the twenty-six functions from outside, as a browser does, and lists those that are not open
-to the public with the Google Cloud command that opens each (docs/web/firebase.md, step 8). A
+to the public with the Google Cloud command that opens each (docs/firebase.md, step 8). A
 function can stay closed when Google slows down a project's first deployment, because Firebase's
 tool opens a function only when it creates it.
 
@@ -108,7 +118,7 @@ for the study's link when it belongs to several. `config.json` remains for publi
 application elsewhere, and is left out of the repository (`.gitignore`) and of Firebase Hosting.
 The predeploy step that prepares the functions now finds Python on Windows as well as on macOS and
 Linux (`scripts/predeploy_functions.mjs`), and the *Firebase deploy* workflow can deploy the
-application too. The Firebase guide (docs/web/firebase.md) has been reworked to match: signing in
+application too. The Firebase guide (docs/firebase.md) has been reworked to match: signing in
 to the application has a step of its own, which now comes before setting the study up in the admin
 area; every command that differs on Windows is given for PowerShell beside the macOS and Linux
 version; the deploy command keeps its list in quotation marks, which PowerShell needs; and the guide
@@ -131,7 +141,7 @@ and a dataset can carry a path prefix that keeps two BIDS datasets' `sub-001` ap
 `electrotag web register --dataset` registers into a dataset from the command line. Sharing recordings
 out as tasks now writes each person's assignments in one step, which on Firebase makes a large
 share-out far quicker. This part covers the study's records and operations
-(docs/web/api.md, "Datasets, collections, groups and hand-outs").
+(docs/api.md, "Datasets, collections, groups and hand-outs").
 
 The admin area has three new sections for this. Datasets (under Data) lists the source datasets with
 their details, licence, target of ratings and how many of their recordings have met it, with a page
@@ -500,7 +510,7 @@ that uses them; the readers and the annotation view are fetched in idle time
 after signing in, so opening a recording does not wait. A page says
 "Loading…" while a part is on its way, and a part that cannot be fetched
 gives a plain message with Try again. A test keeps the sign-in page within a
-budget of JavaScript (docs/web/architecture.md, "Loading on demand").
+budget of JavaScript (docs/architecture.md, "Loading on demand").
 
 Work deleted with Discard and close could come back as "Restore unfinished work?" the next time
 the recording was opened, when a save of the draft was still waiting or on its way to the study at
@@ -508,7 +518,7 @@ the moment it was deleted (a change made just before Close, or an earlier openin
 later a moment before). A recording's view writes no draft once it has closed, a discard waits for a
 draft already on its way and then deletes, and Save and Finish likewise waits for it. The study also
 refuses a draft from a browser session that discarded its work and closed, should one still arrive
-late (409 `draft_discarded`; the delete names the session, see docs/web/api.md).
+late (409 `draft_discarded`; the delete names the session, see docs/api.md).
 
 The pages around the annotation view were improved after a usability review.
 The answer to a chosen file now appears just under the drop zone, scrolled into
@@ -692,7 +702,7 @@ is made of ("You found 7 of the experts' 8 artifacts and made 3 marks they did
 not make"), what the score measures and then What to look at, with the figures
 behind the score (sensitivity, precision and the rest) behind a disclosure. The
 practice result's `summary_html` gave way to `counts`, `verdict` and `summary`
-(docs/web/api.md). The pass mark reads "a score of at least 80% and the right
+(docs/api.md). The pass mark reads "a score of at least 80% and the right
 type for at least 80% of the artifacts you find", and the practice stage of the
 training path gives the best score in the same words, under the chip Not passed
 yet until it is passed; practice recordings are counted as tried. The labels of

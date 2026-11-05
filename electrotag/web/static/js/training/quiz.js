@@ -4,7 +4,7 @@
 // or at the end as the quiz requires, and the score. The segments are shown from the annotator's own
 // copies of the recordings, opened from their computer and checked against the fingerprints in the
 // study's manifests; the EEG never leaves the computer. The study keeps the answers and the
-// correct ones (POST /quiz/{set_id}, docs/web/api.md), so an annotator can stop and carry on later.
+// correct ones (POST /quiz/{set_id}, docs/api.md), so an annotator can stop and carry on later.
 
 import { h, clear } from '../ui/dom.js';
 import { choose } from '../ui/dialog.js';

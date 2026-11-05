@@ -1,4 +1,4 @@
-"""Datasets, collections, groups and hand-outs (docs/web/api.md, "Datasets, collections, groups and hand-outs").
+"""Datasets, collections, groups and hand-outs (docs/api.md, "Datasets, collections, groups and hand-outs").
 
 A study recording belongs to one *source dataset* (``registration.dataset_id`` in its manifest; none means the
 built-in default dataset, :data:`DEFAULT_DATASET_ID`, which has a record only once it is edited, so no manifest is
@@ -1161,7 +1161,7 @@ class Datasets:
     def handout_out(self, record: dict[str, Any], progress: Progress | None = None, *,
                     held: dict[str, dict[str, tuple[str, str]]] | None = None,
                     tasks: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-        """``HandoutOut`` (docs/web/api.md)."""
+        """``HandoutOut`` (docs/api.md)."""
         p = progress or Progress.read(self.service)
         try:
             target = self.target_of(record["target"], active=False)

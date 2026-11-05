@@ -1,5 +1,5 @@
-// An expert's correction of someone's saved work (docs/web/admin.md, "Correcting saved work"; the
-// operations in docs/web/api.md, "Corrections and replay"). The recording opens in the annotation
+// An expert's correction of someone's saved work (docs/admin_area.md, "Correcting saved work"; the
+// operations in docs/api.md, "Corrections and replay"). The recording opens in the annotation
 // view, editable, with the saved attempt's annotations (keeping their IDs) and the original drawn as
 // a dashed layer beside them, so that a removed or moved mark stays visible (L shows or hides it).
 // The Changes panel lists the difference from the original as it is now (js/expert/diff.js), each

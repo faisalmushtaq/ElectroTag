@@ -1,5 +1,5 @@
-// Everyone's marks on one recording (docs/web/admin.md, "Everyone's marks on one recording";
-// docs/web/using.md, "How everyone marked a training recording"): the saved marks of many people over
+// Everyone's marks on one recording (docs/admin_area.md, "Everyone's marks on one recording";
+// docs/using.md, "How everyone marked a training recording"): the saved marks of many people over
 // the same EEG, in a view-only annotation view of kind 'overlay'. Up to eight people have lanes of
 // their own above the EEG, each with a colour that stays distinct for colour-blind readers, a pattern
 // as a second cue and their ID on every mark, and their marks outlined on the EEG in the same colour

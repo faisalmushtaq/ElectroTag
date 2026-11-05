@@ -46,7 +46,7 @@ const store = ['--firebase-project', PROJECT, '--study', STUDY];
 const WORK = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'et-firebase-'));
 
 function setUpStudy() {
-  // The demonstration's recordings, then the commands of docs/web/firebase.md.
+  // The demonstration's recordings, then the commands of docs/firebase.md.
   py('demo', '--dir', path.join(WORK, 'demo'), '--no-serve');
   const demo = path.join(WORK, 'demo');
   py('init-study', ...store, '--name', 'Browser on Firebase');
@@ -178,7 +178,7 @@ async function main() {
     }],
     ['a reload right after a mark loses nothing, west of the functions\' time zone', async () => {
       // The functions keep a draft's time in UTC and this browser in New York's time: the newer is
-      // chosen by the moment, so the mark made just before the reload is there (docs/web/using.md).
+      // chosen by the moment, so the mark made just before the reload is there (docs/using.md).
       const page = await newPage({ timezoneId: 'America/New_York' });
       await signIn(page, 'a02@example.org', PASSWORD);
       await waitForRoute(page, 'home', 30000);

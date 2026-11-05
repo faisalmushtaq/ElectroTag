@@ -1,4 +1,4 @@
-"""Tasks, windows and known answers (electrotag/web/tasks.py, docs/web/api.md "Tasks, windows and known answers").
+"""Tasks, windows and known answers (electrotag/web/tasks.py, docs/api.md "Tasks, windows and known answers").
 
 An administrator shares recordings, or stretches of them, out among k annotators with a preview first; the
 share-out is balanced and the same for the same request; a window is enforced when drafts and saves arrive;

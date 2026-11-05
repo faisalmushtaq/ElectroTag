@@ -1,4 +1,4 @@
-// The annotation lanes of the adjudication view (docs/web/admin.md, "Adjudication"): a strip above the
+// The annotation lanes of the adjudication view (docs/admin_area.md, "Adjudication"): a strip above the
 // EEG with one lane per version compared, named by its letter and the person who made it, on the
 // viewer's own time axis (viewer.tToX), so that each annotator's marks sit side by side over the same
 // stretch of EEG. The marks of the current conflict are drawn full, the others lighter; a click on a

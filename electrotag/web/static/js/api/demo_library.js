@@ -1,4 +1,4 @@
-// Datasets, collections, groups and hand-outs in the sandbox (docs/web/api.md, "Datasets, collections, groups
+// Datasets, collections, groups and hand-outs in the sandbox (docs/api.md, "Datasets, collections, groups
 // and hand-outs"), carried out on the sandbox's own state in this browser as electrotag/web/datasets.py does them
 // on a server, with the tracking reads of electrotag/web/tracking.py and the list of what would be notified. It is
 // loaded on demand (js/lazy.js part demoLibrary) by demo_admin.js, for these operations, and by demo.js for
@@ -982,7 +982,7 @@ export class DemoLibrary {
     return live.filter((r) => people.some((a) => !have[a].has(r)));
   }
 
-  /** HandoutOut (docs/web/api.md). */
+  /** HandoutOut (docs/api.md). */
   handoutOut(record, p = new Progress(this), held = this._held()) {
     const target = this._targetOrEmpty(record);
     const cov = this.covered(record, held, target.rids);
@@ -1413,7 +1413,7 @@ class TrackingIndex {
       ratings_target: inner ? inner.ratings_target : RATINGS_TARGET };
   }
 
-  /** The Cell of one person and one study recording (docs/web/api.md). */
+  /** The Cell of one person and one study recording (docs/api.md). */
   cell(aid, rid) {
     const key = `${aid}|${rid}`;
     if (this._cells.has(key)) return this._cells.get(key);

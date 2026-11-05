@@ -20,7 +20,7 @@ are.
 Allow an afternoon for the first set-up. Steps 1 to 8 are done once per Firebase project, and one
 project can hold several studies; steps 9 to 14 are done once per study. Once you have signed in
 with your own administrator account (step 11), the study is run from the **admin area** of the
-application (docs/web/admin.md): adding recordings, accounts, assignments, reference sets,
+application (docs/admin_area.md): adding recordings, accounts, assignments, reference sets,
 settings, the analyses and the results. The commands below remain an alternative for each of these,
 and "Coming back to a study later", after step 14, explains how to open a terminal for them again
 on a later day.
@@ -90,7 +90,7 @@ electrotag web --help
 If PowerShell says that running scripts is disabled, allow scripts you have made yourself once with
 `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser` and activate again; the same
 setting lets PowerShell run `npx` in step 8. The
-[README](../../README.md#installing-the-python-package) explains each line. In a new terminal later
+[README](../README.md#installing-the-python-package) explains each line. In a new terminal later
 on, only the activation line is needed again. The last command lists everything `electrotag web`
 can do. Every command used below also has its own help, for example
 `electrotag web add-user --help`.
@@ -292,7 +292,7 @@ request away, the password is fine and some functions are closed: run
 
 ## 12. Set the study up in the admin area
 
-Signed in as in step 11, you use the admin area (docs/web/admin.md explains each part) to:
+Signed in as in step 11, you use the admin area (docs/admin_area.md explains each part) to:
 
 * **add the recordings**: choose the dataset folder on your computer. The browser reads each
   recording there, runs ElectroTag's checks and sends only what the study needs to show the
@@ -560,7 +560,7 @@ another study of the same project with `?study=<id>`.
 ## Trying it without a Firebase project
 
 `electrotag web demo` runs the whole system on your computer with the ElectroTag server instead
-of Firebase (docs/web/server.md). `scripts/test_firebase_emulators.sh` runs ElectroTag's tests of
+of Firebase (docs/server.md). `scripts/test_firebase_emulators.sh` runs ElectroTag's tests of
 the Firebase side on Google's Firebase Emulator Suite, which needs Java but no Firebase project.
 `scripts/test_web_firebase.sh` goes further: on the same emulators it sets up a study with the
 commands above, then drives the application in Chromium (signing in with an email address,

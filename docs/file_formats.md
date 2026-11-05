@@ -457,7 +457,7 @@ with the columns `correction_id`, `corrected_at`, `corrector_id`,
 
 ## Tasks and known-answer scores (results zip and export)
 
-The tasks that shared recordings out among annotators (docs/web/admin.md, "Tasks") are kept by the
+The tasks that shared recordings out among annotators (docs/admin_area.md, "Tasks") are kept by the
 study and written below `tasks/` in the results zip and by `electrotag web export`, as they stand at
 that moment, removed tasks included. They never change the annotation files: each annotator's work
 on a task is saved and named as any other recording of theirs.
@@ -480,7 +480,7 @@ the practice feedback does, within the task's part of the recording when it has 
 
 ## The sign-up questionnaire (results zip and export)
 
-The answers to the sign-up questionnaire (docs/web/using.md, "Before your first recording") are
+The answers to the sign-up questionnaire (docs/using.md, "Before your first recording") are
 written below `questionnaire/` in the results zip and by `electrotag web export`, by annotator ID and
 with no name or contact detail.
 
@@ -510,8 +510,8 @@ formula. The README of the zip says the same.
 
 ## Datasets, collections, groups, hand-outs and tracking (results zip and export)
 
-The study's source datasets, its collections, its groups and its hand-outs (docs/web/admin.md,
-"Datasets"; docs/web/api.md, "Datasets, collections, groups and hand-outs") are kept as records of the
+The study's source datasets, its collections, its groups and its hand-outs (docs/admin_area.md,
+"Datasets"; docs/api.md, "Datasets, collections, groups and hand-outs") are kept as records of the
 study and written below `datasets/` in the results zip and by `electrotag web export`, with the
 tracking of who was given, opened and saved each recording, as they stand at that moment. Every
 file names people by annotator ID only. Datasets, collections and groups that were removed are
@@ -676,7 +676,7 @@ with `electrotag web init-study --settings` or changed in the admin area.
 ```
 
 `settings` may override any key of `electrotag/config/default_settings.json`;
-the [administrator guide](administrator_guide.md) explains each one, including
+the [study settings guide](study_settings.md) explains each one, including
 the blocks `review` (corrections and adjudication), `training` (which stages of
 the training path may be skipped, and what real study work waits for) and
 `replay` (who may watch replays of sessions).

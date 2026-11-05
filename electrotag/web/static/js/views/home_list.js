@@ -3,7 +3,7 @@
 // saved, newest first), a search by file
 // name, sorting, and pages of PAGE_SIZE rows, so that only one page is ever in the document. Done
 // study recordings can be opened again to revise them when the study allows it
-// (docs/web/using.md, "History and revisions").
+// (docs/using.md, "History and revisions").
 //
 // When the study team has handed recordings out with titles (GET /assignments `handout`), the To do and All
 // tabs group the rows under each hand-out's title, earliest due first, then "Other recordings"; a row of an

@@ -1,7 +1,7 @@
 // Synthetic EEG with known artifacts, for the demonstration and for tests.
 //
 // makeSyntheticRecording(spec) returns an object with the Recording interface of
-// docs/web/architecture.md. Every sample is computed from the spec on demand (a deterministic
+// docs/architecture.md. Every sample is computed from the spec on demand (a deterministic
 // function of the seed, the channel and the sample), so a recording of any size can be shown
 // without holding it in memory. syntheticEdfBytes(spec) writes the same recording as an EDF file
 // (16-bit, 0.1 µV resolution), which is what the demonstration's fingerprints are computed from,

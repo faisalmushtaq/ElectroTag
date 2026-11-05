@@ -2922,7 +2922,7 @@ export class Workspace {
   /**
    * Before Save and Finish: the marks still Uncertain (Data-artifact, needing an expert's review), with Go to the first,
    * Save anyway and Keep annotating. True to go on saving. Marks of a type the annotator could not tell are saved as they
-   * are when they choose so; the reminder gives them the chance to name the ones they can now (docs/web/using.md).
+   * are when they choose so; the reminder gives them the chance to name the ones they can now (docs/using.md).
    */
   async _uncertainCheck() {
     const marks = this.store.annotations().filter((a) => needsReview(a))

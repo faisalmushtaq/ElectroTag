@@ -1,4 +1,4 @@
-"""Screening-style adjudication of disagreements (docs/web/api.md, "Adjudication and the library").
+"""Screening-style adjudication of disagreements (docs/api.md, "Adjudication and the library").
 
 As in the dual screening of a systematic review (Covidence, Rayyan), two or more people annotate the
 same recording independently; once they have all saved, ElectroTag compares their versions with the

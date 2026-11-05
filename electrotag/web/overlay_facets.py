@@ -1,4 +1,4 @@
-"""The overlay's filters by the study's groups and by experience (docs/web/admin.md, "Everyone's marks").
+"""The overlay's filters by the study's groups and by experience (docs/admin_area.md, "Everyone's marks").
 
 The overlay (:mod:`electrotag.web.overlay`) offers a filter for each facet registered with
 :func:`~electrotag.web.overlay.register_facet`. This module registers two, from the dataset library's groups

@@ -1,4 +1,4 @@
-// What an annotator sees of an expert's correction of their work (docs/web/using.md, "Corrections of
+// What an annotator sees of an expert's correction of their work (docs/using.md, "Corrections of
 // your work"), when the study shows corrections to its annotators: the corrected version, read only,
 // with their own saved version as dashed outlines beside it, and the changes listed with the
 // expert's reasons in the side panel. The marks and chips are in the accent blue, never red: a

@@ -1,5 +1,5 @@
 // openRecording(files) -> Recording: the browser's reader of EDF, EDF+, BDF and BrainVision files
-// (docs/web/architecture.md, "The Recording interface"). The files stay on the annotator's computer
+// (docs/architecture.md, "The Recording interface"). The files stay on the annotator's computer
 // and are read in pieces with Blob.slice. The reading runs in a Web Worker when the browser allows
 // one and on the page otherwise; either way the page stays responsive, because every read is
 // asynchronous and the work is done a piece at a time. Plain ES module; nothing outside js/eeg/.
@@ -166,7 +166,7 @@ export async function openRecording(files, options = {}) {
 }
 
 /**
- * An open recording (docs/web/architecture.md). Besides the interface's fields it has
+ * An open recording (docs/architecture.md). Besides the interface's fields it has
  * suggestedHidden, discontinuities, notes, markerSource, amplitudes, suggestedScalings,
  * readerKind ("worker" or "page"), edgeZones(filters) and setChannelTypes(types).
  */

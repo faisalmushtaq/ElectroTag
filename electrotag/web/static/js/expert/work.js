@@ -1,4 +1,4 @@
-// Saved work, a section of the expert area (docs/web/admin.md, "Saved work"): every saved study
+// Saved work, a section of the expert area (docs/admin_area.md, "Saved work"): every saved study
 // attempt, the latest of each person and recording, filtered by person, recording and whether it was
 // corrected. Each row offers Correct (js/expert/correction_pass.js) and Replay (js/replay/player.js),
 // with the number of corrections it has, and Everyone (js/expert/overlay.js: everyone's marks on the

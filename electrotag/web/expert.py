@@ -1,4 +1,4 @@
-"""The expert area's operations (``POST /expert/{op}``, ``et_expert``; docs/web/api.md, "Experts").
+"""The expert area's operations (``POST /expert/{op}``, ``et_expert``; docs/api.md, "Experts").
 
 Experts open anyone's saved work to correct it, replay sessions, adjudicate conflicts and supply
 training material; administrators may do everything an expert does. :meth:`Expert.run` checks that

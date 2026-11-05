@@ -108,7 +108,7 @@ class Analyses:
             raise ApiError(400, "invalid_config", "config must be an object of analysis settings")
         if {"annotators", "modes"} & set(given):
             raise ApiError(400, "invalid_config", "Choose the annotators and modes with annotator_ids and modes")
-        # The versions compared and the unit (docs/web/api.md, "Derived versions in the analyses"): in the body, or
+        # The versions compared and the unit (docs/api.md, "Derived versions in the analyses"): in the body, or
         # in the settings as electrotag-agreement --config reads them.
         chosen = {k: body[k] for k in ("versions", "unit") if body.get(k) is not None}
         for k, v in chosen.items():
@@ -126,7 +126,7 @@ class Analyses:
                 if annotators else None
             root = self.store.results_tree(Path(tmp), annotator_ids=wanted_people, modes=set(modes))
             # A recording an annotator reported as one that cannot be annotated is left out for everyone: its
-            # other annotations would be compared with a judgement nobody could make (docs/web/api.md).
+            # other annotations would be compared with a judgement nobody could make (docs/api.md).
             unusable = self.service.feedback.unusable_recordings() if "standard" in modes else {}
             wanted = set(recordings) if recordings else None
             files = self._annotation_files(root, wanted, leave_out=set(unusable))

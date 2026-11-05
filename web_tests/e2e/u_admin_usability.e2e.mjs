@@ -31,7 +31,7 @@ export const tests = [
       await page.waitForSelector('.stat-tile');
       // Help: this section of the administrators' guide, in a new tab.
       const help = page.locator('.admin-section[data-section="overview"] a[data-help]');
-      assert.equal(await help.getAttribute('href'), `${DOCS}web/admin.md#overview`);
+      assert.equal(await help.getAttribute('href'), `${DOCS}admin_area.md#overview`);
       assert.equal(await help.getAttribute('target'), '_blank');
       // The figures fill their rows: no grey block behind an incomplete row, and each opens its section.
       const tiles = await page.evaluate(() => {
@@ -49,7 +49,7 @@ export const tests = [
       assert.equal(await page.evaluate(() => document.activeElement.matches('.admin-section[data-section="overview"] h1')), true);
       await page.click('a.stat-tile[data-to="problems"]');
       await waitForRoute(page, 'admin-problems');
-      assert.equal(await page.getAttribute('.admin-section[data-section="problems"] a[data-help]', 'href'), `${DOCS}web/admin.md#problems`);
+      assert.equal(await page.getAttribute('.admin-section[data-section="problems"] a[data-help]', 'href'), `${DOCS}admin_area.md#problems`);
 
       // Study settings: a mistake halfway down the page is answered beside Save, with its field focused.
       await goSection(page, 'Study settings', 'admin-settings');

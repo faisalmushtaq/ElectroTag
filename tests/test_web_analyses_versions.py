@@ -1,4 +1,4 @@
-"""The admin area's agreement analysis of the derived versions (docs/web/api.md, "Derived versions in the analyses").
+"""The admin area's agreement analysis of the derived versions (docs/api.md, "Derived versions in the analyses").
 
 Two annotators save a recording, experts correct one of them (once, then twice, which needs adjudication) and
 an expert adjudicates the recording; the admin operation ``agreement`` then compares the originals, the

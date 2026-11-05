@@ -133,7 +133,7 @@ export class AnnotationSession {
     this.closed = false; // the view has closed, or its work was discarded: no draft is written for it again
     this.remoteFailing = false; // the last draft sent did not reach the study
     this.submitting = false; // Save and Finish is waiting for the study's answer: no draft is sent meanwhile
-    // A revision opens with the annotations of the latest saved version (docs/web/using.md, "History and revisions").
+    // A revision opens with the annotations of the latest saved version (docs/using.md, "History and revisions").
     this.revision = o.revision && Number.isInteger(o.revision.revises) ? { ...o.revision } : null;
     if (this.revision) {
       this.store.reset((this.revision.annotations || []).filter((a) => this.catalogue.has(a.label)), this._knownBad(this.revision.bad_channels));

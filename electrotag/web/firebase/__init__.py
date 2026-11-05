@@ -1,6 +1,6 @@
 """ElectroTag on Firebase: the administrator's access (Admin SDK) and the Cloud Functions.
 
-Real studies run on Firebase (docs/web/firebase.md): annotators sign in with Firebase
+Real studies run on Firebase (docs/firebase.md): annotators sign in with Firebase
 Authentication, the study's records are in Firestore and the private work is done by the Python
 Cloud Functions in ``functions/`` (``main.py``), which call :class:`electrotag.web.service.StudyService`
 with a :class:`electrotag.web.store_firestore.FirestoreStore`.

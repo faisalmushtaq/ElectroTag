@@ -128,7 +128,7 @@ offers the example recordings as EDF files to open "from your computer", which i
 do with real recordings. The demonstration cannot run what needs Python (the analyses, consensus
 references, the results zip file); for those, run the whole system on one computer with
 `electrotag-web demo` and open <http://localhost:8000/>, signing in as A01, A02, T01, E01 or ADMIN with
-the password `electrotag` ([docs/web/server.md](docs/web/server.md) says where the recordings to
+the password `electrotag` ([docs/server.md](docs/server.md) says where the recordings to
 open and the results are).
 
 There are no open pull requests or issues on GitHub.
@@ -175,7 +175,7 @@ Firebase tests need Java 21 for Google's emulators; `npx` fetches the Firebase t
 | To | Run |
 | --- | --- |
 | Try everything on this computer | `electrotag-web demo`, then <http://localhost:8000/> (accounts above) |
-| Run a study on your own server | `electrotag-web serve --study-dir …` ([docs/web/server.md](docs/web/server.md)) |
+| Run a study on your own server | `electrotag-web serve --study-dir …` ([docs/server.md](docs/server.md)) |
 | Register recordings from the command line | `electrotag-web register …` (the admin area does the same in the browser) |
 | See who has done what | the admin area's Results section, or `electrotag-web progress --study-dir …` or `--firebase-project … --study …` |
 | Write a Firebase study's results into ElectroTag's folders | `electrotag-web export …` |
@@ -201,7 +201,7 @@ functions, rules and application (Firebase Hosting) to a real project (see below
 ## Setting up a real study on Firebase
 
 The group's first Firebase project was created on 3 November 2026 and its functions deployed; its
-studies are still to be set up. [docs/web/firebase.md](docs/web/firebase.md)
+studies are still to be set up. [docs/firebase.md](docs/firebase.md)
 takes you through it step by step, in about an afternoon the first time: create the project, choose
 the pay-as-you-go Blaze plan with a budget alert, create Firestore in europe-west2 (London), turn on
 email and password sign-in, register the web application with Firebase Hosting, deploy the rules,
@@ -221,7 +221,7 @@ simulated recordings whose "expert" annotations are the simulation's ground trut
 is obtaining two or three properly annotated recordings. In a browser study the simplest route is
 for the experts to annotate them in the study and for the admin area to turn their saved
 annotations into references, or a consensus of them (the Training section of
-[docs/web/admin.md](docs/web/admin.md)); the [administrator guide](docs/administrator_guide.md)
+[docs/admin_area.md](docs/admin_area.md)); the [study settings guide](docs/study_settings.md)
 ("Real expert files") describes the same with `electrotag-admin` in a folder. Once the real set
 works, remove the example set. Its guided notes tell trainees what each simulated artifact looks like
 and why it is marked on those channels; real sets need the experts' own explanations, written in the
@@ -253,7 +253,7 @@ channels should be shown.
 annotators, a Firebase study keeps the study's records with Google in London, and the audit log
 names the administrators. The sign-up questionnaire adds the annotators' experience, career and,
 where the study keeps them, demographic answers, and their names and contact details (item 6g). The "Data protection in brief" sections of
-[docs/web/firebase.md](docs/web/firebase.md) and [docs/web/server.md](docs/web/server.md) describe
+[docs/firebase.md](docs/firebase.md) and [docs/server.md](docs/server.md) describe
 exactly what is stored; check the arrangements with the university's research data and ethics
 processes before the first real study.
 
@@ -309,14 +309,14 @@ nothing beside them can be found. Recordings a study knows only by their manifes
 annotator to pick the `electrodes.tsv` with the recording. Letting the manifest name it, or carry
 the positions themselves, would change what the study stores: `electrotag/web/manifest.py` and
 `js/eeg/register.js` would both build the new field (checked by `web_tests/register_parity.py`),
-`manifest_check.py` would have to keep it, and `docs/web/api.md` would describe it; the open
+`manifest_check.py` would have to keep it, and `docs/api.md` would describe it; the open
 view could then say which file to pick, or the map use the stored positions. That is left for a
 decision by the project lead.
 
 **6c. Loose ends from the usability fixes to the pages around the annotation view (29 October).**
 An expired or replaced invitation link asks the person to contact "the study team who invited you",
 because a study has no setting that names a contact; a `contact` setting shown there (and on the
-sign-in page) would need the settings, the admin area's Settings section and `docs/web/api.md`. When
+sign-in page) would need the settings, the admin area's Settings section and `docs/api.md`. When
 the connection is lost before the file readers load, Try again asks for `eeg/recording.js` under
 another address, because Chromium remembers a module that failed to load for the life of the page;
 a module that it imports and that also failed still needs a reload of the page, which the message
@@ -473,7 +473,7 @@ remembered beside the drafts in `<key>.closed` or the Firestore collection `draf
 way of saving drafts must go through `saveLocal`/`saveRemote`, which check `mayKeepDraft`.
 
 **The browser, the server and the Firebase functions share one contract**,
-[docs/web/api.md](docs/web/api.md), with the annotators' operations, the administrator's operations
+[docs/api.md](docs/api.md), with the annotators' operations, the administrator's operations
 (`POST /api/v1/admin/{op}`, or the callable `et_admin`) and the quiz. A change to a request or
 response touches the service layer (`electrotag/web/service.py` and the modules it calls, such as
 `admin.py`, `quiz.py`, `coach.py` and `visits.py`), the HTTP route in `electrotag/web/app.py`, the
@@ -482,7 +482,7 @@ Firebase function in `electrotag/web/firebase/functions/main.py`, the browser's 
 `demo_feedback.js`), and the contract itself. The end-to-end tests against the real server and the
 emulators are what catch a mismatch, and `web_tests/unit/api_contract_parity.test.mjs` sends the
 same calls to the real service and to the demonstration's stand-in and compares the answers, so a
-change that the stand-in does not follow fails there first (docs/web/architecture.md, "The
+change that the stand-in does not follow fails there first (docs/architecture.md, "The
 sandbox's stand-in for the server").
 
 **Registration happens in two places.** The browser's `js/eeg/register.js` must build the same
@@ -536,13 +536,13 @@ guides. Any literature cited must be checked against the original source before 
 | Document | For |
 | --- | --- |
 | [README.md](README.md) | What ElectroTag is, trying it, running a study, the outputs |
-| [docs/web/using.md](docs/web/using.md) | Annotators and trainees using the application |
-| [docs/web/admin.md](docs/web/admin.md) | Lead researchers using the admin area |
-| [docs/web/firebase.md](docs/web/firebase.md) | Setting up a real study on Firebase, step by step |
-| [docs/web/server.md](docs/web/server.md) | The demonstration and a study on ElectroTag's own server |
-| [docs/web/architecture.md](docs/web/architecture.md) | How the application, the server and Firebase fit together |
-| [docs/web/api.md](docs/web/api.md) | The contract between browser and server, and the Firebase functions |
-| [docs/administrator_guide.md](docs/administrator_guide.md) | Every study setting, reference sets, competency criteria, the training programme |
+| [docs/using.md](docs/using.md) | Annotators and trainees using the application |
+| [docs/admin_area.md](docs/admin_area.md) | Lead researchers using the admin area |
+| [docs/firebase.md](docs/firebase.md) | Setting up a real study on Firebase, step by step |
+| [docs/server.md](docs/server.md) | The demonstration and a study on ElectroTag's own server |
+| [docs/architecture.md](docs/architecture.md) | How the application, the server and Firebase fit together |
+| [docs/api.md](docs/api.md) | The contract between browser and server, and the Firebase functions |
+| [docs/study_settings.md](docs/study_settings.md) | Every study setting, reference sets, competency criteria, the training programme |
 | [docs/reliability_guide.md](docs/reliability_guide.md) | The agreement measures and how to read them |
 | [docs/activity_logs.md](docs/activity_logs.md) | What the interaction logs record, and the activity analysis |
 | [docs/file_formats.md](docs/file_formats.md) | Every output and configuration file |

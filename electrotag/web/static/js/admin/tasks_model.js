@@ -1,6 +1,6 @@
 // The words and the arithmetic of the admin area's Tasks section (tasks.js), kept apart from the page
 // so that they can be tested without one: the request a share-out sends, what its preview says, the
-// statuses and the filters of the list (docs/web/admin.md, "Tasks"; docs/web/api.md, "Tasks, windows
+// statuses and the filters of the list (docs/admin_area.md, "Tasks"; docs/api.md, "Tasks, windows
 // and known answers").
 
 import { clockText } from '../viewer/bounds.js';

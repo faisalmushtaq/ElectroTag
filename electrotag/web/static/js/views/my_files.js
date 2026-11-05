@@ -1,4 +1,4 @@
-// An annotator's own saved files of one recording (GET /me/results, docs/web/api.md "Your own saved
+// An annotator's own saved files of one recording (GET /me/results, docs/api.md "Your own saved
 // files"): the files the study keeps of the saved version, which are the BIDS _events.tsv and its
 // _events.json, the _annotations.json with the ratings and notes, the _session.json and
 // _time_viewed.txt, downloaded as one small zip or as separate files. Offered in the Saved dialog

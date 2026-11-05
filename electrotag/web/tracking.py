@@ -1,4 +1,4 @@
-"""Tracking: who has been given, has opened and has saved which study recordings, and when (docs/web/api.md,
+"""Tracking: who has been given, has opened and has saved which study recordings, and when (docs/api.md,
 "Datasets, collections, groups and hand-outs"). Every figure is derived from the assignments, the completion
 register, the drafts, the visit index and the reports of recordings that cannot be annotated; nothing new is stored.
 
@@ -36,7 +36,7 @@ if TYPE_CHECKING:
 
 #: How long a Firestore study keeps a built index on the service instance (the files store builds afresh).
 TRACKING_CACHE_S = 120.0
-#: The status of one (person, recording) cell, in order of precedence (docs/web/api.md).
+#: The status of one (person, recording) cell, in order of precedence (docs/api.md).
 STATUSES = ("set_aside", "revised", "saved", "locked", "in_progress", "opened", "given", "not_given")
 KINDS = ("dataset", "collection", "handout")
 LIMIT_MAX = 1000
@@ -127,7 +127,7 @@ class TrackingIndex:
 
     # ------------------------------------------------------------- one cell
     def cell(self, aid: str, rid: str) -> dict[str, Any]:
-        """The ``Cell`` of one person and one study recording (docs/web/api.md)."""
+        """The ``Cell`` of one person and one study recording (docs/api.md)."""
         key = (aid, rid)
         done = self._cells.get(key)
         if done is not None:

@@ -3,7 +3,7 @@
 // an optional due date and the title annotators see. Below, every hand-out with its progress and overdue
 // people, a page for each (change the due date or the title, give recordings added since, add people,
 // withdraw), and what would be notified: ElectroTag sends no email yet, so the page lists what a notice
-// would say for the team to copy (docs/web/admin.md, "Hand-outs"; the operations are in docs/web/api.md,
+// would say for the team to copy (docs/admin_area.md, "Hand-outs"; the operations are in docs/api.md,
 // "Datasets, collections, groups and hand-outs").
 
 import { h, clear } from '../ui/dom.js';

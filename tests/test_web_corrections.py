@@ -1,4 +1,4 @@
-"""Experts' corrections of saved work (electrotag/web/corrections.py, docs/web/api.md "Corrections and replay").
+"""Experts' corrections of saved work (electrotag/web/corrections.py, docs/api.md "Corrections and replay").
 
 An expert corrects someone's saved attempt with a reason for each change; the correction is a
 derived version (five files in derived/corrections with their own register, provenance in

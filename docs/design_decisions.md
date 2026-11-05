@@ -33,7 +33,7 @@ research team.
 
 The table describes the Python core, which registers recordings and writes
 the results. The browser application reads, filters and shows the annotator's
-copy itself, reproducing MNE's results ([web/architecture.md](web/architecture.md)).
+copy itself, reproducing MNE's results ([architecture.md](architecture.md)).
 
 | Need | Provided by MNE | Added by ElectroTag |
 |---|---|---|

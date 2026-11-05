@@ -1,4 +1,4 @@
-"""The sign-up questionnaire and contact details on the server (docs/web/api.md, "The sign-up questionnaire").
+"""The sign-up questionnaire and contact details on the server (docs/api.md, "The sign-up questionnaire").
 
 Annotators and experts answer a short questionnaire about their experience of EEG, their career
 stage and field and (where the study's ethics approval covers it) a few demographic questions,
@@ -57,7 +57,7 @@ if TYPE_CHECKING:
 #: The record kinds (electrotag/web/store.py RECORD_KINDS).
 ANSWERS_KIND = "questionnaires"
 CONTACTS_KIND = "contacts"
-#: The operations of docs/web/api.md that wait for the questionnaire: opening, drafting and saving recordings,
+#: The operations of docs/api.md that wait for the questionnaire: opening, drafting and saving recordings,
 #: the training programme, the quiz and the expert area.
 GATED_OPERATIONS = ("match", "put_draft", "submit", "training", "guided_get", "guided_check", "guided_continue",
                     "guided_show_me", "training_stage", "training_snippets", "quiz", "expert")

@@ -480,7 +480,7 @@ export class AnnotationStore {
     return this._items.get(this.lastSurvivors.get(merged.annotation_id));
   }
 
-  /** As sent to the server (Annotation in docs/web/api.md). */
+  /** As sent to the server (Annotation in docs/api.md). */
   toJSON() {
     return this.annotations().map((a) => ({ ...a, channels: [...a.channels] }));
   }

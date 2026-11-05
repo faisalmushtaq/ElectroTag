@@ -3,7 +3,7 @@
 // people, the recordings, k and the part of each recording, see the share-out before anything is
 // made (each person's share, what is left out and why), then make it once. Below, every task with
 // where each of its people stands and its status, and each annotator's accuracy on the known answers
-// (docs/web/admin.md, "Tasks"; the operations are in docs/web/api.md, "Tasks, windows and known answers").
+// (docs/admin_area.md, "Tasks"; the operations are in docs/api.md, "Tasks, windows and known answers").
 
 import { h, clear } from '../ui/dom.js';
 import { newId } from '../util.js';

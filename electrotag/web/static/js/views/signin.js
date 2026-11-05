@@ -112,7 +112,7 @@ export function signinView(app, { message = '', error = '' } = {}) {
     message ? h('p.success', { role: 'status' }, message) : null,
     problem, b ? form : null, demoHint, connect,
     h('p.caption.guide-link', {}, 'New to ElectroTag? The ',
-      h('a', { href: docsUrl('web/using.md'), target: '_blank', rel: 'noopener', 'data-log': 'guide' }, 'annotators\' guide'),
+      h('a', { href: docsUrl('using.md'), target: '_blank', rel: 'noopener', 'data-log': 'guide' }, 'annotators\' guide'),
       ' explains signing in, opening recordings and annotating (it opens in a new tab).'));
   setTimeout(() => (b ? idField : null)?.focus(), 0);
   return signinFrame(app, card);

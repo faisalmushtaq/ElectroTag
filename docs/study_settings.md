@@ -1,14 +1,14 @@
-# Administrator guide: configuring a study
+# Study settings: configuring a study
 
 This guide is for the lead researcher who configures a study: how the
 recordings are registered and shown, which recording each annotator is given
 next, how annotators are trained and assessed, and what is recorded about their
 work. It explains what each setting and each choice means and what follows from
 it. The steps themselves are in three other guides. The
-[admin area](web/admin.md) is where a lead researcher runs a study in the
+[admin area](admin_area.md) is where a lead researcher runs a study in the
 browser: accounts, recordings, assignments, settings, reference sets, progress
-and results. [Running a study on Firebase](web/firebase.md) sets up a real
-study from the beginning, and [the ElectroTag server](web/server.md) covers
+and results. [Running a study on Firebase](firebase.md) sets up a real
+study from the beginning, and [the ElectroTag server](server.md) covers
 the demonstration and a study on a computer of your own.
 
 The same settings and rules apply wherever a choice is made. The admin area
@@ -79,7 +79,7 @@ recording is read when it is registered, on the computer that holds it (with
 MNE-Python by `electrotag web register`, or by the browser in the admin area,
 which builds the same registration), and again when an annotator opens their
 own copy, by the browser itself, which reproduces MNE's reading
-([architecture](web/architecture.md)). The registration stores the
+([architecture](architecture.md)). The registration stores the
 recording's fingerprint (the SHA-256 checksum of its data file), timing,
 channels and original events, and never the EEG. The browser compares the file
 an annotator opens with that registration before the recording opens.
@@ -545,7 +545,7 @@ taking up again and finished tour or snippets is kept as an event, with its
 time, in the trainee's progress; the competency report lists the stages
 skipped. The training path shows the stages, what the annotator has done,
 their stars, best practice score and time, and the next step; the
-[guide for annotators](web/using.md) describes what they see.
+[guide for annotators](using.md) describes what they see.
 
 **Snippets.** The examples of *meet the artifacts* are the set's snippets:
 one for each of the experts' annotations on its guided recordings, with that

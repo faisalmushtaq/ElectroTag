@@ -1,6 +1,6 @@
 """Where a study's records are kept: the storage interface of the web service.
 
-:class:`~electrotag.web.service.StudyService` performs every operation of docs/web/api.md
+:class:`~electrotag.web.service.StudyService` performs every operation of docs/api.md
 against a :class:`Store`. There are two implementations:
 
 * :class:`~electrotag.web.store_files.FilesStore`: a study folder with an SQLite file, used by the
@@ -38,9 +38,9 @@ MODES = ("standard", "guided", "practice", "assessment")
 #: The kinds of record kept with :meth:`Store.update_record`: problem reports, reviews of saved work, the
 #: marks of assignments that cannot be annotated (each annotator's, by item key), and the records of the
 #: expert work: tasks (``annotator_id`` ""), corrections (the corrected person's), adjudications (the
-#: adjudicator's) and gold scores (docs/web/api.md, "Experts").
+#: adjudicator's) and gold scores (docs/api.md, "Experts").
 RECORD_KINDS = ("problems", "reviews", "unusable", "tasks", "corrections", "adjudications", "gold")
-#: The records of the study's datasets (electrotag/web/datasets.py; docs/web/api.md, "Datasets, collections, groups
+#: The records of the study's datasets (electrotag/web/datasets.py; docs/api.md, "Datasets, collections, groups
 #: and hand-outs"): the details of source datasets, collections, groups of people, hand-outs and the notices that
 #: would be sent about them, each with ``annotator_id`` "".
 RECORD_KINDS += ("datasets", "collections", "groups", "handouts", "notices")
@@ -144,9 +144,9 @@ class Assignment:
     mode: str = "standard"
     context_id: str = ""
     position: int = 0
-    #: The task this assignment belongs to ("" for an assignment made without one: docs/web/api.md, "Tasks").
+    #: The task this assignment belongs to ("" for an assignment made without one: docs/api.md, "Tasks").
     task_id: str = ""
-    #: The hand-out that gave the assignment, or that it was linked to later ("" for none: docs/web/api.md,
+    #: The hand-out that gave the assignment, or that it was linked to later ("" for none: docs/api.md,
     #: "Datasets, collections, groups and hand-outs").
     handout_id: str = ""
     #: When the assignment was made, where the store keeps it (the files store); "" otherwise (Firestore, where
@@ -395,7 +395,7 @@ class Store(ABC):
 
     # ------------------------------------------------------------ invitations
     def create_invitation(self, annotator_id: str, *, days: float, by: str) -> Invitation:
-        """A new private invitation for the account, replacing any earlier one (docs/web/api.md,
+        """A new private invitation for the account, replacing any earlier one (docs/api.md,
         ``user_invite``): ``{"invite_token", "invite_link", "expires_at"}``, with a token the browser
         makes a link from (the files store) or a link to choose a password (Firebase)."""
         raise AccountProblem("not_offered", "This study cannot make invitation links.", 422)
@@ -623,7 +623,7 @@ class Store(ABC):
                       change: Callable[[dict[str, Any] | None], dict[str, Any] | None]) -> dict[str, Any] | None:
         """Read, change and write one record in one step: ``change`` gets the record kept (None when there is
         none) and returns the new one, or None to leave it as it was; returns the record kept. Records are
-        never deleted (docs/web/api.md, "Problem reports" and "Reviews")."""
+        never deleted (docs/api.md, "Problem reports" and "Reviews")."""
 
     # ------------------------------------------------------------------ audit
     @abstractmethod

@@ -1,4 +1,4 @@
-// The Backend that talks to a study server (docs/web/api.md, version 1).
+// The Backend that talks to a study server (docs/api.md, version 1).
 //
 // The server usually runs on another site than the application (GitHub Pages), so requests carry
 // a bearer token rather than a cookie: POST /login returns it, it is kept in memory and in
@@ -131,7 +131,7 @@ export class HttpBackend {
     return data;
   }
 
-  /** A study server takes private invitation links (?invite=<token>, docs/web/api.md). */
+  /** A study server takes private invitation links (?invite=<token>, docs/api.md). */
   get acceptsInvites() { return true; }
 
   /** Whose invitation a link's token is: {annotator_id, display_name, study_name, expires_at} (no sign-in). */
@@ -153,7 +153,7 @@ export class HttpBackend {
   me() { return this._request('GET', '/me'); }
 
   /** The annotator's counters, the facts of their milestones, their goal, the team's progress and the
-   *  anonymised leaderboard (docs/web/api.md, "Achievements"). */
+   *  anonymised leaderboard (docs/api.md, "Achievements"). */
   achievements() { return this._request('GET', '/me/achievements'); }
 
   /** Sets the personal goal ({goal_per_week}) or whether to appear on the leaderboard ({leaderboard_hidden}). */
@@ -234,13 +234,13 @@ export class HttpBackend {
   }
 
   // ------------------------------------------------------------- administration
-  /** One operation of the admin area: POST /admin/{op} with a JSON body (docs/web/api.md, "Administration"). */
+  /** One operation of the admin area: POST /admin/{op} with a JSON body (docs/api.md, "Administration"). */
   admin(op, body = {}) {
     if (!ADMIN_OP.test(String(op))) return Promise.reject(new ApiError(400, 'bad_request', 'That is not an operation of the admin area.'));
     return this._request('POST', `/admin/${op}`, body || {});
   }
 
-  /** One operation of the expert area: POST /expert/{op} with a JSON body (docs/web/api.md, "Experts"). */
+  /** One operation of the expert area: POST /expert/{op} with a JSON body (docs/api.md, "Experts"). */
   expert(op, body = {}) {
     if (!EXPERT_OP.test(String(op))) return Promise.reject(new ApiError(400, 'bad_request', 'That is not an operation of the expert area.'));
     return this._request('POST', `/expert/${op}`, body || {});

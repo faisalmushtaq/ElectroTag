@@ -1,4 +1,4 @@
-// Corrections of saved work and replays of sessions in the sandbox (docs/web/api.md, "Corrections and
+// Corrections of saved work and replays of sessions in the sandbox (docs/api.md, "Corrections and
 // replay"), as electrotag/web/corrections.py and replay.py do them on a server: the same operations,
 // answers and errors, with the corrections kept in this browser beside the sandbox's other records
 // (state.corrections) and the replays read from the visits it keeps in memory for the page's life

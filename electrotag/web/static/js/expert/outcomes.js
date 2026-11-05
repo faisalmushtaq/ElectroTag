@@ -1,4 +1,4 @@
-// What an annotator sees of the adjudication of their own work (docs/web/using.md, "Decisions on your
+// What an annotator sees of the adjudication of their own work (docs/using.md, "Decisions on your
 // disagreements"): once an adjudication that compared their version is finished, and while the study
 // shows outcomes (review.show_outcomes_to_annotators), the home page lists each conflict of theirs with
 // what they marked, what the others marked (nobody is named), the decision and its reason. Calm marks in

@@ -1,7 +1,7 @@
 """ElectroTag's Cloud Functions (Python, 2nd generation, region europe-west2).
 
 Each function is a *callable* taking ``{"study": "<study id>", ...}`` plus the request of
-docs/web/api.md and returning the same JSON as the ElectroTag server. The caller must be signed in
+docs/api.md and returning the same JSON as the ElectroTag server. The caller must be signed in
 with Firebase Authentication; their annotator ID and role are custom claims set by the
 administrator's command (``electrotag-web add-user``). Errors are ``HttpsError`` with the API's
 error code in ``details["error"]``.
@@ -15,7 +15,7 @@ quickly. ``et_admin`` (every operation of the admin area, by ``op``) is for admi
 privileged role (expert, admin) counts only when both the caller's claims and their account in the
 study grant it.
 
-Deploy with ``npx firebase-tools deploy --only functions,firestore`` (docs/web/firebase.md); the
+Deploy with ``npx firebase-tools deploy --only functions,firestore`` (docs/firebase.md); the
 predeploy step copies the ElectroTag code these functions need into this folder.
 """
 
@@ -231,14 +231,14 @@ def et_achievements(req: https_fn.CallableRequest) -> Any:
 
 
 # The sign-up questionnaire: the questions, the caller's answers and contact details; with answers it saves
-# them (docs/web/api.md, "The sign-up questionnaire").
+# them (docs/api.md, "The sign-up questionnaire").
 @https_fn.on_call()
 def et_questionnaire(req: https_fn.CallableRequest) -> Any:
     return handle("questionnaire", req)
 
 
 # A problem an annotator reports with a recording (saved once, whatever the number of presses), and
-# the reviews of their saved work (docs/web/api.md, "Problem reports" and "Reviews").
+# the reviews of their saved work (docs/api.md, "Problem reports" and "Reviews").
 @https_fn.on_call()
 def et_problem_report(req: https_fn.CallableRequest) -> Any:
     return handle("problem_report", req)

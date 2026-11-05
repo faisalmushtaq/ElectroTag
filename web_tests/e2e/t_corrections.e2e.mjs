@@ -1,4 +1,4 @@
-// Corrections of saved work and replays of sessions (docs/web/using.md, "Correcting saved work",
+// Corrections of saved work and replays of sessions (docs/using.md, "Correcting saved work",
 // "Corrections of your work" and "Replaying a session"): A01 saves a recording; E01 opens it from Saved
 // work in the expert area, changes, removes and adds marks with the original as dashed outlines, gives
 // a reason for each change (refused without them) and submits the correction once; A01 sees the

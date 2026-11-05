@@ -1,4 +1,4 @@
-// "Watch an expert": the way in for trainees to replays of experts' sessions (docs/web/using.md,
+// "Watch an expert": the way in for trainees to replays of experts' sessions (docs/using.md,
 // "Watching an expert at work"). Only the sessions of experts who agreed to their sessions being used
 // for teaching are listed (teaching_list), only on the training recordings for learning with the
 // experts (never a recording that can be study work, so annotations stay independent), and only while

@@ -1,4 +1,4 @@
-// Reloading the page while annotating loses nothing (docs/web/using.md, "Saving and drafts"): the
+// Reloading the page while annotating loses nothing (docs/using.md, "Saving and drafts"): the
 // work made a moment before the reload is in this browser's copy (written when the page goes), and
 // the recording opens again where it was. In the sandbox a built-in example and a training recording
 // open by themselves; a file from the computer, in the sandbox (a try-out) or on a study server, is

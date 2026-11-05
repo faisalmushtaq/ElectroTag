@@ -1,4 +1,4 @@
-// The parts of the application that are loaded when they are first needed (docs/web/architecture.md,
+// The parts of the application that are loaded when they are first needed (docs/architecture.md,
 // "Loading on demand"). The sign-in page loads only what it shows and the chosen back end's client;
 // the home page, the annotation view, training, the quiz, the admin area, the expert area, the games
 // and the EEG readers each come with the first view that uses them, and the readers and the annotation view are

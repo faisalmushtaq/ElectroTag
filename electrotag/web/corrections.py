@@ -1,4 +1,4 @@
-"""Experts' corrections of saved work (docs/web/api.md, "Corrections and replay").
+"""Experts' corrections of saved work (docs/api.md, "Corrections and replay").
 
 An expert opens someone's saved attempt of a study recording, changes and adds to its annotations
 and gives a reason for each change; ``correction_save`` keeps the result as a **derived version**:
@@ -266,7 +266,7 @@ def corrections_of(service: StudyService, annotator_id: str, recording_id: str, 
     """The saved corrections of one person's saved work on a study recording (of ``attempt``, or of every
     attempt), oldest first, as full records. With ``latest_per_corrector`` (the default) an expert who corrected
     the same attempt more than once counts with their latest correction only. Two or more corrections of one
-    attempt by different experts are what the adjudication compares (docs/web/api.md, "Corrections and
+    attempt by different experts are what the adjudication compares (docs/api.md, "Corrections and
     replay")."""
     rows = [r for r in _saved(service, annotator_id) if r.get("recording_id") == recording_id
             and (attempt is None or int((r.get("corrected_from") or {}).get("attempt") or 0) == int(attempt))]

@@ -136,8 +136,8 @@ test('the review mode names the annotator reviewed and shows their own doubt', (
 
 test('Help links: one address for the guides, and every section and setting links to a heading that exists', () => {
   assert.equal(DOCS_BASE, 'https://github.com/faisalmushtaq/ElectroTag/blob/main/docs/');
-  assert.equal(docsUrl('web/admin.md', 'progress'), `${DOCS_BASE}web/admin.md#progress`);
-  const admin = headings('web/admin.md');
+  assert.equal(docsUrl('admin_area.md', 'progress'), `${DOCS_BASE}admin_area.md#progress`);
+  const admin = headings('admin_area.md');
   for (const s of m.SECTIONS) assert.ok(admin.includes(guideAnchor(s.title)), `admin.md has no heading for ${s.title}`);
   const reliability = headings('reliability_guide.md');
   const used = [...readFileSync(new URL('electrotag/web/static/js/admin/analyses.js', root), 'utf8').matchAll(/guide\('([a-z0-9-]+)'/g)].map((x) => x[1])

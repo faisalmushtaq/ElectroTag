@@ -1,4 +1,4 @@
-// Correct the marks, in the expert area (docs/web/admin.md, "Correct the marks"): every reference set's
+// Correct the marks, in the expert area (docs/admin_area.md, "Correct the marks"): every reference set's
 // guided recordings, each with its exercise (a copy of the experts' marks with deliberate mistakes that
 // trainees put right), to make, look at, try, make again or remove (js/admin/planted.js). Experts supply
 // training material, so they reach this as administrators do.

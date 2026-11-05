@@ -378,7 +378,7 @@ def build_parser(prog: str = "electrotag-admin") -> argparse.ArgumentParser:
         description="ElectroTag study administration: study set-up, viewing filters, allocation, reference sets, "
         "competency criteria and reports.",
         epilog=f"Run '{prog} COMMAND --help' for the options of one command. "
-        f"Example: {prog} show /data/MyStudy. See docs/administrator_guide.md.",
+        f"Example: {prog} show /data/MyStudy. See docs/study_settings.md.",
     )
     sub = p.add_subparsers(dest="command", required=True, metavar="COMMAND", title="commands")
 

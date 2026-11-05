@@ -5,7 +5,7 @@
 // programme, ADMIN runs the study in the admin area; password "demo"), three built-in example
 // recordings with simulated artifacts (synthetic.js), drafts and results kept in this browser (and
 // downloadable), the guided training rules (training/rules.js) and the practice scoring
-// (training/scoring.js). Its answers follow docs/web/api.md as the server gives them, which
+// (training/scoring.js). Its answers follow docs/api.md as the server gives them, which
 // web_tests/unit/api_contract_parity.test.mjs checks call by call against the real service; the
 // few places where they differ for good reason are listed there. The admin area's operations are in
 // demo_admin.js, problem reports and reviews in demo_feedback.js.
@@ -531,7 +531,7 @@ export class DemoBackend {
   }
 
   // ---------------------------------------------------------------- matching
-  /** The Manifest of docs/web/api.md for a recording of the sandbox. */
+  /** The Manifest of docs/api.md for a recording of the sandbox. */
   async _publicManifest(rid) {
     const info = this._recordingInfo(rid);
     if (!info.builtin) return this._admin.publicManifestOf(info.record);
@@ -616,7 +616,7 @@ export class DemoBackend {
       const revisable = mine.find((i) => this._canRevise(i));
       const viewable = mine.find((i) => i.mode === 'standard' && i.saved);
       const latest = (i) => this._attempts(i.key).pop();
-      if (viewSaved && viewable) { // to read the feedback on it (docs/web/api.md, "Reviews")
+      if (viewSaved && viewable) { // to read the feedback on it (docs/api.md, "Reviews")
         const last = latest(viewable);
         return DemoBackend._answer(status, `Recording found: ${viewable.rid}. Your latest saved version opens to read, with the feedback on it.`, {
           ...where(viewable), manifest: await this._publicManifest(viewable.rid), differences,
@@ -837,7 +837,7 @@ export class DemoBackend {
   async myResults(recordingId, mode, contextId, version) { return (await import('./demo_export.js')).myResults(this, recordingId, mode, contextId, version); }
 
   // ------------------------------------------------------------ achievements
-  /** GET /me/achievements (docs/web/api.md, "Achievements"), from the sandbox's own state. */
+  /** GET /me/achievements (docs/api.md, "Achievements"), from the sandbox's own state. */
   /** GET /me/questionnaire: the sign-up questionnaire, the answers and contact details (demo_questionnaire.js). */
   async questionnaire() { this._aid(); return JSON.parse(JSON.stringify((await this._questionnairePart()).view())); }
 
@@ -1452,7 +1452,7 @@ export class DemoBackend {
   get hasResults() { return this.state.submissions.length > 0; }
 
   // ------------------------------------------------------------ administration
-  /** The admin area's operations (docs/web/api.md, "Administration"), in this browser: demo_admin.js. */
+  /** The admin area's operations (docs/api.md, "Administration"), in this browser: demo_admin.js. */
   async admin(op, body = {}) {
     if (TRAINING_ADMIN_OPS.includes(op)) await this._trainingPart(); // its operations come with it (demo_training_stages.js)
     if (QUESTIONNAIRE_ADMIN_OPS.includes(op)) await this._questionnairePart(); // and these with demo_questionnaire.js
@@ -1460,7 +1460,7 @@ export class DemoBackend {
   }
 
   // ---------------------------------------------------------------- experts
-  /** The expert area's operations (docs/web/api.md, "Experts"), in this browser: demo_expert.js. */
+  /** The expert area's operations (docs/api.md, "Experts"), in this browser: demo_expert.js. */
   async expert(op, body = {}) {
     if (!this.experts) {
       const { DemoExpert } = await loadPart('demoExpert');

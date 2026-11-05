@@ -1,4 +1,4 @@
-// The sandbox's GET /me/results (docs/web/api.md, "Your own saved files"): the files of one saved
+// The sandbox's GET /me/results (docs/api.md, "Your own saved files"): the files of one saved
 // version of a recording, made in this browser in the formats the study server writes them
 // (electrotag/app/io/export.py and the journalled save): the _events.tsv, built row for row as
 // build_events_table does (web_tests/unit/api_contract_parity.test.mjs compares it with the server's),

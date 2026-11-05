@@ -28,7 +28,7 @@ export class ResultsSection {
     this.reviews = allReviewsCard();
     this.zipMsg = messageArea();
     const zip = actionButton('Download all results (zip)', { kind: 'primary', working: 'Preparing the zip…', msg: this.zipMsg, log: 'results-zip', onClick: () => this._zip() });
-    // Names and contact details go into the zip only when asked for, as contacts.csv (docs/web/admin.md, "Results").
+    // Names and contact details go into the zip only when asked for, as contacts.csv (docs/admin_area.md, "Results").
     this.contacts = checkbox('Include names and contact details (contacts.csv)', false);
     this.contacts.input.dataset.log = 'results-contacts';
     const contactsWarning = h('p.banner.contacts-warning', { hidden: true }, 'contacts.csv identifies people: keep it apart from the research data and share it only with the study team. The download is noted in the audit log.');

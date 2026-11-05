@@ -1,8 +1,8 @@
 // An administrator who gives themselves recordings in the admin area finds them under My recordings straight
-// away (docs/web/admin.md, "Getting in"): leaving the admin or expert area asks the study for
+// away (docs/admin_area.md, "Getting in"): leaving the admin or expert area asks the study for
 // the person's recordings again, rather than showing the list read at sign-in. In the sandbox and on the real
 // study server. On the study server ADMIN, who has no Annotator role and has not answered the sign-up
-// questionnaire, is asked it first now that they annotate (docs/web/admin.md, "Questionnaire"); the sandbox's ADMIN
+// questionnaire, is asked it first now that they annotate (docs/admin_area.md, "Questionnaire"); the sandbox's ADMIN
 // has the example answers.
 import { answerQuestionnaire, signIn, waitForRoute } from './helpers.mjs';
 

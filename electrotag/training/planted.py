@@ -1,6 +1,6 @@
 """Correct the marks: a copy of the experts' reference with deliberate mistakes, for trainees to put right.
 
-Part of the training path's "Learn with the experts" stage (docs/web/using.md): the trainee opens a
+Part of the training path's "Learn with the experts" stage (docs/using.md): the trainee opens a
 guided recording with a version of the experts' marks in which some are wrong or missing, corrects
 them, and is told how many of the planted mistakes they fixed and whether they made new ones.
 

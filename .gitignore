@@ -32,7 +32,7 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 .firebaserc
-# A study's config.json for the application (docs/web/firebase.md): kept by each deployment, never committed
+# A study's config.json for the application (docs/firebase.md): kept by each deployment, never committed
 /electrotag/web/static/config.json
 
 # Browser data-layer test recordings (made by scripts/make_web_fixtures.py)

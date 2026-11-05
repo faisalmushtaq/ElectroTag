@@ -1,4 +1,4 @@
-"""The sign-up questionnaire and contact details (electrotag/web/questionnaire.py, docs/web/api.md).
+"""The sign-up questionnaire and contact details (electrotag/web/questionnaire.py, docs/api.md).
 
 The gate on work, the history of answers, the checks of a study's own questionnaire, the results zip
 with and without the contacts list, the analyses' tables of the answers current at each piece of work,
