@@ -1,4 +1,4 @@
-// The training path's operations in the sandbox (docs/web/api.md, "Training stages"), as
+// The training path's operations in the sandbox (docs/api.md, "Training stages"), as
 // electrotag/web/training_path.py does them on a server: skipping, finishing and resuming stages
 // (POST /training/stage), the artifact snippets (GET /training/snippets), the study team's own snippets
 // and a trainee's path in the admin area. Loaded at the first use of any of them (js/lazy.js, part

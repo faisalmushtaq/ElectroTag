@@ -1,4 +1,4 @@
-// The adjudication pass (docs/web/admin.md, "Adjudication"): one conflict at a time on the EEG, as a
+// The adjudication pass (docs/admin_area.md, "Adjudication"): one conflict at a time on the EEG, as a
 // screening tool shows one record at a time. The workspace is read only; every version compared is
 // drawn on the EEG with its letter before the type ("A: Eye-blink-artifact"), and the lanes above the
 // EEG (lanes.js) put each annotator's marks side by side, named. The side panel keeps the current

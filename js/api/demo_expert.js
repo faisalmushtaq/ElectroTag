@@ -1,4 +1,4 @@
-// The expert area's operations in the sandbox (docs/web/api.md, "Experts"), as electrotag/web/expert.py
+// The expert area's operations in the sandbox (docs/api.md, "Experts"), as electrotag/web/expert.py
 // does them on a server: `expert(op, body)` checks that the caller is an expert or an administrator and
 // runs one operation of the registry below. Each part of the expert work brings its operations in a
 // module of its own (demo_corrections.js, demo_tasks.js, ...), listed in PARTS with one line each; an

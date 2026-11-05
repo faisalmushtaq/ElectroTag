@@ -1,4 +1,4 @@
-// The home page's Due card (docs/web/using.md, "Due dates"): one line for each hand-out of the study team
+// The home page's Due card (docs/using.md, "Due dates"): one line for each hand-out of the study team
 // that has a due date, earliest first, from GET /assignments `due`: "Youth recordings: 12 of 40 left, due
 // Friday 20 November", with an Overdue badge once the day has passed and work remains. Show these narrows the
 // list of recordings to that hand-out. Annotators see a hand-out only by the title the study team gave it,

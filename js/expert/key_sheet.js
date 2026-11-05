@@ -1,4 +1,4 @@
-// The ? key of the expert's views and the replay (docs/web/admin.md, "The expert area"): a sheet of the
+// The ? key of the expert's views and the replay (docs/admin_area.md, "The expert area"): a sheet of the
 // keys of the view that is open, in a dialog, instead of the annotation view's general Help tab. The
 // correction view, the annotator's view of a correction and the replay player each give their own
 // rows; the same next and previous keys (N and P) are used across the expert views.

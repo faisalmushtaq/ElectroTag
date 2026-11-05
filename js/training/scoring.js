@@ -91,7 +91,7 @@ const byOnset = (a, b) => a.onset_sample - b.onset_sample || end(a) - end(b) ||
   (a.annotation_id < b.annotation_id ? -1 : a.annotation_id > b.annotation_id ? 1 : 0);
 
 /**
- * Practice feedback in the shape of PracticeFeedback (docs/web/api.md).
+ * Practice feedback in the shape of PracticeFeedback (docs/api.md).
  * @param {object[]} reference the experts' annotations
  * @param {object[]} mine the trainee's annotations
  * @param {{iouThreshold?: number, passRule?: object, sfreq?: number}} opts sfreq gives the flags' times in seconds

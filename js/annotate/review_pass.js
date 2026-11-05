@@ -1,4 +1,4 @@
-// Reviews of saved work (docs/web/admin.md, "Reviewing saved work"; docs/web/using.md, "Reviews of
+// Reviews of saved work (docs/admin_area.md, "Reviewing saved work"; docs/using.md, "Reviews of
 // your work"), in the annotation view's read-only modes:
 //
 // * ReviewPass: an administrator's review of someone's saved recording. The side panel lists the

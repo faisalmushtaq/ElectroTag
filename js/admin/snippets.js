@@ -1,5 +1,5 @@
 // Snippets, a tab of a reference set in Training: the short examples of each artifact type that
-// trainees look through in the training path's "Meet the artifacts" (docs/web/api.md, "Training
+// trainees look through in the training path's "Meet the artifacts" (docs/api.md, "Training
 // stages"). The set offers one for each of the experts' annotations on its guided recordings, with the
 // guided note as its explanation; the study team adds its own here (snippet_add), from any recording
 // of the set that is not used for practice or the assessment, whose snippets would give the answers

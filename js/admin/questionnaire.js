@@ -1,4 +1,4 @@
-// The sign-up questionnaire in the admin area (docs/web/admin.md, "Questionnaire"):
+// The sign-up questionnaire in the admin area (docs/admin_area.md, "Questionnaire"):
 //
 // * the section Questionnaire, under People: everyone's current answers by annotator ID
 //   (questionnaire_summary), how often each answer was given, who has not answered yet, the answers as a

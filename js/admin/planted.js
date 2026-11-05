@@ -1,4 +1,4 @@
-// Correct the marks, as the study team and the experts make it (docs/web/admin.md, "Correct the marks"):
+// Correct the marks, as the study team and the experts make it (docs/admin_area.md, "Correct the marks"):
 // for a guided recording of a reference set, a copy of the experts' marks with deliberate mistakes that
 // trainees put right. The study plants the mistakes from a seed (electrotag/training/planted.py), or
 // finds them in an expert's own version with mistakes: made here with Make my own version with mistakes

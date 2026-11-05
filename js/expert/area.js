@@ -1,10 +1,10 @@
 // The expert area: where experts correct and add to saved work, replay sessions, adjudicate
-// disagreements and supply training material (docs/web/admin.md, "The expert area"). A header, the
+// disagreements and supply training material (docs/admin_area.md, "The expert area"). A header, the
 // menu of its sections (js/expert/sections.js) and the section shown; administrators may use it too.
 // It is loaded the first time it is needed (js/lazy.js) and shares the admin area's layout (admin.css),
 // with a few styles of its own (expert.css).
 //
-// Every operation goes through backend.expert(op, body) (docs/web/api.md, "Experts"). Reads are shared
+// Every operation goes through backend.expert(op, body) (docs/api.md, "Experts"). Reads are shared
 // between the parts of a section until the next change; an operation that saves is never repeated by
 // itself, and its button cannot be pressed again while the study answers. Unlike the admin area, the
 // expert area is logged like annotation work.

@@ -1,4 +1,4 @@
-// The library of contradictory annotations (docs/web/admin.md, "Library"): every conflict between
+// The library of contradictory annotations (docs/admin_area.md, "Library"): every conflict between
 // annotators, decided or not, from every adjudication and from what waits for one. Filters by artifact
 // type, by confused pair (an eye blink against an eye movement), by kind of conflict, by status and
 // decision, by annotator and by recording, and a search of the reasons. Each entry opens at its moment

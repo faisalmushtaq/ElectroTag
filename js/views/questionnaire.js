@@ -1,4 +1,4 @@
-// The sign-up questionnaire (docs/web/using.md, "Before your first recording"): asked once, at the first
+// The sign-up questionnaire (docs/using.md, "Before your first recording"): asked once, at the first
 // sign-in of an annotator or expert, before any recording, training or expert work opens, and open again
 // from the home page to change the answers. Every question offers "Prefer not to say". The answers are
 // research data kept by annotator ID; the name and contact details are kept apart, for the study team.

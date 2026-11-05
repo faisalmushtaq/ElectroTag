@@ -1,4 +1,4 @@
-// Correct the marks in the sandbox (docs/web/api.md, "Correct the marks"): the study makes an exercise
+// Correct the marks in the sandbox (docs/api.md, "Correct the marks"): the study makes an exercise
 // with ElectroTag's Python code (electrotag/training/planted.py), which the browser does not have, so the
 // sandbox has one ready-made exercise, on the first guided recording of its training set, and lets an
 // expert look at it and try it (js/expert/planted.js). Making, replacing and removing exercises answer

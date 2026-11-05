@@ -1,4 +1,4 @@
-// The part of a recording a task gives an annotator (docs/web/api.md, "Tasks, windows and known
+// The part of a recording a task gives an annotator (docs/api.md, "Tasks, windows and known
 // answers"): a window of whole samples, [start_sample, end_sample). The viewer hatches the rest of
 // the recording and keeps the view inside the window (with a second of context on each side, so that
 // an artifact at the edge can be judged), and the annotation store refuses marks outside it. Plain

@@ -1,4 +1,4 @@
-// Everyone's marks on one recording in the sandbox (docs/web/api.md, "The overlay of everyone's marks"), as
+// Everyone's marks on one recording in the sandbox (docs/api.md, "The overlay of everyone's marks"), as
 // electrotag/web/overlay.py does it on a server: the same operations, answers and errors, over the saved work
 // the sandbox keeps in this browser (state.submissions) and its corrections (state.corrections). The sandbox has
 // no adjudicated versions (adjudication needs a study server), and its training recordings are its study

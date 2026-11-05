@@ -247,7 +247,7 @@ export class App {
       });
       this.visitId = visit.visit_id;
       logger.begin({ backend: this.backend, visitId: visit.visit_id, logging: visit.logging || this.me.study.logging });
-      // A study server and Firebase write the visit's first event themselves (docs/web/api.md).
+      // A study server and Firebase write the visit's first event themselves (docs/api.md).
       if (!this.backend.writesVisitStart) {
         logger.event('visit_started', { mode: this.me.programme ? 'training' : 'standard', programme: Boolean(this.me.programme),
           reference_set: this.me.programme ? this.me.programme.set_id : '', client: 'web', backend: this.backend.kind, annotator_id: this.me.annotator_id });
@@ -702,7 +702,7 @@ export class App {
   }
 
   // ============================================================ opening recordings
-  /** Open an assigned recording; with `revise`, a finished one, to revise it (docs/web/using.md, "History and revisions"). */
+  /** Open an assigned recording; with `revise`, a finished one, to revise it (docs/using.md, "History and revisions"). */
   openAssignment(item, { revise = false } = {}) {
     // Continue (where you left off, or the revision): the unfinished work is restored without asking.
     const resume = Boolean(item && (item.status === 'in_progress' || (revise && item.revising)));
@@ -732,7 +732,7 @@ export class App {
   }
 
   /**
-   * An administrator reviews someone's saved recording (docs/web/admin.md, "Reviewing saved work"): the
+   * An administrator reviews someone's saved recording (docs/admin_area.md, "Reviewing saved work"): the
    * EEG file is opened from this computer and checked against the study's manifest, because the EEG
    * never reaches the study; then the saved annotations are shown read only, with the review panel.
    * `back` is the admin area's section (and its parameters) to return to.

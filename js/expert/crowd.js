@@ -1,4 +1,4 @@
-// The overlay of everyone's marks on one recording, without the page (docs/web/admin.md, "Everyone's
+// The overlay of everyone's marks on one recording, without the page (docs/admin_area.md, "Everyone's
 // marks on one recording"), so that it can be tested in Node: the answer of overlay_get decoded, the
 // colours and patterns of the lanes, the filters, the crowd's share of people marking each moment
 // (under each channel, and once for the whole-montage marks), who marked a moment, the disagreements

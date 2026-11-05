@@ -215,10 +215,10 @@ export function questionnaireLine(app) {
     h('button.link', { type: 'button', 'data-log': 'questionnaire-open', onclick: () => app.showQuestionnaire() }, q.missing ? 'Answer the new questions' : 'See or change my answers'));
 }
 
-/** Where the annotators' guide is read (docs/web/using.md, in a new tab). */
+/** Where the annotators' guide is read (docs/using.md, in a new tab). */
 export function guideLine() {
   return h('p.caption.guide-link', {}, 'How each step works, from opening a recording to saving it, is in the ',
-    h('a', { href: docsUrl('web/using.md'), target: '_blank', rel: 'noopener', 'data-log': 'guide' }, 'annotators\' guide'), ' (it opens in a new tab).');
+    h('a', { href: docsUrl('using.md'), target: '_blank', rel: 'noopener', 'data-log': 'guide' }, 'annotators\' guide'), ' (it opens in a new tab).');
 }
 
 /**

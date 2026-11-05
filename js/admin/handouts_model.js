@@ -1,7 +1,7 @@
 // The words and the arithmetic of the admin area's Hand-outs section (handouts.js), kept apart from the
 // page so that they can be tested without one: the request a hand-out sends, the title annotators see,
 // what its preview says (in k mode through the Tasks section's own words, tasks_model.js), its progress
-// and due date, and the notices that would be sent (docs/web/admin.md, "Hand-outs"; docs/web/api.md,
+// and due date, and the notices that would be sent (docs/admin_area.md, "Hand-outs"; docs/api.md,
 // "Datasets, collections, groups and hand-outs").
 
 import { plural } from './model.js';

@@ -1,8 +1,8 @@
 // The words and the arithmetic of the admin area's Datasets section (datasets.js), kept apart from the
 // page so that they can be tested without one: a dataset's summary, its ratings against the target, the
 // words of the tracking grids, collections built from filters (with a sample that a fixed seed repeats),
-// the rows of the tracking download, and the checks of a dataset's details (docs/web/admin.md,
-// "Datasets"; the operations are in docs/web/api.md, "Datasets, collections, groups and hand-outs").
+// the rows of the tracking download, and the checks of a dataset's details (docs/admin_area.md,
+// "Datasets"; the operations are in docs/api.md, "Datasets, collections, groups and hand-outs").
 
 import { bytesText, dateText, durationText, formatName, plural, whenText } from './model.js';
 
@@ -383,7 +383,7 @@ export function recordingsQuery(target, f = {}, offset = 0) {
   return body;
 }
 
-/** The columns of the tracking download: one row for each person and recording (docs/web/admin.md, "Tracking"). */
+/** The columns of the tracking download: one row for each person and recording (docs/admin_area.md, "Tracking"). */
 export const TRACKING_COLUMNS = Object.freeze(['target_kind', 'target_id', 'recording_id', 'file_name', 'dataset_id', 'annotator_id', 'status',
   'assigned_at', 'assigned_by', 'handout_id', 'task_id', 'opened_at', 'first_saved_at', 'saved_at', 'version', 'set_aside_at', 'due_at',
   'overdue', 'n_rated', 'ratings_target']);

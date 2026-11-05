@@ -42,7 +42,7 @@ export async function checkStudyCopy(app, recording, fp, view, target, { verb = 
   return true;
 }
 
-/** An administrator's review of someone's saved recording (docs/web/admin.md, "Reviewing saved work"). */
+/** An administrator's review of someone's saved recording (docs/admin_area.md, "Reviewing saved work"). */
 async function openReview(app, { recording, fp, view, target }) {
   if (!(await checkStudyCopy(app, recording, fp, view, target, { verb: 'Review', kind: 'review' }))) return;
   const t = target;

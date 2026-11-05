@@ -4,8 +4,8 @@
 // themselves (moved to another dataset or added to a collection, several at once) and its hand-outs.
 // Collections are hand-picked, ordered lists drawn from any datasets, made by ticking recordings or from
 // filters. Tracking shows who has what: datasets, collections or hand-outs by people, then one target's
-// recordings by people, each cell with its dates, downloadable as a table (docs/web/admin.md,
-// "Datasets"; the operations are in docs/web/api.md, "Datasets, collections, groups and hand-outs").
+// recordings by people, each cell with its dates, downloadable as a table (docs/admin_area.md,
+// "Datasets"; the operations are in docs/api.md, "Datasets, collections, groups and hand-outs").
 
 import { h, clear } from '../ui/dom.js';
 import { icon } from '../views/common.js';

@@ -72,14 +72,14 @@ export function guideAnchor(heading) {
   return String(heading).toLowerCase().replace(/[^a-z0-9 -]/g, '').trim().replace(/ /g, '-');
 }
 
-/** A link to a guide, opened in a new tab: docsLink('Help', 'web/admin.md', 'progress'). */
+/** A link to a guide, opened in a new tab: docsLink('Help', 'admin_area.md', 'progress'). */
 export function docsLink(text, path, anchor = '', { title = null } = {}) {
   return h('a.docs-link', { href: docsUrl(path, anchor), target: '_blank', rel: 'noopener', title }, text);
 }
 
-/** A section's heading and introduction, with Help: its part of the administrators' guide (docs/web/admin.md). */
+/** A section's heading and introduction, with Help: its part of the administrators' guide (docs/admin_area.md). */
 export function sectionHead(title, intro = '') {
-  const help = docsLink('Help', 'web/admin.md', guideAnchor(title), { title: `The guide to ${title} (opens in a new tab)` });
+  const help = docsLink('Help', 'admin_area.md', guideAnchor(title), { title: `The guide to ${title} (opens in a new tab)` });
   help.setAttribute('data-help', guideAnchor(title));
   return h('div.admin-head', {}, h('div.admin-head-row', {}, h('h1', { tabindex: '-1' }, title), help), intro ? h('p.subtitle', {}, intro) : null);
 }
