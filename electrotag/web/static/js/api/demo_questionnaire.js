@@ -17,6 +17,9 @@ import {
 } from '../views/questionnaire_model.js';
 import { DEFAULT_SETTINGS } from './demo_catalogue.js';
 
+/** The roles that are asked the questionnaire whatever work they hold (questionnaire.py _works). */
+const WORK_ROLES = ['annotator', 'expert', 'participant'];
+
 /** The answers the sandbox's own accounts start with (questionnaire.py EXAMPLE_ANSWERS). */
 export const EXAMPLE_ANSWERS = Object.freeze({
   datasets_analysed: '3–10', eeg_years: '3–5', annotation_hours: '10–50', artifact_training: 'A course or workshop',
@@ -54,10 +57,18 @@ export class DemoQuestionnaire {
 
   get _contacts() { return this.b.state.contacts || (this.b.state.contacts = {}); }
 
-  /** Annotators and experts are asked; an administrator who does not annotate is not. */
+  /** Annotators and experts are asked, and an administrator who annotates (questionnaire.py asked); an administrator who
+   *  does not annotate is not. */
   asked(u) {
     const roles = u ? rolesOf(u) : [];
-    return this.block.enabled !== false && roles.some((r) => ['annotator', 'expert', 'participant'].includes(r));
+    if (this.block.enabled === false) return false;
+    return roles.some((r) => WORK_ROLES.includes(r)) || (roles.includes('admin') && this.annotates(u.annotator_id));
+  }
+
+  /** Recordings of their own to annotate: an assignment, a training programme or saved work (questionnaire.py annotates). */
+  annotates(aid) {
+    const b = this.b;
+    return b._admin.standardAssignments(aid).length > 0 || b._inProgramme(aid) || Object.keys(b.state.done || {}).some((k) => k.startsWith(`${aid}|`));
   }
 
   /** A person's answers, with the sandbox's own accounts given the example ones (to the default questions, as when
@@ -89,10 +100,13 @@ export class DemoQuestionnaire {
     return h.length ? h[h.length - 1] : null;
   }
 
-  /** 403 questionnaire_required while the person signed in is asked and has not answered. */
-  require() {
+  /** 403 questionnaire_required while the person signed in is asked and has not answered; `expert` stays open to an
+   *  administrator who annotates without the annotator or expert role, as on a study server. */
+  require(operation = '') {
     const aid = this.b._aid();
     const u = this.b._admin.user(aid);
+    const roles = u ? rolesOf(u) : [];
+    if (operation === 'expert' && roles.includes('admin') && !roles.some((r) => WORK_ROLES.includes(r))) return;
     if (this.asked(u) && !this._latest(aid)) throw new ApiError(403, 'questionnaire_required', REQUIRED_TEXT);
   }
 

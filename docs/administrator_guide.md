@@ -751,7 +751,10 @@ study's ethics approval covers it.
 Annotators and experts answer a short questionnaire once, at their first
 sign-in, before any recording, training or expert work opens: the study
 refuses that work until they have answered. Administrators who do not annotate
-are not asked. The `questionnaire` block decides what is asked:
+are not asked; an administrator who has recordings of their own to annotate (an
+assignment, a hand-out, a task's share or a training programme) is asked as
+annotators are, at their next sign-in or when they go to My recordings, and can
+change their answers there later. The `questionnaire` block decides what is asked:
 
 ```json
 {"settings": {"questionnaire": {"enabled": true, "demographics": true, "questions": [...],

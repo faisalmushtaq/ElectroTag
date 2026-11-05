@@ -1112,7 +1112,7 @@ class StudyService:
         from electrotag.web.questionnaire import GATED_OPERATIONS
 
         if operation in GATED_OPERATIONS:  # work waits for the sign-up questionnaire (electrotag/web/questionnaire.py)
-            self.questionnaire.require_answered(user)
+            self.questionnaire.require_answered(user, operation)
         if operation == "admin":
             return self.admin(body.get("op"), user, {k: v for k, v in body.items() if k != "op"})
         if operation == "expert":

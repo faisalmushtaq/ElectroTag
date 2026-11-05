@@ -586,13 +586,16 @@ export class App {
 
   showHome() {
     this._fromTraining = false;
-    const show = () => this._withParts(['home'], 'home', ({ homeView }) => this._render(homeView(this), 'home'));
-    // Back from the admin or expert area: the recordings are asked again, since the person may have just given themselves some.
+    const show = (back) => this._withParts(['home'], 'home', async ({ homeView, questionnaireDue }) => {
+      if (!back || !(await questionnaireDue(this))) this._render(homeView(this), 'home');
+    });
+    // Back from the admin or expert area: the recordings are asked again, since the person may have just given themselves some,
+    // and an administrator who now annotates is asked the questionnaire (home.js questionnaireDue).
     if (!this.me || !(ADMIN_ROUTE.test(this.route || '') || EXPERT_ROUTE.test(this.route || ''))) return show();
     this._render(loadingPage(), 'home');
     const mine = this._renders;
-    return this.loadAssignments().then(() => (this._renders === mine ? show() : undefined), (exc) => {
-      if (exc.status !== 401 && this._renders === mine) return show();
+    return this.loadAssignments().then(() => (this._renders === mine ? show(true) : undefined), (exc) => {
+      if (exc.status !== 401 && this._renders === mine) return show(true);
       return undefined;
     });
   }
