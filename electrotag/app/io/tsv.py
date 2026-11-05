@@ -7,7 +7,13 @@ re-formatted, so original event rows are reproduced byte-for-byte in exports
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from typing import Any
+
+#: Characters that would break a row of a tab-separated file when read back: the tab, and every character that
+#: Python's ``str.splitlines`` or pandas treats as the end of a line.
+ROW_BREAKERS = re.compile("[\t\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]+")
 
 
 class TSVError(ValueError):
@@ -72,6 +78,25 @@ def _check_cell(value: str) -> None:
         raise TSVError(f"TSV cells must be strings, got {type(value).__name__}")
     if any(ch in value for ch in "\t\n\r"):
         raise TSVError(f"TSV cell contains a tab or line break: {value!r}")
+
+
+def tsv_cell(value: Any) -> str:
+    """A value as one cell of a tab-separated file: as text, with every tab and line break (``ROW_BREAKERS``)
+    replaced by a space, so that a row always reads back as one row with its columns, whether it is split on
+    tabs or read with pandas or the csv module."""
+    return ROW_BREAKERS.sub(" ", "" if value is None else str(value))
+
+
+def tsv_frame_text(df: Any, **to_csv: Any) -> str:
+    """A pandas table as tab-separated text, its text columns cleaned with :func:`tsv_cell` first."""
+    from pandas.api.types import is_numeric_dtype
+
+    clean = df.copy()
+    for column in clean.columns:
+        if not is_numeric_dtype(clean[column].dtype):  # text, whether object or pandas' own string type
+            clean[column] = clean[column].map(lambda v: tsv_cell(v) if isinstance(v, str) else v)
+    clean.columns = [tsv_cell(c) for c in clean.columns]
+    return clean.to_csv(sep="\t", index=False, **to_csv)
 
 
 def rows_as_dicts(columns: list[str], rows: list[list[str]]) -> list[dict[str, str]]:

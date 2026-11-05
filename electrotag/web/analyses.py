@@ -155,7 +155,9 @@ class Analyses:
                              "settings used (JSON) name the recordings left out, so " + agreement_command()
                              + " leaves them out too.")
             warnings.append(unusable_note)
-        tables = {f"{name}.tsv": df.to_csv(sep="\t", index=False, na_rep="n/a", float_format="%.6g")
+        from electrotag.app.io.tsv import tsv_frame_text
+
+        tables = {f"{name}.tsv": tsv_frame_text(df, na_rep="n/a", float_format="%.6g")
                   for name, df in result.tables.items()}
         if sum(len(t) for t in tables.values()) > MAX_TABLES_BYTES:
             for name in LARGE_TABLES:

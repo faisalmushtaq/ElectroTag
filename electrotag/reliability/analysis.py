@@ -21,6 +21,7 @@ import pandas as pd
 
 from electrotag import __version__
 from electrotag.app.io.atomic import atomic_write_bytes, atomic_write_text
+from electrotag.app.io.tsv import tsv_frame_text
 from electrotag.hints import unknown_names
 from electrotag.reliability.confidence import (
     BY_ANNOTATOR_COLUMNS,
@@ -338,7 +339,7 @@ def write_outputs(
     paths: dict[str, Path] = {}
     for name, df in result.tables.items():
         p = out / f"{name}.tsv"
-        atomic_write_text(p, df.to_csv(sep="\t", index=False, na_rep="n/a", float_format="%.6g"))
+        atomic_write_text(p, tsv_frame_text(df, na_rep="n/a", float_format="%.6g"))
         paths[name] = p
     sp = out / "analysis_settings.json"
     atomic_write_bytes(sp, (json.dumps(result.settings_record, indent=2, default=str) + "\n").encode("utf-8"))

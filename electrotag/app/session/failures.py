@@ -27,6 +27,7 @@ from electrotag.app.common import now_local_iso
 from electrotag.app.io.atomic import append_line
 from electrotag.app.io.discovery import RecordingFiles
 from electrotag.app.io.naming import OutputLayout
+from electrotag.app.io.tsv import tsv_cell
 
 
 #: Failure kinds that may be specific to one computer or moment.
@@ -65,7 +66,7 @@ class FailureLog:
     ) -> None:
         stamp = now_local_iso()
         one_line = " ".join(message.split())
-        append_line(self.layout.failed_load_txt, f"{stamp}\t{recording_id}\t{one_line}")
+        append_line(self.layout.failed_load_txt, f"{stamp}\t{tsv_cell(recording_id)}\t{tsv_cell(one_line)}")
         entry = {
             "event": "failure",
             "timestamp": stamp,

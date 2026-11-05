@@ -59,6 +59,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from electrotag.app.common import now_local_iso
+from electrotag.app.io.tsv import tsv_cell
 from electrotag.web import audit
 from electrotag.web.errors import ApiError
 from electrotag.web.manifest import SCOPE_STUDY, fingerprint_of, set_scope
@@ -1156,8 +1157,7 @@ def task_files(store: Any) -> dict[str, bytes]:
         w = csv.DictWriter(buf, fieldnames=list(columns), delimiter="\t", lineterminator="\n", extrasaction="ignore")
         w.writeheader()
         for r in rows:
-            w.writerow({k: ("" if r.get(k) is None else str(r.get(k)).replace("\t", " ").replace("\n", " "))
-                        for k in columns})
+            w.writerow({k: tsv_cell(r.get(k)) for k in columns})
         return buf.getvalue().encode("utf-8")
 
     rows = [{**t, "start_sample": (t.get("window") or {}).get("start_sample"),

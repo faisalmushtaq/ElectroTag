@@ -727,7 +727,9 @@ def _cell(value: Any) -> str:
         if math.isnan(value) or math.isinf(value):
             return ""
         return f"{value:.4f}".rstrip("0").rstrip(".") if value != int(value) else str(int(value))
-    return str(value).replace("\t", " ").replace("\n", " ")
+    from electrotag.app.io.tsv import tsv_cell
+
+    return tsv_cell(value)
 
 
 def write_tsv(path: Any, rows: list[dict[str, Any]], columns: list[str]) -> None:
