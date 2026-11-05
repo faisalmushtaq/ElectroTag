@@ -220,8 +220,9 @@ async function main() {
       };
       // Each step: wait until the coach has no call on its way, Show me, wait until the study has answered it and
       // the check after it says the step can go on, then Continue. Waiting on the coach's own state, rather than
-      // its text, keeps a slow function (a cold start) from being taken for an answer that has not come yet.
-      const coachIdle = () => { const c = globalThis.ElectroTag.ws && globalThis.ElectroTag.ws.coach; return Boolean(c) && (c.complete || (!c.busy && !c.acting && !c.showMeWanted)); };
+      // its text, keeps a slow function (a cold start) from being taken for an answer that has not come yet; a
+      // recording just opened has no step until the study's first answer gives it one.
+      const coachIdle = () => { const c = globalThis.ElectroTag.ws && globalThis.ElectroTag.ws.coach; return Boolean(c) && (c.complete || (Boolean(c.step) && !c.busy && !c.acting && !c.showMeWanted)); };
       const showMeToTheEnd = async () => {
         for (let i = 0; i < 20; i++) {
           await page.waitForFunction(coachIdle, null, { timeout: 60000 });
