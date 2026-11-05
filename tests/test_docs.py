@@ -161,6 +161,8 @@ def test_every_guide_named_in_the_repository_exists():
         for name in re.findall(r"(?<![\w/.-])docs/[\w./-]+\.md", text):
             if not (REPO / name).is_file():
                 missing.add(f"{p.relative_to(REPO)}: {name}")
+        if p.name != "CHANGELOG.md" and p != Path(__file__) and re.search(r"docs[\\/]+web\b|\"docs\" / \"web\"", text):
+            missing.add(f"{p.relative_to(REPO)}: names the folder docs/web, whose guides are in docs/ now")
         for name in re.findall(r"ElectroTag/(?:blob|tree)/main/([\w./-]+)", text):
             if not (REPO / name.rstrip("/")).exists():
                 missing.add(f"{p.relative_to(REPO)}: {name}")

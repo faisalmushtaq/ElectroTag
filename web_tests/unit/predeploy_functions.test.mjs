@@ -52,5 +52,5 @@ test('the script\'s own failure is passed on, and no Python at all says what to 
   const said = [];
   const none = fakeRun({});
   assert.equal(vendor('/repo/fn', { platform: 'linux', run: none.run, exists: () => false, log: (m) => said.push(m) }), 1);
-  assert.match(said[0], /step 8 of docs\/web\/firebase\.md/);
+  assert.match(said[0], /step 8 of docs\/firebase\.md/);
 });

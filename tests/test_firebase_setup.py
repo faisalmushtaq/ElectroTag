@@ -10,7 +10,7 @@ import subprocess
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-GUIDE = REPO / "docs" / "web" / "firebase.md"
+GUIDE = REPO / "docs" / "firebase.md"
 
 
 def firebase_json() -> dict:
