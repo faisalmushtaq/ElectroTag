@@ -1,8 +1,10 @@
 // An administrator who gives themselves recordings in the admin area finds them under My recordings straight
 // away (docs/web/admin.md, "Getting in"): leaving the admin or expert area asks the study for
 // the person's recordings again, rather than showing the list read at sign-in. In the sandbox and on the real
-// study server.
-import { signIn, waitForRoute } from './helpers.mjs';
+// study server. On the study server ADMIN, who has no Annotator role and has not answered the sign-up
+// questionnaire, is asked it first now that they annotate (docs/web/admin.md, "Questionnaire"); the sandbox's ADMIN
+// has the example answers.
+import { answerQuestionnaire, signIn, waitForRoute } from './helpers.mjs';
 
 const PASSWORD = 'electrotag';
 const hex = (n) => n.toString(16).padStart(32, '0');
@@ -29,10 +31,19 @@ async function notYetMine(page) {
 /** The recordings listed on the home page. */
 const listed = (page) => page.evaluate(() => [...document.querySelectorAll('.recordings-card table.list tbody tr:not(.group-row)')].length);
 
-async function leaveAdminAndCheck(t, page, n) {
+async function leaveAdminAndCheck(t, page, n, { asked = false } = {}) {
   const { assert } = t;
   const before = await page.evaluate(() => (globalThis.ElectroTag.assignments.items || []).length);
   await page.click('[data-log="leave-admin"]');
+  // My recordings, or the questionnaire first (the page reads the recordings and the questionnaire's status meanwhile)
+  await page.waitForSelector('.recordings-card, form.q-form', { timeout: 30000 });
+  const q = await page.evaluate(() => globalThis.ElectroTag.me.questionnaire);
+  if (asked && !q.answered) {
+    assert.equal(await page.evaluate(() => globalThis.ElectroTag.route), 'questionnaire', 'an administrator who now annotates answers it first');
+    await answerQuestionnaire(page, { name: 'Study administrator', email: 'admin@example.org' });
+  } else {
+    assert.equal(await page.evaluate(() => globalThis.ElectroTag.route), 'home', 'straight to My recordings');
+  }
   await waitForRoute(page, 'home', 30000);
   await page.waitForSelector('.recordings-card');
   await page.click('[data-tab="todo"]').catch(() => {}); // the To do tab, where the list has one
@@ -60,7 +71,7 @@ export const tests = [
       await signIn(page, 'ADMIN', PASSWORD);
       await page.waitForFunction(() => globalThis.ElectroTag && /^admin/.test(globalThis.ElectroTag.route || ''));
       await handOutToSelf(page, await notYetMine(page), 'ADMIN');
-      await leaveAdminAndCheck(t, page, 2);
+      await leaveAdminAndCheck(t, page, 2, { asked: true });
     },
   },
 ];
