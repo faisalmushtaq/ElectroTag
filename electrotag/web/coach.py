@@ -419,6 +419,11 @@ class Coach:
         st["signature"] = sig
         self._active(st)
         can = bool(result.matched and not ext)
+        # A Show me of this step answered while this check was being made (from another window, or an older browser)
+        # is kept: the check never takes the step's "shown" away, which would score it as found alone.
+        fresh = self.store.guided_state(user.annotator_id, rs.set_id, rid) or {}
+        if int(fresh.get("index", -1)) == int(st["index"]):
+            st["shown"] = sorted({int(x) for x in st["shown"]} | {int(x) for x in fresh.get("shown") or []})
         shown = i in {int(x) for x in st["shown"]}
         st["last"] = {"step": i + 1, "can_continue": can, "candidate_id": result.candidate_id}
         self._save(user, rs, rid, st)

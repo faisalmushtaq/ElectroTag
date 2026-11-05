@@ -218,13 +218,22 @@ async function main() {
         await waitForRoute(page, 'annotate', 60000);
         await waitForTraces(page);
       };
+      // Each step: wait until the coach has no call on its way, Show me, wait until the study has answered it and
+      // the check after it says the step can go on, then Continue. Waiting on the coach's own state, rather than
+      // its text, keeps a slow function (a cold start) from being taken for an answer that has not come yet; a
+      // recording just opened has no step until the study's first answer gives it one.
+      const coachIdle = () => { const c = globalThis.ElectroTag.ws && globalThis.ElectroTag.ws.coach; return Boolean(c) && (c.complete || (Boolean(c.step) && !c.busy && !c.acting && !c.showMeWanted)); };
       const showMeToTheEnd = async () => {
-        for (let i = 0; i < 20 && !/Recording complete/.test(await coach(page)); i++) {
+        for (let i = 0; i < 20; i++) {
+          await page.waitForFunction(coachIdle, null, { timeout: 60000 });
+          const step = await page.evaluate(() => { const c = globalThis.ElectroTag.ws.coach; return c.complete ? null : c.step.step; });
+          if (step === null) break;
           await page.locator('.coach button', { hasText: 'Show me' }).click();
+          await page.waitForFunction((n) => { const c = globalThis.ElectroTag.ws.coach;
+            return c.complete || (c.step && c.step.step === n && c.shownNow && !c.busy && !c.acting && !c.showMeWanted && Boolean(c.last && c.last.can_continue)); }, step, { timeout: 60000 });
           await waitForCoach(page, /This is how the experts marked it/);
-          const before = await page.textContent('.coach-header');
           await page.keyboard.press('Enter');
-          await page.waitForFunction((h) => document.querySelector('.coach-header')?.textContent !== h, before, { timeout: 30000 });
+          await page.waitForFunction((n) => { const c = globalThis.ElectroTag.ws.coach; return c.complete || (c.step && c.step.step !== n); }, step, { timeout: 60000 });
         }
         await waitForCoach(page, /Recording complete/);
       };
