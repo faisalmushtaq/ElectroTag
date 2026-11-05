@@ -2822,6 +2822,7 @@ export class Workspace {
     if (this.coach && !this.coach.canSave()) return false;
     // A revision starts with nothing viewed and may fix one place only, so it is not asked to view everything again.
     if (this.timed && this.settings.coverageCheck === 'warn' && s.mode !== 'guided' && !s.revision && !(await this._coverageCheck())) return false;
+    if (s.mode !== 'guided' && !(await this._uncertainCheck())) return false;
     if (!(await this._confidenceCheck(s))) return false;
     const counts = s.countsByLabel();
     let ok;
@@ -2914,6 +2915,40 @@ export class Workspace {
       this.viewer.setView({ startS: cov.viewStartFor(gaps[0], this.viewer.view.durationS) }, 'unviewed');
       this.say(`Not yet viewed: ${clockText(gaps[0][0])} to ${clockText(gaps[0][1])}.${one ? '' : ` ${touchFirst() ? 'Next part not yet viewed' : 'U (or Next part not yet viewed)'} shows the next one.`}`);
       this.viewer.over.focus({ preventScroll: true });
+    }
+    return choice === 'save';
+  }
+
+  /**
+   * Before Save and Finish: the marks still Uncertain (Data-artifact, needing an expert's review), with Go to the first,
+   * Save anyway and Keep annotating. True to go on saving. Marks of a type the annotator could not tell are saved as they
+   * are when they choose so; the reminder gives them the chance to name the ones they can now (docs/web/using.md).
+   */
+  async _uncertainCheck() {
+    const marks = this.store.annotations().filter((a) => needsReview(a))
+      .sort((x, y) => x.onset_sample - y.onset_sample || x.duration_samples - y.duration_samples);
+    if (!marks.length) return true;
+    const n = marks.length;
+    const one = n === 1;
+    const sf = this.sf;
+    const shown = marks.slice(0, 6);
+    const body = h('div', {},
+      h('p.dialog-text', {}, `${one ? '1 annotation is' : `${n} annotations are`} marked ${UNCERTAIN_TEXT}:`),
+      h('ul.uncertain-list', {}, shown.map((a) => h('li', {}, `${clockText(a.onset_sample / sf)} to ${clockText((a.onset_sample + a.duration_samples) / sf)}`))),
+      n > shown.length ? h('p.dialog-text', {}, `and ${n - shown.length} more.`) : null,
+      h('p.dialog-text', {}, `${one ? 'It is' : 'They are'} saved as artifacts of an unknown type, and an expert is asked to review ${one ? 'it' : 'them'}. `
+        + `If you can now tell the type of ${one ? 'it' : 'any of them'}, give ${one ? 'it' : 'them'} that type before you save; otherwise save ${one ? 'it' : 'them'} as ${one ? 'it is' : 'they are'}.`));
+    const choice = await showDialog({ title: one ? 'An uncertain mark' : 'Uncertain marks', body, className: 'uncertain-check', logText: `${plural(n, 'uncertain mark')}`,
+      buttons: [{ label: 'Keep annotating', value: 'cancel' }, { label: 'Save anyway', value: 'save' },
+        { label: one ? 'Go to it' : 'Go to the first', value: 'goto', kind: 'primary' }], cancelValue: 'cancel' });
+    logger.event('uncertain_check', { n_uncertain: n, n_annotations: this.store.size, choice });
+    if (choice === 'goto') {
+      const first = marks[0];
+      this.select([first.annotation_id], { via: 'uncertain_check' });
+      this.jumpTo(first.annotation_id, { keepSelection: true });
+      this.viewer.over.focus({ preventScroll: true });
+      const at = `The uncertain mark at ${clockText(first.onset_sample / sf)} is selected`;
+      this.say(touchFirst() ? `${at}: give it a type from its menu.` : `${at}: press a number to give it a type, or double-click it to choose any type.`);
     }
     return choice === 'save';
   }
