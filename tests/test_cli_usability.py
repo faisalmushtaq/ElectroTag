@@ -72,12 +72,12 @@ def test_report_refuses_unknown_annotators(dataset, capsys):
     root, _ = dataset
     _, study = load_settings(root)
     ReferenceSet.create(reference_sets_dir(root, study), "pilot")
-    assert main(["init-study", str(root), "--study-id", "s", "--annotators", "CAM"]) == 0
+    assert main(["init-study", str(root), "--study-id", "s", "--annotators", "A04"]) == 0
     assert main(["report", str(root), "pilot", "NOBODY"]) == 2
     assert "NOBODY is not an annotator of this study" in capsys.readouterr().err
-    assert main(["report", str(root), "pilot", "CAN"]) == 2
-    assert "Did you mean 'CAM'?" in capsys.readouterr().err
-    assert main(["report", str(root), "pilot", "cam"]) == 0  # listed: an "incomplete" report is useful
+    assert main(["report", str(root), "pilot", "AO4"]) == 2
+    assert "Did you mean 'A04'?" in capsys.readouterr().err
+    assert main(["report", str(root), "pilot", "a04"]) == 0  # listed: an "incomplete" report is useful
 
 
 def test_admin_help_is_readable():

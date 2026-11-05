@@ -91,14 +91,14 @@ def test_consensus_disagreements_are_exact():
 def test_competency_status_needs_evaluated_criteria():
     blink, emg = "Eye-blink-artifact", "EMG-artifact"
     ref = doc("REFERENCE", [(blink, 1, 1.3, ()), (blink, 4, 4.3, ()), (emg, 6, 7, ())])
-    nothing = doc("CAM", [])
+    nothing = doc("A04", [])
     metrics = compare_with_reference([nothing], [ref], _analysis_config(None))
     crit = CompetencyCriteria.from_dict({"criteria": [{"metric": "event_recall", "threshold": 0.7,
                                                        "scope": "each_category"}], "min_reference_events": 3})
     ev = evaluate_criteria(metrics, crit)
     assert ev["status"] == "not_determined" and ev["checks"][0]["passed"] is None
     # A recording that cannot be compared with the reference makes the result undetermined.
-    odd = AnnotationDocument(RecordingInfo("rec.vhdr", RecordingTiming(100.0, 999), CH), "CAM", [], CAT)
+    odd = AnnotationDocument(RecordingInfo("rec.vhdr", RecordingTiming(100.0, 999), CH), "A04", [], CAT)
     metrics = compare_with_reference([odd], [ref], _analysis_config(None))
     assert metrics["recordings_not_compared"] == ["rec.vhdr"] and metrics["warnings"]
     assert metrics["minutes_assessed"] == 0
@@ -179,7 +179,7 @@ def test_reference_set_provenance_and_integrity(tmp_path):
 
 def test_practice_feedback_lists_misses_extras_and_label_differences():
     ref = doc("REFERENCE", [("Eye-blink-artifact", 1, 1.4, ()), ("EMG-artifact", 3, 4, ()), ("Electrode-pops-artifact", 6, 6.3, ("C1",))])
-    mine = doc("CAM", [("Eye-blink-artifact", 1.05, 1.4, ()), ("Chewing-artifact", 3, 4, ()), ("Sweat-artifact", 8, 9, ())])
+    mine = doc("A04", [("Eye-blink-artifact", 1.05, 1.4, ()), ("Chewing-artifact", 3, 4, ()), ("Sweat-artifact", 8, 9, ())])
     fb = practice_feedback(mine, ref)
     assert fb["overall"]["event_recall"] == pytest.approx(1 / 3)
     # Each disagreement is listed once: the EMG artifact marked as chewing is a label difference,
@@ -242,18 +242,18 @@ def test_competency_report_workflow(training_dataset):
     assess = rs.assessment_recordings
     assert len(assess) == 1
     rid = assess[0]
-    rep = competency_report(layout, rs, "CAM")
+    rep = competency_report(layout, rs, "A04")
     assert rep["status"] == "incomplete" and rep["missing_recordings"] == [rid]
-    # Cameron annotates the assessment recording: everything except one blink, plus one extra annotation.
+    # A04 annotates the assessment recording: everything except one blink, plus one extra annotation.
     truth = truths[rid].annotations
     blinks = [a for a in truth if a.label == "Eye-blink-artifact"]
     mine = [a for a in truth if a is not blinks[0]]
     mine.append(ArtifactAnnotation("x", "Sweat-artifact", 100, 200, ()))
-    _annotate(root, rs, settings, rid, "CAM", "assessment", mine)
+    _annotate(root, rs, settings, rid, "A04", "assessment", mine)
     # Assessment outputs are kept apart from research annotations.
-    assert (layout.root / "training" / "pilot" / "assessment" / "annotator-CAM").exists()
-    assert not (layout.root / "annotator-CAM").exists()
-    rep = competency_report(layout, rs, "CAM")
+    assert (layout.root / "training" / "pilot" / "assessment" / "annotator-A04").exists()
+    assert not (layout.root / "annotator-A04").exists()
+    rep = competency_report(layout, rs, "A04")
     assert rep["status"] == "not_determined"  # no criteria set yet
     o = rep["metrics"]["overall"]
     assert o["event_recall"] == pytest.approx((len(truth) - 1) / len(truth))
@@ -261,24 +261,24 @@ def test_competency_report_workflow(training_dataset):
     assert {m["label"] for m in rep["metrics"]["missed"]} == {"Eye-blink-artifact"}
     rs.set_criteria({"criteria": [{"metric": "event_f1", "threshold": 0.8},
                                   {"metric": "event_recall", "threshold": 0.95}], "min_reference_events": 3})
-    rep = competency_report(layout, rs, "CAM")
+    rep = competency_report(layout, rs, "A04")
     assert rep["status"] == "not_met"
     assert [c["passed"] for c in rep["checks"]] == [True, False]
     rs.set_criteria({"criteria": [{"metric": "event_f1", "threshold": 0.8},
                                   {"metric": "event_recall", "threshold": 0.8, "scope": "each_category"}],
                      "min_reference_events": 3})
-    rep1 = competency_report(layout, rs, "CAM")
-    rep2 = competency_report(layout, rs, "CAM")
+    rep1 = competency_report(layout, rs, "A04")
+    rep2 = competency_report(layout, rs, "A04")
     assert rep1["results_sha256"] == rep2["results_sha256"]  # reproducible
-    saved_path = layout.root / "training" / "pilot" / "reports" / "annotator-CAM_competency_report.json"
+    saved_path = layout.root / "training" / "pilot" / "reports" / "annotator-A04_competency_report.json"
     saved = json.loads(saved_path.read_text(encoding="utf-8"))
     assert saved["results_sha256"] == rep1["results_sha256"]
     assert verify_competency_report(saved_path)
     assert "Eye-blink-artifact" in {c["where"] for c in rep1["checks"]}
     # Rewriting reference_set.json without changing the assessment (assigning annotators) keeps the digest.
-    rs.assigned_annotators = ["CAM"]
+    rs.assigned_annotators = ["A04"]
     rs.save()
-    assert competency_report(layout, rs, "CAM")["results_sha256"] == rep1["results_sha256"]
+    assert competency_report(layout, rs, "A04")["results_sha256"] == rep1["results_sha256"]
     saved["metrics"]["overall"]["event_f1"] = 1.0
     saved_path.write_text(json.dumps(saved), encoding="utf-8")
     assert not verify_competency_report(saved_path)
@@ -295,8 +295,8 @@ def test_quiz_session(tmp_path, training_dataset):
         rs.add_quiz_item(it, CAT.label_names)
     with pytest.raises(ReferenceSetError):
         rs.add_quiz_item(QuizItem("bad", rid, 1, 2, "Not-a-label"), CAT.label_names)
-    assert [i.item_id for i in item_order(rs.quiz_items, "CAM", "pilot")] == [i.item_id for i in item_order(rs.quiz_items, "CAM", "pilot")]
-    q = QuizSession(rs, "CAM", "assessment")
+    assert [i.item_id for i in item_order(rs.quiz_items, "A04", "pilot")] == [i.item_id for i in item_order(rs.quiz_items, "A04", "pilot")]
+    q = QuizSession(rs, "A04", "assessment")
     answers = {"q1": "Eye-blink-artifact", "q2": "Electrode-movement-artifact", "q3": "EMG-artifact"}
     while not q.finished:
         q.item_shown()
@@ -308,7 +308,7 @@ def test_quiz_session(tmp_path, training_dataset):
     data = json.loads(path.read_text(encoding="utf-8"))
     assert data["score"]["n_correct"] == 2 and len(data["answers"]) == 3
     rs.quiz["include_none_option"] = True
-    assert QuizSession(rs, "CAM", "practice").options(CAT.label_names)[-1] == NONE_OPTION
+    assert QuizSession(rs, "A04", "practice").options(CAT.label_names)[-1] == NONE_OPTION
 
 
 # -------------------------------------------------------------------- admin
@@ -318,7 +318,7 @@ def test_admin_study_configuration(dataset):
     assert admin.verify_passphrase("secret-phrase", rec) and not admin.verify_passphrase("wrong", rec)
     with pytest.raises(ValueError):
         admin.hash_passphrase("abc")
-    admin.set_annotators(root, [("a01", "Annotator one"), ("CAM", "Cameron")], allow_unlisted=False)
+    admin.set_annotators(root, [("a01", "Annotator one"), ("A04", "Fourth annotator")], allow_unlisted=False)
     with pytest.raises(Exception):
         admin.set_annotators(root, [("A 01", "")], allow_unlisted=False)
     from electrotag.config.settings import FilterSettings
@@ -326,22 +326,22 @@ def test_admin_study_configuration(dataset):
     admin.fix_filters(root, FilterSettings(notch_hz=50.0))
     settings, study = load_settings(root)
     assert settings.filters.locked and settings.filters.notch_hz == 50.0
-    assert [a.annotator_id for a in study.annotators] == ["A01", "CAM"] and not study.allow_unlisted_annotators
+    assert [a.annotator_id for a in study.annotators] == ["A01", "A04"] and not study.allow_unlisted_annotators
     from tests.conftest import SUB1, SUB2
 
-    assign = admin.make_balanced_allocation(root, [SUB1, SUB2], ["A01", "CAM"], 2, seed=5)
+    assign = admin.make_balanced_allocation(root, [SUB1, SUB2], ["A01", "A04"], 2, seed=5)
     settings, study = load_settings(root)
     assert settings.selection_strategy == "manual"
-    assert set(study.manual_assignments["CAM"]) == {SUB1, SUB2} == set(assign["A01"])
+    assert set(study.manual_assignments["A04"]) == {SUB1, SUB2} == set(assign["A01"])
 
 
 def test_admin_cli_end_to_end(training_dataset, capsys):
     from electrotag.training.cli import main
 
     root, truths, rs, settings = training_dataset
-    assert main(["init-study", str(root), "--study-id", "pilot-2026", "--annotators", "CAM:Cameron"]) == 0
+    assert main(["init-study", str(root), "--study-id", "pilot-2026", "--annotators", "A04:Fourth annotator"]) == 0
     assert main(["set-criteria", str(root), "pilot", "--criterion", "event_f1:0.7"]) == 0
-    assert main(["report", str(root), "pilot", "cam"]) == 0
+    assert main(["report", str(root), "pilot", "a04"]) == 0
     out = capsys.readouterr().out
     assert "Incomplete" in out
     e = AnnotationDocument(truths[rs.assessment_recordings[0]].recording, "E2",
@@ -365,6 +365,6 @@ def test_quiz_clean_segment_needs_none_option(tmp_path):
         rs.add_quiz_item(item, CAT.label_names)
     rs.quiz["include_none_option"] = True
     rs.add_quiz_item(item, CAT.label_names)
-    quiz = QuizSession(rs, "CAM", "practice")
+    quiz = QuizSession(rs, "A04", "practice")
     assert NONE_OPTION in quiz.options(CAT.label_names)
     assert quiz.answer(NONE_OPTION) is True
