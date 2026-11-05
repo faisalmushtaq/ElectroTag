@@ -369,9 +369,11 @@ export const tests = [
       await page.waitForSelector('.dialog .dialog-title', { timeout: 30000 });
       await clickDialogButton(page, 'Back to my recordings');
       await waitForRoute(page, 'home');
+      // the version's interaction log is written once the browser's log says the recording was finished
+      await page.evaluate(() => globalThis.ElectroTag.flushLog());
       const folder = path.join(t.study.dir, 'study', 'Annotated_Events', 'annotator-R01', 'sub-003', 'eeg');
       const before = checksums(folder);
-      assert.equal(Object.keys(before).length, 5);
+      assert.equal(Object.keys(before).length, 6);
 
       await homeTab(page, 'history');
       const row = page.locator(HISTORY_ROWS, { hasText: file });
@@ -390,9 +392,11 @@ export const tests = [
       assert.match(await page.textContent('.dialog'), /saved as version 2/);
       await clickDialogButton(page, 'Back to my recordings');
       await waitForRoute(page, 'home');
+      await page.evaluate(() => globalThis.ElectroTag.flushLog());
 
+      // each version: five result files and its own interaction log
       const after = checksums(folder);
-      assert.equal(Object.keys(after).length, 10);
+      assert.equal(Object.keys(after).length, 12);
       for (const [f, sum] of Object.entries(before)) assert.equal(after[f], sum, `${f} is unchanged`);
       assert.ok(Object.keys(after).some((f) => f.includes('_attempt-02_annotations.json')));
       const doc = JSON.parse(fs.readFileSync(path.join(folder, Object.keys(after).find((f) => f.includes('_attempt-02_annotations.json'))), 'utf8'));
