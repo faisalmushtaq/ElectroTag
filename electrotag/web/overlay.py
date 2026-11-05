@@ -1,4 +1,4 @@
-"""Everyone's marks on one recording, for the overlay view (docs/web/api.md, "The overlay of everyone's marks").
+"""Everyone's marks on one recording, for the overlay view (docs/api.md, "The overlay of everyone's marks").
 
 The overlay puts several people's saved marks on the same file: up to eight of them in lanes of their own,
 and everyone else as a **crowd**, shaded by the share of people who marked each moment. ``overlay_get``

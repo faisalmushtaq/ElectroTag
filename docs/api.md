@@ -189,7 +189,7 @@ password.
 `quizzes` lists the short-segment quizzes the annotator may take (see "The
 short-segment quiz" below); `logging_notice` is the study's own notice when the
 administrator has written one. The three settings for long sessions in
-`annotation` are described in the [administrator guide](../administrator_guide.md): minutes of work before a
+`annotation` are described in the [study settings guide](study_settings.md): minutes of work before a
 break reminder and minutes without input before the clock pauses itself (0 turns
 either off), and whether Save and Finish first lists the parts not yet viewed.
 `annotation.confidence` says whether annotators rate their confidence in a mark (1 to 5) when they wish
@@ -207,7 +207,7 @@ of the conflicts in it (`GET /me/feedback`), `training` which stages of the
 training path may be skipped and what real study work waits for, and `replay`
 whether sessions are replayed and whether trainees may watch experts' sessions
 (the study settings `review`, `training` and `replay` of the
-[administrator guide](../administrator_guide.md)). `training_gate`
+[study settings guide](study_settings.md)). `training_gate`
 says whether the person's study recordings are open, and if not why, in a
 sentence for the person (see "Training stages" below).
 
@@ -501,7 +501,7 @@ study whose experts have made none answers empty lists.
 ## Achievements
 
 `GET /me/achievements` gives the facts that the home page's game elements are
-drawn from (`docs/web/using.md`, "Progress and milestones"); `POST
+drawn from (`docs/using.md`, "Progress and milestones"); `POST
 /me/achievements` with `{"goal_per_week": 10}` (a whole number from 1 to 200, or
 null for no goal) or `{"leaderboard_hidden": true}` changes them and answers the
 same (400 `bad_request` for other values). When the study has the game elements
@@ -902,7 +902,7 @@ study's own recordings have `"self_contained": false` and `"scope": "study"`.
 | op | body | answer |
 | --- | --- | --- |
 | `overview` | `{}` | `{"study": {"study_id", "name"}, "counts": {"recordings", "annotators", "experts", "admins", "assignments", "done", "in_progress", "todo", "unusable", "problems_open", "reviewed"}, "recent": [AuditEntry], "last_saved": [{"annotator_id", "recording_id", "mode", "context_id", "at"}]}` (ten of each; `recordings` counts the study's own, the others the active accounts and their work, each account under every role it holds; `problems_open` the open problem reports and `reviewed` the annotator's recordings with at least one review) |
-| `settings_get` | `{}` | `{"name", "settings": {"filters", "display", "channels", "selection", "logging", "annotation", "loading", "discovery", "gamification", "review", "training", "replay", "questionnaire"}, "logging_notice", "logging_notice_is_default"}`: the effective values of the blocks of `electrotag_study.json` that a study may change (`review`, `training`, `replay` and `questionnaire` are described in the administrator guide) |
+| `settings_get` | `{}` | `{"name", "settings": {"filters", "display", "channels", "selection", "logging", "annotation", "loading", "discovery", "gamification", "review", "training", "replay", "questionnaire"}, "logging_notice", "logging_notice_is_default"}`: the effective values of the blocks of `electrotag_study.json` that a study may change (`review`, `training`, `replay` and `questionnaire` are described in the study settings guide) |
 | `settings_update` | `{"name"?, "settings"?: {block: {key: value}}, "logging_notice"?}` | as `settings_get`. Each key given replaces that setting; the result is checked with ElectroTag's own settings code and refused with 400 `invalid_settings` and the reason (also for a block or key that cannot be changed). `"logging_notice": ""` goes back to ElectroTag's own notice |
 | `users_list` | `{}` | `{"users": [UserRecord]}` (disabled accounts too) |
 | `user_add` | `{"annotator_id", "display_name"?, "email"?, "roles"?: ["annotator"], "role"?, "password"?, "invite"?: false, "expires_days"?: 14}` | `{"user": UserRecord, "invite_link": str \| null, "temporary_password": str \| null}`, with `"invite_token", "expires_at"` when `invite` is true. On Firebase `email` is required (400 `email_required`), the Firebase Authentication user is created (or, for a person already in another study of the project, given this study) with the custom claims below, and `invite_link` lets the person choose a password when none is given. On the server a temporary password (three groups of four characters) is made when none is given; with `"invite": true` the account is made with an invitation instead (as `user_invite`), and nobody knows its first password. A password has 8 to 200 characters; a password and `invite` together are 400; `invite` for an administrator is 409 `admin_account`. `roles` lists the account's roles; the older `role` alone gives one; with both, `role` must be the primary role of `roles` (400 otherwise). An unknown role is 400 `bad_request`, `participant` 400 `role_not_offered`, the IDs `ADJUDICATED` and `REFERENCE` 400 `reserved_id`. 409 `user_exists`, 409 `email_in_use` |
@@ -1648,7 +1648,7 @@ these operations with 501 `needs_server`.
 
 `overlay_get` gives the browser everyone's saved marks on one recording, for the view that
 shows up to eight people in lanes of their own and everyone else as a crowd
-(docs/web/admin.md, "Everyone's marks on one recording"). It reads, so the browser may ask it
+(docs/admin_area.md, "Everyone's marks on one recording"). It reads, so the browser may ask it
 again after a failure. It is one of the operations open to everyone, and checks for itself who
 may see what: experts and administrators see everyone, by ID and name; anyone else (a trainee)
 sees an unnamed crowd only, and only while the study's `replay.trainees_see_crowd` is on (it is
@@ -1864,7 +1864,7 @@ There is no `token` and no beacon on Firebase: the Firebase SDK adds the ID
 token; to send the last events when the page is hidden, call `et_visit_events`
 with `fetch(…, {keepalive: true})` or simply on the next visit. The admin
 area downloads the results with `et_admin` `results_zip` (up to 25 MB); larger
-studies export them with `electrotag web export` (docs/web/firebase.md).
+studies export them with `electrotag web export` (docs/firebase.md).
 
 The HTTP status of an error becomes the `HttpsError` code: 400 and 413
 `invalid-argument`, 401 `unauthenticated`, 403 `permission-denied`, 404

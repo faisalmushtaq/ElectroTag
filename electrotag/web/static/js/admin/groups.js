@@ -1,7 +1,7 @@
 // Groups: the study team's groups of people ("Leeds RAs", "Experts"), to hand datasets and collections
 // out to together. A list, a page for each group with its members and the history of who joined and left
 // when, and adding people, which says first what the hand-outs that follow the group would give them
-// (docs/web/admin.md, "Groups"; the operations are in docs/web/api.md, "Datasets, collections, groups
+// (docs/admin_area.md, "Groups"; the operations are in docs/api.md, "Datasets, collections, groups
 // and hand-outs").
 
 import { h, clear } from '../ui/dom.js';

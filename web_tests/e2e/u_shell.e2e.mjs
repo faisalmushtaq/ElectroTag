@@ -11,7 +11,7 @@ import { profilePage, kept, waitKept } from './l_device.e2e.mjs';
 import { demoSpecs, syntheticEdfBytes } from '../../electrotag/web/static/js/eeg/synthetic.js';
 
 const PASSWORD = 'electrotag';
-const GUIDE = 'https://github.com/faisalmushtaq/ElectroTag/blob/main/docs/web/using.md';
+const GUIDE = 'https://github.com/faisalmushtaq/ElectroTag/blob/main/docs/using.md';
 const NAME = 'sub-demo01_task-rest_eeg.edf';
 
 /** A file that is no recording of the study: the example with one data byte changed, under another name. */

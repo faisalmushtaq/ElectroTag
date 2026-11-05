@@ -221,7 +221,7 @@ this browser only</i> until the connection returns and the draft reaches the stu
 
 /** The last paragraph of the Help tab: where the annotators' guide is read (it opens in a new tab). */
 export const GUIDE_HTML = `
-<p class="guide-link">The <a href="${docsUrl('web/using.md')}" target="_blank" rel="noopener">annotators' guide</a>
+<p class="guide-link">The <a href="${docsUrl('using.md')}" target="_blank" rel="noopener">annotators' guide</a>
 (it opens in a new tab) describes every part of ElectroTag in more detail.</p>
 `;
 

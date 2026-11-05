@@ -85,6 +85,6 @@ def test_admin_help_is_readable():
     usage = parser.format_usage()
     assert "COMMAND" in usage and len(usage) < 120
     text = parser.format_help()
-    assert "fix-filters" in text and "administrator_guide.md" in text
+    assert "fix-filters" in text and "study_settings.md" in text
     with pytest.raises(SystemExit):
         parser.parse_args(["fix-filtres", "x"])

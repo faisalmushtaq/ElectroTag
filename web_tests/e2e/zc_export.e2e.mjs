@@ -1,4 +1,4 @@
-// An annotator downloads their own saved files of a recording (docs/web/using.md, "Your own files"):
+// An annotator downloads their own saved files of a recording (docs/using.md, "Your own files"):
 // from the Saved dialog after Save and Finish, and from the History, as one zip or as separate files,
 // in the sandbox and on the study server, where they are exactly the files the study keeps.
 import fs from 'node:fs';

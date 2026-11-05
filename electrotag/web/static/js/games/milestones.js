@@ -1,4 +1,4 @@
-// The milestones of the home page, drawn from the facts of GET /me/achievements (docs/web/api.md,
+// The milestones of the home page, drawn from the facts of GET /me/achievements (docs/api.md,
 // "Achievements"; electrotag/web/games.py gives the facts).
 //
 // Milestones reward progress through the recordings and thoroughness, never speed and never the

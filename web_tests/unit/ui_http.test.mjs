@@ -1,4 +1,4 @@
-// The study server backend (js/api/http.js) follows docs/web/api.md: the bearer token, the
+// The study server backend (js/api/http.js) follows docs/api.md: the bearer token, the
 // X-ElectroTag header, sessionStorage only, and the errors.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';

@@ -1,4 +1,4 @@
-// The Recording interface of docs/web/architecture.md as openRecording returns it: fields and their
+// The Recording interface of docs/architecture.md as openRecording returns it: fields and their
 // types, the choice among picked files, channel types from a manifest, closing, and the helpers.
 
 import assert from "node:assert/strict";

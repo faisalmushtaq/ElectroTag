@@ -139,7 +139,7 @@ NONE_OPTION = "No artifact / none of these"
 
 @dataclass
 class Snippet:
-    """A short example of an artifact type for the training path's "Meet the artifacts" stage (docs/web/api.md,
+    """A short example of an artifact type for the training path's "Meet the artifacts" stage (docs/api.md,
     "Training stages"): a stretch of a recording of the set, with its type and the experts' explanation, shown
     with ``context_s`` of EEG on each side. ``channels`` are the channels the artifact is on (none: the whole
     montage); ``source`` says where it came from (``{"kind": "guided", "annotation_id"}`` for one made from a

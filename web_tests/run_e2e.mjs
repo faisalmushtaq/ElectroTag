@@ -8,7 +8,7 @@
 // application; a test that needs Chromium's own tools says so and is skipped there.
 //
 // Serves electrotag/web/static with `python -m http.server`, runs a stand-in study server
-// (GET /api/v1/health, POST /login and the few calls the sign-in needs, as docs/web/api.md) and a
+// (GET /api/v1/health, POST /login and the few calls the sign-in needs, as docs/api.md) and a
 // second static server whose config.json each test can set, and (for the specs that need it) the real
 // demonstration server, `electrotag-web demo`, then runs web_tests/e2e/*.e2e.mjs.
 

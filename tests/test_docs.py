@@ -64,14 +64,14 @@ def test_the_old_name_remains_only_where_it_belongs():
 
 def test_the_firebase_guide_counts_the_functions_there_are():
     names = re.findall(r"^def (et_\w+)\(", FUNCTIONS.read_text(encoding="utf-8"), flags=re.MULTILINE)
-    guide = (REPO / "docs" / "web" / "firebase.md").read_text(encoding="utf-8")
+    guide = (REPO / "docs" / "firebase.md").read_text(encoding="utf-8")
     said = re.search(r"lists ElectroTag's ([a-z-]+) functions, whose names start with `et_`", guide)
-    assert said, "docs/web/firebase.md no longer says how many functions the console lists"
+    assert said, "docs/firebase.md no longer says how many functions the console lists"
     assert said.group(1) == NUMBERS[len(names)], f"main.py defines {len(names)}: {', '.join(names)}"
 
 
 @pytest.mark.parametrize("doc", ["README.md", "HANDOVER.md", "docs/developer_guide.md", "docs/testing_guide.md",
-                                 "docs/web/server.md", "docs/web/firebase.md"])
+                                 "docs/server.md", "docs/firebase.md"])
 def test_install_instructions_use_plain_pip_in_an_active_environment(doc):
     text = (REPO / doc).read_text(encoding="utf-8")
     assert "python -m pip install -r requirements" not in text
@@ -84,7 +84,7 @@ def test_the_readme_says_where_the_package_comes_from_and_links_every_guide():
     assert 'pip install "electrotag @ git+https://github.com/faisalmushtaq/ElectroTag"' in text
     assert "source .venv/bin/activate" in text and ".venv\\Scripts\\activate" in text
     top = text[:text.index("## Trying it")]
-    for guide in ("docs/web/using.md", "docs/web/admin.md", "docs/web/firebase.md", "docs/web/server.md",
+    for guide in ("docs/using.md", "docs/admin_area.md", "docs/firebase.md", "docs/server.md",
                   "docs/developer_guide.md"):
         assert f"]({guide})" in top, f"the Documentation section near the top links {guide}"
     for target in re.findall(r"\]\((?!https?://|#)([^)#]+)", text):
@@ -92,7 +92,7 @@ def test_the_readme_says_where_the_package_comes_from_and_links_every_guide():
 
 
 def test_the_annotators_guide_says_who_it_is_for():
-    first = (REPO / "docs" / "web" / "using.md").read_text(encoding="utf-8").split("\n\n")[1]
+    first = (REPO / "docs" / "using.md").read_text(encoding="utf-8").split("\n\n")[1]
     assert first.startswith("This guide is for annotators.")
 
 
@@ -111,3 +111,75 @@ def test_every_long_guide_has_its_list_of_contents_up_to_date() -> None:
         if module.START in text:
             listed = re.findall(r"\]\(#([^)]+)\)", text[text.index(module.START):text.index(module.END)])
             assert listed and set(listed) <= anchors, path
+
+
+def _contents_module():
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("docs_contents_links", REPO / "scripts" / "docs_contents.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _anchors(path: Path, cache: dict[Path, set[str]]) -> set[str]:
+    if path not in cache:
+        cache[path] = {a for _, _, a in _contents_module().headings(path.read_text(encoding="utf-8"))}
+    return cache[path]
+
+
+def _outside_code(text: str) -> str:
+    """The text without fenced code blocks and inline code, where a "link" is only an example."""
+    text = re.sub(r"(?ms)^\s*(```|~~~).*?^\s*\1", "", text)
+    return re.sub(r"`[^`\n]*`", "", text)
+
+
+def test_every_link_in_the_guides_reaches_its_page_and_heading():
+    """Every relative link in every Markdown file leads to a file of the repository, and every #anchor to a heading
+    of the page it names (with GitHub's anchors, scripts/docs_contents.py)."""
+    cache: dict[Path, set[str]] = {}
+    broken = []
+    for doc in docs():
+        for target, anchor in re.findall(r"\]\(([^)\s#]*)(?:#([^)\s]+))?\)", _outside_code(doc.read_text(encoding="utf-8"))):
+            if re.match(r"^[a-z][a-z0-9+.-]*:", target) or target.startswith("/"):
+                continue
+            page = (doc.parent / target).resolve() if target else doc
+            if not page.exists():
+                broken.append(f"{doc.relative_to(REPO)}: {target} does not exist")
+            elif anchor and page.suffix == ".md" and anchor not in _anchors(page, cache):
+                broken.append(f"{doc.relative_to(REPO)}: {target or doc.name}#{anchor} names no heading")
+    assert not broken, "\n".join(broken)
+
+
+def test_every_guide_named_in_the_repository_exists():
+    """A guide named by its path anywhere (code, comments, workflows, guides: docs/….md) is there, and so is a
+    page of this repository linked by its address on GitHub."""
+    missing = set()
+    for p in text_files():
+        text = p.read_text(encoding="utf-8", errors="replace")
+        for name in re.findall(r"(?<![\w/.-])docs/[\w./-]+\.md", text):
+            if not (REPO / name).is_file():
+                missing.add(f"{p.relative_to(REPO)}: {name}")
+        for name in re.findall(r"ElectroTag/(?:blob|tree)/main/([\w./-]+)", text):
+            if not (REPO / name.rstrip("/")).exists():
+                missing.add(f"{p.relative_to(REPO)}: {name}")
+    if (REPO / "CHANGELOG.md").exists():  # earlier versions' paragraphs may name guides as they were then
+        missing = {m for m in missing if not m.startswith("CHANGELOG.md:")}
+    assert not missing, "\n".join(sorted(missing))
+
+
+def test_the_applications_links_into_the_guides_reach_their_headings():
+    """docsUrl and docsLink in the application name guides under docs/ (js/ui/docs.js), with anchors that exist."""
+    base = (REPO / "electrotag" / "web" / "static" / "js" / "ui" / "docs.js").read_text(encoding="utf-8")
+    assert "github.com/faisalmushtaq/ElectroTag/blob/main/docs/'" in base
+    cache: dict[Path, set[str]] = {}
+    seen = 0
+    for p in (REPO / "electrotag" / "web" / "static" / "js").rglob("*.js"):
+        text = p.read_text(encoding="utf-8")
+        for path, anchor in re.findall(r"docs(?:Url|Link)\((?:[^,()]*, )?'([\w./-]+\.md)'(?:, '([\w-]+)')?", text):
+            seen += 1
+            page = REPO / "docs" / path
+            assert page.is_file(), f"{p.relative_to(REPO)} links to docs/{path}, which does not exist"
+            if anchor:
+                assert anchor in _anchors(page, cache), f"{p.relative_to(REPO)}: docs/{path}#{anchor} names no heading"
+    assert seen >= 4

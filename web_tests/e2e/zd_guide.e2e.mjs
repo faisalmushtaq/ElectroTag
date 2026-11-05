@@ -1,4 +1,4 @@
-// The artifact reference guide (docs/web/using.md, "The artifact reference guide"): its own page at
+// The artifact reference guide (docs/using.md, "The artifact reference guide"): its own page at
 // #guide, without signing in, with every type, a search and Print, and live examples drawn as they come
 // into view; beside the EEG as the annotation view's Guide tab, opened from the Help tab and from the
 // type picker's About this type; and a link to it on the training path.

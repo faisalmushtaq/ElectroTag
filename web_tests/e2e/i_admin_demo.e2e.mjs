@@ -13,7 +13,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC = path.resolve(HERE, '..', '..', 'electrotag', 'web', 'static');
 
 /**
- * A stand-in for js/eeg/register.js with the interface of docs/web/architecture.md: it reads each
+ * A stand-in for js/eeg/register.js with the interface of docs/architecture.md: it reads each
  * EDF file with the application's own reader (./recording.js beside it) for the fingerprint, timing
  * and channels, reports progress, lists other files as failures, and can be held until released.
  */

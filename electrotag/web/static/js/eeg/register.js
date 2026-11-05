@@ -1,4 +1,4 @@
-// Registering recordings in the browser (docs/web/architecture.md, "Registering recordings in the
+// Registering recordings in the browser (docs/architecture.md, "Registering recordings in the
 // browser"). The administrator picks a dataset folder (or files) on their own computer; this module
 // finds the recordings in it as the desktop's discovery does, reads each one with the browser's
 // readers and builds the same internal manifest that electrotag.web.manifest.build_manifest builds

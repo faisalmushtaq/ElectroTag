@@ -1,4 +1,4 @@
-// How experts' corrections of an annotator's version stand, in words (docs/web/using.md, "Corrections of
+// How experts' corrections of an annotator's version stand, in words (docs/using.md, "Corrections of
 // your work"). One expert's correction is shown as it is. When two or more experts corrected the same
 // version, the annotator is never taught one expert's version: until the study has adjudicated their
 // disagreements the history says only who corrected it and that the study is settling it, and once it

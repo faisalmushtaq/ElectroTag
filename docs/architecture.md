@@ -62,7 +62,7 @@ in one of three ways:
   university machine). Its address comes from `?server=https://…`,
   `config.json` (`{"server": "…"}`) or the sign-in screen.
 
-Both study back ends perform the same operations with the same JSON (docs/web/api.md):
+Both study back ends perform the same operations with the same JSON (docs/api.md):
 over HTTP for the server, and as Firebase callable functions named `et_<operation>`
 for Firebase. In the browser, `js/api/http.js` and `js/api/firebase.js` implement the
 same Backend interface, so the rest of the application does not know which is in use.
@@ -87,7 +87,7 @@ type buttons, the type picker, M / [ / ] marks, N / P, C, Draw as / Change to,
 undo and redo, merging of overlapping annotations of one type, the training
 coach, the practice review and the short-segment quiz). It keeps a draft of
 unsaved work in the browser and on the server, and sends interaction events to
-the server. For administrators it holds the admin area (docs/web/admin.md),
+the server. For administrators it holds the admin area (docs/admin_area.md),
 which registers recordings from the files on the administrator's own computer
 and sends the study only their manifests.
 
@@ -222,7 +222,7 @@ electrotag/reliability/         the agreement analysis (electrotag agreement)
 electrotag/activity/            the activity analysis of the interaction logs (electrotag activity)
 web_tests/unit/                   node --test unit tests of the browser modules
 web_tests/e2e/                    Playwright end-to-end tests
-docs/web/api.md                   the HTTP API (the contract between browser and server)
+docs/api.md                   the HTTP API (the contract between browser and server)
 ```
 
 ## Loading on demand
@@ -606,11 +606,11 @@ tests** runs all of them on GitHub.
 
 ## The Backend interface
 
-`js/api/http.js` talks to the server (docs/web/api.md). `js/api/demo.js`
+`js/api/http.js` talks to the server (docs/api.md). `js/api/demo.js`
 implements the same methods entirely in the browser, for the demonstration
 without a server: built-in example recordings, demo accounts, results kept in
 the browser and downloadable, and the same training rules. Every method
-returns a Promise of the JSON described in docs/web/api.md.
+returns a Promise of the JSON described in docs/api.md.
 
 Three methods carry the administrator's, the experts' and the quiz's
 operations, so that every backend implements them the same way:

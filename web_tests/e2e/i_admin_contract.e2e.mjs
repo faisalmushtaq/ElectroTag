@@ -1,5 +1,5 @@
 // The admin area's screens for what only a study can compute, against a stand-in for the study
-// server that answers with the shapes of docs/web/api.md ("Administration"): the agreement and
+// server that answers with the shapes of docs/api.md ("Administration"): the agreement and
 // activity reports in their sandboxed frames and their downloads, a competency report, a consensus
 // reference with its disagreements, the example set's recordings, every result as a zip file (and
 // the command when it is too large), an invitation link, and that an analysis is not started twice.

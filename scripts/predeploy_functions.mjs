@@ -41,7 +41,7 @@ export function vendor(functionsDir = DEFAULT_FUNCTIONS, { platform = process.pl
     return res.status === null ? 1 : res.status;
   }
   log('Python could not be found to prepare the functions. Make the functions\' environment first, as in step 8 of '
-    + 'docs/web/firebase.md (electrotag/web/firebase/functions/venv), then deploy again.');
+    + 'docs/firebase.md (electrotag/web/firebase/functions/venv), then deploy again.');
   return 1;
 }
 

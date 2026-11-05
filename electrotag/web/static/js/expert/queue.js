@@ -1,4 +1,4 @@
-// The adjudication queue of the expert area (docs/web/admin.md, "Adjudication"), in the manner of a
+// The adjudication queue of the expert area (docs/admin_area.md, "Adjudication"), in the manner of a
 // screening tool's conflict list: every recording (or part of one, or set of corrections) that two or
 // more people annotated, with its status, its conflicts and how many are decided. A search finds a
 // recording, a person or a note; tabs show what is ready, in progress, finished and still waiting, and

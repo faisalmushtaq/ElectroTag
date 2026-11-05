@@ -31,7 +31,7 @@ the Firestore tests are skipped unless the Firestore emulator is running (see
 below).
 
 The browser application has tests of its own, described in
-[web/architecture.md](web/architecture.md) ("Tests"):
+[architecture.md](architecture.md) ("Tests"):
 
 ```bash
 node --test web_tests/unit/*.test.mjs                     # the browser modules (Node.js 22)
@@ -186,7 +186,7 @@ A BrainVision header that gives one name to several channels is now refused by b
 because MNE-Python cannot read it. Registered without its `events.tsv`, ds003420 brought 185,443
 BrainVision markers (EGI's DIN markers, one on every sample a trigger is held), a registration of
 13 MB that the study refused; a registration now keeps the first 10,000 events and says so
-([administrator guide](administrator_guide.md)). ds004408 gets an amplitude warning of about 44 V
+([study settings guide](study_settings.md)). ds004408 gets an amplitude warning of about 44 V
 (70 V without the display filters) in both readers: its float32 samples are about 4 x 10^10 with a
 resolution of 0.1 µV, so the values in the file are about a million times too large (its header was
 written by pybv, and its `channels.tsv` gives the unit as V, which suggests volts given where
@@ -262,7 +262,7 @@ annotators will use (Firefox, Safari and a real iPad in particular):
 
 1. The study's link opens the sign-in page, and signing in, the notice about
    the interaction log and the list of recordings appear as described in
-   [using ElectroTag](web/using.md).
+   [using ElectroTag](using.md).
 2. Opening a recording from the computer works with the file picker, with a
    folder and by dropping the files on the page, for EDF, BDF and BrainVision
    (all three files), and a large recording shows the progress of its
@@ -292,7 +292,7 @@ annotators will use (Firefox, Safari and a real iPad in particular):
 
 The browser's times for reading, fingerprinting and filtering a 128-channel
 recording of 30 minutes at 1024 Hz are in
-[web/architecture.md](web/architecture.md) ("Memory and speed"). For
+[architecture.md](architecture.md) ("Memory and speed"). For
 registration, which reads each recording with MNE-Python: a 60-minute,
 64-channel recording at 500 Hz (0.46 GB data file) took 14 s to load,
 fingerprint and filter in memory, and 19 s with the memory-mapped display copy.

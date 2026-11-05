@@ -1,4 +1,4 @@
-// The sign-up questionnaire's rules, in the browser (docs/web/api.md, "The sign-up questionnaire"): the
+// The sign-up questionnaire's rules, in the browser (docs/api.md, "The sign-up questionnaire"): the
 // checks of a definition (electrotag/config/questionnaire.py) and of the answers
 // (electrotag/web/questionnaire.py check_answers), with the same words, the questions people are asked, and
 // the version of a wording. The person's page (questionnaire.js), the admin area's editor and the

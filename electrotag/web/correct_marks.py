@@ -1,4 +1,4 @@
-"""Correct the marks: exercises made from a guided recording's reference (docs/web/api.md, "Derived versions in
+"""Correct the marks: exercises made from a guided recording's reference (docs/api.md, "Derived versions in
 the analyses" and "Correct the marks").
 
 The study keeps, with a reference set, a flawed copy of the experts' marks for some of its guided recordings:

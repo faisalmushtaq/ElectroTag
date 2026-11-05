@@ -1,4 +1,4 @@
-"""Problem reports and reviews of saved work (electrotag/web/feedback.py, docs/web/api.md).
+"""Problem reports and reviews of saved work (electrotag/web/feedback.py, docs/api.md).
 
 An annotator reports a problem with a recording instead of saving it as having no artifacts; the
 outcome ``unusable`` sets the assignment aside (finished for the annotator, kept apart from done,

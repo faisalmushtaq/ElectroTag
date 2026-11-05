@@ -1,5 +1,5 @@
 """Tracking: the datasets x people summary, the recordings x people grid, what would be notified and the datasets/
-folder of the results (electrotag/web/tracking.py; docs/web/api.md, "Datasets, collections, groups and hand-outs")."""
+folder of the results (electrotag/web/tracking.py; docs/api.md, "Datasets, collections, groups and hand-outs")."""
 
 from __future__ import annotations
 

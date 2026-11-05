@@ -1,4 +1,4 @@
-// The admin area's operations in the sandbox (docs/web/api.md, "Administration"), carried out on
+// The admin area's operations in the sandbox (docs/api.md, "Administration"), carried out on
 // the sandbox's own state in this browser, as electrotag/web/admin.py does them on a server: the
 // study's settings, the accounts and their passwords and invitation links, assignments and the
 // training programme, the register of recordings (the three built-in examples and any added from
@@ -198,7 +198,7 @@ function displayEvents(ev, nSamples, sfreq) {
   return out.sort((a, b) => a.onset_sample - b.onset_sample);
 }
 
-/** The Manifest of docs/web/api.md from an internal one (electrotag/web/manifest.py, public_manifest). */
+/** The Manifest of docs/api.md from an internal one (electrotag/web/manifest.py, public_manifest). */
 export function publicManifest(m, studyScalings = {}) {
   const t = m.timing || {};
   const sfreq = Number(t.sfreq);
@@ -1065,7 +1065,7 @@ export class DemoAdmin {
     };
   }
 
-  /** How far the study has got and how long the work takes (docs/web/api.md, `stats`; electrotag/web/admin.py). */
+  /** How far the study has got and how long the work takes (docs/api.md, `stats`; electrotag/web/admin.py). */
   op_stats(body) {
     const work = body.work || 'study';
     if (!['study', 'all'].includes(work)) throw bad("work must be 'study' (the study's own annotation) or 'all' (training too)");

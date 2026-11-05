@@ -1,4 +1,4 @@
-"""Replays of sessions from the interaction log (electrotag/web/replay.py, docs/web/api.md "Corrections and replay").
+"""Replays of sessions from the interaction log (electrotag/web/replay.py, docs/api.md "Corrections and replay").
 
 The segments of a person's sessions on a recording come from the visit index, each with the attempt
 it saved (by the session's ID, or in order for older logs); a segment's events are paged, with the

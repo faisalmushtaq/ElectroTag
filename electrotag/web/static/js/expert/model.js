@@ -1,4 +1,4 @@
-// The adjudication queue, the adjudication pass and the library without the page (docs/web/admin.md,
+// The adjudication queue, the adjudication pass and the library without the page (docs/admin_area.md,
 // "Adjudication" and "Library"): the words, the keys, the progress, the order of the conflicts, the body
 // of a decision and the library's export, so that the unit tests check them in Node. The study
 // recomputes the conflicts (electrotag/web/adjudication.py); nothing here compares annotations.

@@ -4,7 +4,7 @@
 
 The input is {"checks": [...], "steps": [...], "notes": [...]}. Each check is {"target": Annotation,
 "annotations": [Annotation], "sfreq": 250, "taken": [...], "quick_keys": {...}} (Annotation as in
-docs/web/api.md), answered by {"matched", "candidate_id", "problems", "messages"}; each step is
+docs/api.md), answered by {"matched", "candidate_id", "problems", "messages"}; each step is
 {"guidance", "label", "channels", "quick_keys"}, answered by the step's text (step_text); each note is
 {"label", "duration_s", "channels"}, answered by the example set's note (example_note). So
 web_tests/unit/ui_rules.test.mjs can check that js/training/rules.js and js/eeg/synthetic.js give the

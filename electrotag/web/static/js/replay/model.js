@@ -1,4 +1,4 @@
-// The replay of a session from its interaction log, without the page (docs/web/admin.md, "Replaying
+// The replay of a session from its interaction log, without the page (docs/admin_area.md, "Replaying
 // a session"; tested in Node). A segment is one recording opened in one window of a visit
 // (replay_index_get), with its events (replay_events_get). buildTimeline puts the events of one or
 // more segments on one time line, in order, a second apart; stateAt rebuilds what the annotator saw

@@ -1,4 +1,4 @@
-// The replay player (docs/web/admin.md, "Replaying a session"; docs/web/using.md, "Watching an
+// The replay player (docs/admin_area.md, "Replaying a session"; docs/using.md, "Watching an
 // expert at work"): an annotator's session played back from the interaction log on the EEG, in a
 // view-only annotation view of kind 'replay'. The view follows the annotator's scrolling, a small
 // ink-blue ring shows their pointer, the annotations build up as they made them (in the Annotations

@@ -1,4 +1,4 @@
-// The sign-up questionnaire (docs/web/using.md, "Before your first recording"): a new annotator's first
+// The sign-up questionnaire (docs/using.md, "Before your first recording"): a new annotator's first
 // sign-in shows it before anything else and the study refuses their work until it is answered; it can be
 // changed later from the home page, with the history kept; the administrator sees the answers, the name
 // and the contact details on the person's page, and an expert sees none of it. Nothing answered or typed

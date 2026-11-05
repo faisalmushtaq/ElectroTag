@@ -1,4 +1,4 @@
-// Loading on demand (js/lazy.js, docs/web/architecture.md "Loading on demand"): the sign-in page
+// Loading on demand (js/lazy.js, docs/architecture.md "Loading on demand"): the sign-in page
 // loads only what it shows and the chosen back end's client, within a budget of JavaScript that
 // catches a view creeping back into it; the open view and the annotation view arrive in idle time
 // after signing in; and a part that cannot be loaded says so, with Try again.

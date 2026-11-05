@@ -75,7 +75,7 @@ def run_cli(*args: str) -> None:
 
 
 def new_study(template: Path, with_users: bool = True) -> str:
-    """A study set up with the administrator's commands, as docs/web/firebase.md describes."""
+    """A study set up with the administrator's commands, as docs/firebase.md describes."""
     sid = f"t{uuid.uuid4().hex[:10]}"
     run_cli("init-study", "--study", sid, "--name", "Firestore test")
     run_cli("register", str(template / "recordings" / "study"), "--study", sid)
@@ -734,7 +734,7 @@ def test_invitations_and_stats_on_firebase(study: str) -> None:
 
 
 def test_tasks_windows_and_known_answers_on_firestore(service: StudyService, recordings: Path) -> None:
-    """docs/web/api.md, "Tasks, windows and known answers": the same as tests/test_web_tasks.py on Firestore."""
+    """docs/api.md, "Tasks, windows and known answers": the same as tests/test_web_tasks.py on Firestore."""
     import base64
     import io
     import zipfile

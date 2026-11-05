@@ -196,7 +196,7 @@ def _block(data: dict[str, Any], name: str) -> dict[str, Any]:
 
 @dataclass(frozen=True)
 class ReviewSettings:
-    """review: corrections of saved work and the adjudication of disagreements (docs/administrator_guide.md)."""
+    """review: corrections of saved work and the adjudication of disagreements (docs/study_settings.md)."""
 
     corrections: bool = True  # experts may correct saved work, as new versions linked to the original
     show_corrections_to_annotators: bool = True  # annotators see the corrections of their work, with the reasons
@@ -370,11 +370,11 @@ class Settings:
     gamification_enabled: bool = True
     gamification_leaderboard: bool = True
     gamification_leaderboard_viewed_only: bool = False
-    # annotation: comfort for long sessions in the browser (docs/web/using.md, "Pausing and breaks").
+    # annotation: comfort for long sessions in the browser (docs/using.md, "Pausing and breaks").
     break_reminder_minutes: float = 50.0  # minutes of work since the last break before a reminder (0: none)
     idle_pause_minutes: float = 3.0  # minutes without input after which the clock pauses itself (0: never)
     coverage_check: str = "warn"  # "warn": Save and Finish lists the parts never on screen; "off"
-    confidence: str = "optional"  # CONFIDENCE_SETTINGS: how sure the annotator is of each mark (docs/web/using.md)
+    confidence: str = "optional"  # CONFIDENCE_SETTINGS: how sure the annotator is of each mark (docs/using.md)
     # review, training and replay: corrections and adjudication, the training path's policy, and replays.
     review: ReviewSettings = field(default_factory=ReviewSettings)
     training: TrainingPolicy = field(default_factory=TrainingPolicy)

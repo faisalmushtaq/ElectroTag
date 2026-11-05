@@ -2,7 +2,7 @@
 
 Used to test the browser application locally, for the demonstration (``electrotag-web demo``)
 and by a study that prefers its own server to Firebase. It serves the browser application from
-``/`` and the API of docs/web/api.md under ``/api/v1``.
+``/`` and the API of docs/api.md under ``/api/v1``.
 
 Security: sign-in returns a bearer token (kept only as a hash; it expires after 12 hours without use
 and on sign-out); every API request except ``GET /health`` must carry ``X-ElectroTag: 1`` (so a
@@ -453,12 +453,12 @@ def create_app(study_dir: Path | str, *, demo: bool = False, allowed_origins: li
 
     @app.post(p + "/admin/{op}")
     async def admin_op(request: Request, op: str) -> JSONResponse:
-        """Every operation of the admin area (docs/web/api.md, "Administration")."""
+        """Every operation of the admin area (docs/api.md, "Administration")."""
         return await authed(request, "admin", {**await body_of(request), "op": op})
 
     @app.post(p + "/expert/{op}")
     async def expert_op(request: Request, op: str) -> Response:
-        """Every operation of the expert area (docs/web/api.md, "Experts"); a large answer (the overlay of everyone's
+        """Every operation of the expert area (docs/api.md, "Experts"); a large answer (the overlay of everyone's
         marks) is compressed for a browser that accepts it."""
         return compressed(request, await authed(request, "expert", {**await body_of(request), "op": op}))
 

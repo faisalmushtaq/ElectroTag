@@ -1,4 +1,4 @@
-"""The five-stage training path on the server (electrotag/web/training_path.py, docs/web/api.md "Training
+"""The five-stage training path on the server (electrotag/web/training_path.py, docs/api.md "Training
 stages"): skipping, finishing and resuming stages, the competency gate of real study work, what the study team
 does after an assessment, the snippets and the study team's own snippets. The stages' rules themselves are in
 tests/test_training_stages.py."""

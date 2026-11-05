@@ -1,4 +1,4 @@
-// What the home page shows of problem reports and reviews (docs/web/using.md, "When a recording
+// What the home page shows of problem reports and reviews (docs/using.md, "When a recording
 // cannot be annotated" and "Reviews of your work"): the More menu on each recording's row (Report a
 // problem…, See the feedback), the line under a file name ("Reviewed: 2 caveats, 1 comment",
 // "Problem reported", "Set aside: cannot be annotated"), and a short line when the study team

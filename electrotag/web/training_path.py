@@ -1,4 +1,4 @@
-"""The five-stage training path on the server (docs/web/api.md, "Training stages").
+"""The five-stage training path on the server (docs/api.md, "Training stages").
 
 * ``POST /training/stage``: a trainee skips a stage the study's policy lets them skip, takes a
   skipped stage up again, or reports the tour or the snippets finished. Each is kept as an event of

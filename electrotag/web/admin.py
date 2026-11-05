@@ -1,4 +1,4 @@
-"""The admin area's operations (``POST /admin/{op}``, ``et_admin``; docs/web/api.md, "Administration").
+"""The admin area's operations (``POST /admin/{op}``, ``et_admin``; docs/api.md, "Administration").
 
 :meth:`Admin.run` checks that the caller is an administrator and runs one operation; every
 operation that changes the study appends an entry to the audit log (:mod:`electrotag.web.audit`).
@@ -1156,7 +1156,7 @@ class Admin:
             raise ApiError(500, "reference_unavailable", f"The saved annotations of {aid} cannot be read") from exc
 
     def _source(self, source: Any, rid: str, folder: Path) -> dict[str, Any]:
-        """The reference document and how it was made, from a Source of docs/web/api.md."""
+        """The reference document and how it was made, from a Source of docs/api.md."""
         from electrotag.app.annotations.model import AnnotationError
         from electrotag.app.io.canonical import document_from_dict
         from electrotag.training.consensus import build_consensus
@@ -1497,7 +1497,7 @@ class Admin:
         return self.service.admin_progress(user, {})
 
     def op_stats(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
-        """How far the study has got and how long the work takes (docs/web/api.md, ``stats``)."""
+        """How far the study has got and how long the work takes (docs/api.md, ``stats``)."""
         work = body.get("work") or "study"
         if work not in STATS_WORK:
             raise _bad("work must be 'study' (the study's own annotation) or 'all' (training too)")

@@ -1,4 +1,4 @@
-"""The game elements of an annotator's home page (docs/web/api.md, "Achievements").
+"""The game elements of an annotator's home page (docs/api.md, "Achievements").
 
 ``GET /me/achievements`` (``et_achievements`` on Firebase) gives an annotator the facts that their
 counters, milestones and personal goal are drawn from, the whole team's progress through the

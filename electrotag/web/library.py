@@ -1,4 +1,4 @@
-"""The library of contradictory annotations (docs/web/api.md, "Adjudication and the library").
+"""The library of contradictory annotations (docs/api.md, "Adjudication and the library").
 
 The library is derived, never stored: each call recomputes the conflicts of every unit that has some
 (:mod:`electrotag.web.adjudication`), from the frozen inputs of its adjudication when it has one and

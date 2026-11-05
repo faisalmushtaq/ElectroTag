@@ -1,4 +1,4 @@
-// Reviews of saved work in the admin area (docs/web/admin.md, "Reviewing saved work"): the Review
+// Reviews of saved work in the admin area (docs/admin_area.md, "Reviewing saved work"): the Review
 // button on a saved study recording (in a person's Work and in Results), the number of reviews of
 // each, a person's reviews, and every review of the study in Results with filters. Each review opens
 // to show its marks and notes. The review itself happens in the annotation view

@@ -1,4 +1,4 @@
-// "How everyone marked it": the way in for trainees to the crowd of a training recording (docs/web/using.md,
+// "How everyone marked it": the way in for trainees to the crowd of a training recording (docs/using.md,
 // "How everyone marked a training recording"). The study shows it only when its setting
 // replay.trainees_see_crowd is on, only on the training recordings for learning with the experts, and with
 // nobody named (overlay_get checks all of this on the server). The entry is one small button on the training

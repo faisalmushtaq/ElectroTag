@@ -1,5 +1,5 @@
 // The admin area's client method, admin(op, body), on the study server (POST /admin/{op}) and on
-// Firebase (the callable et_admin with {op, ...body}), as docs/web/api.md "Administration" says:
+// Firebase (the callable et_admin with {op, ...body}), as docs/api.md "Administration" says:
 // the same headers and errors as every other request, and a second attempt only for reads.
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';

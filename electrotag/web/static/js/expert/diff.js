@@ -1,4 +1,4 @@
-// What changed between a saved version and its correction (docs/web/api.md, "Corrections and replay"):
+// What changed between a saved version and its correction (docs/api.md, "Corrections and replay"):
 // the same function as electrotag/web/corrections.py diff_annotations, tested with the same cases
 // (web_tests/unit/correction_diff_cases.json). Marks are matched by annotation_id, because a
 // correction keeps the IDs of the marks it changes; each change is added, removed or changed, with

@@ -46,7 +46,7 @@ const PYTHON = findPython();
 const TIMES = ['saved_at', 'created_at', 'modified_at', 'reported_at', 'reviewed_at', 'registered_at', 'first_saved_at', 'completed_at',
   'generated_at', 'started_at', 'answered_at', 'finished_at', 'closed_at', 'last_seen', 'last_activity', 'last_active', 'at', 'resolved_at',
   'returned_at', 'expires_at', 'invited_at', 'ended_at', 'added_at', 'changed_at', 'save_times\\[\\]', 'today', 'days\\[\\]',
-  // datasets, hand-outs and tracking (docs/web/api.md, "Datasets, collections, groups and hand-outs")
+  // datasets, hand-outs and tracking (docs/api.md, "Datasets, collections, groups and hand-outs")
   'opened_at', 'assigned_at', 'set_aside_at', 'handed_out_at', 'given_at', 'first_assigned_at', 'last_saved_at', 'updated_at', 'removed_at',
   'first_registered_at', 'last_registered_at'].join('|');
 export const ALLOWED = [
@@ -432,7 +432,7 @@ async function script(call) {
   await call('training (new)', (s) => s.b.training());
   await call('training stage (skip the assessment)', (s) => s.b.trainingStage({ stage: 'assessment', action: 'skip' }));
   await call('training stage (no such stage)', (s) => s.b.trainingStage({ stage: 'lunch', action: 'skip' }));
-  // the five-stage path: the tour first, then the snippets (docs/web/api.md, "Training stages")
+  // the five-stage path: the tour first, then the snippets (docs/api.md, "Training stages")
   await call('training stage (skip a stage not open yet)', (s) => s.b.trainingStage({ stage: 'guided', action: 'skip' }));
   await call('training stage (done of a stage that saves)', (s) => s.b.trainingStage({ stage: 'practice', action: 'done' }));
   await call('training stage (finish the tour)', (s) => s.b.trainingStage({ stage: 'tour', action: 'done' }));
@@ -565,7 +565,7 @@ async function script(call) {
   await call('logout', (s) => s.b.logout());
 
   // ------------------------------------------------------------ datasets, collections, groups and hand-outs (ADMIN)
-  // Every read and write of docs/web/api.md "Datasets, collections, groups and hand-outs" that the sandbox answers
+  // Every read and write of docs/api.md "Datasets, collections, groups and hand-outs" that the sandbox answers
   // (js/api/demo_library.js), with their refusals. A hand-out shared out k per recording uses Tasks, which are
   // server-only (demo_admin.js SERVER_ONLY), so the sandbox answers it with needs_server and it is checked in
   // tests/test_web_datasets.py and ui_library_demo.test.mjs rather than here.

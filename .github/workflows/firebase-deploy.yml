@@ -4,7 +4,7 @@
 # Run it from the Actions tab ("Firebase deploy", Run workflow). It needs the repository secret
 # FIREBASE_SERVICE_ACCOUNT (the JSON key of a Google Cloud service account allowed to deploy) and
 # the Firebase project ID, given when running it or as the repository variable FIREBASE_PROJECT.
-# Without the secret it only explains what to set up. docs/web/firebase.md describes every step,
+# Without the secret it only explains what to set up. docs/firebase.md describes every step,
 # including the first deployment from your own computer.
 name: Firebase deploy
 
@@ -56,9 +56,9 @@ jobs:
             echo "* the Firebase project ID, typed when you run the workflow or kept in the repository variable"
             echo "  **FIREBASE_PROJECT**."
             echo
-            echo "docs/web/firebase.md explains how to create both, step by step."
+            echo "docs/firebase.md explains how to create both, step by step."
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "::notice title=Firebase deploy::Nothing deployed: set the FIREBASE_SERVICE_ACCOUNT secret and the project ID (see docs/web/firebase.md)."
+          echo "::notice title=Firebase deploy::Nothing deployed: set the FIREBASE_SERVICE_ACCOUNT secret and the project ID (see docs/firebase.md)."
 
       - uses: actions/checkout@v7
         if: env.FIREBASE_SERVICE_ACCOUNT != '' && env.PROJECT != ''

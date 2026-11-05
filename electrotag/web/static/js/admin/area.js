@@ -1,4 +1,4 @@
-// The admin area: where lead researchers run the study (docs/web/admin.md). A header, the menu of
+// The admin area: where lead researchers run the study (docs/admin_area.md). A header, the menu of
 // sections in four groups (Study, People, Data, Settings) and the section shown. Each group folds
 // away with its heading, remembered in this browser for each administrator. Each section is
 // addressed by a plain hash (#admin, #admin-recordings, ...), so the browser's Back and Forward
@@ -6,7 +6,7 @@
 // and kept, so work in progress (adding recordings, an analysis) carries on while another section
 // is shown. Find, in the header, jumps to a person or a recording.
 //
-// Every operation goes through backend.admin(op, body) (docs/web/api.md, "Administration").
+// Every operation goes through backend.admin(op, body) (docs/api.md, "Administration").
 // Answers to reads are shared between the parts of a section until the next change or the next
 // visit to a section, so a slow study is asked once.
 

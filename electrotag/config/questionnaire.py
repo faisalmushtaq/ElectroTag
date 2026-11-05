@@ -1,6 +1,6 @@
 """The sign-up questionnaire's definition: the default questions, and the checks of a study's own.
 
-A study's settings block ``questionnaire`` (docs/administrator_guide.md, "The sign-up questionnaire")
+A study's settings block ``questionnaire`` (docs/study_settings.md, "The sign-up questionnaire")
 holds whether annotators and experts are asked at all (``enabled``), whether the demographic
 questions are included (``demographics``, which a study switches on only when its ethics approval
 covers them), the questions (``questions``: null for the default questionnaire below, or the study's

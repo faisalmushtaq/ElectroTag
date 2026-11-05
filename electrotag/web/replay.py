@@ -1,4 +1,4 @@
-"""Replays of annotation sessions from the interaction log (docs/web/api.md, "Corrections and replay").
+"""Replays of annotation sessions from the interaction log (docs/api.md, "Corrections and replay").
 
 The interaction log already records everything a session needs to be played back: the view, the
 pointer, the keys, every change of an annotation with its full summary, the dialogs, pauses and how

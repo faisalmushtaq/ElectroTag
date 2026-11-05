@@ -1,4 +1,4 @@
-// Correct the marks (docs/web/using.md, "Learn with the experts"): the annotation view opens with a
+// Correct the marks (docs/using.md, "Learn with the experts"): the annotation view opens with a
 // copy of the experts' marks in which some are deliberately wrong or missing, and a panel that says so.
 //
 // For a trainee, this is a guided recording whose guidance is "correct": the guided coach hands over to
@@ -12,7 +12,7 @@
 // dashed outlines. An expert making their own version with mistakes (mode "author", from Make my own
 // version with mistakes) starts from the experts' marks or from nothing, puts the mistakes in, and Save
 // as the exercise sends the marks to set_planted_from (Source "marks"); the study keeps the version with
-// the reference set under a _flawed name, which no analysis reads (docs/web/admin.md, "Correct the marks").
+// the reference set under a _flawed name, which no analysis reads (docs/admin_area.md, "Correct the marks").
 //
 // Log events: planted_opened {mode, n_planted, restored}, planted_checked {fixed, n_errors, new_mistakes},
 // planted_reference_layer {shown}, planted_item_jumped {kind, fixed}, planted_restarted, planted_result_shown

@@ -1,4 +1,4 @@
-// The sign-up questionnaire in the sandbox (docs/web/api.md, "The sign-up questionnaire"), as
+// The sign-up questionnaire in the sandbox (docs/api.md, "The sign-up questionnaire"), as
 // electrotag/web/questionnaire.py keeps it on a study server: GET and POST /me/questionnaire, the gate on
 // work until it is answered, the field `questionnaire` of GET /me, and the admin area's
 // questionnaire_get, questionnaire_summary and contacts_download. The answers and the contact details are

@@ -1,7 +1,7 @@
 # The ElectroTag server
 
-Real studies of ElectroTag run on Firebase (docs/web/firebase.md). The ElectroTag
-server is the other back end: the same operations (docs/web/api.md) over HTTP, from a study folder on
+Real studies of ElectroTag run on Firebase (docs/firebase.md). The ElectroTag
+server is the other back end: the same operations (docs/api.md) over HTTP, from a study folder on
 a computer you control. It is how the whole system is tried on one computer (`electrotag web
 demo`), how the application is tested, and it suits a study that prefers its own machine,
 for example a university server.
@@ -21,7 +21,7 @@ for example a university server.
 
 ElectroTag's Python package is installed from its repository (it is not on PyPI). In a terminal
 in a copy of the repository, with a virtual environment made and activated as the
-[README](../../README.md#installing-the-python-package) shows (on Windows `.venv\Scripts\activate`,
+[README](../README.md#installing-the-python-package) shows (on Windows `.venv\Scripts\activate`,
 on macOS and Linux `source .venv/bin/activate`):
 
 ```
@@ -72,7 +72,7 @@ Three commands set the study up; everything after that is done in the browser.
    your institution's HTTPS (a reverse proxy such as nginx); browsers must reach it over HTTPS
    unless it is on the same computer.
 
-Then sign in with that account and open the **admin area** (docs/web/admin.md). There you add the
+Then sign in with that account and open the **admin area** (docs/admin_area.md). There you add the
 recordings (choose the dataset folder on your computer: the browser reads each recording, runs
 ElectroTag's checks and sends only what the study needs to recognise and show it, never the EEG),
 make the annotators' accounts (each gets in one of three ways: a temporary password that the study

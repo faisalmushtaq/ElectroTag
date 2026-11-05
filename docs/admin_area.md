@@ -68,7 +68,7 @@ hand-out or an assignment, are listed straight away. The first time you have rec
 the sign-up questionnaire opens before them (see "Questionnaire" below). A person can hold several roles: annotator, expert and
 administrator. Experts open the expert area from the Expert work card on their home page or the
 Expert work button in the header (see "The expert area" below); an administrator may use it too. The study's administrator accounts are made when the study is
-set up (docs/web/firebase.md and docs/web/server.md), and from then on you can make more in the
+set up (docs/firebase.md and docs/server.md), and from then on you can make more in the
 admin area itself.
 
 The admin area has twelve sections, listed on the left (at the top on a narrow screen) in four groups:
@@ -77,7 +77,7 @@ Training), Data (Recordings and Problems) and Settings (Study settings). Under S
 (marked with an arrow) opens the adjudication queue in the expert area, which administrators may
 use too (see "Adjudication" below). Help, beside each section's
 heading, opens that section of this guide in a new tab, and the analyses' settings link to the
-parts of the [reliability guide](../reliability_guide.md) that explain them; the guides are read on
+parts of the [reliability guide](reliability_guide.md) that explain them; the guides are read on
 GitHub, wherever the application is served from. The first press of Tab offers Skip to the section,
 which goes past the header and the menu to the section's heading. Each group folds away under its heading
 and opens again with the same heading; your browser remembers which groups you folded, for each
@@ -838,7 +838,7 @@ Include names and contact details, as `contacts.csv` at its top; the page then w
 identifies people, and the download is noted in the audit log. When the results are too large to send through the page, the
 page gives the command to use instead: on a study server the results are already in the study
 folder's `Annotated_Events`, and on Firebase `electrotag-web export` writes them into the same
-folders (docs/web/firebase.md).
+folders (docs/firebase.md).
 
 Annotators can download their own saved files of each recording themselves, from the Saved dialog
 after Save and Finish and from their History (see "Your own files" in the
@@ -967,7 +967,7 @@ one key or tap, and Save and Finish lists the marks left unrated, with Rate them
 question never blocks their work. The setting is recorded in each saved result, and the analyses
 report each annotator's ratings, agreement for all marks and again without the marks rated 1 or 2,
 and whether marks rated higher are found more often by other annotators (see the
-[design decisions](../design_decisions.md), "Confidence and notes").
+[design decisions](design_decisions.md), "Confidence and notes").
 
 **Annotation** also chooses whether annotators may revise recordings they have
 finished (on by default; `annotation.allow_revisions`). A revision is saved as a new attempt of the
@@ -1347,7 +1347,7 @@ experts' marks** to compare, and press **Save as the exercise**: the study finds
 comparing your version with the reference and says how many it found. **Use an annotation file with
 deliberate mistakes** does the same with an `_annotations.json` made outside this study. Either way
 the study keeps the version with the reference set as a version with deliberate mistakes, named
-`…_annotator-<ID>_flawed_annotations.json` ([file formats](../file_formats.md)), and no analysis reads
+`…_annotator-<ID>_flawed_annotations.json` ([file formats](file_formats.md)), and no analysis reads
 a file named so, so the same expert's correct annotations of other recordings count in the analyses
 as usual. Work saved in the study is never used as a version with mistakes: a file of it is refused,
 since it counts in the analyses. **Try it** opens the recording from this computer with the copy, as a
@@ -1373,6 +1373,6 @@ asked a second time when reading a list fails, and for anything else, wait for t
 trying again.
 
 If the page says that the study does not offer a part of the admin area yet, its server or its
-Firebase functions are older than the application: update them as docs/web/server.md and
-docs/web/firebase.md describe. If your sign-in ends while you work, sign in again: the admin area
+Firebase functions are older than the application: update them as docs/server.md and
+docs/firebase.md describe. If your sign-in ends while you work, sign in again: the admin area
 opens at the section you were in.

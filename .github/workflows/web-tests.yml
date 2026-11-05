@@ -2,7 +2,7 @@
 # against the demonstration and the real study server (Playwright), the same in WebKit, the engine
 # of Safari on iPads and Macs (with the iPad's touch, layouts and file pickers), and a study on Firebase on the
 # Firebase Emulator Suite (the functions' tests and the application signing in, annotating,
-# training and exporting). See docs/web/server.md and docs/web/firebase.md.
+# training and exporting). See docs/server.md and docs/firebase.md.
 #
 # Runs when the browser version, its server or these tests change. Nothing reaches a real Firebase
 # project: the emulators' project ID starts with "demo-".

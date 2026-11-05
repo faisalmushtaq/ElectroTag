@@ -1,4 +1,4 @@
-"""Problem reports and reviews of saved work (docs/web/api.md, "Problem reports" and "Reviews").
+"""Problem reports and reviews of saved work (docs/api.md, "Problem reports" and "Reviews").
 
 **Problem reports.** An annotator who cannot judge a recording (a file that will not open, the wrong
 recording, flat or missing channels, one too noisy or too short) reports it with ``POST /problems``

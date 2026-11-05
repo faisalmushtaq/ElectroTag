@@ -10,7 +10,7 @@ much of each recording they looked at, how often they undo, and how training
 changes this.
 
 This document describes what is recorded, the file format, and the tables and
-report that `electrotag activity` and the admin area ([web/admin.md](web/admin.md))
+report that `electrotag activity` and the admin area ([admin_area.md](admin_area.md))
 make from the logs. The application records the logs and sends them to the
 study in batches.
 
@@ -52,7 +52,7 @@ and an expert's sessions may be shown to trainees when the expert agrees. It
 never records what you type, such as notes or passwords. Ask the study team if
 you have questions." Annotators must
 be told about the logs and agree to them under the study's ethics approval; the
-administrator guide has a paragraph on this.
+study settings guide has a paragraph on this.
 
 ## What is never recorded
 
@@ -191,7 +191,7 @@ type it opened at, or null); `guide_search` (`n_chars`, the length of what was
 typed, never the words, and `n_matches`); `guide_printed`.
 
 **Revisions.** An annotator may open a recording they finished and
-submit it again as a new version (docs/web/using.md, "History and revisions").
+submit it again as a new version (docs/using.md, "History and revisions").
 `revision_started` (`session_id`, `recording_id`, `version`, the version a
 submission will save, `revises`, the version opened, `revises_saved_at`,
 `annotations_loaded`, `resumed` when a draft of the revision was continued)
@@ -205,13 +205,13 @@ answer never arrived: the first had most likely been saved. The time spent revis
 by the session clock as for any recording.
 
 **Problem reports and feedback.** An annotator may report a problem
-with a recording (docs/web/using.md, "When a recording cannot be annotated"):
+with a recording (docs/using.md, "When a recording cannot be annotated"):
 `problem_reported` (`recording_id`, `mode`, `reason`, `outcome`, `noted` or
 `unusable`, `where`, `home` or `annotate`, `already`, true when the study had
 kept that report already, and `note_length`, the number of characters of the
 note, never its text) and `problem_report_failed` (`recording_id`, `reason`,
 `outcome`, `code`). A recording set aside closes with its draft kept. The feedback
-on reviewed work (docs/web/using.md, "Reviews of your work") gives
+on reviewed work (docs/using.md, "Reviews of your work") gives
 `feedback_shown` (`recording_id`, `reviews`, `items`, `kind`, `feedback` when read
 only or `annotate` beside a revision), `feedback_item_jumped` (`status`,
 `onset_s`, `item`) and `feedback_closed` (`to`, `home` or `revision`). An
@@ -221,7 +221,7 @@ the interaction log: the reviews given are in the study's review records
 each annotator received and read.
 
 **Corrections and replays.** An expert's correction of someone's saved work
-(docs/web/admin.md, "Correcting saved work") is logged in the expert's own log, in place of
+(docs/admin_area.md, "Correcting saved work") is logged in the expert's own log, in place of
 `recording_opened`: `correction_started` (`annotator_id`, `recording_id`, `attempt`, the version
 corrected, `n_annotations`, `session_id`, `resumed` when work kept in the browser was continued),
 followed by an `annotations_snapshot` of the marks it opens with; the changes then log as any
@@ -230,14 +230,14 @@ the note's text, and `via`) records each reason given; `correction_submitted` (`
 `changed`, `elapsed_s`, `already`, true when the study had kept that correction already,
 `correction_id`, `n_corrections_of_version`) and `correction_left` (`n_changes`, `kept`, whether the
 work stays in the browser) end it, and `state` with `original_layer` records the original shown or
-hidden. The annotator's view of a correction (docs/web/using.md, "Corrections of your work") gives
+hidden. The annotator's view of a correction (docs/using.md, "Corrections of your work") gives
 `correction_feedback_shown` (`correction_id`, `recording_id`, `attempt`, `n_changes`, and
 `standing`: `single`, or `adjudicated` once several experts' corrections were settled) and
 `correction_feedback_item_jumped` (`correction_id`, `change`, `reason`, `item`); opening Where the
 experts disagreed logs `correction_outcome_opened` (`places`, and `via` from the history). The ? key
 of the correction view, the annotator's view of a correction and the replay logs `key_sheet_shown`
 (`view`: `correction`, `correction_feedback` or `replay`). A replay of a
-session (docs/web/admin.md, "Replaying a session") is logged in the watcher's log as
+session (docs/admin_area.md, "Replaying a session") is logged in the watcher's log as
 `replay_opened` (`annotator_id`, `recording_id`, `n_segments`, `n_events`, `attempt`),
 `replay_control` (`action`: `play`, `pause`, `speed`, `skip_pauses`, `follow`, `seek`, `start`,
 `next_event`, `prev_event`, `next_change`, `prev_change`, `scrub`, `scrub_key` or `end`, with `speed`,
@@ -247,7 +247,7 @@ replayed annotations are only shown, never logged as the watcher's. The applicat
 Bring it back, the work set aside in a tab returning, as `annotations_reset` (`added`, `removed`,
 `changed`).
 
-The view of everyone's marks on one recording (docs/web/admin.md, "Everyone's marks on one
+The view of everyone's marks on one recording (docs/admin_area.md, "Everyone's marks on one
 recording") is logged in the viewer's log as `overlay_opened` (`recording_id`, `people`, `lanes`,
 `anonymous`, `load_ms`), `overlay_lane` (`action`: `add` or `remove`, `annotator_id`, `lanes`, and
 `via`: `list`, `band` or `button`), `overlay_filter` (`filter`: `label`, `role`, `from`, `to` or
@@ -257,7 +257,7 @@ recording") is logged in the viewer's log as `overlay_opened` (`recording_id`, `
 logged, and it logs no `recording_opened`, so it never counts as an annotation session.
 
 **Milestones and goals.** When the game elements are on
-(docs/web/admin.md, "Study settings"), `milestone_reached` (`milestone`, such
+(docs/admin_area.md, "Study settings"), `milestone_reached` (`milestone`, such
 as `recordings-10`, `streak-3`, `thorough-5` or `team-50`, its `kind`, `name`
 and `target`) records each milestone that a Save and Finish reached, once;
 `goal_set` (`goal_per_week`, or null when the goal was removed) and
@@ -441,7 +441,7 @@ Shift and a digit is a `shortcut` (`Reason <code>`). `adjudication_skipped`
 `n_conflicts`, `by_choice`) and `adjudication_closed` (`unit_id`, `decided`,
 `n_conflicts`, `reason`, and `unsaved`, the choices left unsaved) follow the
 rest. In the queue, `adjudication_queue_searched` (`shown`, `of`: never what
-was typed) and `adjudication_reference_made` (`use`). Correct the marks (docs/web/admin.md) logs `planted_opened` (`mode`: `trainee` on
+was typed) and `adjudication_reference_made` (`use`). Correct the marks (docs/admin_area.md) logs `planted_opened` (`mode`: `trainee` on
 the training path, or `try` for an expert trying an exercise; `n_planted`; `restored` when a draft
 was continued), with an `annotations_snapshot` of the copy it opens with, then
 `planted_checked` (`fixed`, `n_errors`, `new_mistakes`: an expert's Check my corrections),

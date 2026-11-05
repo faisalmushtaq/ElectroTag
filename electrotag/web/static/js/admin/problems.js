@@ -1,4 +1,4 @@
-// Problems: the problems annotators reported with recordings (docs/web/admin.md, "Problems"). A
+// Problems: the problems annotators reported with recordings (docs/admin_area.md, "Problems"). A
 // table with filters (open or resolved, reason, person, recording) and a CSV download, and for each
 // report: resolve it with a note, return the recording to the annotator's to-do list (which undoes
 // "cannot be annotated"), or give it to someone else. Reports are never deleted.

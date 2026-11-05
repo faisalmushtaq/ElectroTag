@@ -1,4 +1,4 @@
-// The Backend for a study on Firebase (docs/web/api.md, "The same operations on Firebase").
+// The Backend for a study on Firebase (docs/api.md, "The same operations on Firebase").
 //
 // Signing in uses Firebase Authentication (email and password) in the browser; every other
 // operation is a callable Cloud Function named et_<operation> in the study's region, taking
@@ -13,7 +13,7 @@ import { ADMIN_OP, ApiError, EXPERT_OP, isExpertRead } from './http.js';
 
 export { isExpertRead };
 
-/** The admin operations that only read (docs/web/api.md, "Administration"), which may be retried. */
+/** The admin operations that only read (docs/api.md, "Administration"), which may be retried. */
 const ADMIN_READS = new Set(['overview', 'progress', 'stats', 'audit', 'visits', 'sets_list', 'quiz_items', 'set_guided_notes', 'questionnaire_summary']);
 
 export function isAdminRead(op) {
@@ -68,7 +68,7 @@ const STATUS = {
 /** What the person reads when a function call ends without an answer from ElectroTag's code. */
 export const NO_ANSWER_MESSAGE = 'The study\'s server turned the request away before ElectroTag could answer it. '
   + 'If this keeps happening, tell your study team: some of the study\'s functions may not be open to the '
-  + 'application (docs/web/firebase.md, step 8, explains the check and the fix).';
+  + 'application (docs/firebase.md, step 8, explains the check and the fix).';
 
 /**
  * The SDK's message without the HTTP status that Firebase's library (version 12 and later) adds in

@@ -8,7 +8,7 @@ Every command works on a study in one of two places:
   ``GOOGLE_APPLICATION_CREDENTIALS``.
 
 Run ``electrotag-web --help`` for the commands and ``electrotag-web <command> --help`` for their
-options. docs/web/firebase.md and docs/web/server.md explain them step by step.
+options. docs/firebase.md and docs/server.md explain them step by step.
 """
 
 from __future__ import annotations
@@ -447,7 +447,7 @@ def cmd_config(a: argparse.Namespace) -> int:
             web[key] = value
     if not web.get("apiKey"):
         raise CommandError("Give the web app's apiKey (--api-key) or the SDK configuration copied from the Firebase "
-                           "console (--web-config FILE); see docs/web/firebase.md")
+                           "console (--web-config FILE); see docs/firebase.md")
     web.setdefault("projectId", a.firebase_project)
     web.setdefault("authDomain", f"{a.firebase_project}.firebaseapp.com")
     config = {"firebase": web, "study": a.study, "functions_region": REGION}
