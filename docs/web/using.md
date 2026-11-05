@@ -509,7 +509,10 @@ When you can see an artifact but cannot tell what kind it is, mark it Uncertain:
 as Data-artifact, the HED-SCORE term for an artifact whose type is unknown, and it is treated as
 needing review: the Annotations list says "needs review" under it, its label on the EEG reads
 Uncertain, and the study's experts find it listed in their Saved work and adjudication queue so
-that they can look at it again. When you know the family of an artifact but not its exact type,
+that they can look at it again. Save and Finish reminds you of the marks still Uncertain before it
+saves, listing their times: Go to the first selects the first of them so that you can give it a type
+if you can tell it now (press a number, or double-click it to choose any type), Save anyway saves them
+as they are for the experts to review, and Keep annotating goes back to the recording. When you know the family of an artifact but not its exact type,
 choose the group term instead, such as Eye-artifact or Electrical-artifact, from the menu of all
 types, where group terms are in italics. Uncertain always has the key 0; it is never among the
 numbered types.
