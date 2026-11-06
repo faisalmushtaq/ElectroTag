@@ -169,15 +169,15 @@ export const METRICS = Object.freeze({
     description: "The proportion of the annotator's annotations that match an artifact in the reference.",
   },
   time_kappa: {
-    label: "Cohen's kappa over time (exact)", better: 'higher', range: [-1, 1],
-    description: 'Agreement, moment by moment, on whether an artifact is present, corrected for the agreement expected by chance: 1 is perfect agreement, 0 is no better than chance.',
+    label: "Cohen's kappa, sample by sample (exact)", better: 'higher', range: [-1, 1],
+    description: 'Agreement on whether an artifact is present, judged at every sample of the recording and corrected for the agreement expected by chance: 1 is perfect agreement, 0 is no better than chance.',
   },
   time_positive_agreement: {
-    label: 'Positive agreement over time (exact)', better: 'higher', range: [0, 1],
+    label: 'Positive agreement, sample by sample (exact)', better: 'higher', range: [0, 1],
     description: 'Agreement on the time marked as artifact: twice the time both marked, divided by the time each marked. Clean time that both left unmarked does not count.',
   },
   channel_positive_agreement: {
-    label: 'Positive agreement over time and channels', better: 'higher', range: [0, 1],
+    label: 'Positive agreement, sample by sample in each channel', better: 'higher', range: [0, 1],
     description: 'Positive agreement counted separately for every channel, so choosing the wrong channels lowers it.',
   },
   mean_iou: {

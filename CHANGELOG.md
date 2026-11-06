@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The competency measures once called "Cohen's kappa over time" and "positive agreement over time" are
+now named "Cohen's kappa, sample by sample" and "positive agreement, sample by sample", which says what
+they are: agreement judged at every sample of the recording, rather than a trend. The measures, and the
+names `time_kappa`, `time_positive_agreement` and `channel_positive_agreement` used in saved criteria,
+are unchanged (docs/study_settings.md, "Competency criteria").
+
 The target of ratings of a dataset or collection no longer stops at 20: it is typed in as any whole
 number from 1 upwards, and a target of 100 or more is asked about before it is saved, in case of a slip
 (docs/admin_area.md, "The target of ratings"). A task, a hand-out shared out k per recording and the

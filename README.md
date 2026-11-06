@@ -250,7 +250,7 @@ electrotag agreement path/to/Annotated_Events
 This produces `agreement_report.html` and tab-separated tables, in a new
 folder `agreement_<date-time>` (choose another with `--out`). The report opens
 with the key results for each pair of annotators. Agreement is reported by
-artifact category, by annotator pair and over time at several resolutions, for
+artifact category, by annotator pair, sample by sample and in bins of several widths, for
 time alone and for time and channel together, and with event matching
 (precision, recall, F1, boundary differences). The admin area runs the same
 analysis on the study's results. The

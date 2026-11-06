@@ -51,8 +51,8 @@ def default_out_dir(now: datetime | None = None) -> Path:
 def build_parser(prog: str = "electrotag-agreement") -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog=prog,
-        description="Inter-rater agreement of ElectroTag annotations: by artifact category, over time, by channel "
-        "and by matched events. Writes tab-separated tables and an HTML report.",
+        description="Inter-rater agreement of ElectroTag annotations: by artifact category, along the recording, "
+        "by channel and by matched events. Writes tab-separated tables and an HTML report.",
         epilog=EPILOG.replace("electrotag-agreement ", f"{prog} "),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )

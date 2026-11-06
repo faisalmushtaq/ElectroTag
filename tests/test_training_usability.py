@@ -86,7 +86,7 @@ def test_report_gives_each_assessment_references_provenance_and_stays_reproducib
     assert "Glossary" in page and METRICS["time_kappa"]["description"] in page
     assert "match_criterion" not in page and "reference_events" not in page  # no raw names
     assert "at least 20% (intersection over union)" in page
-    assert "Kappa over time" in page and "<td class='cat'>Eye-blink-artifact</td>" in page
+    assert "Kappa (samples)" in page and "<td class='cat'>Eye-blink-artifact</td>" in page
 
 
 def test_summary_and_matching_texts():

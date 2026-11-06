@@ -708,8 +708,8 @@ enrolled in, or have saved work in, cannot be deleted.
 ### Competency criteria
 
 The criteria decide whether a trainee's assessment meets the standard. Each measure (event F1,
-sensitivity, precision, kappa and positive agreement over time, positive agreement over time and
-channels, the mean overlap of matched events in time and in channels, the share given the same
+sensitivity, precision, kappa and positive agreement sample by sample, positive agreement sample by
+sample in each channel, the mean overlap of matched events in time and in channels, the share given the same
 label, and extra events per minute) can be ticked with a threshold, overall or in every assessed
 category. A category is assessed only when the reference has at least the given number of events of
 it. Leave every measure unticked to report results without a pass or fail decision. ElectroTag

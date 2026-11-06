@@ -204,7 +204,7 @@ annotators: it can be low although agreement on the few positive intervals is
 good (Feinstein and Cicchetti, 1990). The report therefore leads with positive
 agreement, shows kappa with the prevalence and bias indices, and adds the
 event-based measures below. Its *Key results* box gives, for each pair of
-annotators, positive agreement and kappa for any artifact over time and the
+annotators, positive agreement and kappa for any artifact sample by sample and the
 event F1 over all categories, as a starting point for the detailed sections.
 
 **Rare categories.** A category annotated only once or twice gives agreement
