@@ -69,7 +69,7 @@ STATS_WORK = ("study", "all")
 READ_ONLY = ("overview", "settings_get", "users_list", "assignments_list", "recordings_list", "sets_list",
              "set_guided_notes", "quiz_items", "progress", "stats", "agreement", "activity", "competency",
              "results_zip", "audit", "visits", "problems_list", "reviews_list", "saved_attempt_get",
-             "tasks_list", "tasks_preview_get", "quality_list",
+             "tasks_list", "tasks_preview_get", "quality_list", "recording_warnings_list",
              "set_planted_get")
 OPERATIONS = READ_ONLY + (
     "settings_update", "user_add", "user_update", "user_reset_password", "user_invite", "user_invite_revoke",
@@ -194,6 +194,16 @@ def _rid(value: Any, what: str = "recording_id") -> str:
     if not isinstance(value, str) or not value or len(value) > 512:
         raise _bad(f"{what} is missing")
     return value
+
+
+def warnings_dismissed(m: dict[str, Any]) -> dict[str, str] | None:
+    """Who dismissed a recording's warnings from Problems, and when (``{"by", "at"}``), or None. A dismissal holds
+    only for the warnings dismissed: a recording registered again with other warnings is listed again."""
+    d = (m.get("registration") or {}).get("warnings_dismissed")
+    now = list(m.get("warnings") or [])
+    if not now or not isinstance(d, dict) or list(d.get("warnings") or []) != now:
+        return None
+    return {"by": str(d.get("by", "")), "at": str(d.get("at", ""))}
 
 
 def _mode_ctx(body: dict[str, Any]) -> tuple[str, str]:
@@ -496,7 +506,8 @@ class Admin:
                 "registered_by": reg.get("registered_by", ""), "registered_via": reg.get("registered_via", "command"),
                 "notes": reg.get("notes", ""), "retired": bool(reg.get("retired", False)),
                 "dataset_id": (reg.get("dataset_id") or DEFAULT_DATASET_ID) if m["scope"] == SCOPE_STUDY else None,
-                "assigned": assigned.get(key, 0), "done": done.get(key, 0), "warnings": list(m.get("warnings", []))}
+                "assigned": assigned.get(key, 0), "done": done.get(key, 0), "warnings": list(m.get("warnings", [])),
+                "warnings_dismissed": warnings_dismissed(m)}
 
     def set_record(self, rs: ReferenceSet) -> dict[str, Any]:
         from electrotag.training.assessment import CompetencyCriteria
@@ -960,6 +971,8 @@ class Admin:
             m["registration"] = {"registered_at": now_local_iso(), "registered_by": user.annotator_id,
                                  "registered_via": "browser", "notes": old_reg.get("notes", ""),
                                  "retired": bool(old_reg.get("retired", False))}
+            if old_reg.get("warnings_dismissed"):  # kept, and holding only while the warnings are the same
+                m["registration"]["warnings_dismissed"] = old_reg["warnings_dismissed"]
             if scope == SCOPE_STUDY and dataset_id != DEFAULT_DATASET_ID:
                 m["registration"]["dataset_id"] = dataset_id
             self.store.add_manifest(m)
@@ -981,12 +994,22 @@ class Admin:
             raise ApiError(404, "unknown_recording", f"{rid} is not registered in {scope}")
         return scope, rid, m
 
+    def op_recording_warnings_list(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """The recordings with warnings found when they were added (Problems), each saying whether they were
+        dismissed; the ones not dismissed first, then by where they are and their ID."""
+        counts = self._counts()
+        rows = [self.recording_record(m, counts) for m in self.store.manifests() if m.get("warnings")]
+        rows.sort(key=lambda r: (r["warnings_dismissed"] is not None, r["scope"] != SCOPE_STUDY, r["scope"],
+                                 r["recording_id"]))
+        return {"recordings": rows}
+
     def op_recording_update(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         scope, rid, m = self._manifest(body)
         notes = body.get("notes")
         if notes is not None:
             notes = _text(body, "notes", limit=5000)
         retired = _bool(body, "retired")
+        dismissed = _bool(body, "warnings_dismissed")
         reg = dict(m.get("registration") or {"registered_at": m.get("created_at", ""), "registered_by": "",
                                                "registered_via": "command"})
         said = []
@@ -996,10 +1019,19 @@ class Admin:
         if retired is not None and retired != bool(reg.get("retired", False)):
             reg["retired"] = retired
             said.append("retired it (no new assignments)" if retired else "offered it for assignments again")
+        if dismissed is not None and dismissed != (warnings_dismissed(m) is not None) and m.get("warnings"):
+            if dismissed:
+                reg["warnings_dismissed"] = {"by": user.annotator_id, "at": now_local_iso(),
+                                             "warnings": list(m.get("warnings", []))}
+                said.append("dismissed the warnings found when it was added")
+            else:
+                reg.pop("warnings_dismissed", None)
+                said.append("listed the warnings found when it was added under Problems again")
         m = {**m, "registration": reg}
         self.store.add_manifest(m)
         self._audit(user, "recording_update", f"{rid}: " + (", ".join(said) if said else "no change"), scope=scope,
-                    recording_id=rid, notes=notes, retired=retired)
+                    recording_id=rid, notes=notes, retired=retired,
+                    **({"warnings_dismissed": dismissed} if dismissed is not None else {}))
         return {"recording": self.recording_record(m)}
 
     def op_recording_remove(self, user: User, body: dict[str, Any]) -> dict[str, Any]:

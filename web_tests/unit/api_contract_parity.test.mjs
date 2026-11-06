@@ -405,6 +405,11 @@ async function script(call) {
   await call('admin correction_save (a second expert)', (s) => s.b.expert('correction_save', correction(s, { correction_id: hex(0xc2), annotations: [{ ...B1, label: 'EMG-artifact' }],
     changes: [{ annotation_id: B1.annotation_id, reason: 'wrong_type' }], overall_note: '' })));
   await call('admin recording_update', (s) => s.b.admin('recording_update', { scope: 'study', recording_id: r2, notes: 'T7 is noisy' }));
+  // the warnings found when recordings were added (Problems): the list, and a dismissal (a change only where there are warnings)
+  await call('admin recording_warnings_list', (s) => s.b.admin('recording_warnings_list', {}));
+  await call('admin recording_update (warnings dismissed)', (s) => s.b.admin('recording_update', { scope: 'study', recording_id: r2, warnings_dismissed: true }));
+  await call('admin recording_update (warnings listed again)', (s) => s.b.admin('recording_update', { scope: 'study', recording_id: r2, warnings_dismissed: false, notes: 'T7 is noisy' }));
+  await call('admin recording_warnings_list (after)', (s) => s.b.admin('recording_warnings_list', {}));
   await call('admin problem_resolve', (s) => s.b.admin('problem_resolve', { problem_id: hex(0xa1), note: 'Known; carry on' }));
   await call('admin problem_resolve (again)', (s) => s.b.admin('problem_resolve', { problem_id: hex(0xa1) }));
   await call('admin settings_update', (s) => s.b.admin('settings_update', { settings: { annotation: { min_duration_samples: 2 } } }));

@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Problems, in the admin area, now lists the recordings for which the checks noticed something when they
+were added (an unusual amplitude, events outside the recording, sidecars read with a warning), with what
+was found and when and by whom each was added. An administrator can dismiss a recording from the list
+once it has been looked at, see the dismissed ones again and list one again; a dismissal holds while the
+warnings are the same, and each is in the audit log (`recording_warnings_list`, and `recording_update`
+with `warnings_dismissed`; docs/admin_area.md, "Problems").
+
 The guides are all in `docs/` now: the folder `docs/web/`, kept from when the browser version stood
 beside the desktop application, is gone. The annotators' guide is `docs/using.md`, the guide to the
 admin area `docs/admin_area.md`, and the administrator guide, which explains every setting and choice

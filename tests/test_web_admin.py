@@ -293,6 +293,51 @@ def test_assignments_and_programmes(client: TestClient, admin: Api, recordings: 
 
 
 # ---------------------------------------------------------------------- recordings
+def test_warnings_found_when_recordings_were_added_are_listed_and_can_be_dismissed(admin: Api, tmp_path: Path) -> None:
+    from electrotag.synthetic import write_edf_recording
+
+    folder = tmp_path / "warned"
+    write_edf_recording(folder / "sub-201" / "eeg", "sub-201_task-rest", sfreq=128.0, duration_s=20.0, seed=21)
+    write_edf_recording(folder / "sub-202" / "eeg", "sub-202_task-rest", sfreq=128.0, duration_s=20.0, seed=22)
+    manifests = build_manifests(folder)
+    warned = next(m for m in manifests if "sub-201" in m["recording_id"])
+    plain = next(m for m in manifests if "sub-202" in m["recording_id"])
+    warned["warnings"], plain["warnings"] = ["Amplitude: Fp1 reaches 4 mV"], []
+    admin.admin_ok("recordings_register", {"scope": "study", "manifests": manifests})
+    rid = warned["recording_id"]
+    listed = admin.admin_ok("recording_warnings_list", {})["recordings"]
+    assert [r["recording_id"] for r in listed if r["scope"] == "study" and "sub-20" in r["recording_id"]] == [rid]
+    row = next(r for r in listed if r["recording_id"] == rid)
+    assert row["warnings"] == ["Amplitude: Fp1 reaches 4 mV"] and row["warnings_dismissed"] is None
+    # dismissed: kept in the list, marked, after the ones still to look at; audited
+    rec = admin.admin_ok("recording_update", {"scope": "study", "recording_id": rid, "warnings_dismissed": True})
+    assert rec["recording"]["warnings_dismissed"]["by"] == "ADMIN" and rec["recording"]["warnings_dismissed"]["at"]
+    listed = admin.admin_ok("recording_warnings_list", {})["recordings"]
+    flags = [r["warnings_dismissed"] is not None for r in listed]
+    assert flags == sorted(flags) and next(r for r in listed if r["recording_id"] == rid)["warnings_dismissed"]
+    entry = admin_audit(admin)[0]
+    assert entry["op"] == "recording_update" and "dismissed the warnings" in entry["summary"]
+    assert entry["details"]["warnings_dismissed"] is True
+    # a recording without warnings has nothing to dismiss
+    assert admin.admin_ok("recording_update", {"scope": "study", "recording_id": plain["recording_id"],
+                                               "warnings_dismissed": True})["recording"]["warnings_dismissed"] is None
+    # added again with the same warnings: still dismissed; with others: listed again
+    admin.admin_ok("recordings_register", {"scope": "study", "manifests": [warned], "replace": True})
+    rows = {r["recording_id"]: r for r in admin.admin_ok("recording_warnings_list", {})["recordings"]}
+    assert rows[rid]["warnings_dismissed"] is not None
+    other = copy.deepcopy(warned)
+    other["warnings"] = ["Amplitude: Fp1 reaches 4 mV", "Events: 2 events lie outside the recording"]
+    admin.admin_ok("recordings_register", {"scope": "study", "manifests": [other], "replace": True})
+    rows = {r["recording_id"]: r for r in admin.admin_ok("recording_warnings_list", {})["recordings"]}
+    assert rows[rid]["warnings_dismissed"] is None and len(rows[rid]["warnings"]) == 2
+    # dismissed, then listed again by hand
+    admin.admin_ok("recording_update", {"scope": "study", "recording_id": rid, "warnings_dismissed": True})
+    back = admin.admin_ok("recording_update", {"scope": "study", "recording_id": rid, "warnings_dismissed": False})
+    assert back["recording"]["warnings_dismissed"] is None
+    assert "listed the warnings" in admin_audit(admin)[0]["summary"]
+    assert "recording_warnings_list" in READ_ONLY
+
+
 def test_recordings_registered_from_the_browser(client: TestClient, admin: Api, tmp_path: Path) -> None:
     from electrotag.synthetic import write_edf_recording
 
