@@ -511,6 +511,16 @@ mode (guided, practice or assessment) with the reference set the recordings come
 says how many assignments were new and how many existed already. Annotators see their recordings in
 the order the study's selection setting gives (Study settings).
 
+For the study's own work you may also give a due date. The recordings chosen then go to the people
+chosen as a hand-out of their own, with that due date, so that it works as every other due date
+does (see "Due dates and overdue work" under Hand-outs): work still open after the day is marked
+overdue in the admin area, and the annotator's home page groups the recordings under "Recordings due
+20 November" with a Due card. A recording someone holds already keeps its place in their list and
+takes the due date. The hand-out is listed under Hand-outs by the title annotators see, with "Given in
+Assignments" under it, where the due date can be changed or taken away and the overdue work
+followed, and Withdraw takes back what nobody has started. Without a due date, the recordings are
+assigned as before.
+
 Every assignment lists all of them with the annotator, the recording, the mode, the status and the
 last activity, filtered by person, mode, status or recording. Unassign takes an unfinished
 recording away from someone after you confirm it; when they have started it, the question says that
@@ -549,7 +559,8 @@ already is left out, so a second share-out of the same recordings needs the firs
 Hand out is ready once the preview is shown, and a change to the choices asks for the preview again.
 The hand-out is made once, however often the button is pressed or however late the answer arrives.
 
-**Due dates and overdue work.** A due date is a day. From the day after it, by the study's own date,
+**Due dates and overdue work.** A due date is a day, given here or with recordings assigned in
+Assignments. From the day after it, by the study's own date,
 a person who still has recordings of the hand-out that are neither saved nor set aside is overdue:
 the hand-out's row, its page, the tracking grids and Overview mark it, and the annotator's home page
 shows a Due card with the overdue chip. Due dates never change the order of work, which the study's

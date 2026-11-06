@@ -21,7 +21,7 @@ import {
   skippedReason, targetValue,
 } from './handouts_model.js';
 
-const KIND_WORD = { dataset: 'Dataset', collection: 'Collection' };
+const KIND_WORD = { dataset: 'Dataset', collection: 'Collection', recordings: 'Given in Assignments' };
 
 /** The study's day ("2026-10-30") from this computer's clock, until the study says its own. */
 function localDay() {

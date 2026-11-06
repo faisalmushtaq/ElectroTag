@@ -647,6 +647,9 @@ async function script(call) {
     s.mem.hid2 = r.handout.handout_id;
     return r;
   });
+  // recordings chosen one by one in Assignments, with a due date (a hand-out of kind "recordings")
+  await call('admin handout_create (recordings named twice)', (s) => s.b.admin('handout_create', { request_id: hex(0xe3), target: { kind: 'recordings', recording_ids: [RIDS[0], RIDS[0]] }, people: ['A02'], due_at: '2099-12-01' }));
+  await call('admin handout_create (chosen recordings)', (s) => s.b.admin('handout_create', { request_id: hex(0xe4), target: { kind: 'recordings', recording_ids: [RIDS[1], RIDS[2]] }, people: ['A02'], mode: 'all', due_at: '2099-12-01' }));
   await call('admin handouts_list', (s) => s.b.admin('handouts_list', {}));
   await call('admin handouts_list (overdue)', (s) => s.b.admin('handouts_list', { overdue: true }));
   await call('admin handouts_list (A01, a collection)', (s) => s.b.admin('handouts_list', { annotator_id: 'a01', target: { kind: 'collection', id: s.mem.cid } }));

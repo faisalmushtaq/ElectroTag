@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Assignments now takes a due date for the study's own work. The recordings chosen go to the people chosen as a
+hand-out of their own with that date, so that open work after it is overdue in the admin area and the
+annotator's home page shows the recordings under "Recordings due 20 November", as for a dataset or collection
+handed out; recordings someone holds already take the date too. The hand-out is listed under Hand-outs, where
+the date can be changed (a hand-out target of kind `recordings`; docs/admin_area.md, "Assignments").
+
 Add several, under Annotators, now reads a CSV file saved from a spreadsheet as well as pasted lines, and
 gives roles other than annotator. A first line of column names (ID, Name, Email, Roles) lets a file's columns
 come in any order, quoted cells may hold commas, and files saved with semicolons, in UTF-16 or in an older

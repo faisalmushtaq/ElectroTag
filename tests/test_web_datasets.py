@@ -347,6 +347,37 @@ def test_an_all_hand_out_gives_links_skips_retired_and_is_made_once(app: Any, cl
     assert entry["details"]["added"] == 5 and entry["details"]["mode"] == "all"
 
 
+def test_recordings_chosen_in_assignments_with_a_due_date_are_a_hand_out(app: Any, client: TestClient,
+                                                                         admin: Api) -> None:
+    """Assignments with a due date: a hand-out of the recordings chosen one by one, with its due date and the
+    Due card's overdue marks, and the recordings the person held already take the date too."""
+    extra = copies(app, 3)
+    admin.admin_ok("recording_update", {"recording_id": extra[2], "retired": True})
+    admin.admin_ok("assign", {"annotator_ids": ["A03"], "recording_ids": [extra[0]]})
+    body = {"request_id": rq(31), "target": {"kind": "recordings", "recording_ids": extra},
+            "people": ["A03", "A04"], "mode": "all", "due_at": "2026-11-20"}
+    made = admin.admin_ok("handout_create", body)
+    h = made["handout"]
+    assert (made["added"], made["already_had"]) == (3, 1)
+    assert made["skipped"] == [{"recording_id": extra[2], "reason": "retired"}]
+    assert h["title"] == "Recordings due 20 November" and h["name"] == "3 recordings chosen in Assignments"
+    assert h["target"]["kind"] == "recordings"
+    rec = app.state.store.records("handouts")[0]
+    assert rec["target"] == {"kind": "recordings", "id": "", "recording_ids": extra}
+    items = standard(person(client, "A03"))
+    assert items[extra[0]]["handout"]["due_at"] == "2026-11-20", "held already: it takes the due date"
+    assert items[extra[1]]["handout"]["title"] == "Recordings due 20 November"
+    assert "Handed out 3 recordings chosen in Assignments (to everyone)" in next(
+        e for e in admin_audit(admin) if e["op"] == "handout_create")["summary"]
+    for bad in ({"recording_ids": []}, {"recording_ids": [extra[0], extra[0]]}, {"recording_ids": "all"}):
+        admin.admin_error("handout_create", {**body, "request_id": rq(32), "target": {"kind": "recordings", **bad}},
+                          400, "bad_request")
+    out = admin.admin_ok("handout_withdraw", {"handout_id": h["handout_id"]})
+    assert out["handout"]["state"] == "withdrawn"
+    assert ("A03", extra[0]) in {(a.annotator_id, a.recording_id) for a in app.state.store.assignments()}, \
+        "an assignment made before the hand-out stays"
+
+
 def test_withdrawing_takes_back_only_what_nobody_started(app: Any, client: TestClient, admin: Api,
                                                          recordings: Path) -> None:
     admin.admin_ok("dataset_create", {"request_id": rq(1), "dataset_id": "ds", "name": "DS"})

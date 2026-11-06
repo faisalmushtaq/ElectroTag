@@ -63,10 +63,21 @@ CHANGES_KEPT = 100
 MAX_LINKED = 5000
 MODES = ("all", "k")
 TARGET_KINDS = ("dataset", "collection")
+#: What a hand-out can give: a dataset, a collection, or recordings chosen one by one, as Assignments gives them
+#: with a due date (``{"kind": "recordings", "recording_ids": [...]}``, kept with the hand-out).
+HANDOUT_KINDS = (*TARGET_KINDS, "recordings")
 
 
 def _bad(message: str, code: str = "bad_request") -> ApiError:
     return ApiError(400, code, message)
+
+
+def _kept_target(target: dict[str, Any]) -> dict[str, Any]:
+    """A hand-out's target as its record keeps it: the kind and ID, and the recordings when they were chosen one
+    by one."""
+    if target["kind"] == "recordings":
+        return {"kind": "recordings", "id": "", "recording_ids": list(target["rids"])}
+    return {"kind": target["kind"], "id": target["id"]}
 
 
 def _now() -> str:
@@ -894,8 +905,19 @@ class Datasets:
 
     def target_of(self, target: Any, *, active: bool = True) -> dict[str, Any]:
         """``{"kind", "id", "name", "rids": every recording of it, in order}`` (the dataset's by ID)."""
-        if not isinstance(target, dict) or target.get("kind") not in TARGET_KINDS:
-            raise _bad("target must be {\"kind\": \"dataset\" or \"collection\", \"id\"}")
+        if not isinstance(target, dict) or target.get("kind") not in HANDOUT_KINDS:
+            raise _bad("target must be {\"kind\": \"dataset\" or \"collection\", \"id\"}, or "
+                       "{\"kind\": \"recordings\", \"recording_ids\": [...]}")
+        if target["kind"] == "recordings":
+            ids = target.get("recording_ids")
+            if not isinstance(ids, list) or not ids or not all(isinstance(r, str) and r for r in ids) \
+                    or len(set(ids)) != len(ids):
+                raise _bad("recording_ids must be a list of recording IDs, each once")
+            if len(ids) > MAX_COLLECTION:
+                raise ApiError(413, "too_large", f"At most {MAX_COLLECTION:,} recordings can be given at once")
+            n = len(ids)
+            return {"kind": "recordings", "id": "", "rids": list(ids),
+                    "name": f"{n} recording{'' if n == 1 else 's'} chosen in Assignments"}
         if target["kind"] == "dataset":
             rec = self.need_dataset(target.get("id"), active=active)
             rids = [h["recording_id"] for h in self.heads() if h["dataset_id"] == rec["dataset_id"]]
@@ -1054,7 +1076,7 @@ class Datasets:
         now = _now()
         record: dict[str, Any] = {
             "schema": HANDOUT_SCHEMA, "schema_version": 1, "handout_id": hid, "name": req["name"],
-            "title": req["title"], "target": {"kind": req["target"]["kind"], "id": req["target"]["id"]},
+            "title": req["title"], "target": _kept_target(req["target"]),
             "mode": req["mode"], "k": req["k"], "people": req["people"], "groups": req["groups"],
             "follow_groups": req["follow_groups"], "due_at": req["due_at"], "note": req["note"], "state": "open",
             "handed_out_at": now, "handed_out_by": user.annotator_id, "request_id": request_id,
@@ -1088,7 +1110,9 @@ class Datasets:
                                                  "linked_overflow": record.get("linked_overflow", False)})
         people = [a for a, _v in req["recipients"]]
         how = "to everyone" if req["mode"] == "all" else f"shared out {req['k']} per recording"
-        self._audit(user, "handout_create", f"Handed out {req['target']['kind']} {req['target']['name']} ({how}) to "
+        what = req["target"]["name"] if req["target"]["kind"] == "recordings" else \
+            f"{req['target']['kind']} {req['target']['name']}"
+        self._audit(user, "handout_create", f"Handed out {what} ({how}) to "
                     f"{', '.join(people[:6])}{' …' if len(people) > 6 else ''}: "
                     f"{audit.count(added, 'new assignment')}", handout_id=hid, target=record["target"],
                     mode=req["mode"], k=req["k"], annotator_ids=people, groups=req["groups"], due_at=req["due_at"],
@@ -1427,6 +1451,9 @@ class Datasets:
         """Whether a study manifest is one of a target's recordings, without reading the study's register."""
         if target.get("kind") == "dataset":
             return lambda m: (dataset_of(m) or DEFAULT_DATASET_ID) == target.get("id")
+        if target.get("kind") == "recordings":
+            chosen = set(target.get("recording_ids") or [])
+            return lambda m: m.get("recording_id") in chosen
         rec = self._record("collections", str(target.get("id") or "")) or {}
         ids = set(rec.get("recording_ids", []))
         return lambda m: m.get("recording_id") in ids
