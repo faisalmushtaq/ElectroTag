@@ -495,13 +495,25 @@ kappa).
 | `event_f1` | F1 of matched events (time only) |
 | `event_recall` | Proportion of reference artifacts found |
 | `event_precision` | Proportion of the annotator's artifacts that match the reference |
-| `time_kappa` | Cohen's kappa over time (exact) |
-| `time_positive_agreement` | Positive agreement over time |
-| `channel_positive_agreement` | Positive agreement over time and channels |
+| `time_kappa` | Cohen's kappa, sample by sample (exact) |
+| `time_positive_agreement` | Positive agreement, sample by sample (exact) |
+| `channel_positive_agreement` | Positive agreement, sample by sample in each channel |
 | `mean_iou` | Mean temporal overlap of matched artifacts |
 | `mean_channel_jaccard` | Mean channel overlap of matched artifacts |
 | `label_accuracy` | Proportion of detected artifacts given the reference's label |
 | `false_positives_per_min` | Annotations matching no reference artifact of any category, per minute (lower is better); an artifact found with a different label counts towards `label_accuracy` instead |
+
+The three sample-by-sample measures treat every sample of an assessment
+recording as one judgement, artifact or not, made by both the trainee and the
+reference. The time each marked, the time only one marked and the time neither
+marked are added up over all the trainee's assessment recordings (so a long
+recording weighs more than a short one), and kappa and positive agreement are
+computed from those totals; *exact* means that the times come from the marks
+themselves, without cutting the recording into bins. Kappa can be low when
+artifacts take up little of the recording even though the trainee found them
+well, which is why positive agreement is offered beside it. The
+[reliability guide](reliability_guide.md#1-time-resolved-agreement) gives the
+formulas and these caveats in full.
 
 Each criterion applies **overall** or **in every assessed category**. A
 category is judged only when the reference contains at least

@@ -52,19 +52,19 @@ METRICS: dict[str, dict[str, Any]] = {
         "description": "The proportion of the annotator's annotations that match an artifact in the reference.",
     },
     "time_kappa": {
-        "label": "Cohen's kappa over time (exact)", "short": "Kappa over time", "better": "higher",
+        "label": "Cohen's kappa, sample by sample (exact)", "short": "Kappa (samples)", "better": "higher",
         "range": (-1.0, 1.0),
-        "description": "Agreement, moment by moment, on whether an artifact is present, corrected for the agreement "
-        "expected by chance: 1 is perfect agreement, 0 is no better than chance.",
+        "description": "Agreement on whether an artifact is present, judged at every sample of the recording and "
+        "corrected for the agreement expected by chance: 1 is perfect agreement, 0 is no better than chance.",
     },
     "time_positive_agreement": {
-        "label": "Positive agreement over time (exact)", "short": "Positive agreement", "better": "higher",
+        "label": "Positive agreement, sample by sample (exact)", "short": "Positive agreement", "better": "higher",
         "range": (0.0, 1.0),
         "description": "Agreement on the time marked as artifact: twice the time both marked, divided by the time "
         "each marked. Clean time that both left unmarked does not count.",
     },
     "channel_positive_agreement": {
-        "label": "Positive agreement over time and channels", "short": "Positive agreement (channels)",
+        "label": "Positive agreement, sample by sample in each channel", "short": "Positive agreement (channels)",
         "better": "higher", "range": (0.0, 1.0),
         "description": "Positive agreement counted separately for every channel, so choosing the wrong channels "
         "lowers it.",

@@ -423,7 +423,7 @@ def fig_timeline(group: Any, cats: list[str]) -> str | None:
 
 # ------------------------------------------------------------- key results
 def key_results(result: Any) -> pd.DataFrame:
-    """Per annotator pair: positive agreement and kappa on any artifact over time, and event F1."""
+    """Per annotator pair: positive agreement and kappa on any artifact sample by sample, and event F1."""
     cfg = result.config
     tr = result.tables.get("timeresolved_pairwise", pd.DataFrame())
     ev = result.tables.get("events_summary", pd.DataFrame())
@@ -890,7 +890,7 @@ def build_html_report(result: Any) -> str:
         sel = tr[(tr.recording == POOLED) & (tr.representation == "exact")]
         comp = sel.pivot_table(index="category", columns="channel_mode", values="positive_agreement", aggfunc="mean")
         comp = comp.reindex([c for c in show_cats if c in comp.index]).rename_axis(columns=None)
-        add(_table(comp.reset_index(), caption="Mean positive agreement over time only, and over time and channel "
+        add(_table(comp.reset_index(), caption="Mean positive agreement in time only, and in time and channel "
                    "together (0 to 1). A lower value with channels means the annotators chose different channels."))
 
     # Confusion
