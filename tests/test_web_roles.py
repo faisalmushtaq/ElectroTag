@@ -248,7 +248,7 @@ def test_the_review_training_and_replay_settings_are_checked() -> None:
     assert s.training.skippable == ("tour", "snippets", "guided", "practice") and s.training.gate == "met"
     assert s.replay.enabled and s.replay.trainees_watch_experts
     assert _settings(training={"skippable": ["practice", "tour"]}).training.skippable == ("tour", "practice")
-    for bad in ({"review": {"k_default": 1}}, {"review": {"k_default": 7}}, {"review": {"k_default": 2.5}},
+    for bad in ({"review": {"k_default": 1}}, {"review": {"k_default": 11}}, {"review": {"k_default": 2.5}},
                 {"review": {"reason_required": "sometimes"}}, {"review": {"corrections": "yes"}},
                 {"review": {"matching": {"match_criterion": "nearby"}}}, {"review": {"matching": {"iou_threshold": 1}}},
                 {"review": {"matching": {"overlap": 0.3}}}, {"review": {"matching": {"channel_jaccard": -0.1}}},
