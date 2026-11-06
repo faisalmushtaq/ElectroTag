@@ -22,6 +22,13 @@ ElectroTag server, which keeps the study's settings in
 `electrotag_study.json` just as a dataset folder does. Each command explains
 its options, for example `electrotag admin set-criteria --help`.
 
+Commands are typed in a terminal: Terminal on macOS and Linux, and PowerShell on Windows. Where a
+command differs between the two, this guide gives both versions, one after the other; where only
+one block is shown, it works as it stands in both. The examples use `/data/MyStudy` for the
+folder on macOS and Linux and `C:\data\MyStudy` on Windows. A command written over several lines
+ends each line but the last with `\` in Terminal and with `` ` `` (a backtick) in PowerShell, with
+nothing after it on the line.
+
 <!-- contents: made by scripts/docs_contents.py from the headings; run it after changing them -->
 **Contents**
 
@@ -205,11 +212,22 @@ should see the same filtered signal, so the filters can be fixed with
 `notch_harmonics`). In a folder, `electrotag admin fix-filters` and
 `unlock-filters` write the same settings:
 
+macOS and Linux (Terminal):
+
 ```bash
 electrotag admin fix-filters /data/MyStudy                     # 1 Hz high-pass, 50 Hz notch, FIR
 electrotag admin fix-filters /data/MyStudy --notch 60          # for 60 Hz mains
 electrotag admin fix-filters /data/MyStudy --no-highpass --notch off
 electrotag admin unlock-filters /data/MyStudy
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag admin fix-filters C:\data\MyStudy                     # 1 Hz high-pass, 50 Hz notch, FIR
+electrotag admin fix-filters C:\data\MyStudy --notch 60          # for 60 Hz mains
+electrotag admin fix-filters C:\data\MyStudy --no-highpass --notch off
+electrotag admin unlock-filters C:\data\MyStudy
 ```
 
 Annotators then see the filters in the viewing options but cannot change
@@ -326,8 +344,17 @@ into the folder's study file, where `electrotag admin show` lists it; assign
 those recordings to each annotator in the admin area or with
 `electrotag web assign`.
 
+macOS and Linux (Terminal):
+
 ```bash
 electrotag admin allocate /data/MyStudy --annotators A01 A02 A03 A04 \
+    --raters-per-recording 2 --seed 7
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag admin allocate C:\data\MyStudy --annotators A01 A02 A03 A04 `
     --raters-per-recording 2 --seed 7
 ```
 
@@ -465,10 +492,21 @@ in the study. In a folder, `electrotag admin` does the same from files
 then stores the folder's reference sets with the study, with their experts'
 annotations and without their recordings:
 
+macOS and Linux (Terminal):
+
 ```bash
 electrotag admin create-reference-set /data/MyStudy pilot --name "Pilot set" \
     --method consensus --experts E1 E2 E3
 electrotag admin build-consensus /data/MyStudy pilot E1.json E2.json E3.json \
+    --use assessment --disagreements dis.tsv
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag admin create-reference-set C:\data\MyStudy pilot --name "Pilot set" `
+    --method consensus --experts E1 E2 E3
+electrotag admin build-consensus C:\data\MyStudy pilot E1.json E2.json E3.json `
     --use assessment --disagreements dis.tsv
 ```
 
@@ -528,9 +566,19 @@ not be compared with its reference (for instance because the annotator's file
 refers to a different version of the recording); the report lists the
 reasons.
 
+macOS and Linux (Terminal):
+
 ```bash
 electrotag admin set-criteria /data/MyStudy pilot \
     --criterion event_f1:0.8 --criterion event_recall:0.7:each_category \
+    --criterion label_accuracy:0.85 --min-reference-events 3
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag admin set-criteria C:\data\MyStudy pilot `
+    --criterion event_f1:0.8 --criterion event_recall:0.7:each_category `
     --criterion label_accuracy:0.85 --min-reference-events 3
 ```
 
@@ -699,9 +747,18 @@ declared when the set was created is shown separately) and the checksum of
 every input file. It is in the admin area, in the exported results
 (`training/<set>/reports/`), and can be made again from a results folder:
 
+macOS and Linux (Terminal):
+
 ```bash
 electrotag admin progress /data/MyStudy pilot --annotators A03 A04
 electrotag admin report /data/MyStudy pilot A04
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag admin progress C:\data\MyStudy pilot --annotators A03 A04
+electrotag admin report C:\data\MyStudy pilot A04
 ```
 
 Each competency report carries a `results_sha256` digest of its contents.
@@ -720,9 +777,19 @@ other answers also accepted (for example the group term Eye-artifact for an
 eye blink) and an explanation, shown after each answer when the quiz is used
 for practice. Items are added in the admin area, or in a folder with:
 
+macOS and Linux (Terminal):
+
 ```bash
 electrotag admin add-quiz-item /data/MyStudy pilot --item-id q01 \
     --recording sub-002/eeg/sub-002_task-rest_eeg.vhdr --start 9.2 --end 10.8 \
+    --label EMG-artifact --explanation "High-frequency activity over temporal channels"
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag admin add-quiz-item C:\data\MyStudy pilot --item-id q01 `
+    --recording sub-002/eeg/sub-002_task-rest_eeg.vhdr --start 9.2 --end 10.8 `
     --label EMG-artifact --explanation "High-frequency activity over temporal channels"
 ```
 

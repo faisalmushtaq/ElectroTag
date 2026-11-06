@@ -14,6 +14,10 @@
 
 ## Running the tests
 
+Commands are typed in a terminal: Terminal on macOS and Linux, and PowerShell on Windows. Where a
+command differs between the two, this guide gives both versions, one after the other; where only
+one block is shown, it works as it stands in both.
+
 In an active virtual environment (the [README](../README.md) shows how to make
 one), from the repository's folder:
 
@@ -33,6 +37,8 @@ below).
 The browser application has tests of its own, described in
 [architecture.md](architecture.md) ("Tests"):
 
+macOS and Linux (Terminal):
+
 ```bash
 node --test web_tests/unit/*.test.mjs                     # the browser modules (Node.js 22)
 ELECTROTAG_PYTHON=python node web_tests/run_e2e.mjs     # the application in Chromium (Playwright)
@@ -40,6 +46,20 @@ ELECTROTAG_PYTHON=python node web_tests/run_e2e.mjs --browser webkit   # the sam
 bash scripts/test_firebase_emulators.sh                   # the functions and the Firestore store (Java 21)
 bash scripts/test_web_firebase.sh                         # the application with a study on Firebase's emulators
 ```
+
+Windows (PowerShell):
+
+```powershell
+node --test web_tests/unit/*.test.mjs                     # the browser modules (Node.js 22)
+$env:ELECTROTAG_PYTHON = "python"                         # the Python of the tests below, for this terminal
+node web_tests/run_e2e.mjs                                # the application in Chromium (Playwright)
+node web_tests/run_e2e.mjs --browser webkit               # the same in WebKit, Safari's engine
+```
+
+In PowerShell the Python is named once, with `$env:ELECTROTAG_PYTHON`, and holds for the rest of
+that terminal; Terminal names it on each line. On Windows it is needed: without it the tests look
+for `.venv/bin/python` and then `python3`, names that a Windows virtual environment does not use. The two Firebase scripts are Bash scripts: on Windows they run in the Windows
+Subsystem for Linux, as [the Firebase guide](firebase.md) says of them.
 
 The unit tests compare the browser's readers, filters, amplitude check and
 fingerprints (the EEG library in `js/eeg/`, whose README says which test checks
@@ -134,8 +154,18 @@ recordings named as BIDS names them (`…_eeg.edf`, `…_eeg.bdf` or `…_eeg.vh
 `.eeg`, beside any `channels.tsv`, `events.tsv` and `electrodes.tsv`), and point
 `ELECTROTAG_REAL_EEG` at that folder:
 
+macOS and Linux (Terminal):
+
 ```bash
 export ELECTROTAG_REAL_EEG=/path/to/real-eeg
+node --test web_tests/unit/data_readers.test.mjs web_tests/unit/data_register.test.mjs
+python -m pytest tests/test_real_eeg.py -s
+```
+
+Windows (PowerShell):
+
+```powershell
+$env:ELECTROTAG_REAL_EEG = "C:\path\to\real-eeg"
 node --test web_tests/unit/data_readers.test.mjs web_tests/unit/data_register.test.mjs
 python -m pytest tests/test_real_eeg.py -s
 ```

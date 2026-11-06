@@ -35,9 +35,23 @@ disagreement occurred.
 
 ## Running an analysis
 
+The command is typed in a terminal: Terminal on macOS and Linux, and PowerShell on Windows. Written
+over several lines, it ends each line but the last with `\` in Terminal and with `` ` `` (a
+backtick) in PowerShell; on one line it is the same in both.
+
+macOS and Linux (Terminal):
+
 ```bash
 electrotag agreement Annotated_Events --out agreement_results \
     --resolutions 0.01 0.05 0.1 --min-bin-coverage 0.5 \
+    --criterion iou --iou-thresholds 0 0.2 0.5 --primary-iou 0.2
+```
+
+Windows (PowerShell):
+
+```powershell
+electrotag agreement Annotated_Events --out agreement_results `
+    --resolutions 0.01 0.05 0.1 --min-bin-coverage 0.5 `
     --criterion iou --iou-thresholds 0 0.2 0.5 --primary-iou 0.2
 ```
 

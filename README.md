@@ -116,19 +116,26 @@ computer.
 
 **From a copy of the repository** (a clone, or the source archive from
 GitHub's *Code* button, unpacked), open a terminal in its folder and make and
-activate the environment. On macOS and Linux:
+activate the environment. Commands are typed in a terminal: Terminal on macOS
+and Linux, and PowerShell on Windows. Where a command differs between the two,
+both versions are given, one after the other; where only one block is shown,
+it works as it stands in both.
+
+macOS and Linux (Terminal):
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-On Windows, in Command Prompt or PowerShell:
+Windows (PowerShell):
 
-```bat
+```powershell
 py -m venv .venv
 .venv\Scripts\activate
 ```
+
+The Windows lines work in Command Prompt too.
 
 If PowerShell refuses to run the activation script, allow scripts you have
 made yourself once with
