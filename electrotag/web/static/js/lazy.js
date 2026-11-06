@@ -49,7 +49,6 @@ const PARTS = Object.freeze({
   reopen: './annotate/reopen.js',
   myFiles: './views/my_files.js',
   guide: './guide/guide.js',
-  topomap: './annotate/topomap.js',
 });
 
 const pending = new Map(); // name -> the promise of its module

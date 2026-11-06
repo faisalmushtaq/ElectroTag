@@ -42,6 +42,7 @@ import { microvoltText, voltsText } from '../viewer/geometry.js';
 import { timeScaleChoices, timeScaleText, nudgeSamples } from '../viewer/scales.js';
 import { mapLayout, projectPositions } from '../viewer/head_map.js';
 import { topoPositions } from '../viewer/topo.js';
+import { mountTopomap } from './topomap.js';
 import { readElectrodes, sidecarsOf } from '../eeg/electrodes.js';
 import { centredStart, clampTime, parseTimeText } from './goto.js';
 import { forgetOpen, noteOpen } from './reopen.js';
@@ -2840,11 +2841,20 @@ export class Workspace {
     const positions = topoPositions(this.s.channels, registered, this._positions());
     logger.event('topomap_available', { shown: positions.source !== 'none' && positions.points.size >= 3, source: positions.source,
       registered: positions.registered, n_placed: positions.points.size });
-    if (positions.source === 'none' || positions.points.size < 3) return;
-    let mod;
-    try { mod = await loadPart('topomap'); } catch { return; } // the view works without it
-    if (this._destroyed || this.topo) return;
-    this.topo = mod.mountTopomap(this, this.topoHost, positions);
+    if (positions.source === 'none' || positions.points.size < 3 || this._destroyed) return;
+    // Beside the panel of a review, a correction, a replay, an adjudication or everyone's marks, which needs
+    // the side panel's height, the map is a tab of its own (Map); elsewhere it is above the tabs.
+    const beside = !['annotate', 'tryout', 'tour'].includes(this.kind) || this.reviewHost.childElementCount > 0;
+    let host = this.topoHost;
+    if (beside) {
+      const b = h('button.tab', { type: 'button', role: 'tab', 'aria-selected': 'false', 'data-tab': 'map', onclick: () => this.showTab('map') }, 'Map');
+      this.tabButtons.map = b;
+      this.tabPanels.map = host = h('div.tab-panel', { role: 'tabpanel', hidden: true, 'data-panel': 'map' });
+      const bar = this.tabButtons.annotations.parentElement;
+      bar.insertBefore(b, this.tabButtons.guide || null);
+      bar.parentElement.append(host);
+    }
+    this.topo = mountTopomap(this, host, positions, { inTab: beside });
     this.onDestroy(() => this.topo && this.topo.destroy());
   }
 

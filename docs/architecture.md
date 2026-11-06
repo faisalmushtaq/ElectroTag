@@ -200,8 +200,7 @@ electrotag/web/static/          the application (plain ES modules, no build step
                                   dialogs, the help, the session with its drafts, clock.js,
                                   the working-time clock that stops while the annotator is paused,
                                   channel_map.js, the channel chooser's map, topomap.js, the
-                                  topographic map beside the EEG (a part loaded on its own),
-                                  and goto.js, the
+                                  topographic map beside the EEG, and goto.js, the
                                   times typed into Go to time
     js/training/                  the training path, the coach, the practice review, the
                                   demonstration's guided rules and practice scoring, and the

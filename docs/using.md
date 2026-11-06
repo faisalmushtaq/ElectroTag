@@ -518,7 +518,7 @@ runs through Fpz, T7, Oz and T8 and electrodes below it lie just outside.
 
 The heading folds the map away, and ElectroTag remembers that in this browser too. Beside the panels of
 a review, a correction, a replay, an adjudication or everyone's marks, which need the side panel's
-height, the map starts folded. On an iPad held
+height, the map is a tab of its own, Map, beside Annotations. On an iPad held
 upright, the map stands beside the Annotations panel; folded, it is a narrow strip, which gives the
 panel back its width. The map needs to know where each electrode is: from the positions given when
 the recording was added to the study, from an electrodes.tsv opened with the recording, or from the

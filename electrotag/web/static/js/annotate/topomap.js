@@ -9,8 +9,8 @@
 // colours run from blue (negative) through white to red (positive) on a scale that stays the same for
 // the whole recording, ± the recording's starting EEG amplitude, which − and + change.
 //
-// The arithmetic is in js/viewer/topo.js. Loaded as a part of its own (js/lazy.js, 'topomap') when a
-// recording opens with a map to show. Logged as topomap events, with channels, times and choices only.
+// The arithmetic is in js/viewer/topo.js. Beside the panel of a review, a correction, a replay, an
+// adjudication or everyone's marks it is a tab of its own (Map). Logged as topomap events, with channels, times and choices only.
 
 import { h, clear } from '../ui/dom.js';
 import { COLOURS } from '../ui/theme.js';
@@ -35,13 +35,14 @@ const uv = (v) => (Number.isFinite(v) ? `${(v * 1e6).toFixed(Math.abs(v) < 1e-5 
 const secs = (s) => `${s.toFixed(3)} s`;
 
 /** The topographic map's section in the annotation view `ws`, with the channels placed at `positions` (topo.js topoPositions). */
-export function mountTopomap(ws, host, positions) {
-  return new TopoMap(ws, host, positions);
+export function mountTopomap(ws, host, positions, opts = {}) {
+  return new TopoMap(ws, host, positions, opts);
 }
 
 export class TopoMap {
-  constructor(ws, host, positions) {
+  constructor(ws, host, positions, { inTab = false } = {}) {
     this.ws = ws;
+    this.inTab = inTab; // in a tab of its own (Map) beside an expert's or a review's panel: always open there
     this.host = host;
     this.positions = positions;
     const study = (ws.s.me && ws.s.me.study) || {};
@@ -54,10 +55,7 @@ export class TopoMap {
       reference: kept && REFERENCE_CHOICES[kept.reference] ? kept.reference : this.studySignal.reference,
     };
     this.measure = MEASURES[local.get(ws._toolKey('topomap_measure'), null)] ? local.get(ws._toolKey('topomap_measure'), 'mean') : 'mean';
-    // Folded at first beside a panel of the expert area or a review (adjudicating, correcting, a replay,
-    // everyone's marks), which needs the side panel's height; opened, it stays open as the person chose.
-    const beside = !['annotate', 'tryout', 'tour'].includes(ws.kind) || Boolean(ws.reviewHost && ws.reviewHost.childElementCount);
-    this.open = local.get(ws._toolKey('topomap_open'), true) !== false && !beside;
+    this.open = inTab || local.get(ws._toolKey('topomap_open'), true) !== false;
     this.limitUv = stepLimit(((ws.s.scalings && ws.s.scalings.eeg) || 50e-6) * 1e6);
     // The channels on the map, in the order of the montage.
     this.chans = ws.s.channels.filter((c) => positions.points.has(c.name)).map((c) => ({ ...c, p: positions.points.get(c.name) }));
@@ -128,7 +126,8 @@ export class TopoMap {
       this.scaleRow = h('div.topo-scale', {}, this._narrower = narrower, this.lo, this.bar, this.hi, this._wider = wider),
       h('div.topo-opts', {}, h('label', { for: this.measureSel.id }, 'Over a mark'), this.measureSel),
       this.signalBtn, this.signalBox, this.signalNote);
-    this.el = h('section.topo', { 'aria-label': 'Topographic map', 'data-part': 'topomap', class: this.open ? null : 'folded' }, h('h2.topo-head', {}, this.toggle), this.body);
+    this.el = h('section.topo', { 'aria-label': 'Topographic map', 'data-part': 'topomap', class: this.open ? null : 'folded' },
+      inTabHead(this), this.body);
     clear(this.host);
     this.host.append(this.el);
     this.canvas.addEventListener('pointermove', (e) => this._hover(e));
@@ -287,7 +286,7 @@ export class TopoMap {
 
   // ------------------------------------------------------------------ drawing
   _geometry() {
-    const w = this.body.clientWidth || this.host.clientWidth || MAX_PX;
+    const w = this.body.clientWidth || MAX_PX;
     const size = Math.round(clamp(w, MIN_PX, MAX_PX));
     const half = size / 2;
     const scale = (half - 6) / (this.radius + 0.12); // room for the nose
@@ -421,6 +420,11 @@ export class TopoMap {
     logger.event('topomap', { action: 'channel', channel: hit.ch.name, via: 'topomap' });
     this.ws.chooseChannelFromMap(hit.ch.name);
   }
+}
+
+/** The section's heading: the button that folds it, or nothing in a tab of its own. */
+function inTabHead(m) {
+  return m.inTab ? null : h('h2.topo-head', {}, m.toggle);
 }
 
 /** The colours of the scale, for the tests. */
