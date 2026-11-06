@@ -266,6 +266,7 @@ def public_manifest(m: dict[str, Any], study_scalings: dict[str, float] | None =
         "display": {"scalings": scalings, "warnings": list(m.get("warnings", [])) + list(m.get("notes", []))},
         "fingerprint": {"algorithm": "sha256", "role": FINGERPRINT_ROLE, "hex": fp.get("sha256", ""),
                         "size_bytes": int(fp.get("size", 0) or 0)},
+        **({"electrode_positions": copy.deepcopy(m["electrode_positions"])} if positions_source(m) != "unset" else {}),
     }
 
 
@@ -451,6 +452,19 @@ def dataset_of(m: dict[str, Any]) -> str:
     """The source dataset a study recording belongs to: ``registration.dataset_id``, "" for the built-in
     default dataset (recordings registered before datasets existed, or without choosing one)."""
     return str((m.get("registration") or {}).get("dataset_id") or "")
+
+
+#: Where a recording's electrodes are for the topographic map, as chosen when it was added
+#: (docs/admin_area.md, "Adding recordings from this computer"): its electrodes.tsv ("file", with the map
+#: position of each EEG channel), the standard positions of its channel names ("standard"), or none.
+POSITION_SOURCES = ("file", "standard", "none")
+
+
+def positions_source(m: dict[str, Any]) -> str:
+    """How a recording's electrodes are placed on the topographic map: one of POSITION_SOURCES, or "unset" for
+    a recording added without that choice (the browser then places them as the channel chooser does)."""
+    p = m.get("electrode_positions")
+    return p["source"] if isinstance(p, dict) and p.get("source") in POSITION_SOURCES else "unset"
 
 
 def manifest_head(m: dict[str, Any]) -> dict[str, Any]:

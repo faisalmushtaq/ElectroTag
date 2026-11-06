@@ -29,7 +29,9 @@ from electrotag.training.reference import GUIDANCE_LEVELS, NONE_OPTION, USES, Re
 from electrotag.web import audit
 from electrotag.web.datasets import DEFAULT_DATASET_ID
 from electrotag.web.errors import ApiError
-from electrotag.web.manifest import SCOPE_STUDY, dataset_of, fingerprint_of, manifest_info, prefix_manifest, set_scope
+from electrotag.web.manifest import (
+    SCOPE_STUDY, dataset_of, fingerprint_of, manifest_info, positions_source, prefix_manifest, set_scope,
+)
 from electrotag.web.store import (
     KNOWN_ROLES, MODES, RESERVED_IDS, RESERVED_ROLES, ROLES, STATUSES, AccountProblem, StoreError, User, attempt_of,
     item_key, latest_entry, parse_roles, primary_role, roles_text,
@@ -519,7 +521,8 @@ class Admin:
                 "notes": reg.get("notes", ""), "retired": bool(reg.get("retired", False)),
                 "dataset_id": (reg.get("dataset_id") or DEFAULT_DATASET_ID) if m["scope"] == SCOPE_STUDY else None,
                 "assigned": assigned.get(key, 0), "done": done.get(key, 0), "warnings": list(m.get("warnings", [])),
-                "warnings_dismissed": warnings_dismissed(m)}
+                "warnings_dismissed": warnings_dismissed(m),
+                "electrode_positions": positions_source(m)}
 
     def set_record(self, rs: ReferenceSet) -> dict[str, Any]:
         from electrotag.training.assessment import CompetencyCriteria, assessment_matching

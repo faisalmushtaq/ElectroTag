@@ -5,6 +5,19 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The annotation view has a topographic map at the top of its side panel: the channels' values spread over a
+drawing of the head with spherical splines, from blue through white to red on a scale that stays the same for
+the whole recording. A click on the EEG shows the map at that moment; with a mark selected or just drawn it
+shows each channel's mean or RMS over the mark, as the annotator chooses. Channels marked bad are grey and
+left out at once, pointing at an electrode names it and a click chooses its channel on the EEG. The map uses
+the signal as the viewer shows it unless the study (Study settings, The display) or the annotator, for their
+next recordings too, chooses no filters or the average reference; a study can turn it off. Adding recordings
+from this computer now asks whether to add them with their electrode positions (from each recording's
+electrodes.tsv, or the standard positions of its channel names), which go into the recording's description;
+a recording added without them has no map (`electrode_positions` in the manifest; docs/using.md, "The
+topographic map"; docs/admin_area.md, "Adding recordings from this computer"). Add no longer becomes
+pressable with nothing to add after the files have been read.
+
 Administrators can now draw a probability map over a recording in Everyone's marks: the weighted share of
 the raters who marked each moment as an artifact, for any artifact or one HED-SCORE type, over time or
 channel by channel. A mark counts less when its rater gave it a low confidence (1 to 5 count 20 % to 100 %

@@ -90,7 +90,12 @@ Manifest = {                          // what the browser needs to show a regist
   "original_events": [{"onset_sample": 512, "duration_samples": 0, "label": "stimulus/1"}],
   "gaps": [[14000, 15360]],                    // no recorded data: hatched, nothing to annotate
   "display": {"scalings": {"eeg": 5e-05, "eog": 0.00015, "ecg": 0.0005}, "warnings": ["…"]},
-  "fingerprint": {"algorithm": "sha256", "role": "eeg", "hex": "…", "size_bytes": 123456}
+  "fingerprint": {"algorithm": "sha256", "role": "eeg", "hex": "…", "size_bytes": 123456},
+  "electrode_positions": {"source": "file", "points": {"Fp1": [-0.3, 0.95], "…": [0.0, 0.0]}}
+      // optional: where the topographic map places the EEG channels, as chosen when the recording was
+      // added: "file" (map positions: x to the right, y to the front, the ring through Fpz, T7, Oz and T8
+      // at radius 1), "standard" (the 10-20 names' positions) or "none" (no map); left out when no choice
+      // was made, and the browser then places them as the channel chooser does
 }
 
 Draft = {"annotations": [Annotation], "bad_channels": ["T7"], "view": {"start_s": 12.0, "duration_s": 10.0, "first_channel": 0,
@@ -162,7 +167,9 @@ password.
     "filters": {"highpass_enabled": true, "highpass_hz": 1.0, "notch_enabled": true, "notch_hz": 50.0,
                 "notch_harmonics": false, "locked": false},
     "display": {"duration_s": 10.0, "n_channels": 32, "scalings": {"eeg": 5e-05, "…": 0.0},
-                "channel_colours": "off" | "region" | "side" | "type"},     // the study's default
+                "channel_colours": "off" | "region" | "side" | "type",     // the study's default
+                "topomap": true, "topomap_filters": "as_shown" | "none",   // the topographic map, and the signal
+                "topomap_reference": "as_recorded" | "average"},           //   it maps until the annotator chooses
     "annotation": {"min_duration_samples": 1, "quick_labels": ["Eye-blink-artifact", "…"],
                    "break_reminder_minutes": 50, "idle_pause_minutes": 3, "coverage_check": "warn" | "off",
                    "allow_revisions": true, "allow_reviews": true, "show_reviews_to_annotators": true,
@@ -877,7 +884,8 @@ RecordingRecord = {"scope": "study" | "set:<set_id>", "recording_id": "sub-001/e
               "file_name", "format", "sfreq", "n_samples", "duration_s", "n_channels", "size_bytes",
               "sha256", "registered_at", "registered_by", "registered_via": "browser" | "command",
               "notes": "", "retired": false, "assigned": 3, "done": 1, "warnings": ["…"],
-              "warnings_dismissed": null | {"by", "at"}}
+              "warnings_dismissed": null | {"by", "at"},
+              "electrode_positions": "file" | "standard" | "none" | "unset"}   // as chosen when it was added
 Withdrawal = {"withdrawal_id", "annotator_id", "recording_id", "mode": "standard", "context_id": "",
               "then": "todo" | "unassign", "withdrawn_at", "withdrawn_by",
               "downloaded_before": null | "<time of the download of the whole results after it was saved>",
@@ -1055,7 +1063,11 @@ and to write result files. The server records `registration`
 (`{"registered_at", "registered_by", "registered_via", "notes", "retired",
 "dataset_id"?}`, the last for a recording of a source dataset other than the
 built-in one) in the stored manifest itself; a browser's `registration` is
-ignored.
+ignored. `electrode_positions`, when given, is `{"source": "standard"}`, `{"source": "none"}`
+or `{"source": "file", "points": {channel: [x, y]}}` naming EEG channels shown, with two numbers from −3
+to 3 each (in the order of `ch_names` once stored); the browser adds it from the administrator's
+answer to "Electrode positions" (docs/admin_area.md, "Adding recordings from this computer"), and
+`electrotag web register` leaves it out.
 
 **The example training set.** `set_example_create` makes ElectroTag's example
 set (`electrotag/training/examples.py`: three simulated recordings, two for

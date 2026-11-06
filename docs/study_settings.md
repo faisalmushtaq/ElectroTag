@@ -248,7 +248,11 @@ amplitude per channel type, in volts; the scale bar shows twice the value),
 at once, 32 by default, so that a 10-20 montage with its EOG and ECG channels
 fits without scrolling). `channel_colours` sets how the browser colours the
 channels at first (`off`, `region`, `side` or `type`; `off` by default), which
-each annotator can change in the Recording tab. Annotators can still change the amplitude, and the
+each annotator can change in the Recording tab. `topomap` shows the topographic map beside the
+EEG (`true` by default), and `topomap_filters` (`as_shown`, the viewer's display filters, by
+default, or `none`) and `topomap_reference` (`as_recorded` by default, or `average`, the average of
+the channels not marked bad) choose the signal it maps until an annotator chooses another for
+themselves ([using ElectroTag](using.md), "The topographic map"). Annotators can still change the amplitude, and the
 scale, seconds and channels on screen at Save and Finish are written to each
 session file (`display` in session.json), so you can see at what scale each
 recording was annotated. For a reliability study it helps to choose a starting

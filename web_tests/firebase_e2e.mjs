@@ -295,8 +295,11 @@ async function main() {
       await page.setInputFiles('input[data-log="register-folder"]', path.join(demo, 'recordings', 'study'));
       await page.waitForSelector('[data-log="register"]', { timeout: 120000 });
       assert.match(await page.innerText('.admin-review'), /Found 3 recordings/);
-      await page.click('[data-log="register"]');
-      await page.waitForFunction(() => /skipped 3/.test(document.querySelector('.admin-review')?.innerText || ''), null, { timeout: 120000 });
+      // Add waits for the choice of electrode positions, then has nothing to add without Replace.
+      assert.equal(await page.textContent('[data-log="register"]'), 'Choose whether to add electrode positions');
+      await page.check('[data-log="positions-with"]');
+      assert.equal(await page.textContent('[data-log="register"]'), 'Nothing to add');
+      assert.equal(await page.isDisabled('[data-log="register"]'), true);
 
       // The activity analysis runs in the function, from the interaction logs of the visits above.
       await go('Analyses', 'admin-analyses');

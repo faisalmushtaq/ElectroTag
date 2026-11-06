@@ -41,6 +41,8 @@ import { NAME_SIZES, PANEL_TEXT, TRACE_WIDTHS, loadComfort, saveComfort } from '
 import { microvoltText, voltsText } from '../viewer/geometry.js';
 import { timeScaleChoices, timeScaleText, nudgeSamples } from '../viewer/scales.js';
 import { mapLayout, projectPositions } from '../viewer/head_map.js';
+import { topoPositions } from '../viewer/topo.js';
+import { mountTopomap } from './topomap.js';
 import { readElectrodes, sidecarsOf } from '../eeg/electrodes.js';
 import { centredStart, clampTime, parseTimeText } from './goto.js';
 import { forgetOpen, noteOpen } from './reopen.js';
@@ -193,7 +195,9 @@ export class Workspace {
       this._placeConfidenceBar();
       if (this.timed && !this._overviewView) this._noteViewDwell();
       if (cause !== 'restore') this._afterViewChange();
+      if (this.topo) this.topo.update();
     };
+    this.viewer.onCursor = () => { if (this.topo) this.topo.follow('cursor'); };
     this.viewer.onPointer = (type, info, e) => this._pointer(type, info, e);
     // The EEG takes the keyboard in the Tab order too (with a focus ring), for those who annotate without a mouse.
     this.viewer.over.tabIndex = 0;
@@ -445,6 +449,7 @@ export class Workspace {
     clear(this.side);
     this.coachHost = h('div.coach-host');
     this.reviewHost = h('div.review-host');
+    this.topoHost = this.topoHost || h('div.topo-host'); // the topographic map (js/annotate/topomap.js), when the recording has one
     const tabs = [['annotations', 'Annotations'], ['recording', 'Recording'], ['guide', 'Guide'], ['help', 'Help']];
     this.tabButtons = {};
     this.tabPanels = {};
@@ -465,7 +470,7 @@ export class Workspace {
         h('a.btn.small.quiet', { href: './#guide', target: '_blank', rel: 'noopener', 'data-log': 'help-guide-tab',
           onclick: () => { noteForGuideTab(this.quick); logger.event('guide_opened', { where: 'tab', label: null }); } }, 'Open in a new tab'))));
     this.tabPanels.help.appendChild(h('div.help-text', { html: helpHtml(touchFirst(), { training: ['guided', 'practice'].includes(this.s.mode) && this.kind === 'annotate' }) }));
-    this.side.append(this.coachHost, this.reviewHost, h('div.side-tabs', {}, bar, ...Object.values(this.tabPanels)));
+    this.side.append(this.coachHost, this.reviewHost, this.topoHost, h('div.side-tabs', {}, bar, ...Object.values(this.tabPanels)));
     this.showTab('annotations');
   }
 
@@ -573,6 +578,7 @@ export class Workspace {
       for (const el of [n50, n60, harm]) el.disabled = locked || !notch.checked;
       this.s.filters = nf;
       this.viewer.setFilters(nf);
+      if (this.topo) this.topo.update();
       this._updateEdgeText();
       this._refreshFixed();
       local.set(`electrotag.filters|${study.study_id || ''}`, {
@@ -1272,6 +1278,7 @@ export class Workspace {
     this.viewer.setSelection(list);
     this._refreshList();
     this._refreshState();
+    if (this.topo) this.topo.update();
   }
 
   targetIds() { return this.selection.filter((i) => this.store.has(i)); }
@@ -1466,6 +1473,7 @@ export class Workspace {
     if (this.welcomeEl && act !== 'reset') { this.welcomeEl.remove(); this.welcomeEl = null; }
     this._refreshPrompt();
     if (this.coach) this.coach.scheduleCheck();
+    if (this.topo) this.topo.update(); // a channel marked bad, or the mark shown changed
   }
 
   /** The channels marked bad, after any change of the store: on the EEG, and in the log when they changed (never any typed text). */
@@ -1497,6 +1505,7 @@ export class Workspace {
     }
     this._revealRow(ann.annotation_id);
     this.lastMadeId = ann.annotation_id;
+    if (this.topo) this.topo.follow('made'); // the map shows the stretch just marked
     const where = ann.channels.length ? plural(ann.channels.length, 'channel') : 'whole montage';
     const span = `${(ann.onset_sample / this.sf).toFixed(3)}–${(endSample(ann) / this.sf).toFixed(3)} s`;
     if (this.store.lastAutoMerged) {
@@ -2813,8 +2822,57 @@ export class Workspace {
       if (this._showColourLegend) this._showColourLegend();
     }
     const layout = mapLayout(this.s.channels, this.electrodes ? this.electrodes.positions : null);
+    void this._startTopomap();
     logger.event('electrode_positions', { source: layout.source, opened_from: (src && src.kind) || 'other',
       ...(layout.source === 'file' ? { n_placed: layout.points.filter((p) => !p.extra).length, coordinate_system: String(got.system || '').slice(0, 40) } : {}) });
+  }
+
+  // ------------------------------------------------------------------------- the topographic map
+  /**
+   * The topographic map (js/annotate/topomap.js) at the top of the side panel, when the study shows it
+   * (Study settings, display.topomap) and the recording's electrodes have positions: those given when it
+   * was added to the study, or, for a recording added without that choice, its own electrodes.tsv or the
+   * standard positions of its channel names. A recording added without positions has none.
+   */
+  async _startTopomap() {
+    const study = (this.s.me && this.s.me.study) || {};
+    if (this.topo || (study.display && study.display.topomap === false)) return;
+    const registered = this.s.manifest ? this.s.manifest.electrode_positions : null;
+    const positions = topoPositions(this.s.channels, registered, this._positions());
+    logger.event('topomap_available', { shown: positions.source !== 'none' && positions.points.size >= 3, source: positions.source,
+      registered: positions.registered, n_placed: positions.points.size });
+    if (positions.source === 'none' || positions.points.size < 3 || this._destroyed) return;
+    // Beside the panel of a review, a correction, a replay, an adjudication or everyone's marks, which needs
+    // the side panel's height, the map is a tab of its own (Map); elsewhere it is above the tabs.
+    const beside = !['annotate', 'tryout', 'tour'].includes(this.kind) || this.reviewHost.childElementCount > 0;
+    let host = this.topoHost;
+    if (beside) {
+      const b = h('button.tab', { type: 'button', role: 'tab', 'aria-selected': 'false', 'data-tab': 'map', onclick: () => this.showTab('map') }, 'Map');
+      this.tabButtons.map = b;
+      this.tabPanels.map = host = h('div.tab-panel', { role: 'tabpanel', hidden: true, 'data-panel': 'map' });
+      const bar = this.tabButtons.annotations.parentElement;
+      bar.insertBefore(b, this.tabButtons.guide || null);
+      bar.parentElement.append(host);
+    }
+    this.topo = mountTopomap(this, host, positions, { inTab: beside });
+    this.onDestroy(() => this.topo && this.topo.destroy());
+  }
+
+  /**
+   * A click on an electrode of the topographic map: its channel comes into view and is chosen, as a click
+   * on its name chooses it (switching to Selected channels first when the next mark is for the whole montage).
+   */
+  chooseChannelFromMap(name) {
+    const v = this.viewer;
+    const row = v.channels.findIndex((c) => c.name === name);
+    if (row < 0) return;
+    const n = v.view.nChannels;
+    if (row < v.view.firstChannel || row >= v.view.firstChannel + n) {
+      v.setView({ firstChannel: clamp(row - Math.floor(n / 2), 0, Math.max(0, v.channels.length - n)) }, 'topomap');
+    }
+    if (this.readOnly) { this.say(`${name} is in view.`); return; }
+    if (this.targetIds().length !== 1 && this.scope !== 'channels' && !v.overlay) this.setScope('channels');
+    this.onChannelClicked(name);
   }
 
   /** What the channel chooser's map needs: where each channel goes, the group colours, and where the choice of view is kept. */

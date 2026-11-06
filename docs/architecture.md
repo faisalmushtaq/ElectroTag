@@ -194,11 +194,13 @@ electrotag/web/static/          the application (plain ES modules, no build step
                                   fingers, long presses and double taps on a touch screen;
                                   coverage.js for the parts of a recording viewed so far;
                                   bounds.js for a task's part of a recording;
-                                  head_map.js for where electrodes go on the channel map
+                                  head_map.js for where electrodes go on the channel map;
+                                  topo.js for the topographic map's spline and colours
     js/annotate/                  the annotation view (workspace.js), the annotation store, the
                                   dialogs, the help, the session with its drafts, clock.js,
                                   the working-time clock that stops while the annotator is paused,
-                                  channel_map.js, the channel chooser's map, and goto.js, the
+                                  channel_map.js, the channel chooser's map, topomap.js, the
+                                  topographic map beside the EEG, and goto.js, the
                                   times typed into Go to time
     js/training/                  the training path, the coach, the practice review, the
                                   demonstration's guided rules and practice scoring, and the

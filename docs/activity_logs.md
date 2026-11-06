@@ -351,6 +351,17 @@ coordsystem.json (empty when there is none). It names neither the file nor where
 a recording is kept on the device, `device_kept` says with `electrodes` (true or false) whether its
 electrode files were kept with it.
 
+**The topographic map.** Once per recording opened, `topomap_available` says whether the map is
+shown (`shown`), where its electrode positions come from (`source`: `file`, `standard` or `none`),
+whether they were given when the recording was added to the study (`registered`) and how many
+channels it places (`n_placed`); it is not sent when the study has turned the map off. `topomap`
+records what is done with it, by `action`: `show` each time the map shows something new, with
+`what` (`moment`, with the time cursor's `t_s`, or `mean` or `rms` over a mark, with its
+`annotation_id`, `onset_s` and `duration_s`), the signal's `filters` and `reference`, and `n_bad`,
+the channels on the map marked bad; `open` and `close` for the heading; `measure` (`mean` or `rms`)
+for Over a mark; `signal` with the `filters` and `reference` chosen; `scale` with the new
+`limit_uv`; and `channel` for a click on an electrode, with its `channel`.
+
 **Dialogs.** `dialog_shown` (`dialog` class, `title`; for messages also the
 `text`, `informative` text and the `buttons` offered) and `dialog_closed`
 (`accepted`, the `button` clicked, the `chosen` type in the type picker, the

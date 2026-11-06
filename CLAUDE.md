@@ -46,7 +46,7 @@ install `electrotag/web/firebase/functions/requirements.txt`.
 ## Rules that protect the research data
 
 EEG recordings never leave the computer they are on: the browser reads them, and only manifests
-(fingerprints, timing, channels, events), annotations and interaction logs go to the study. Source
+(fingerprints, timing, channels with their places on the head when given, events), annotations and interaction logs go to the study. Source
 files are read-only: no code path may write to one. A recording is marked complete only after its
 output files (five, and `_channels.tsv` when channels were marked bad) are written, read back and verified (the journalled save in
 `electrotag/app/session/`). The annotation store is the single source of truth; interfaces display

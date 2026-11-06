@@ -208,8 +208,13 @@ export function publicManifest(m, studyScalings = {}) {
     gaps: (m.acquisition_gaps || []).map((g) => [...g]),
     display: { scalings: { ...studyScalings, ...(amp.suggested_scalings || {}) }, warnings: [...(m.warnings || []), ...(m.notes || [])] },
     fingerprint: { algorithm: 'sha256', role: 'eeg', hex: String(fp.sha256 || ''), size_bytes: Number(fp.size || 0) },
+    ...(positionsSource(m) !== 'unset' ? { electrode_positions: deepCopy(m.electrode_positions) } : {}),
   };
 }
+
+/** How a recording's electrodes are placed on the topographic map (manifest.py positions_source). */
+export const positionsSource = (m) => (m && m.electrode_positions && ['file', 'standard', 'none'].includes(m.electrode_positions.source) ? m.electrode_positions.source : 'unset');
+
 
 /** Why an internal manifest cannot be registered, or null (the shape, sizes and consistency). */
 export function manifestProblem(m) {
@@ -384,7 +389,8 @@ export class DemoAdmin {
       study_id: 'demo', name: this.s.name,
       filters: Object.fromEntries(['highpass_enabled', 'highpass_hz', 'notch_enabled', 'notch_hz', 'notch_harmonics', 'locked'].map((k) => [k, st.filters[k]])),
       display: { duration_s: st.display.duration_s, n_channels: st.display.n_channels, scalings: { ...st.display.scalings },
-        channel_colours: st.display.channel_colours },
+        channel_colours: st.display.channel_colours, topomap: st.display.topomap !== false,
+        topomap_filters: st.display.topomap_filters || 'as_shown', topomap_reference: st.display.topomap_reference || 'as_recorded' },
       annotation: Object.fromEntries(['min_duration_samples', 'quick_labels', ...Object.keys(DEFAULT_ANNOTATION), 'allow_revisions', 'allow_reviews',
         'show_reviews_to_annotators'].map((k) => [k, deepCopy(st.annotation[k])])),
       gamification: { enabled: st.gamification.enabled !== false,
@@ -563,6 +569,7 @@ export class DemoAdmin {
       try { r.sha256 = (await this.b.exampleRecording(r.recording_id).fingerprint()).hex; } catch { /* left empty */ }
     }
     const { manifest, builtin, warnings_dismissed: d, ...rest } = r; // eslint-disable-line no-unused-vars
+    rest.electrode_positions = positionsSource(manifest);
     rest.warnings_dismissed = d && rest.warnings.length && JSON.stringify(d.warnings) === JSON.stringify(rest.warnings) ? { by: d.by, at: d.at } : null;
     if (r.scope === 'study') {
       const mine = items.filter((i) => i.recording_id === r.recording_id && i.mode === 'standard');
@@ -872,8 +879,9 @@ export class DemoAdmin {
     return { recordings: out };
   }
 
-  op_recordings_register(body) {
+  async op_recordings_register(body) {
     const scope = this._scopeOk(body.scope || 'study');
+    const { positionsProblem } = await import('./demo_positions.js');
     if (!Array.isArray(body.manifests) || !body.manifests.length) throw bad('There are no recordings to add.');
     const out = { added: [], replaced: [], skipped: [] };
     const who = this.b.annotatorId;
@@ -881,7 +889,7 @@ export class DemoAdmin {
     const prints = new Map();
     for (const m of body.manifests) {
       const rid = m && typeof m.recording_id === 'string' ? m.recording_id : '(no ID)';
-      const problem = manifestProblem(m);
+      const problem = manifestProblem(m) || positionsProblem(m);
       if (problem) { out.skipped.push({ recording_id: rid, reason: `It cannot be added: ${problem}.` }); continue; }
       const fp = m.fingerprint.eeg;
       const old = this.record(scope, rid);
