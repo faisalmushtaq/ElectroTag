@@ -293,6 +293,9 @@ class StudyService:
         from electrotag.web.withdrawals import Withdrawals
 
         self.withdrawals = Withdrawals(self)  # one person's saved work: download, withdraw, restore
+        from electrotag.web.probability import Probability
+
+        self.probability = Probability(self)  # the probability maps of several raters' marks
         self.tracking = Tracking(self)
         from electrotag.web.questionnaire import Questionnaire
 

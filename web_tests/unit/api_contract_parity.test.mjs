@@ -341,6 +341,14 @@ async function script(call) {
   await call('admin saved_work_restore', (s) => s.b.admin('saved_work_restore', { withdrawal_id: s.mem.withdrawal }));
   await call('admin saved_work_restore (again)', (s) => s.b.admin('saved_work_restore', { withdrawal_id: s.mem.withdrawal }));
   await call('admin withdrawals_list (none)', (s) => s.b.admin('withdrawals_list', {}));
+  // the probability map of r1 (one rater so far: too few for a map) and the checks of what is asked
+  await call('admin probability_get', (s) => s.b.admin('probability_get', { recording_id: r1 }));
+  await call('admin probability_get (unknown recording)', (s) => s.b.admin('probability_get', { recording_id: 'nope.edf' }));
+  await call('admin probability_export (too few raters)', (s) => s.b.admin('probability_export', { weights: { confidence: [0.2, 0.4, 0.6, 0.8, 1], questions: { eeg_years: { 'Less than 1': 0.5 } } } }));
+  await call('admin probability_export (one rater asked for)', (s) => s.b.admin('probability_export', { recording_ids: [r1], as: 'tsv' }));
+  await call('admin probability_export (bad weights)', (s) => s.b.admin('probability_export', { weights: { confidence: [1, 1] } }));
+  await call('admin probability_export (one minimum)', (s) => s.b.admin('probability_export', { min_raters: 1 }));
+  await call('admin probability_export (unknown type)', (s) => s.b.admin('probability_export', { category: 'Not-a-type' }));
   const C1 = ann(hex(0xc1), 'EMG-artifact', 4000, 200);
   const correction = (s, extra = {}) => ({ correction_id: hex(0xc0), annotator_id: 'A01', recording_id: r1, attempt: 2,
     annotations: [{ ...B1, label: 'Eye-artifact' }, C1], session: { elapsed_s: 30 }, sha256: s.mem.sha[0],

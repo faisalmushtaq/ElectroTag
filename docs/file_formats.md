@@ -41,6 +41,7 @@ into place in one step, so a file is either complete or absent.
 - [Competency report (`…_competency_report.json`)](#competency-report-_competency_reportjson)
 - [Training progress (`training_progress/<set>/annotator-<ID>.json`)](#training-progress-training_progresssetannotator-idjson)
 - [Agreement analysis outputs](#agreement-analysis-outputs)
+- [Probability maps (`probability_maps.zip`)](#probability-maps-probability_mapszip)
 <!-- /contents -->
 
 ## Time and channel conventions (all files)
@@ -822,3 +823,36 @@ skipped in the new one.
 | `bad_channels_by_channel.tsv` | Each channel someone marked bad for the whole recording: the recording's annotators, how many marked it and who |
 | `bad_channels_pairwise.tsv` | Per recording and pair of annotators, their agreement on bad channels over the recording's channels (each channel one unit): the 2×2 counts, proportion and positive agreement and Cohen's kappa |
 | `uncertain_by_annotator.tsv` | Per recording and annotator, the marks of the uncertain type (`Data-artifact`): how many, their share of the annotator's marks, their time and the share of the recording they cover |
+
+## Probability maps (`probability_maps.zip`)
+
+The admin area's probability maps ([reliability guide](reliability_guide.md), "Probability maps")
+download as `probability_maps.zip`, a folder `probability/` with a `README.txt`, a
+`probability.json` and one TSV a recording, or as that one TSV on its own from a recording's map.
+A study recording's TSV is named after its file, `sub-01_task-rest_eeg_probability.tsv` for
+`sub-01_task-rest_eeg.vhdr` (with the other dots of a name written as underscores, and the
+folders of its ID as `__`); the map of a training set's own recording starts with the set,
+`set-pilot__…`. Every row is a run of samples with one value:
+
+| Column | Contents |
+|---|---|
+| `category` | `any` for every mark, or the HED-SCORE type the map is of |
+| `channel` | The channel the map is of, or `n/a` for the recording as a whole |
+| `start_sample`, `end_sample` | The run's samples, from the first sample of the file, the end not included |
+| `onset`, `duration` | The same in seconds (`start_sample` and the run's length divided by the sampling rate) |
+| `probability` | The weighted share of the raters who marked these samples, from 0 to 1; `n/a` when every rater weighs nothing |
+| `n_raters` | The raters of the recording |
+| `n_marked` | How many of them marked these samples |
+| `weight_total`, `weight_marked` | The sums of the weights of every rater and of those who marked, whose quotient is `probability` |
+
+The runs of each category and channel cover the recording from sample 0 to its last sample, one
+block after another: first the recording as a whole, then each channel when the map was broken
+down by channel, for `any` and then each type. Numbers are written in full, as Python writes a
+float, so that reading them back gives the same values. `probability.json` records `made_at`,
+`made_by`, `electrotag_version`, the `weights` used (`confidence`, the weights of confidence 1 to 5;
+`questions`, the weight of each answer of each question used; `no_answer`), `category`,
+`by_channel`, `min_raters`, `columns` and, under `recordings`, each TSV's `recording_id`, `scope`,
+`sfreq`, `n_samples`, `n_raters`, `low_sample` (true for a map from only two raters),
+`categories`, `channels` and `raters`, each with its `annotator_id`, `source` (`study` for saved
+study work, `expert` for an expert's file kept with a reference) and `weight`; `left_out_too_few_raters`
+names the recordings with fewer raters than `min_raters`. No name or contact detail is written.

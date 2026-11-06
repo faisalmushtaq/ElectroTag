@@ -5,6 +5,18 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Administrators can now draw a probability map over a recording in Everyone's marks: the weighted share of
+the raters who marked each moment as an artifact, for any artifact or one HED-SCORE type, over time or
+channel by channel. A mark counts less when its rater gave it a low confidence (1 to 5 count 20 % to 100 %
+by default, each adjustable; marks without a confidence and unmarked time count in full), and raters can be
+weighed by their answers to the sign-up questionnaire, with a slider for each answer and the weights of
+several questions multiplied. The raters are everyone's latest study work and the experts' own files kept
+with a training reference; a map needs two raters and warns that two is a small sample. The maps download
+for one recording or every recording, here and on the Analyses page, as exact runs of samples in TSV with
+`probability.json` beside them, for training and checking automatic artifact detection, and
+`electrotag.reliability.probability.probability_array` reads one into a NumPy array aligned with MNE-Python's
+`raw.get_data()` (`probability_get`, `probability_export`; docs/reliability_guide.md, "Probability maps").
+
 Assignments now takes a due date for the study's own work. The recordings chosen go to the people chosen as a
 hand-out of their own with that date, so that open work after it is overdue in the admin area and the
 annotator's home page shows the recordings under "Recordings due 20 November", as for a dataset or collection

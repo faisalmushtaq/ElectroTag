@@ -361,4 +361,70 @@ export const tests = [
       }
     },
   },
+  {
+    name: 'the administrator\'s probability map: weights, a type, the channels, the small-sample warning and the downloads',
+    async run(t) {
+      const { assert } = t;
+      const s = await ownStudy();
+      try {
+        await people(s, ['A03'], 'long enough'); // the training gate and the questionnaire off, so that A01 and A02 may save
+        // two raters: A01 marks the blink at confidence 2 (40 %) and the EMG; A02 marks the blink on Fp1 only
+        await save(s, 'A01', [{ ...ann('Eye-blink-artifact', 500, 100), confidence: 2 }, ann('EMG-artifact', 3000, 250)]);
+        await save(s, 'A02', [ann('Eye-blink-artifact', 500, 100, ['Fp1'])]);
+        const page = await t.newPage({ url: s.base, width: 1600, height: 950 });
+        await signIn(page, 'ADMIN', PASSWORD);
+        await waitForRoute(page, 'admin', 30000);
+        await page.evaluate(() => globalThis.ElectroTag.showAdmin('admin-recordings'));
+        await waitForRoute(page, 'admin-recordings');
+        const rrow = page.locator('table.admin-list tr', { hasText: FILE }).first();
+        await rrow.waitFor({ timeout: 20000 });
+        await rrow.locator('button', { hasText: 'Manage' }).click();
+        await page.click('button[data-log="recording-overlay"]');
+        await page.waitForSelector('input[data-log="file-input"]', { state: 'attached', timeout: 30000 });
+        await openFile(page, s);
+        await page.waitForSelector('[data-part="probability"]', { timeout: 20000 });
+        await page.check('[data-log="probability-show"]');
+        await page.waitForSelector('.prob-lane:not([hidden])', { timeout: 20000 });
+        const panel = '[data-part="probability"]';
+        assert.match(await page.innerText(panel), /Only 2 people rated this recording/);
+        assert.match(await page.innerText(panel), /2 raters: A01 100%, A02 100%/);
+        const at = (s2, ch = null) => page.evaluate(([x, c]) => {
+          const pp = globalThis.ElectroTag.ws.pass.prob;
+          const runs = pp.map(c);
+          const r = runs.find((q) => q.start <= x && x < q.end);
+          return r ? r.p : null;
+        }, [s2, ch]);
+        // the blink: A01 at 40 %, A02 in full; the EMG: A01 in full against A02's unmarked time
+        assert.equal(await at(550), 1);
+        assert.equal(await at(3100), 0.5);
+        await page.fill('[data-log="probability-confidence-2"]', '100');
+        await page.locator('[data-log="probability-confidence-2"]').dispatchEvent('input');
+        assert.equal(await at(550), 1);
+        // a type of its own, and by channel: on O1 only A01's whole-montage blink counts
+        await page.selectOption('[data-log="probability-category"]', 'Eye-blink-artifact');
+        assert.equal(await at(3100), 0);
+        await page.check('[data-log="probability-by-channel"]');
+        assert.equal(await at(550, 'O1'), 0.5);
+        assert.equal(await at(550, 'Fp1'), 1);
+        await t.screenshot(page, 'probability_map');
+        // the map of this recording as TSV, as the study works it out
+        const [dl] = await Promise.all([page.waitForEvent('download'), page.click('[data-log="probability-download-one"]')]);
+        assert.match(dl.suggestedFilename(), /_probability\.tsv$/);
+        const text = fs.readFileSync(await dl.path(), 'utf8');
+        assert.match(text.split('\n')[0], /^category\tchannel\tstart_sample\tend_sample/);
+        assert.ok(text.includes('Eye-blink-artifact\tO1\t500\t600\t'), 'broken down by channel');
+        // weights by a questionnaire answer: a rater without one is weighed by No answer
+        await page.check('[data-log="probability-question"][data-question="eeg_years"]');
+        await page.fill('[data-log="probability-no-answer"]', '50');
+        await page.locator('[data-log="probability-no-answer"]').dispatchEvent('input');
+        const weighed = await page.evaluate(() => {
+          const pp = globalThis.ElectroTag.ws.pass.prob;
+          return pp.raters.map((r) => [r.annotator_id, r.weight, Boolean((pp.answers[r.annotator_id] || {}).eeg_years)]);
+        });
+        for (const [, w, answered] of weighed) assert.equal(w, answered ? 1 : 0.5);
+      } finally {
+        s.stop();
+      }
+    },
+  },
 ];

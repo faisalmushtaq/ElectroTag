@@ -58,6 +58,7 @@ allowed for the allowed origins.
   - [Tasks, windows and known answers](#tasks-windows-and-known-answers)
   - [Adjudication and the library](#adjudication-and-the-library)
   - [The overlay of everyone's marks](#the-overlay-of-everyones-marks)
+  - [Probability maps](#probability-maps)
   - [Derived versions in the analyses](#derived-versions-in-the-analyses)
 - [The same operations on Firebase](#the-same-operations-on-firebase)
 <!-- /contents -->
@@ -1740,6 +1741,50 @@ eight people in `detail`, a training mode without its `context_id`), and 404
 `unknown_recording` for a recording the study does not hold. The sandbox answers both operations
 over its own saved work (`js/api/demo_overlay.js`); it has no adjudicated versions, and none of
 its recordings is a teaching recording.
+
+### Probability maps
+
+Two administrator's operations give the probability maps of docs/reliability_guide.md,
+"Probability maps", and both read, so the browser may repeat them. They are open to
+administrators only (403 `forbidden` for anyone else).
+
+| op | body | answer | saves? |
+| --- | --- | --- | --- |
+| `probability_get` | `{"recording_id", "set_id"?}` | below | read |
+| `probability_export` | `{"weights"?, "category"?: "any", "by_channel"?: false, "min_raters"?: 2, "recording_ids"?, "set_id"?, "as"?: "zip"}` | `{"file_name": "probability_maps.zip", "base64", "size_bytes", "recordings", "left_out": [recording IDs], "low_sample": [recording IDs]}`, or with `"as": "tsv"` `{"file_name", "text", "recordings": 1, "left_out": [], "low_sample", "raters": [{"annotator_id", "source", "weight"}], "weights"}` | read |
+
+`probability_get` gives the browser what it needs to draw a recording's map and weigh it again
+without asking: the recording's raters with their marks, and their answers to the questionnaire's
+single-choice questions as they stood when they saved it. `set_id` reads a recording of a
+self-contained training set, whose raters are the experts' files kept with its reference.
+
+```text
+{"recording_id", "scope": "study", "file_name", "sfreq": 250.0, "n_samples": 17500,
+ "channels": ["Fp1", …], "labels": [...], "sets": ["", "0-1"],   // the overlay's tables
+ "people": [{"annotator_id": "A01", "source": "study", "set_id": null, "saved_at": "…",
+             "answers": {"eeg_years": "3–5"},
+             "marks": [0, 500, 100, 1, 2, …]}],                 // five whole numbers a mark, as overlay_get
+ "questions": [{"id", "text", "options": [{"value", "label"}, …, {"value": "prefer_not_to_say", "label": "Prefer not to say"}]}],
+ "min_raters": 2}
+```
+
+`source` is `study` for a person's latest saved study work and `expert` for an expert's file kept
+with a reference set (with that set's `set_id`). Nobody's name or contact details are in the
+answer.
+
+`probability_export` works out the maps here, with `weights`
+`{"confidence": [five numbers from 0 to 1], "questions": {question ID: {answer: weight}}, "no_answer"}`
+(each weight of an answer from 0 to 10; the defaults are confidence 0.2 to 1.0, no questions and
+`no_answer` 1). `category` is `any`, `each` (`any` and every type someone marked) or one type of
+the catalogue; `by_channel` adds a map for each channel; `min_raters` is 2 or more, and recordings
+with fewer raters are left out and named. Without `recording_ids` it makes the maps of every study
+recording and every self-contained training set's recording. `"as": "tsv"` answers with one
+recording's TSV as text, and needs exactly one recording in `recording_ids`. The files are those of
+docs/file_formats.md, "Probability maps (`probability_maps.zip`)". 400 `bad_request` for weights,
+a category or a number it cannot use (in words that say which), 404 `unknown_recording` and 404
+`no_maps` when no recording has enough raters, and 413 `too_large` for a zip of more than 25 MB.
+The sandbox answers both over its own saved work (`js/api/demo_probability.js`); it has no reference
+sets, so no expert files, and answers a `set_id` with 501 `needs_server`.
 
 ### Derived versions in the analyses
 
