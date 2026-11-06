@@ -22,7 +22,8 @@ test('the request of a hand-out, checked in plain words', () => {
   const base = { target: 'dataset:youth', people: ['A01', 'A01'], groups: [], mode: 'all', dueAt: '', title: '', name: '', note: '' };
   assert.throws(() => m.handoutBody({ ...base, target: '' }), /Choose the dataset or collection/);
   assert.throws(() => m.handoutBody({ ...base, people: [] }), /Choose the people or groups/);
-  assert.throws(() => m.handoutBody({ ...base, mode: 'k', k: '7' }), /2 to 6 people/);
+  assert.throws(() => m.handoutBody({ ...base, mode: 'k', k: '11' }), /2 to 10 people/);
+  assert.equal(m.handoutBody({ ...base, mode: 'k', k: '10' }).k, 10);
   assert.throws(() => m.handoutBody({ ...base, dueAt: '20/11/2026' }), /as a day/);
   assert.throws(() => m.handoutBody({ ...base, dueAt: '2026-10-29' }, { today: '2026-10-30' }), /has passed/);
   assert.throws(() => m.handoutBody({ ...base, title: 'x'.repeat(121) }), /title has at most 120/);

@@ -1100,7 +1100,8 @@ note on a hand-out, stay in the admin area: `GET /me`, `GET /assignments`,
 `POST /match` and the home page never carry them.
 
 Each dataset and collection has a **target number of ratings** per recording,
-`ratings_target` (2 unless the team chooses otherwise, from 1 to 20). A
+`ratings_target` (2 unless the team chooses otherwise, any whole number from 1
+upwards; the admin area asks before saving one of 100 or more). A
 recording counts as rated when at least that many different people have saved
 it in study mode (a revision counts once per person; a report that the
 recording cannot be annotated is shown beside the ratings and is not one). A
@@ -1407,7 +1408,7 @@ words.
 ### Tasks, windows and known answers
 
 A **task** shares one study recording, or one window of it, out among k
-annotators (2 to 6, `review.k_default` unless the request says otherwise),
+annotators (2 to 10, `review.k_default` unless the request says otherwise),
 who annotate it independently in the ordinary way: a task makes an ordinary
 assignment for each of its people, carrying the task's ID
 (`electrotag/web/tasks.py`). An assignment made without a task behaves
@@ -1514,7 +1515,7 @@ the recording. A recording or window for which fewer than k people are free is
 skipped as `too_few_annotators`. With `gold`, every person chosen gets each
 task, and a recording without a reference in the set is skipped
 (`no_gold_reference`, or `gold_mismatch` when the set's copy is another
-file). With `adopt: true`, each recording already given to two to six of the
+file). With `adopt: true`, each recording already given to two to ten of the
 chosen people (without a task) becomes a task of exactly those people, with
 their assignments joined to it (`fewer_than_two` and `too_many_annotators`
 otherwise; `window`, `windows` and `gold` cannot be given with it).
@@ -1523,7 +1524,7 @@ otherwise; `window`, `windows` and `gold` cannot be given with it).
 when they hold it for another task, 409 `already_in_task`, 409 `closed` for a
 closed task unless the same request reopens it); a person taken out loses
 their unfinished assignment, and is refused once they have saved it (409
-`has_results`). A task keeps 2 to 6 people (409 `too_few`, 400 `k_too_large`);
+`has_results`). A task keeps 2 to 10 people (409 `too_few`, 400 `k_too_large`);
 a known-answer task at least one. Closing a task takes its recording from the
 lists of those who have not saved it and keeps every saved result with the
 task; reopening gives it back to them. `task_remove` is refused once anyone has

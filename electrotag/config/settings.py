@@ -80,6 +80,12 @@ def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]
     return out
 
 
+#: How many annotators one task (or hand-out) gives each recording: at least two, for a disagreement needs two
+#: versions, and at most ANNOTATORS_PER_TASK_MAX. Raising it is this one number here and K_MAX in
+#: electrotag/web/static/js/admin/tasks_model.js (tests/test_tasks_limits.py keeps the two the same); adjudication
+#: tells any number of people apart (letters A to Z, and colours that repeat with another outline).
+ANNOTATORS_PER_TASK_MIN, ANNOTATORS_PER_TASK_MAX = 2, 10
+
 @dataclass(frozen=True)
 class FilterSettings:
     """Viewing filters applied to the displayed copy of the EEG only.
@@ -236,7 +242,8 @@ class ReviewSettings:
             corrections=_flag(block, "review", "corrections", d.corrections),
             show_corrections_to_annotators=_flag(block, "review", "show_corrections_to_annotators",
                                                  d.show_corrections_to_annotators),
-            k_default=_whole(block, "review", "k_default", d.k_default, 2, 6, "annotators per task"),
+            k_default=_whole(block, "review", "k_default", d.k_default, ANNOTATORS_PER_TASK_MIN,
+                             ANNOTATORS_PER_TASK_MAX, "annotators per task"),
             show_outcomes_to_annotators=_flag(block, "review", "show_outcomes_to_annotators",
                                               d.show_outcomes_to_annotators),
             reason_required=str(reason), matching=m,

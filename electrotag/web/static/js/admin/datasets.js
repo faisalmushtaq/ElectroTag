@@ -10,15 +10,16 @@
 import { h, clear } from '../ui/dom.js';
 import { icon } from '../views/common.js';
 import { newId } from '../util.js';
+import { ask } from '../ui/dialog.js';
 import { csvText, durationText, formatName, plural, whenText } from './model.js';
 import {
   actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, infoTable, messageArea, numberInput, put, recordingName,
   sectionHead, select, shareBar, tabBar, textArea, textInput, downloadText,
 } from './ui.js';
 import {
-  CELL_STATUS, DATASET_FIELDS, DEFAULT_DATASET_ID, MAX_COLLECTION, RATINGS_MAX, RATINGS_MIN, RATINGS_TARGET, STATUS_ORDER, TRACKING_COLUMNS, TRACK_KINDS,
+  CELL_STATUS, DATASET_FIELDS, DEFAULT_DATASET_ID, MAX_COLLECTION, RATINGS_MIN, RATINGS_TARGET, STATUS_ORDER, TRACKING_COLUMNS, TRACK_KINDS,
   builtFrom, builtFromText, cellTitle, cellWord, channelsText, datasetBody, figuresText, filterForCollection, filterSummary, formatsText, hoursText,
-  inUse, moved, peopleById, peopleShown, personText, ratedShare, ratingsTarget, ratingsText, recordingRatings, recordingsQuery, summaryCell,
+  inUse, largeTargetQuestion, moved, peopleById, peopleShown, personText, ratedShare, ratingsTarget, ratingsText, recordingRatings, recordingsQuery, summaryCell,
   summaryRows, trackingCsvRows, trackingFileName,
 } from './datasets_model.js';
 import { handoutProgress, modeText, dueState } from './handouts_model.js';
@@ -26,9 +27,19 @@ import { handoutProgress, modeText, dueState } from './handouts_model.js';
 const TABS = [{ key: 'datasets', title: 'Datasets' }, { key: 'collections', title: 'Collections' }, { key: 'tracking', title: 'Tracking' }];
 const DEFAULT_WORDS = 'Recordings registered before datasets existed, and those added without choosing one.';
 
-/** A select of the targets of ratings, 1 to 20 people. */
+/** The target of ratings: a whole number of people, 1 or more, with no upper limit. */
 function targetSelect(value) {
-  return select(Array.from({ length: RATINGS_MAX - RATINGS_MIN + 1 }, (_, i) => [String(RATINGS_MIN + i), plural(RATINGS_MIN + i, 'person', 'people')]), String(value || RATINGS_TARGET));
+  const box = numberInput({ value: String(value || RATINGS_TARGET), min: RATINGS_MIN, step: 1 });
+  box.inputMode = 'numeric';
+  box.setAttribute('aria-label', 'Target of ratings (people per recording)');
+  return box;
+}
+
+/** Before a target of RATINGS_LARGE or more is saved: asked, in case of a slip. False when it is not wanted. */
+async function targetIsMeant(n) {
+  const question = largeTargetQuestion(n);
+  if (!question) return true;
+  return ask(`A target of ${n.toLocaleString('en-GB')} ratings?`, question, { yes: `Keep ${n.toLocaleString('en-GB')}`, no: 'Change it', defaultYes: false });
 }
 
 /** The state of a dataset or collection as chips: Fully rated, Archived, Built-in. */
@@ -153,6 +164,7 @@ export class DatasetsSection {
     const make = actionButton('Make the dataset', { kind: 'primary', working: 'Making it…', msg, log: 'dataset-create', onClick: async () => {
       const values = Object.fromEntries(Object.entries(controls).map(([k, c]) => [k, c.value]));
       const body = datasetBody(values, { creating: true });
+      if (!(await targetIsMeant(body.ratings_target))) { msg.show('note', 'Not made yet: change the target of ratings, then make the dataset.'); return; }
       requestId = requestId || newId();
       const r = await this.area.write('dataset_create', { ...body, request_id: requestId });
       requestId = null;
@@ -228,6 +240,7 @@ export class DatasetsSection {
       const body = datasetBody(values);
       const changes = Object.fromEntries(Object.entries(body).filter(([k, v]) => (k === 'ratings_target' ? Number(d[k]) !== v : (d[k] || '') !== v)));
       if (!Object.keys(changes).length) { msg.show('note', 'Nothing has changed.'); return; }
+      if ('ratings_target' in changes && !(await targetIsMeant(changes.ratings_target))) { msg.show('note', 'Not saved: change the target of ratings, then save.'); return; }
       const r = await this.area.write('dataset_update', { dataset_id: d.dataset_id, ...changes });
       await this._loadLists();
       await this._datasetPage(d.dataset_id, ['success', r.changed && r.changed.length ? 'The details are saved.' : 'Nothing has changed.']);
@@ -430,9 +443,11 @@ export class DatasetsSection {
     };
     const make = actionButton('Make a collection of these', { kind: 'primary', working: 'Making it…', msg, log: 'collection-create', onClick: async () => {
       if (!name.value.trim()) throw new Error('Give the collection a name.');
+      const wanted = ratingsTarget(target.value);
+      if (!(await targetIsMeant(wanted))) { msg.show('note', 'Not made yet: change the target of ratings, then make the collection.'); return; }
       requestId = requestId || newId();
       const body = { request_id: requestId, name: name.value.trim(), description: description.value.trim(), recording_ids: chosen.map((r) => r.recording_id),
-        ratings_target: ratingsTarget(target.value), ...(byHand ? {} : { built_from: filters }) };
+        ratings_target: wanted, ...(byHand ? {} : { built_from: filters }) };
       const r = await this.area.write('collection_create', body);
       requestId = null;
       this.view.collection = r.collection.collection_id;
@@ -494,8 +509,10 @@ export class DatasetsSection {
       const body = { collection_id: c.collection_id };
       if (cName.value.trim() !== c.name) body.name = cName.value.trim();
       if (cDesc.value.trim() !== (c.description || '')) body.description = cDesc.value.trim();
-      if (ratingsTarget(cTarget.value) !== Number(c.ratings_target)) body.ratings_target = Number(cTarget.value);
+      const wanted = ratingsTarget(cTarget.value);
+      if (wanted !== Number(c.ratings_target)) body.ratings_target = wanted;
       if (Object.keys(body).length === 1) { dMsg.show('note', 'Nothing has changed.'); return; }
+      if ('ratings_target' in body && !(await targetIsMeant(wanted))) { dMsg.show('note', 'Not saved: change the target of ratings, then save.'); return; }
       await this.area.write('collection_update', body);
       await this._loadLists();
       await this._collectionPage(c.collection_id, ['success', 'The details are saved.']);

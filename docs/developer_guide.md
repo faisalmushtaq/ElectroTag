@@ -214,6 +214,14 @@ told to try again.
   size check, and a source for its markers in `eeg.events`. The browser needs
   a reader of its own in `js/eeg/` that gives the same values, with tests
   against MNE in `web_tests/unit/` ([architecture](architecture.md)).
+* **Annotators per task.** A task, a hand-out shared out k per recording and
+  `review.k_default` take 2 to 10 people. The limit is
+  `ANNOTATORS_PER_TASK_MAX` in `config/settings.py` and `K_MAX` in
+  `js/admin/tasks_model.js`, which `tests/test_tasks_limits.py` keeps the same;
+  raising it means changing both. Adjudication has letters for 26 people
+  (`reliability.conflicts.LETTERS`) and tells them apart by six colours, taken
+  again with a dashed, a dotted and then a dash-and-dot outline
+  (`letterLook` in `js/expert/adjudicate.js`), so 24 are distinct as it stands.
 * **Drafts and autosave.** The browser keeps drafts of unfinished work
   (`js/annotate/session.js`) and the study stores them (`PUT /drafts/{recording_id}`).
   A session writes no draft once its view has closed or its work was discarded,

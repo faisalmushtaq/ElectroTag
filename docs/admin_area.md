@@ -357,7 +357,9 @@ dataset has recordings. Archive keeps a dataset on record while it takes no new 
 cannot be handed out again; Remove is offered for a dataset without recordings or open hand-outs.
 
 **The target of ratings.** Each dataset and each collection has a number of ratings to reach for every
-recording: 2 unless you choose otherwise, from 1 to 20. A recording counts as rated once that many
+recording: 2 unless you choose otherwise, and any whole number from 1 upwards. A target of 100 or
+more is asked about before it is saved ("A target of 150 ratings?"), in case a key was pressed once
+too often; Keep it saves it as typed and Change it leaves the form open. A recording counts as rated once that many
 different people have saved it in study mode, whoever gave it to them; a person's revisions count
 once, and a report that the recording cannot be annotated is shown beside the ratings without being
 one. A dataset or collection is fully rated when every recording of it in use has met the target,
@@ -564,7 +566,7 @@ that name them.
 
 Tasks share recordings out so that several people annotate each one independently, as in the
 dual screening of a systematic review: each recording, or each part of one, goes to k annotators
-(2 to 6), who meet it as one more recording in their own list. Once all of them have saved it, the
+(2 to 10), who meet it as one more recording in their own list. Once all of them have saved it, the
 differences between their versions are the task's conflicts, which experts adjudicate. Known-answer
 recordings can be mixed in to measure each person's accuracy. The section is under People.
 
@@ -1255,7 +1257,10 @@ it, because every decision is kept by the study as you make it.
 
 In the **adjudication view** every version is drawn on the EEG with its letter before the type (A:
 Eye-blink-artifact, B: Eye-movement-artifact), each letter in its own colour, and the lanes above
-the EEG put each person's marks side by side on the same time axis, named in the same colours. The
+the EEG put each person's marks side by side on the same time axis, named in the same colours. There
+are six colours: the first six people (A to F) have one each, and the next six (G to L) take them again
+with a dashed outline on their marks and a dashed underline beneath their letter, so that A and G share
+a colour and are told apart by the outline and by the letter, which every mark carries. The
 side panel keeps the current conflict (its kinds and what each person marked, with their confidence
 and note) and the decision bar at its top, where they stay while the list of every conflict below
 them scrolls, in the order of the recording, with a tick once a conflict is decided. The panel's

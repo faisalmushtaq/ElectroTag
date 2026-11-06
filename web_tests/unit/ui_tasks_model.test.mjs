@@ -84,7 +84,9 @@ test('the request of a share-out, with its checks in plain words', () => {
   assert.throws(() => requestBody({ ...base, pool: [] }), /Choose the annotators/);
   assert.throws(() => requestBody({ ...base, all: false, recordingIds: [] }), /at least one recording/);
   assert.throws(() => requestBody({ ...base, k: '4' }), /choose at least 4 annotators/);
-  assert.throws(() => requestBody({ ...base, k: '7' }), /2 to 6/);
+  assert.throws(() => requestBody({ ...base, k: '11' }), /2 to 10/);
+  const ten = Array.from({ length: 10 }, (_, i) => `A${String(i + 1).padStart(2, '0')}`);
+  assert.equal(requestBody({ ...base, pool: ten, k: '10' }).k, 10, 'ten annotators per recording');
   assert.throws(() => requestBody({ ...base, part: 'one', startS: '20', endS: '21' }), /at least 2 seconds/);
   assert.throws(() => requestBody({ ...base, part: 'one', startS: '', endS: '21' }), /start and the end/);
   assert.throws(() => requestBody({ ...base, part: 'many', lengthS: '30', overlapS: '15' }), /less than half/);

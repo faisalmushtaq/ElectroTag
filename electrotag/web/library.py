@@ -210,7 +210,7 @@ def _filters(body: dict[str, Any]) -> dict[str, Any]:
         f["status"] = status
     choice = body.get("choice")
     if choice is not None:
-        if not isinstance(choice, str) or not re.match(r"^(one|all|none|pick|edited|[A-F])$", choice):
+        if not isinstance(choice, str) or not re.match(r"^(one|all|none|pick|edited|[A-Z])$", choice):
             raise _bad("choice must be one, all, none, pick, edited or a letter")
         f["choice"] = choice
     kind = body.get("kind")

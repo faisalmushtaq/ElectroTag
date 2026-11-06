@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The target of ratings of a dataset or collection no longer stops at 20: it is typed in as any whole
+number from 1 upwards, and a target of 100 or more is asked about before it is saved, in case of a slip
+(docs/admin_area.md, "The target of ratings"). A task, a hand-out shared out k per recording and the
+study's `review.k_default` now take up to 10 annotators rather than 6 (docs/admin_area.md, "Tasks"). In
+the adjudication view the six letter colours serve the first six people, and people G to L take them
+again with a dashed outline on their marks and a dashed underline beneath their letter.
+
 The break reminder now counts the work since the last break across an annotator's whole session. That
 time was kept only by the open page, so a reload, a new tab or signing in again started it from nothing,
 and a reminder put off with Remind me in 15 minutes came back as soon as the next recording opened. It is

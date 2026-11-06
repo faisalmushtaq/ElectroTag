@@ -60,6 +60,7 @@ from typing import TYPE_CHECKING, Any
 
 from electrotag.app.common import now_local_iso
 from electrotag.app.io.tsv import tsv_cell
+from electrotag.config.settings import ANNOTATORS_PER_TASK_MAX, ANNOTATORS_PER_TASK_MIN
 from electrotag.web import audit
 from electrotag.web.errors import ApiError
 from electrotag.web.manifest import SCOPE_STUDY, fingerprint_of, set_scope
@@ -70,8 +71,8 @@ if TYPE_CHECKING:
 
 TASK_SCHEMA = "electrotag.task"
 GOLD_SCHEMA = "electrotag.gold_score"
-#: How many annotators a task may have (a gold task goes to the whole pool, up to MAX_POOL).
-K_MIN, K_MAX = 2, 6
+#: How many annotators a task may have (electrotag/config/settings.py); a gold task goes to the whole pool (MAX_POOL).
+K_MIN, K_MAX = ANNOTATORS_PER_TASK_MIN, ANNOTATORS_PER_TASK_MAX
 MAX_POOL = 1000
 #: The most tasks one request makes, and the shortest window.
 MAX_TASKS = 5000

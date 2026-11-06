@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { SkipTest, signIn, waitForRoute, chooseFolder } from './helpers.mjs';
+import { SkipTest, signIn, waitForRoute, chooseFolder, clickDialogButton } from './helpers.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const STATIC = path.resolve(HERE, '..', '..', 'electrotag', 'web', 'static');
@@ -129,7 +129,16 @@ async function flow(t, page, { people, folder, collide, study }) {
   await form.locator('.admin-field', { hasText: 'Licence' }).locator('input').fill('CC0');
   await form.locator('.admin-field', { hasText: 'Origin or address' }).locator('input').fill('https://example.org/youth');
   await form.locator('.admin-field', { hasText: 'Path prefix' }).locator('input').fill('youth');
-  await form.locator('.admin-field', { hasText: 'Target of ratings' }).locator('select').selectOption('2');
+  // the target has no upper limit, but one of 100 or more is asked about first, in case of a slip
+  const target = form.locator('.admin-field', { hasText: 'Target of ratings' }).locator('input');
+  await target.fill('150');
+  await page.click('[data-log="dataset-create"]');
+  await page.waitForSelector('.dialog');
+  assert.match(await page.innerText('.dialog'), /150 different people/);
+  await clickDialogButton(page, 'Change it');
+  await until(page, /Not made yet: change the target of ratings/);
+  assert.equal(await page.locator('h2[data-dataset-title]').count(), 0, 'nothing was made');
+  await target.fill('2');
   await shots(t, page, 'new_dataset');
   await page.click('[data-log="dataset-create"]');
   await page.waitForSelector('h2[data-dataset-title]');

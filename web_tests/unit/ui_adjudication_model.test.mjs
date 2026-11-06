@@ -296,3 +296,29 @@ test('the library export has the columns of the study\'s own library.tsv', async
   const cols = /LIBRARY_COLUMNS = \(([^)]*)\)/s.exec(py)[1].match(/"([a-z_]+)"/g).map((x) => x.slice(1, -1));
   assert.deepEqual([...m.LIBRARY_COLUMNS], cols);
 });
+
+test('up to ten people (and more) are told apart in adjudication: six colours, then the same colours with another outline', async () => {
+  const { LETTER_COLOURS, LETTER_ROUNDS, letterLook, letterStyle } = await import('../../electrotag/web/static/js/expert/adjudicate.js');
+  const { K_MAX } = await import('../../electrotag/web/static/js/admin/tasks_model.js');
+  assert.equal(K_MAX, 10);
+  const looks = Array.from({ length: 24 }, (_, i) => letterLook(i));
+  // A to F: the six colours, plain; G to L: the same colours, dashed; M to R dotted; S to X a dash and a dot
+  assert.deepEqual(looks.slice(0, 6).map((l) => l.colour), [...LETTER_COLOURS]);
+  assert.ok(looks.slice(0, 6).every((l) => l.dash === null && l.underline === null));
+  for (let i = 6; i < 12; i++) {
+    assert.equal(looks[i].colour, LETTER_COLOURS[i - 6], `${String.fromCharCode(65 + i)} takes ${String.fromCharCode(59 + i)}'s colour`);
+    assert.deepEqual(looks[i].dash, LETTER_ROUNDS[1].dash);
+    assert.equal(looks[i].underline, 'dashed');
+  }
+  assert.equal(looks[12].underline, 'dotted');
+  assert.equal(looks[18].underline, 'wavy');
+  // every person of a task of K_MAX looks different from every other
+  const keys = looks.slice(0, K_MAX).map((l) => `${l.colour}|${JSON.stringify(l.dash)}`);
+  assert.equal(new Set(keys).size, K_MAX);
+  // so do the 24 of four rounds (the letters, on every tag, tell the 25th and 26th apart)
+  assert.equal(new Set(looks.map((l) => `${l.colour}|${JSON.stringify(l.dash)}`)).size, 24);
+  // the letter in the panel and lanes: its colour, and past F its round's underline
+  assert.deepEqual(letterStyle(looks[0]), { color: LETTER_COLOURS[0] });
+  assert.equal(letterStyle(looks[7]).textDecorationStyle, 'dashed');
+  assert.equal(letterStyle(looks[7]).color, LETTER_COLOURS[1]);
+});

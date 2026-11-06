@@ -27,7 +27,7 @@ const HANDOUT_RE = /^h-[0-9a-f]{10}$/;
 const STATES = ['active', 'archived'];
 const DATASET_TEXT = { name: 120, description: 5000, origin: 500, licence: 200, citation: 2000, contact: 200, notes: 5000 };
 export const RATINGS_TARGET = 2;
-const [RATINGS_MIN, RATINGS_MAX] = [1, 20];
+const [RATINGS_MIN, RATINGS_MAX] = [1, Number.MAX_SAFE_INTEGER]; // no upper limit (datasets.py)
 const MAX_COLLECTION = 2000;
 const [MAX_GROUP_MEMBERS, MAX_GROUP_HISTORY] = [200, 1000];
 const CHANGES_KEPT = 100;
@@ -107,7 +107,7 @@ function ratingsTarget(body, fallback = RATINGS_TARGET) {
   const v = has(body, 'ratings_target') ? body.ratings_target : fallback;
   if (v === null || v === undefined) return null;
   if (!Number.isInteger(v) || v < RATINGS_MIN || v > RATINGS_MAX) {
-    throw bad(`ratings_target (the people who should rate each recording) must be a whole number from ${RATINGS_MIN} to ${RATINGS_MAX}`);
+    throw bad(`ratings_target (the people who should rate each recording) must be a whole number of ${RATINGS_MIN} or more`);
   }
   return v;
 }
