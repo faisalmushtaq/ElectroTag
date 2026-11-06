@@ -8,13 +8,17 @@
 // recording's dataset is its record's `dataset_id` (none means the built-in dataset) and an assignment's hand-out
 // its `handout_id`. Nothing is ever deleted: a dataset, collection or group that is removed is marked so. A hand-out
 // shared out k per recording uses Tasks, which need the study's Python code, so it is answered with needs_server.
+//
+// One person's saved work on one recording (electrotag/web/withdrawals.py) is here too: its files, withdrawing it
+// (the attempts move from state.submissions to state.withdrawn) and restoring it. The sandbox keeps no record of
+// downloads of the whole results, so it never answers `downloaded`.
 
 import { ApiError } from './http.js';
 import { needsServer } from './demo_admin.js';
 import { indexRows } from './demo_corrections.js';
 import { sha256Hex } from '../eeg/sha256.js';
-import { nowLocalIso } from '../util.js';
-import { deepCopy, rolesOf } from '../admin/model.js';
+import { newId, nowLocalIso } from '../util.js';
+import { deepCopy, plural, rolesOf } from '../admin/model.js';
 
 export const DEFAULT_DATASET_ID = 'study-recordings';
 export const DEFAULT_DATASET_NAME = 'Study recordings';
@@ -556,6 +560,104 @@ export class DemoLibrary {
       out[k] = v;
     }
     return this.a.op_set_update({ ...body, assessment_matching: out });
+  }
+
+  // ------------------------------------------------------- one person's saved work (withdrawals.py)
+  _item(body) {
+    const aid = typeof body.annotator_id === 'string' && body.annotator_id.trim() ? body.annotator_id.trim().toUpperCase() : '';
+    if (!aid) throw bad('Give annotator_id');
+    const rid = body.recording_id;
+    if (typeof rid !== 'string' || !rid.trim() || rid.length > 500) throw bad('Give recording_id');
+    const mode = body.mode || 'standard';
+    if (!['standard', 'guided', 'practice', 'assessment'].includes(mode)) throw bad('mode is standard, guided, practice or assessment');
+    return { aid, rid: rid.trim(), mode, ctx: mode !== 'standard' ? String(body.context_id || '') : '' };
+  }
+
+  _saved({ aid, rid, mode, ctx }) {
+    return this.b.state.submissions.filter((s) => s.annotator_id === aid && s.recording_id === rid && (s.mode || 'standard') === mode
+      && (s.context_id || '') === ctx).sort((x, y) => x.attempt - y.attempt);
+  }
+
+  _withdrawn() {
+    if (!Array.isArray(this.b.state.withdrawn)) this.b.state.withdrawn = [];
+    return this.b.state.withdrawn;
+  }
+
+  static _public(w) {
+    const r = w.record;
+    return { withdrawal_id: r.withdrawal_id, annotator_id: r.annotator_id, recording_id: r.recording_id, mode: r.mode, context_id: r.context_id,
+      then: r.then, withdrawn_at: r.withdrawn_at, withdrawn_by: r.withdrawn_by, downloaded_before: null,
+      versions: w.submissions.map((s) => ({ version: s.attempt, saved_at: s.saved_at })) };
+  }
+
+  async op_saved_work_get(body) {
+    const it = this._item(body);
+    const { myResults } = await import('./demo_export.js');
+    const versions = [];
+    for (const s of this._saved(it)) {
+      const out = await myResults(this.b, it.rid, it.mode, it.ctx, s.attempt, it.aid);
+      versions.push({ version: s.attempt, saved_at: s.saved_at, folder: out.file_name.replace(/\.zip$/, ''), files: out.files });
+    }
+    if (!versions.length) throw notFound('not_saved', `${it.aid} has no saved annotations of ${it.rid}.`);
+    const stem = it.rid.split('/').pop().replace(/\.[^.]*$/, '');
+    return { annotator_id: it.aid, recording_id: it.rid, mode: it.mode, context_id: it.ctx, file_name: `${stem}_${it.aid}_saved.zip`, versions };
+  }
+
+  async op_saved_work_withdraw(body) {
+    const it = this._item(body);
+    const then = body.then;
+    if (!['todo', 'unassign'].includes(then)) throw bad('then is todo (to annotate it again) or unassign (to take it off their list)');
+    if (it.mode !== 'standard') throw bad('Only the work of study recordings can be withdrawn; training work stays with the training programme.', 'not_study_work');
+    const subs = this._saved(it);
+    if (!subs.length) throw notFound('not_saved', `${it.aid} has no saved annotations of ${it.rid}.`);
+    if ((this.b.state.corrections || []).some((r) => r.annotator_id === it.aid && r.recording_id === it.rid)) {
+      throw conflict('has_derived', `${it.aid}'s work on ${it.rid} stays: an expert's correction of it was made from it. Remove that first in the expert area.`);
+    }
+    const key = this.b._key(it.aid, it.rid, it.mode, it.ctx);
+    const record = { withdrawal_id: newId(), annotator_id: it.aid, recording_id: it.rid, mode: it.mode, context_id: it.ctx, then,
+      withdrawn_at: nowLocalIso(), withdrawn_by: this.user };
+    const w = { record, submissions: subs, done: this.b.state.done[key] || null };
+    this._withdrawn().push(w);
+    this.b.state.submissions = this.b.state.submissions.filter((s) => !subs.includes(s));
+    delete this.b.state.done[key];
+    if (then === 'unassign') {
+      const i = this.a.s.assignments.findIndex((a) => a.annotator_id === it.aid && a.recording_id === it.rid && a.mode === it.mode);
+      if (i >= 0) this.a.s.assignments.splice(i, 1);
+    }
+    this._audit('saved_work_withdraw', `Withdrew ${it.aid}'s saved work on ${it.rid} (${plural(subs.length, 'version')}); the recording was ${then === 'todo' ? 'given back to annotate again' : 'taken off their list'}`,
+      { withdrawal_id: record.withdrawal_id, annotator_id: it.aid, recording_id: it.rid, then, versions: subs.map((s) => s.attempt), downloaded_before: null });
+    return { withdrawal: DemoLibrary._public(w) };
+  }
+
+  op_withdrawals_list(body) {
+    const aid = body.annotator_id;
+    if (aid !== undefined && aid !== null && (typeof aid !== 'string' || !aid.trim())) throw bad('annotator_id is an annotator\'s ID');
+    const rows = this._withdrawn().filter((w) => !aid || w.record.annotator_id === aid.trim().toUpperCase()).map((w) => DemoLibrary._public(w));
+    rows.sort((x, y) => String(y.withdrawn_at).localeCompare(String(x.withdrawn_at)));
+    return { withdrawals: rows };
+  }
+
+  op_saved_work_restore(body) {
+    const wid = body.withdrawal_id;
+    if (typeof wid !== 'string' || !wid) throw bad('Give withdrawal_id');
+    const list = this._withdrawn();
+    const i = list.findIndex((w) => w.record.withdrawal_id === wid);
+    if (i < 0) throw notFound('no_withdrawal', 'There is no withdrawn work with that ID; it may have been restored.');
+    const w = list[i];
+    const r = w.record;
+    const it = { aid: r.annotator_id, rid: r.recording_id, mode: r.mode, ctx: r.context_id };
+    if (this._saved(it).length) {
+      throw conflict('saved_again', `${it.aid} has saved ${it.rid} again since it was withdrawn, so the withdrawn work stays aside. Withdraw the new work first to put the earlier work back.`);
+    }
+    list.splice(i, 1);
+    this.b.state.submissions.push(...w.submissions);
+    if (w.done) this.b.state.done[this.b._key(it.aid, it.rid, it.mode, it.ctx)] = w.done;
+    if (!this.a.s.assignments.some((a) => a.annotator_id === it.aid && a.recording_id === it.rid && a.mode === it.mode)) {
+      this.a.s.assignments.push({ annotator_id: it.aid, recording_id: it.rid, mode: it.mode, context_id: it.ctx, at: nowLocalIso() });
+    }
+    this._audit('saved_work_restore', `Restored ${it.aid}'s saved work on ${it.rid} (${plural(w.submissions.length, 'version')}), withdrawn by ${r.withdrawn_by}`,
+      { withdrawal_id: wid, annotator_id: it.aid, recording_id: it.rid });
+    return { withdrawal: DemoLibrary._public(w) };
   }
 
   /** user_remove: the person's membership of groups ends. */

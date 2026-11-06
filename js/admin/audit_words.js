@@ -74,6 +74,11 @@ export const AUDIT_OPS = Object.freeze({
   contacts_changed: 'Contact details changed',
   contacts_download: 'Contacts list downloaded',
   results_zip_contacts: 'Results downloaded with names and contact details',
+  // downloads of the whole results, and one person's saved work withdrawn and restored (withdrawals.py)
+  results_zip: 'Results downloaded',
+  results_export: 'Results exported with the command',
+  saved_work_withdraw: 'Saved work withdrawn',
+  saved_work_restore: 'Saved work restored',
 });
 
 /**
