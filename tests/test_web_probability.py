@@ -75,6 +75,7 @@ def test_administrators_only_and_reads() -> None:
 def test_one_recording_for_the_browser(client: TestClient, admin: Api, recordings: Path, app: Any) -> None:
     _two_raters(client, recordings)
     _answer(app, "A01", {"eeg_years": "Less than 1"})
+    _answer(app, "A02", {})
     out = admin.admin_ok("probability_get", {"recording_id": SUB1})
     assert [p["annotator_id"] for p in out["people"]] == ["A01", "A02"]
     assert {p["source"] for p in out["people"]} == {"study"}
