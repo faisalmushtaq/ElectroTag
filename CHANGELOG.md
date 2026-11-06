@@ -5,6 +5,17 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+A person's Work, in Results and on their page under Annotators, now has Download and Withdraw beside each
+saved recording. Download gives every saved version's files in one zip. Withdraw takes a study recording's
+saved work out of the results, the lists, the analyses, the results zip and the export, keeping it aside
+under Withdrawn work with Restore, and gives the recording back to the person to annotate again or takes it
+off their list, as the administrator chooses. When the whole results were downloaded after the work was
+saved, it says so first and asks again; every download of the results (the zip, `GET /admin/results.zip`
+and `electrotag web export`) is now in the audit log for this. Training work, and work an expert has
+corrected or an adjudication has compared, stays (`saved_work_get`, `saved_work_withdraw`,
+`withdrawals_list`, `saved_work_restore`; docs/admin_area.md, "One person's saved work"). The Results
+section's list of every review no longer breaks after a person's Work has been opened.
+
 The browser tests now find the Python of a Windows virtual environment (`.venv\Scripts\python.exe`)
 and Windows's own names for Python (`python`, `py`) by themselves, as they already found
 `.venv/bin/python` and `python3` on macOS and Linux, so `ELECTROTAG_PYTHON` is needed only for a

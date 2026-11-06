@@ -1007,6 +1007,65 @@ class FirestoreStore(Store):
                 raise
         return SavedResult(session=session, result=result, files=files, attempt=attempt)
 
+    # ------------------------------------------------------- withdrawn work
+    # A withdrawal moves each saved version's document from ``submissions`` to ``withdrawn`` (as
+    # ``<withdrawal_id>_<its ID>``) and keeps its record in ``withdrawals``; restoring moves them back.
+    _BLOB_FIELDS = ("blob", "chunks", "chunk_prefix")
+
+    def withdraw_saved(self, annotator_id: str, recording_id: str, mode: str, context_id: str,
+                       record: dict[str, Any]) -> dict[str, Any] | None:
+        ctx = context_id if mode != "standard" else ""
+        snaps = [x for x in self._submissions(annotator_id)
+                 if (x.to_dict() or {}).get("recording_id") == recording_id
+                 and (x.to_dict() or {}).get("mode", "standard") == mode
+                 and (x.to_dict() or {}).get("context_id", "") == ctx]
+        if not snaps:
+            return None
+        wid = str(record["withdrawal_id"])
+        kept = {**record, "versions": [dict((x.to_dict() or {}).get("entry", {})) for x in snaps],
+                "documents": [x.id for x in snaps], "restored_at": None}
+        self.doc.collection("withdrawals").document(wid).create(kept)
+        for x in snaps:  # a copy aside first, then the original goes
+            fields = {k: v for k, v in (x.to_dict() or {}).items() if k not in self._BLOB_FIELDS}
+            self._put_blob(self.doc.collection("withdrawn").document(f"{wid}_{x.id}"),
+                           {**fields, "withdrawal_id": wid, "original_id": x.id}, self._get_blob(x) or {}, create=True)
+            self._delete(x.reference)
+        return kept
+
+    def withdrawals(self, annotator_id: str | None = None) -> list[dict[str, Any]]:
+        out = []
+        for x in self.doc.collection("withdrawals").stream():
+            d = x.to_dict() or {}
+            if d.get("restored_at") or (annotator_id is not None and d.get("annotator_id") != annotator_id):
+                continue
+            out.append(d)
+        return out
+
+    def restore_withdrawn(self, withdrawal_id: str) -> dict[str, Any] | None:
+        if not re.match(r"^[A-Za-z0-9_-]{1,80}$", str(withdrawal_id)):
+            return None
+        ref = self.doc.collection("withdrawals").document(withdrawal_id)
+        snap = ref.get()
+        rec = snap.to_dict() if snap.exists else None
+        if not rec or rec.get("restored_at"):
+            return None
+        for doc_id in rec.get("documents", []):
+            if self.doc.collection("submissions").document(doc_id).get().exists:
+                raise StoreError(f"{doc_id} is saved already, so the withdrawn copy stays aside")
+        for doc_id in rec.get("documents", []):
+            aside = self.doc.collection("withdrawn").document(f"{withdrawal_id}_{doc_id}")
+            x = aside.get()
+            if not x.exists:
+                continue
+            fields = {k: v for k, v in (x.to_dict() or {}).items()
+                      if k not in (*self._BLOB_FIELDS, "withdrawal_id", "original_id")}
+            self._put_blob(self.doc.collection("submissions").document(doc_id), fields, self._get_blob(x) or {},
+                           create=True)
+            self._delete(aside)
+        rec["restored_at"] = now_local_iso()
+        ref.set(rec)
+        return rec
+
     def submission_files(self, annotator_id: str | None = None) -> list[tuple[dict[str, Any], dict[str, bytes],
                                                                               list[str]]]:
         """(register row, files, session log lines) of every saved recording (for the export)."""

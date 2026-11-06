@@ -99,6 +99,13 @@ OPERATIONS += DATASET_READS + TRACKING_READS + DATASET_WRITES
 # answers, and the contacts list (written to the audit log, as it names people).
 READ_ONLY += ("questionnaire_get", "questionnaire_summary")
 OPERATIONS += ("questionnaire_get", "questionnaire_summary", "contacts_download")
+# One person's saved work on one recording (electrotag/web/withdrawals.py): its files, withdrawing it from the results
+# and putting it back.
+from electrotag.web.withdrawals import READS as WITHDRAWAL_READS  # noqa: E402
+from electrotag.web.withdrawals import WRITES as WITHDRAWAL_WRITES  # noqa: E402
+
+READ_ONLY += WITHDRAWAL_READS
+OPERATIONS += WITHDRAWAL_READS + WITHDRAWAL_WRITES
 
 
 # ------------------------------------------------------------------ checking input
@@ -1686,6 +1693,8 @@ class Admin:
         if include:  # a file that names people: written to the audit log
             self._audit(user, "results_zip_contacts", "Downloaded the results with the names and contact details "
                         "(contacts.csv)", include_contacts=True)
+        else:  # so that withdrawing saved work later can say that a copy of it left the study (withdrawals.py)
+            self._audit(user, "results_zip", "Downloaded the results (zip)")
         return out
 
     # ------------------------------------------------------------ the record
@@ -1795,6 +1804,17 @@ def _tracking_op(name: str) -> Any:
     return op
 
 
+def _withdrawal_op(name: str) -> Any:
+    def op(self: Admin, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return getattr(self.service.withdrawals, f"op_{name}")(user, body)
+
+    op.__name__ = f"op_{name}"
+    op.__doc__ = f"``{name}``: :meth:`electrotag.web.withdrawals.Withdrawals.op_{name}`."
+    return op
+
+
+for _name in WITHDRAWAL_READS + WITHDRAWAL_WRITES:
+    setattr(Admin, f"op_{_name}", _withdrawal_op(_name))
 for _name in DATASET_READS + DATASET_WRITES:
     setattr(Admin, f"op_{_name}", _dataset_op(_name))
 for _name in TRACKING_READS:

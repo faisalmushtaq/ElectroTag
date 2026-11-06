@@ -11,6 +11,7 @@
 
 import { h, clear } from '../ui/dom.js';
 import { reviewButton, reviewCount, reviewsCard } from './reviews.js';
+import { savedWorkButtons, withdrawnCard } from './saved_work.js';
 import { setAsideButton } from './assignments.js';
 import { trainingGateCard } from './training_gate.js';
 import { answeredChip, questionnaireCard } from './questionnaire.js';
@@ -631,10 +632,14 @@ export class AnnotatorsSection {
       { title: 'Saved', sort: (i) => i.saved_at, render: (i) => whenText(i.saved_at, { never: '–' }) },
       { title: 'Attempts', num: true, sort: (i) => i.attempts ?? 0, render: (i) => String(i.attempts ?? 0) },
       { title: 'Reviews', num: true, render: (i) => reviewCount(this._reviews, u.annotator_id, i) },
-      { title: '', cls: 'actions', render: (i) => (i.status === 'done' ? reviewButton(this.area, u.annotator_id, i, { route: 'admin-annotators', params: { annotator: u.annotator_id } })
+      { title: '', cls: 'actions', render: (i) => (i.status === 'done' ? h('span.btn-row.tight', {}, reviewButton(this.area, u.annotator_id, i, { route: 'admin-annotators', params: { annotator: u.annotator_id } }),
+        savedWorkButtons(this.area, u.annotator_id, i, { msg: workMsg, onChange: () => this._refreshWork(u, items, withdrawn, workMsg) }))
         : i.status === 'unusable' ? setAsideButton(this.area, u.annotator_id) : this._unassignButton(u.annotator_id, i, msg)) },
     ], [], { empty: 'Nothing is assigned to this person.', pageSize: 15, sortable: true, caption: `Work of ${u.annotator_id}` });
     const itemsNote = loading();
+    const workMsg = messageArea();
+    // withdrawn saved work of this person, with Restore (saved_work.js)
+    const withdrawn = withdrawnCard(this.area, u.annotator_id, { msg: workMsg, onChange: () => this._refreshWork(u, items, withdrawn, workMsg) });
     const reviewsHost = h('div.admin-stack');
     this._reviews = [];
     Promise.all([this.area.read('assignments_list', { annotator_id: u.annotator_id }),
@@ -667,14 +672,22 @@ export class AnnotatorsSection {
       questionnaireCard(this.area, u), // the sign-up questionnaire's answers and the contact details (questionnaire.js)
       card('Work',
         h('p.caption', {}, 'Each recording given to this person, with the time it was open and not paused in their browser (breaks left out), the annotations saved, when, and how many times.'),
-        itemsNote, items,
+        workMsg, itemsNote, items,
         h('div.btn-row', {}, h('button.btn', { type: 'button', onclick: () => this.area.go('assignments', { annotator: u.annotator_id }) }, `Assign recordings to ${u.annotator_id}…`))),
-      reviewsHost);
+      withdrawn, reviewsHost);
     if (note) msg.show(...note);
     else {
       const heading = this.detailView.querySelector('h2');
       if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
     }
+  }
+
+  /** The person's work and withdrawn work afresh, after a withdrawal or a restoration. */
+  async _refreshWork(u, items, withdrawn, msg) {
+    try {
+      items.update((await this.area.read('assignments_list', { annotator_id: u.annotator_id })).items || []);
+      await withdrawn.refresh();
+    } catch (exc) { msg.problem(exc); }
   }
 
   _unassignButton(aid, item, msg) {

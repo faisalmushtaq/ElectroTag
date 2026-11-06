@@ -14,6 +14,7 @@ from the register after every update and is never read back.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -121,6 +122,29 @@ class CompletionRegister:
             if row["mode"] == "standard":
                 self._write_completed_list(row["annotator_id"], entries)
             return True
+        finally:
+            lock.release()
+
+    def remove(self, match: Callable[[dict[str, str]], bool]) -> list[dict[str, str]]:
+        """Take the rows for which ``match`` is true out of the register (the administrator's withdrawal of
+        saved work, electrotag/web/withdrawals.py); returns them. ``add`` puts a row back."""
+        lock = self._lock()
+        lock.acquire(timeout_s=self.lock_timeout_s)
+        try:
+            entries = self.entries()
+            gone = [e for e in entries if match(e)]
+            if not gone:
+                return []
+            kept = [e for e in entries if not match(e)]
+            columns = list(REGISTER_COLUMNS)
+            for e in entries:
+                for k in e:
+                    if k not in columns:
+                        columns.append(k)
+            atomic_write_bytes(self.path, tsv_bytes(columns, [[e.get(c, "") for c in columns] for e in kept]))
+            for aid in sorted({e["annotator_id"] for e in gone if e.get("mode", "standard") == "standard"}):
+                self._write_completed_list(aid, kept)
+            return gone
         finally:
             lock.release()
 

@@ -128,6 +128,8 @@ Annotated_Events/                the results, in ElectroTag's results layout
                                  part of them: _interaction_log.jsonl)
     training_progress/           stars, scores and times of each trainee
     training/<set>/quiz/         the short-segment quiz results
+withdrawn/                       saved work an administrator withdrew from the results, kept until it is
+                                 restored (docs/admin_area.md, "One person's saved work")
 ```
 
 The admin area shows who has done what and downloads `Annotated_Events` as a zip, with the study's

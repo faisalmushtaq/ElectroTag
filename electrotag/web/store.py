@@ -551,6 +551,25 @@ class Store(ABC):
         files = self.saved_files(annotator_id, recording_id, mode, context_id, attempt)
         return next((b for n, b in sorted(files.items()) if n.endswith("_annotations.json")), None)
 
+    # ------------------------------------------------------- withdrawn work
+    @abstractmethod
+    def withdraw_saved(self, annotator_id: str, recording_id: str, mode: str, context_id: str,
+                       record: dict[str, Any]) -> dict[str, Any] | None:
+        """Take every saved version of one person's work on one recording out of the results: their files
+        and their completion register rows are kept aside with ``record`` (``withdrawal_id``, who, when and
+        what was chosen for the recording), so that no list, analysis or export sees them, until
+        :meth:`restore_withdrawn`. Returns the record kept, with ``versions`` (the register rows), or None
+        when nothing is saved."""
+
+    @abstractmethod
+    def withdrawals(self, annotator_id: str | None = None) -> list[dict[str, Any]]:
+        """The records of the work withdrawn and not restored (every annotator's, or one's), in no order."""
+
+    @abstractmethod
+    def restore_withdrawn(self, withdrawal_id: str) -> dict[str, Any] | None:
+        """Put withdrawn work back into the results, as it was; returns its record, or None when there is
+        no such withdrawal."""
+
     # ------------------------------------------------------- derived versions
     @abstractmethod
     def save_derived(self, kind: str, make_session: Callable[[Any], AnnotationSession], *, elapsed_s: float,

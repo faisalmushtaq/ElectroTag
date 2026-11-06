@@ -132,8 +132,7 @@ export function eventsSidecar({ recordingId, annotatorId, sessionId, confidence,
 }
 
 /** GET /me/results/{recording_id}: the annotator's own files of one saved version (the latest, or `version`). */
-export async function myResults(backend, recordingId, mode = 'standard', contextId = '', version = null) {
-  const aid = backend._aid();
+export async function myResults(backend, recordingId, mode = 'standard', contextId = '', version = null, aid = backend._aid()) {
   const m = mode || 'standard';
   if (typeof recordingId !== 'string' || !recordingId || !MODES.includes(m)) throw new ApiError(400, 'bad_request', 'recording_id and mode are needed');
   const ctx = m === 'standard' ? '' : String(contextId || '');

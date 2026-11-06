@@ -418,6 +418,11 @@ def cmd_export(a: argparse.Namespace) -> int:
     except ExportError as exc:
         raise CommandError(str(exc)) from exc
     root = Path(a.to).resolve()
+    from electrotag.web import audit
+
+    # so that withdrawing saved work later can say that a copy of it left the study (electrotag/web/withdrawals.py)
+    audit.record(store, "command", "results_export", f"Exported the results ({counts['recordings']} saved "
+                 "recording(s)) with electrotag web export", {"recordings": counts["recordings"]})
     print(f"Exported into {root}: {counts['recordings']} saved recording(s) ({counts['written']} new file(s)), "
           f"{counts['visits']} interaction log(s) of visits and {counts.get('recording_logs', 0)} of saved "
           f"recordings, {counts['progress']} training progress file(s), "

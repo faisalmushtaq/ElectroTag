@@ -69,6 +69,8 @@ export const ALLOWED = [
     "the visit's log as each side keeps it: the server writes the desktop's visit_started and times log_closed by its clock"],
 
   ['admin contacts_download', 'csv', 'numbers', 'the contacts list gives the time of each change, which each side stamps'],
+  ['admin saved_work_get', 'versions\\[\\]\\.files\\[\\]\\.text', 'any', "the files as each side writes them (as for my results)"],
+  ['admin (saved_work_withdraw|saved_work_restore|withdrawals_list)', '(withdrawal|withdrawals\\[\\])\\.(withdrawal_id|withdrawn_at)', 'type', 'each side makes its own ID and stamps its own time'],
 
   // Until the sandbox's own answers (js/api/demo.js) carry `task: null`, the browser reads a missing task as none.
   ['.*', '(items\\[\\]\\.)?task', 'any', 'the sandbox makes no tasks (they need the study server: demo_admin.js SERVER_ONLY), so its items and matches have none'],
@@ -327,6 +329,17 @@ async function script(call) {
   await call('expert saved_attempt_get', (s) => s.b.expert('saved_attempt_get', { annotator_id: 'A01', recording_id: r1 }));
   await call('expert saved_attempt_get (version 1)', (s) => s.b.expert('saved_attempt_get', { annotator_id: 'a01', recording_id: r1, attempt: 1 }));
   await call('expert saved_attempt_get (no such version)', (s) => s.b.expert('saved_attempt_get', { annotator_id: 'A01', recording_id: r1, attempt: 9 }));
+  // A01's saved work on r1 in the admin area: every version's files, withdrawn from the results and restored
+  await call('admin saved_work_get', (s) => s.b.admin('saved_work_get', { annotator_id: 'a01', recording_id: r1 }));
+  await call('admin saved_work_get (nothing saved)', (s) => s.b.admin('saved_work_get', { annotator_id: 'A02', recording_id: r1 }));
+  await call('admin saved_work_withdraw (not a choice)', (s) => s.b.admin('saved_work_withdraw', { annotator_id: 'A01', recording_id: r1, then: 'later' }));
+  await call('admin saved_work_withdraw (training work)', (s) => s.b.admin('saved_work_withdraw', { annotator_id: 'T01', recording_id: r1, mode: 'practice', context_id: 'example', then: 'todo' }));
+  await call('admin saved_work_withdraw', (s) => s.b.admin('saved_work_withdraw', { annotator_id: 'A01', recording_id: r1, then: 'todo' }));
+  await call('admin assignments_list (withdrawn)', (s) => s.b.admin('assignments_list', { annotator_id: 'A01' }));
+  await call('admin withdrawals_list', async (s) => { const out = await s.b.admin('withdrawals_list', { annotator_id: 'A01' }); s.mem.withdrawal = out.withdrawals[0] && out.withdrawals[0].withdrawal_id; return out; });
+  await call('admin saved_work_restore', (s) => s.b.admin('saved_work_restore', { withdrawal_id: s.mem.withdrawal }));
+  await call('admin saved_work_restore (again)', (s) => s.b.admin('saved_work_restore', { withdrawal_id: s.mem.withdrawal }));
+  await call('admin withdrawals_list (none)', (s) => s.b.admin('withdrawals_list', {}));
   const C1 = ann(hex(0xc1), 'EMG-artifact', 4000, 200);
   const correction = (s, extra = {}) => ({ correction_id: hex(0xc0), annotator_id: 'A01', recording_id: r1, attempt: 2,
     annotations: [{ ...B1, label: 'Eye-artifact' }, C1], session: { elapsed_s: 30 }, sha256: s.mem.sha[0],
@@ -340,6 +353,7 @@ async function script(call) {
   await call('expert correction_save', (s) => s.b.expert('correction_save', correction(s)));
   await call('expert correction_save (again)', (s) => s.b.expert('correction_save', correction(s)));
   await call('expert corrections_list', (s) => s.b.expert('corrections_list', { annotator_id: 'A01' }));
+  await call('admin saved_work_withdraw (corrected)', (s) => s.b.admin('saved_work_withdraw', { annotator_id: 'A01', recording_id: r1, then: 'todo' }));
   await call('expert correction_get', (s) => s.b.expert('correction_get', { correction_id: hex(0xc0) }));
   await call('expert work_list (corrected)', (s) => s.b.expert('work_list', { corrected: true }));
   await call('expert saved_attempt_get (corrected)', (s) => s.b.expert('saved_attempt_get', { annotator_id: 'A01', recording_id: r1 }));

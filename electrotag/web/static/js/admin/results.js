@@ -6,6 +6,7 @@ import { h, clear } from '../ui/dom.js';
 import { MODES, STATUS, bytesText, csvText, programmeText, progressCounts, whenText } from './model.js';
 import { actionButton, card, checkbox, chip, dataTable, downloadBase64, downloadText, messageArea, recordingName, sectionHead } from './ui.js';
 import { allReviewsCard, reviewButton, reviewCount } from './reviews.js';
+import { savedWorkButtons, withdrawnCard } from './saved_work.js';
 
 export class ResultsSection {
   constructor(area) {
@@ -60,20 +61,30 @@ export class ResultsSection {
     this.table.update(this.rows);
   }
 
-  async _showWork(r) {
-    try { this.reviews = (await this.area.read('reviews_list', { annotator_id: r.annotator_id })).reviews || []; } catch { this.reviews = []; }
+  async _showWork(r, said = null) {
+    try { this.reviewsOf = (await this.area.read('reviews_list', { annotator_id: r.annotator_id })).reviews || []; } catch { this.reviewsOf = []; }
     clear(this.work);
-    this.work.append(card(`Work of ${r.annotator_id}`,
+    const msg = messageArea();
+    if (said) msg.append(...said);
+    // after a withdrawal or a restoration: the table and the person's work afresh, keeping what was said
+    const again = async () => {
+      const kept = [...msg.childNodes];
+      await this.show();
+      await this._showWork(this.rows.find((x) => x.annotator_id === r.annotator_id) || r, kept);
+    };
+    this.work.append(card(`Work of ${r.annotator_id}`, msg,
       dataTable([
         { title: 'Recording', render: (i) => recordingName(i.recording_id) },
         { title: 'Mode', render: (i) => (MODES[i.mode] || i.mode) + (i.context_id ? ` (${i.context_id})` : '') },
         { title: 'Status', render: (i) => chip(STATUS[i.status] || i.status, i.status === 'done' ? 'done' : i.status === 'in_progress' ? 'active' : '') },
-        { title: 'Reviews', num: true, render: (i) => reviewCount(this.reviews, r.annotator_id, i) },
+        { title: 'Reviews', num: true, render: (i) => reviewCount(this.reviewsOf, r.annotator_id, i) },
         { title: 'Saved', num: true, render: (i) => String(i.attempts ?? 0) },
         { title: 'Last activity', render: (i) => whenText(i.last_activity, { never: '–' }) },
-        { title: '', cls: 'actions', render: (i) => reviewButton(this.area, r.annotator_id, i, { route: 'admin-results', params: null }) },
+        { title: '', cls: 'actions', render: (i) => h('span.btn-row.tight', {}, reviewButton(this.area, r.annotator_id, i, { route: 'admin-results', params: null }),
+          savedWorkButtons(this.area, r.annotator_id, i, { msg, onChange: again })) },
       ], r.items || [], { empty: 'Nothing is assigned to this person.', pageSize: 20 }),
-      h('div.btn-row', {}, h('button.btn.quiet', { type: 'button', onclick: () => clear(this.work) }, 'Close'))));
+      h('div.btn-row', {}, h('button.btn.quiet', { type: 'button', onclick: () => clear(this.work) }, 'Close'))),
+    withdrawnCard(this.area, r.annotator_id, { msg, onChange: again }));
     this.work.querySelector('h2').tabIndex = -1;
     this.work.querySelector('h2').focus({ preventScroll: false });
   }

@@ -448,6 +448,9 @@ def create_app(study_dir: Path | str, *, demo: bool = False, allowed_origins: li
         if not user.is_admin:
             raise ApiError(403, "forbidden", "Only study administrators can download the results")
         path = await run_in_threadpool(results_zip, store)
+        from electrotag.web import audit  # a copy of the saved work leaves the study (electrotag/web/withdrawals.py)
+
+        await run_in_threadpool(audit.record, store, user.annotator_id, "results_zip", "Downloaded the results (zip)")
         return FileResponse(path, media_type="application/zip", filename=f"{store.study_id}_results.zip",
                             background=BackgroundTask(path.unlink, missing_ok=True))
 
