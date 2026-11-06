@@ -27,6 +27,9 @@ const HANDOUT_RE = /^h-[0-9a-f]{10}$/;
 const STATES = ['active', 'archived'];
 const DATASET_TEXT = { name: 120, description: 5000, origin: 500, licence: 200, citation: 2000, contact: 200, notes: 5000 };
 export const RATINGS_TARGET = 2;
+// a reference set's matching against its reference (electrotag/training/assessment.py ASSESSMENT_MATCHING_KEYS)
+const MATCHING_KEYS = ['match_criterion', 'iou_threshold', 'onset_tolerance_s', 'offset_tolerance_s'];
+const MATCH_CRITERIA = ['iou', 'tolerance', 'iou_and_tolerance'];
 const [RATINGS_MIN, RATINGS_MAX] = [1, Number.MAX_SAFE_INTEGER]; // no upper limit (datasets.py)
 const MAX_COLLECTION = 2000;
 const [MAX_GROUP_MEMBERS, MAX_GROUP_HISTORY] = [200, 1000];
@@ -533,6 +536,26 @@ export class DemoLibrary {
     const out = await this.a.op_recording_remove(body);
     if ((body.scope || 'study') === 'study') this.removeFromCollections(body.recording_id);
     return out;
+  }
+
+  /** set_update with assessment_matching: when a trainee's mark matches the reference's, checked as
+   * electrotag/training/assessment.py assessment_matching_update does (the sandbox's own practice scoring
+   * stays with its overlap of 0.2: training/scoring.js). */
+  async hook_set_update(body) {
+    const given = body.assessment_matching;
+    if (typeof given !== 'object' || Array.isArray(given)) throw bad('assessment_matching must be an object');
+    const set = this.a._setOr404(body.set_id);
+    const out = { ...(set.assessment_matching || {}) };
+    for (const [k, v] of Object.entries(given)) {
+      if (!MATCHING_KEYS.includes(k)) throw bad(`The matching has no setting '${k}'; it has ${MATCHING_KEYS.join(', ')}`, 'invalid_set');
+      if (k === 'match_criterion') {
+        if (!MATCH_CRITERIA.includes(v)) throw bad(`match_criterion is one of ${MATCH_CRITERIA.join(', ')}`, 'invalid_set');
+      } else if (typeof v !== 'number' || !Number.isFinite(v)) throw bad(`${k} must be a number`, 'invalid_set');
+      else if (k === 'iou_threshold' && !(v >= 0 && v < 1)) throw bad('The overlap needed is from 0 (any overlap) to just below 1', 'invalid_set');
+      else if (k !== 'iou_threshold' && !(v >= 0 && v <= 60)) throw bad('A tolerance is from 0 to 60 seconds', 'invalid_set');
+      out[k] = v;
+    }
+    return this.a.op_set_update({ ...body, assessment_matching: out });
   }
 
   /** user_remove: the person's membership of groups ends. */

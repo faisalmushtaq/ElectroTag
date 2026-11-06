@@ -2,8 +2,7 @@
 // electrotag/web/admin.py does them: settings, accounts, assignments, the programme, the recordings (built-in
 // and added as manifests), the training set, problem reports and reviews (demo_feedback.js), progress, audit, visits.
 //
-// What needs a study server is answered with an error saying so (try it with `electrotag-web demo`).
-// Import warnings dismissed from Problems are handled in demo_library.js.
+// What needs a study server is answered with an error saying so. demo_library.js does some, loaded when used.
 
 import { CATALOGUE, DEFAULT_ANNOTATION, DEFAULT_SETTINGS } from './demo_catalogue.js';
 import { ApiError } from './http.js';
@@ -168,7 +167,7 @@ function passwordHash(password, salt) {
   return sha256Hex(new TextEncoder().encode(`electrotag-demo:${salt}:${password}`));
 }
 
-/** The settings blocks that a study may change, with the sandbox's values (its recordings are chosen in order). */
+/** The settings blocks that a study may change, with the sandbox's values. */
 export function defaultSettings() {
   return { ...deepCopy(DEFAULT_SETTINGS), selection: { strategy: 'manual', seed: null } };
 }
@@ -460,7 +459,7 @@ export class DemoAdmin {
         const subs = this.b._attempts(i.key);
         const draft = i.status === 'in_progress' ? this.b.state.drafts[i.key] : null;
         const last = [...subs.map((x) => x.saved_at), draft ? draft.saved_at : ''].filter(Boolean).sort().pop() || null;
-        // the latest attempt by its number; the time of every saved attempt together (a revision adds its own)
+        // the latest attempt by its number; the time of every saved attempt together
         const latest = subs.length ? subs[subs.length - 1] : null;
         const times = subs.map((x) => secondsOf((x.session || {}).elapsed_s)).filter((t) => t !== null);
         const elapsed = latest ? (times.length ? times.reduce((x, y) => x + y, 0) : null) : draft ? secondsOf(draft.elapsed_s) : null;
@@ -589,6 +588,7 @@ export class DemoAdmin {
         registered: Boolean(this.record(`set:${set.set_id}`, r.recording_id)),
       })),
       quiz_items: this._quizItems(set).length, self_contained: true, scope: `set:${set.set_id}`,
+      assessment_matching: { match_criterion: 'iou', iou_threshold: 0.2, onset_tolerance_s: 0.5, offset_tolerance_s: 0.5, ...set.assessment_matching },
     };
   }
 
@@ -601,7 +601,7 @@ export class DemoAdmin {
     const b = body && typeof body === 'object' ? body : {};
     if (SERVER_ONLY[op]) throw needsServer(SERVER_ONLY[op]);
     const fn = this[`op_${op}`];
-    const lib = LIBRARY_OP.test(op) || (LIBRARY_HOOK.test(op) && (this.s.library || b.dataset_id != null)) || (op === 'recording_update' && b.warnings_dismissed != null);
+    const lib = LIBRARY_OP.test(op) || (LIBRARY_HOOK.test(op) && (this.s.library || b.dataset_id != null)) || (op === 'recording_update' && b.warnings_dismissed != null) || (op === 'set_update' && b.assessment_matching != null);
     if (!lib && typeof fn !== 'function') throw notFound(`This server does not offer the administrative operation '${op}'`);
     const out = lib ? await (await this._library()).run(op, b) : await fn.call(this, b);
     this.b._save();
@@ -877,7 +877,7 @@ export class DemoAdmin {
     if (!Array.isArray(body.manifests) || !body.manifests.length) throw bad('There are no recordings to add.');
     const out = { added: [], replaced: [], skipped: [] };
     const who = this.b.annotatorId;
-    // A byte-identical copy of a registered recording is skipped unless the administrator confirms it (admin.py).
+    // A byte-identical copy is skipped unless the administrator confirms it (admin.py).
     const prints = new Map();
     for (const m of body.manifests) {
       const rid = m && typeof m.recording_id === 'string' ? m.recording_id : '(no ID)';
@@ -972,7 +972,7 @@ export class DemoAdmin {
     }
     if (body.practice_pass !== undefined) {
       const p = body.practice_pass || {};
-      set.practice_pass = { event_f1: fraction(p.event_f1, 'The share of artifacts found'), label_accuracy: fraction(p.label_accuracy, 'The share given the right type') };
+      set.practice_pass = { event_f1: fraction(p.event_f1, 'The score'), label_accuracy: fraction(p.label_accuracy, 'The share given the right type') };
       changes.push('practice pass mark');
     }
     if (body.guided_tolerance !== undefined) {
@@ -984,6 +984,7 @@ export class DemoAdmin {
       set.guided_tolerance = { seconds, fraction: fraction(t.fraction, 'The share of its length'), channel_jaccard: cj, accepted_labels: {} };
       changes.push('guided tolerance');
     }
+    if (body.assessment_matching) { set.assessment_matching = body.assessment_matching; changes.push('matching for practice and assessment'); }
     if (body.criteria !== undefined) {
       const c = body.criteria || {};
       for (const x of c.criteria || []) if (!METRICS[x.metric]) throw bad(`${x.metric} is not a competency measure.`);
@@ -1043,7 +1044,7 @@ export class DemoAdmin {
 
   // ------------------------------------------------------------------- quiz
   op_quiz_items(body) {
-    // the sandbox's quiz is on its guided recordings, whose use cannot change here: nothing is withheld (admin.py op_quiz_items)
+    // the sandbox's quiz is on guided recordings, so nothing is withheld (admin.py op_quiz_items)
     return { items: deepCopy(this._quizItems(this._setOr404(body.set_id))), withheld: [] };
   }
 
