@@ -263,6 +263,49 @@ export class DemoLibrary {
 
   _audit(op, summary, details) { this.a._audit(op, summary, details); }
 
+  // ------------------------------------------------------------- warnings found when recordings were added (Problems)
+  /** The recordings with warnings found when they were added, the ones not dismissed first (admin.py). */
+  async op_recording_warnings_list() {
+    const items = this.a._items();
+    const out = [];
+    for (const r of this.a.s.recordings.filter((x) => (x.warnings || []).length)) out.push(await this.a._recordingRecord(r, items));
+    const key = (r) => [r.warnings_dismissed ? 1 : 0, r.scope === 'study' ? 0 : 1, r.scope, r.recording_id];
+    out.sort((x, y) => { const p = key(x); const q = key(y); for (let i = 0; i < p.length; i++) if (p[i] !== q[i]) return p[i] < q[i] ? -1 : 1; return 0; });
+    return { recordings: out };
+  }
+
+  /** recording_update with warnings_dismissed: the warnings dismissed from Problems, or listed there again (admin.py
+   *  op_recording_update), with the notes and retirement as the admin's own operation changes them. */
+  async op_recording_update(body) {
+    const a = this.a;
+    const scope = body.scope || 'study';
+    const r = a.record(scope, body.recording_id);
+    if (!r) throw notFound('unknown_recording', `${body.recording_id} is not registered in ${scope}`);
+    const notes = body.notes === undefined || body.notes === null ? null : String(body.notes).trim().slice(0, 5000);
+    const retired = body.retired === undefined || body.retired === null ? null : Boolean(body.retired);
+    const dismissed = Boolean(body.warnings_dismissed);
+    const said = [];
+    if (notes !== null && notes !== (r.notes || '')) { r.notes = notes; said.push('changed the notes'); }
+    if (retired !== null && retired !== Boolean(r.retired)) {
+      r.retired = retired;
+      said.push(retired ? 'retired it (no new assignments)' : 'offered it for assignments again');
+    }
+    const items = a._items();
+    const now = (await a._recordingRecord(r, items)).warnings_dismissed;
+    if (dismissed !== Boolean(now) && (r.warnings || []).length) {
+      if (dismissed) {
+        r.warnings_dismissed = { by: a.b.annotatorId, at: nowLocalIso(), warnings: [...r.warnings] };
+        said.push('dismissed the warnings found when it was added');
+      } else {
+        delete r.warnings_dismissed;
+        said.push('listed the warnings found when it was added under Problems again');
+      }
+    }
+    this._audit('recording_update', `${r.recording_id}: ${said.length ? said.join(', ') : 'no change'}`,
+      { scope, recording_id: r.recording_id, notes, retired, warnings_dismissed: dismissed });
+    return { recording: await a._recordingRecord(r, items) };
+  }
+
   _records(kind, { removed = false } = {}) {
     return Object.keys(this.lib[kind]).sort(byText).map((k) => this.lib[kind][k]).filter((r) => removed || r.state !== 'removed');
   }

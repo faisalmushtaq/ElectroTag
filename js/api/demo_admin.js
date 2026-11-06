@@ -1,14 +1,9 @@
-// The admin area's operations in the sandbox (docs/api.md, "Administration"), carried out on
-// the sandbox's own state in this browser, as electrotag/web/admin.py does them on a server: the
-// study's settings, the accounts and their passwords and invitation links, assignments and the
-// training programme, the register of recordings (the three built-in examples and any added from
-// this computer as manifests), the training set's pass mark, matching, guidance and notes, problem
-// reports and reviews (demo_feedback.js), progress, the audit log and the visits.
+// The admin area's operations in the sandbox (docs/api.md, "Administration"), on the sandbox's own state, as
+// electrotag/web/admin.py does them: settings, accounts, assignments, the programme, the recordings (built-in
+// and added as manifests), the training set, problem reports and reviews (demo_feedback.js), progress, audit, visits.
 //
-// What a visitor cannot use in a sandbox, or what needs ElectroTag's Python code (reference sets of
-// one's own and their quizzes, the agreement and activity analyses, competency reports, the example
-// set's files and the results zip), is answered with an error that says so, and how to try it with
-// `electrotag-web demo`.
+// What needs a study server is answered with an error saying so (try it with `electrotag-web demo`).
+// Import warnings dismissed from Problems are handled in demo_library.js.
 
 import { CATALOGUE, DEFAULT_ANNOTATION, DEFAULT_SETTINGS } from './demo_catalogue.js';
 import { ApiError } from './http.js';
@@ -67,7 +62,7 @@ const SERVER_ONLY = {
 
 const bad = (message, code = 'bad_request', status = 400) => new ApiError(status, code, message);
 // datasets, collections, groups, hand-outs, tracking (demo_library.js, loaded when used), and what they change
-const LIBRARY_OP = /^(datasets?|collections?|groups?|handouts?|tracking)_|^(recordings_move|notify_preview_get)$/;
+const LIBRARY_OP = /^(datasets?|collections?|groups?|handouts?|tracking)_|^(recordings_move|notify_preview_get|recording_warnings_list)$/;
 const LIBRARY_HOOK = /^(overview|recordings_(list|register)|recording_remove|user_remove)$/;
 // How long an invitation link lasts unless the administrator chooses otherwise, and the longest allowed.
 const INVITE_DAYS = 14;
@@ -568,7 +563,8 @@ export class DemoAdmin {
     if (r.builtin && !r.sha256) {
       try { r.sha256 = (await this.b.exampleRecording(r.recording_id).fingerprint()).hex; } catch { /* left empty */ }
     }
-    const { manifest, builtin, ...rest } = r; // eslint-disable-line no-unused-vars
+    const { manifest, builtin, warnings_dismissed: d, ...rest } = r; // eslint-disable-line no-unused-vars
+    rest.warnings_dismissed = d && rest.warnings.length && JSON.stringify(d.warnings) === JSON.stringify(rest.warnings) ? { by: d.by, at: d.at } : null;
     if (r.scope === 'study') {
       const mine = items.filter((i) => i.recording_id === r.recording_id && i.mode === 'standard');
       return { ...rest, dataset_id: r.dataset_id || 'study-recordings', assigned: mine.length, done: mine.filter((i) => i.status === 'done').length };
@@ -605,7 +601,7 @@ export class DemoAdmin {
     const b = body && typeof body === 'object' ? body : {};
     if (SERVER_ONLY[op]) throw needsServer(SERVER_ONLY[op]);
     const fn = this[`op_${op}`];
-    const lib = LIBRARY_OP.test(op) || (LIBRARY_HOOK.test(op) && (this.s.library || b.dataset_id != null));
+    const lib = LIBRARY_OP.test(op) || (LIBRARY_HOOK.test(op) && (this.s.library || b.dataset_id != null)) || (op === 'recording_update' && b.warnings_dismissed != null);
     if (!lib && typeof fn !== 'function') throw notFound(`This server does not offer the administrative operation '${op}'`);
     const out = lib ? await (await this._library()).run(op, b) : await fn.call(this, b);
     this.b._save();
