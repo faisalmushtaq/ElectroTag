@@ -43,7 +43,7 @@ test('a dataset\'s summary and its ratings against the target', () => {
 test('a dataset\'s details are checked in plain words, and only what is given is sent', () => {
   assert.throws(() => d.datasetBody({ name: '  ' }, { creating: true }), /Give the dataset a name/);
   assert.throws(() => d.datasetBody({ name: 'x', licence: 'L'.repeat(201) }, { creating: true }), /Licence: at most 200 characters/);
-  assert.throws(() => d.datasetBody({ name: 'x', ratings_target: '0' }, { creating: true }), /from 1 to 20/);
+  assert.throws(() => d.datasetBody({ name: 'x', ratings_target: '0' }, { creating: true }), /1 or more/);
   assert.throws(() => d.datasetBody({ name: 'x', ratings_target: '2.5' }, { creating: true }), /whole number/);
   assert.throws(() => d.datasetBody({ name: 'x', dataset_id: 'with.dot' }, { creating: true }), /letters, digits, hyphens and underscores/);
   assert.throws(() => d.datasetBody({ name: 'x', path_prefix: '../up' }, { creating: true }), /plain folder name/);
@@ -56,6 +56,10 @@ test('a dataset\'s details are checked in plain words, and only what is given is
   assert.match(d.prefixProblem('a/./b'), /without \. or \.\./);
   assert.match(d.prefixProblem('a:b'), /plain folder name/);
   assert.equal(d.ratingsTarget('20'), 20);
+  // no upper limit: a large target is typed in as it is, and asked about from 100
+  assert.equal(d.ratingsTarget('1,500'), 1500);
+  assert.equal(d.largeTargetQuestion(99), '');
+  assert.match(d.largeTargetQuestion(100), /only once 100 different people have saved it/);
 });
 
 test('recordings found here whose IDs belong to another dataset are pointed out, with the prefix applied', () => {

@@ -732,7 +732,7 @@ adjudication of disagreements work:
 `corrections` lets experts correct saved work, and
 `show_corrections_to_annotators` shows annotators the corrections of their own
 work with the reasons given. `k_default` is the number of annotators, from 2 to
-6, given each task when the study shares recordings out as tasks.
+10, given each task when the study shares recordings out as tasks.
 `show_outcomes_to_annotators` shows annotators the decisions on the conflicts
 in their work (who else marked what is never said). `reason_required` says
 when an adjudicator gives a reason for a decision: `always`, `edited_or_none`

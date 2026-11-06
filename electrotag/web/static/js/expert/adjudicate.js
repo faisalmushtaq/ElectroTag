@@ -50,6 +50,31 @@ import {
 export const LETTER_COLOURS = Object.freeze([COLOURS.accent, COLOURS.selection_channel, COLOURS.group_green, COLOURS.warning_text,
   COLOURS.flag_type, COLOURS.text]);
 
+/**
+ * Past six people the colours come round again with a second cue: each round of six has its own outline on the EEG's
+ * tags and its own underline on the letter (plain for A to F, dashed for G to L, dotted for M to R, then a dash and a
+ * dot). The letter itself is on every tag, so two people never look the same; any number of people is shown this way.
+ */
+export const LETTER_ROUNDS = Object.freeze([
+  { dash: null, underline: null, words: '' },
+  { dash: [5, 3], underline: 'dashed', words: 'dashed' },
+  { dash: [1.5, 2.5], underline: 'dotted', words: 'dotted' },
+  { dash: [6, 2, 1.5, 2], underline: 'wavy', words: 'dash and dot' },
+]);
+
+/** How the person at `index` (0 for A) is shown: {colour, dash, underline, words}. */
+export function letterLook(index) {
+  const i = Math.max(0, Number(index) || 0);
+  return { colour: LETTER_COLOURS[i % LETTER_COLOURS.length], ...LETTER_ROUNDS[Math.floor(i / LETTER_COLOURS.length) % LETTER_ROUNDS.length] };
+}
+
+/** A letter in the panel and the lanes: its colour, and past F its round's underline. */
+export function letterStyle(look) {
+  return look.underline
+    ? { color: look.colour, textDecorationLine: 'underline', textDecorationStyle: look.underline, textDecorationColor: look.colour, textUnderlineOffset: '3px' }
+    : { color: look.colour };
+}
+
 const blank = () => ({ choice: null, reasonCode: null, reason: '', marks: [], picks: [] });
 const fromDecision = (d) => ({ choice: d.choice, reasonCode: d.reason_code || null, reason: d.reason || '',
   marks: d.choice === 'edited' ? (d.marks || []).map((m) => ({ ...m })) : [], picks: d.choice === 'pick' ? (d.picks || []).map((p) => ({ ...p })) : [] });
@@ -111,23 +136,32 @@ export class AdjudicationPass {
   /** The montage's channel names in order, for writing channels as runs (channelList). */
   _montage() { return this.ws.s.channels.map((c) => c.name); }
 
-  _colourOf(letter) { return LETTER_COLOURS[Math.max(0, this.letters.indexOf(letter)) % LETTER_COLOURS.length]; }
+  _lookOf(letter) { return letterLook(this.letters.indexOf(letter)); }
+
+  _colourOf(letter) { return this._lookOf(letter).colour; }
+
+  /** A letter as the panel shows it, in its person's colour (and past F their round's underline). */
+  _letterEl(letter, text = letter) { return h('b', { style: letterStyle(this._lookOf(letter)) }, text); }
 
   /** Each letter's tags on the EEG in its own colour, with its letter before the type; the corrected original dashed. */
   _colours() {
     const prefix = {};
     const colours = {};
+    const dashes = {};
     for (const v of this.versions) {
+      const look = this._lookOf(v.letter);
       for (const a of v.annotations || []) {
         const id = `${v.letter}-${a.annotation_id}`;
         prefix[id] = `${v.letter}: `;
-        colours[id] = this._colourOf(v.letter);
+        colours[id] = look.colour;
+        if (look.dash) dashes[id] = look.dash;
       }
     }
     this.ws.prefix = prefix;
     this.ws.labelColours = colours;
     this.ws.viewer.setPrefix(prefix);
     this.ws.viewer.setLabelColours(colours);
+    if (this.ws.viewer.setLabelDashes) this.ws.viewer.setLabelDashes(dashes);
     const o = this.t.original;
     if (o && this.ws.viewer.setLayers) {
       this.ws.viewer.setLayers([{ id: 'original', annotations: o.annotations || [], style: 'dashed', prefix: `Original (${o.annotator_id}): `, visible: true }]);
@@ -154,7 +188,7 @@ export class AdjudicationPass {
     const chip = this.ws.el.querySelector('.ws-name .chip');
     if (chip) chip.textContent = this.mode === 'view' ? 'Adjudicated' : 'Adjudication';
     const who = this.versions.map((v) => h('span.adj-who', { 'data-letter': v.letter },
-      h('b', { style: { color: this._colourOf(v.letter) } }, v.letter), ` ${v.annotator_id}${v.display_name ? ` (${v.display_name})` : ''}`,
+      this._letterEl(v.letter), ` ${v.annotator_id}${v.display_name ? ` (${v.display_name})` : ''}`,
       v.source === 'correction' ? h('span.caption', {}, `, correcting version ${v.attempt}`) : null));
     const history = (this.adj && this.adj.history) || [];
     const last = history[history.length - 1];
@@ -178,6 +212,7 @@ export class AdjudicationPass {
     this.ws.reviewHost.append(this.el);
     const o = t.original ? { annotator_id: t.original.annotator_id, annotations: t.original.annotations || [] } : null;
     this.lanes = new Lanes(this.ws.viewer, { versions: this.versions, catalogue: this.ws.cat, colours: Object.fromEntries(this.letters.map((x) => [x, this._colourOf(x)])),
+      letterStyles: Object.fromEntries(this.letters.map((x) => [x, letterStyle(this._lookOf(x))])),
       original: o, onPick: (id) => this._pick(id) });
     this.ws.eegHost.prepend(this.lanes.el);
     this.ws.hintEl.textContent = touchFirst()
@@ -235,7 +270,7 @@ export class AdjudicationPass {
       const keys = c.keys.map((k) => k.toUpperCase()).join(' or ');
       const b = h('button.chip-btn.adj-choice', { type: 'button', 'aria-pressed': 'false', 'data-choice': c.choice, title: `${c.label} (${keys})`,
         onclick: () => this.choose(c.choice, 'button'), onkeydown: (e) => this._enterSaves(e) },
-      c.choice.length === 1 ? h('span', {}, h('b', { style: { color: this._colourOf(c.choice) } }, c.choice), ` ${this.people[c.choice]}`) : c.label,
+      c.choice.length === 1 ? h('span', {}, this._letterEl(c.choice), ` ${this.people[c.choice]}`) : c.label,
       h('span.chip-key', {}, c.keys[0].toUpperCase()));
       return b;
     });
@@ -411,7 +446,7 @@ export class AdjudicationPass {
       box.checked = (this.pending.picks || []).some((p) => p.letter === m.letter && p.annotation_id === m.annotation_id);
       box.addEventListener('change', () => this.togglePick(m.letter, m.annotation_id, box.checked));
       box.addEventListener('keydown', (e) => this._enterSaves(e));
-      return h('label.adj-pick-row', {}, box, h('b', { style: { color: this._colourOf(m.letter) } }, ` ${m.letter} `),
+      return h('label.adj-pick-row', {}, box, ' ', this._letterEl(m.letter), ' ',
         `${m.annotator_id}: ${m.label}, ${spanText(m.onset_s, m.offset_s)}`);
     });
     this.pickHost.append(h('p.caption', {}, 'Tick the marks to keep, from anyone (or click them in the lanes).'), ...this.pickBoxes);
@@ -725,7 +760,7 @@ export class AdjudicationPass {
       }) : [h('span.caption', {}, 'no mark here')];
       const why = this._changesAt(v, c).map((ch) => h('span.adj-change.caption', {}, `${ch.change === 'added' ? 'Added' : ch.change === 'removed' ? 'Removed' : 'Changed'}: `
         + `${ch.reason_text || CORRECTION_REASONS[ch.reason] || ch.reason || 'no reason given'}${ch.note ? `, “${ch.note}”` : ''}`));
-      return h('li', { 'data-letter': v.letter }, h('b', { style: { color: this._colourOf(v.letter) } }, `${v.letter} `), `${v.annotator_id}: `, ...what, ...why);
+      return h('li', { 'data-letter': v.letter }, this._letterEl(v.letter), ` ${v.annotator_id}: `, ...what, ...why);
     });
     const d = c.decision;
     this.detail.append(...[

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import hashlib
 import math
+import string
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from itertools import combinations
@@ -45,8 +46,9 @@ KINDS = ("presence", "type", "timing", "channels", "split")
 #: What an adjudicator may decide, besides keeping one person's marks (their letter): everyone's marks, none, some
 #: marks chosen one by one (from different people, ``picks``), or marks of their own (``marks``).
 CHOICE_WORDS = ("all", "none", "pick", "edited")
-#: Letters given to the versions compared, in order (at most six people per adjudication).
-LETTERS = ("A", "B", "C", "D", "E", "F")
+#: Letters given to the versions compared, in order: up to 26 people per adjudication (a task has at most
+#: electrotag.config.settings.ANNOTATORS_PER_TASK_MAX).
+LETTERS = tuple(string.ascii_uppercase)
 #: The most marks an adjudicator's own replacement of a conflict may hold.
 MAX_EDITED_MARKS = 5
 #: How a decision turned out for one of the people compared (:func:`outcome_for`): what they marked, or did not

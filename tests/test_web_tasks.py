@@ -245,7 +245,8 @@ def test_checks_of_a_request(admin: Api) -> None:
     admin.admin_error("tasks_create", {"recording_ids": [SUB1], "annotator_ids": POOL}, 400, "bad_request")
     admin.admin_error("tasks_preview_get", {"recording_ids": [SUB1], "annotator_ids": ["A01", "A02"], "k": 3}, 400,
                       "k_too_large")
-    admin.admin_error("tasks_preview_get", {"recording_ids": [SUB1], "annotator_ids": POOL, "k": 7}, 400, "bad_request")
+    admin.admin_error("tasks_preview_get", {"recording_ids": [SUB1], "annotator_ids": POOL, "k": 11}, 400,
+                      "bad_request")
     admin.admin_error("tasks_preview_get", {"recording_ids": [SUB1], "annotator_ids": ["A01", "Z99"]}, 404,
                       "unknown_user")
     admin.admin_error("tasks_preview_get", {"recording_ids": ["nope"], "annotator_ids": POOL}, 404,

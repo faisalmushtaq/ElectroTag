@@ -85,7 +85,8 @@ test('the sandbox reads the roles of a request as admin.py does', () => {
 test('the review and training settings are checked in plain words', () => {
   assert.deepEqual(both({ review: { k_default: 2, matching: { match_criterion: 'iou', iou_threshold: 0.2 } }, training: { skippable: ['tour'], gate: 'met' } }), []);
   const problems = both;
-  assert.match(problems({ review: { k_default: 7 } })[0], /between 2 and 6/);
+  assert.match(problems({ review: { k_default: 11 } })[0], /between 2 and 10/);
+  assert.deepEqual(problems({ review: { k_default: 10 } }), [], 'ten annotators per task');
   assert.match(problems({ review: { reason_required: 'sometimes' } })[0], /reason/);
   assert.match(problems({ review: { matching: { iou_threshold: 1 } } })[0], /just below 1/);
   assert.match(problems({ review: { matching: { match_criterion: 'nearby' } } })[0], /matched/);

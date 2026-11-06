@@ -168,9 +168,11 @@ def test_a_dataset_is_made_once_per_request_and_checked(admin: Api) -> None:
     admin.admin_error("dataset_create", {**body, "request_id": rq(3), "dataset_id": "study-recordings"}, 409,
                       "dataset_exists")
     for bad in ({"dataset_id": "has.dot"}, {"path_prefix": "../up"}, {"ratings_target": 0},
-                {"ratings_target": 21}, {"name": ""}, {"request_id": "nope"}):
+                {"ratings_target": 2.5}, {"ratings_target": True}, {"name": ""}, {"request_id": "nope"}):
         admin.admin_error("dataset_create", {**body, "request_id": rq(4), "dataset_id": "x1", **bad}, 400,
                           "bad_request")
+    big = admin.admin_ok("dataset_create", {**body, "request_id": rq(6), "dataset_id": "x2", "ratings_target": 500})
+    assert big["dataset"]["ratings_target"] == 500, "no upper limit: the admin area asks first from 100"
     made = admin.admin_ok("dataset_create", {"request_id": rq(5), "name": "OpenNeuro ds003420!"})["dataset"]
     assert made["dataset_id"] == "openneuro-ds003420" and made["ratings_target"] == 2
     upd = admin.admin_ok("dataset_update", {"dataset_id": "youth-ld", "notes": "From the 2026 sessions",
@@ -390,7 +392,7 @@ def test_a_k_hand_out_is_a_tasks_share_out(app: Any, admin: Api) -> None:
     again = admin.admin_ok("handouts_preview_get", {**body, "people": ["A01", "A02"]})
     assert {s["reason"] for s in again["skipped"]} == {"has_task"}
     assert any("open task already" in w for w in again["warnings"])
-    admin.admin_error("handouts_preview_get", {**body, "k": 7}, 400, "bad_request")
+    admin.admin_error("handouts_preview_get", {**body, "k": 11}, 400, "bad_request")
     admin.admin_error("handouts_preview_get", {**body, "people": ["A03"], "k": 2}, 400, "k_too_large")
     out = admin.admin_ok("handout_withdraw", {"handout_id": h["handout_id"]})
     assert out["removed"] == 6 and admin.admin_ok("tasks_list")["tasks"] == []

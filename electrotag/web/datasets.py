@@ -50,8 +50,10 @@ STATES = ("active", "archived")
 #: The details of a dataset and how long each may be.
 DATASET_TEXT = {"name": 120, "description": 5000, "origin": 500, "licence": 200, "citation": 2000, "contact": 200,
                 "notes": 5000}
-#: How many people's saved ratings make a recording "rated" (decision 3 of the project lead), and the range.
-RATINGS_TARGET, RATINGS_MIN, RATINGS_MAX = 2, 1, 20
+#: How many people's saved ratings make a recording "rated" (decision 3 of the project lead), and the least. There is
+#: no upper limit for the study to keep: RATINGS_MAX is only the largest whole number every store and browser holds
+#: exactly (2**53 - 1). The admin area asks before saving a target of RATINGS_LARGE or more, in case of a slip.
+RATINGS_TARGET, RATINGS_MIN, RATINGS_MAX, RATINGS_LARGE = 2, 1, 2**53 - 1, 100
 MAX_COLLECTION = 2000
 MAX_GROUP_MEMBERS, MAX_GROUP_HISTORY = 200, 1000
 #: The changes kept in a record's ``changes`` (the audit log keeps every one).
@@ -92,8 +94,8 @@ def _ratings_target(body: dict[str, Any], default: int | None = RATINGS_TARGET) 
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int) or not RATINGS_MIN <= value <= RATINGS_MAX:
-        raise _bad(f"ratings_target (the people who should rate each recording) must be a whole number from "
-                   f"{RATINGS_MIN} to {RATINGS_MAX}")
+        raise _bad(f"ratings_target (the people who should rate each recording) must be a whole number of "
+                   f"{RATINGS_MIN} or more")
     return value
 
 

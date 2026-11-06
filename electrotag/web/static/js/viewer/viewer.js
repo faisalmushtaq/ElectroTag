@@ -131,6 +131,7 @@ export class EegViewer {
     this.markedBad = new Set(); // channels the annotator marked bad for the whole recording (setMarkedBad)
     this.prefix = {};
     this.labelColours = {};
+    this.labelDashes = {}; // a tag's outline pattern, beside its colour: a person's second cue in adjudication
     this.cursorT = null;
     this.hover = null;
     this.edgeZones = [];
@@ -378,6 +379,8 @@ export class EegViewer {
   setCursor(t) { this.cursorT = t; this.invalidate(['over']); }
   setPrefix(map) { this.prefix = map || {}; this.invalidate(['over']); }
   setLabelColours(map) { this.labelColours = map || {}; this.invalidate(['over']); }
+  /** Tags whose outline is dashed (id -> canvas line dashes), as each person's second cue beside their colour. */
+  setLabelDashes(map) { this.labelDashes = map || {}; this.invalidate(['over']); }
   /** Review feedback over the EEG: [{onset_sample, duration_samples, outline, current}], drawn in the accent blue (_drawMarkers). */
   setMarkers(list) { this.markers = Array.isArray(list) ? list : []; this.invalidate(['over']); }
   setEdgeZonesVisible(on) { this.showEdgeZones = Boolean(on); this.invalidate(['under']); }
@@ -1109,9 +1112,12 @@ export class EegViewer {
       roundRect(ctx, tg.x - tg.w / 2, y, tg.w, TAG_ROW_H - 3, 4);
       ctx.fillStyle = sel ? rgba(colour, 0.14) : 'rgba(255, 255, 255, 0.9)';
       ctx.fill();
-      ctx.strokeStyle = sel ? colour : rgba(colour, 0.65);
-      ctx.lineWidth = sel ? 2 : 1;
+      const dash = this.labelDashes[tg.a.annotation_id];
+      ctx.strokeStyle = sel ? colour : rgba(colour, dash ? 0.9 : 0.65);
+      ctx.lineWidth = sel ? 2 : dash ? 1.5 : 1;
+      if (dash) ctx.setLineDash(dash);
       ctx.stroke();
+      if (dash) ctx.setLineDash([]);
       ctx.fillStyle = legibleOnWhite(colour);
       ctx.textAlign = 'center';
       ctx.fillText(tg.text, tg.x - (tg.a.note ? NOTE_W / 2 : 0), y + 13);
