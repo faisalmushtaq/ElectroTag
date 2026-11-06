@@ -35,7 +35,7 @@ import { isTyping } from '../ui/dom.js';
 import { displayCode, needsReview, UNCERTAIN_LABEL, UNCERTAIN_TEXT } from '../catalogue.js';
 import { icon } from '../views/common.js';
 import { CHANNEL_COLOUR_MODES, MODE_TEXT as COLOUR_MODE_TEXT, channelColours, legendOf, normaliseMode } from '../viewer/channel_colours.js';
-import { BREAK_MIN_S, HIDDEN_PAUSE_MS, SNOOZE_S, idleDue, todayKey } from './clock.js';
+import { HIDDEN_PAUSE_MS, SNOOZE_S, breakKey, carriedBreak, idleDue, newestCarry, todayKey } from './clock.js';
 import * as cov from '../viewer/coverage.js';
 import { NAME_SIZES, PANEL_TEXT, TRACE_WIDTHS, loadComfort, saveComfort } from '../ui/comfort.js';
 import { microvoltText, voltsText } from '../viewer/geometry.js';
@@ -696,10 +696,12 @@ export class Workspace {
     this._listeners.push(() => document.removeEventListener('keydown', onKey));
     logger.eegAt = (x, y) => this.viewer.logInfo(x, y);
     logger.setContext({ recording: this.s.recordingId, window_no: this.windowNo });
-    // The clock starts with the recording on screen; the work since the last break carries over
-    // from the recording before, unless that was closed long enough ago to count as a break.
-    const carry = this.app.sinceBreak;
-    this.s.startClock({ sinceBreakS: carry && Date.now() - carry.at < BREAK_MIN_S * 1000 ? carry.s : 0 });
+    // The clock starts with the recording on screen. The work since the last break is the person's, for the
+    // whole session: it carries over from the recording before, through a reload or signing in again (this
+    // browser's copy), with a reminder put off, unless they have been away from their recordings long enough
+    // for a break. Only the views that count working time carry it; the others leave it as it was.
+    this.s.startClock(this.timed ? carriedBreak(newestCarry(this.app.sinceBreak, local.get(this._breakKey, null))) : {});
+    this._breakKeptAt = 0;
     this._tallied = this.s.elapsedS;
     this._applyPanelComfort();
     if (this.timed) {
@@ -724,7 +726,7 @@ export class Workspace {
     this._listeners.push(() => document.removeEventListener('visibilitychange', visibility));
     // A reload or a closing page: this browser's copy is written at once, before the page goes (the
     // write is synchronous). visibilitychange comes too, in most browsers, and sends the draft to the study.
-    const leaving = () => { if (this.s.mayKeepLocal) this.s.saveLocal(); };
+    const leaving = () => { if (this.s.mayKeepLocal) this.s.saveLocal(); this._keepBreak(); };
     for (const type of ['pagehide', 'beforeunload']) {
       window.addEventListener(type, leaving);
       this._listeners.push(() => window.removeEventListener(type, leaving));
@@ -835,7 +837,7 @@ export class Workspace {
     if (this.clock) {
       if (this.clock.paused) this.resume('close', { quiet: true });
       this._tally(true);
-      this.app.sinceBreak = { s: this.clock.sinceBreakS, at: Date.now() };
+      this._keepBreak();
     }
     // Closed: a save still waiting (a change just before Close) must not write a draft after the view has
     // gone, where it would bring back work discarded since, or overwrite a newer draft of the recording.
@@ -865,6 +867,7 @@ export class Workspace {
         else if (!this._breakShown && c.breakDue(this.settings.breakReminderMinutes * 60)) this._showBreakReminder();
       }
       this._tally();
+      if (Date.now() - this._breakKeptAt >= 15 * 1000) this._keepBreak();
     }
     if (this.s.canSave && !this.s.finished && !(c && c.paused)) {
       this.s.saveRemote().then((sent) => { if (sent) logger.event('autosave', { n_annotations: this.store.size }); });
@@ -872,6 +875,18 @@ export class Workspace {
   }
 
   /** Today's working time in this browser (the home page shows it), added every few seconds. */
+  get _breakKey() { return breakKey((this.s.me && this.s.me.annotator_id) || 'anon'); }
+
+  /** The work since the last break, for the next recording opened: kept by the page and in this browser (clock.js
+   *  carry), so that it lasts the whole session. Only views that count working time keep it. */
+  _keepBreak() {
+    if (!this.timed || !this.clock) return;
+    const carry = this.clock.carry();
+    this.app.sinceBreak = carry;
+    local.set(this._breakKey, carry);
+    this._breakKeptAt = Date.now();
+  }
+
   _tally(now = false) {
     if (!this.timed || !this.clock) return;
     const e = this.s.elapsedS;
@@ -929,6 +944,7 @@ export class Workspace {
     // The time paused counts up on the panel, second by second from the start of the pause.
     clearInterval(this._pauseTimer);
     this._pauseTimer = setInterval(() => this._refreshPausePanel(), 1000);
+    this._keepBreak(); // from when the pause began: a reload during a long pause finds a break
     logger.event('pause', { reason, elapsed_s: Math.round(p.elapsedS * 1000) / 1000,
       ...(reason === 'idle' ? { idle_s: Math.round(idleS * 10) / 10 } : {}),
       ...(reason === 'hidden' ? { hidden_s: Math.round((c.now() - p.at) / 100) / 10 } : {}) });
@@ -961,6 +977,7 @@ export class Workspace {
     this.pauseBtn.title = 'Stop the clock while you are away (B). Your draft is kept.';
     this._lastInput = performance.now();
     if (r.isBreak) this._breakShown = false;
+    this._keepBreak();
     logger.event('resume', { reason: r.reason, paused_s: Math.round(r.pausedS * 1000) / 1000, via, counts_as_break: r.isBreak,
       elapsed_s: Math.round(this.s.elapsedS * 1000) / 1000 });
     if (this.coach) this.coach.addPaused(r.pausedS);
@@ -1010,6 +1027,7 @@ export class Workspace {
     logger.event('break_reminder_closed', { choice: choice || 'paused' });
     if (choice === 'remind_later') {
       this.clock.snooze(SNOOZE_S);
+      this._keepBreak(); // put off for the next recording too
       this._breakShown = false;
       this.say('A reminder comes again in 15 minutes of work.');
     } else if (choice === 'take_break') {
