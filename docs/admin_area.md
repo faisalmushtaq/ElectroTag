@@ -961,7 +961,7 @@ another of the same type on the same channels into one, and tells the annotator,
 back; off, overlapping marks stay as drawn. Marks with a gap between them, however brief, and marks
 that only touch are never joined, so separate occurrences stay separate. Under Long sessions it also sets three comforts for
 annotators who work for hours: after how many minutes of work since their last break they are
-offered a break (50 by default), after how many minutes without any input the working-time clock
+offered a break (50 by default, counted across all the recordings of their session), after how many minutes without any input the working-time clock
 pauses itself (3 by default), and whether Save and Finish first lists the parts of the recording that
 have never been on the screen, with Go to the first part and Save anyway (on by default). A value of 0
 turns the reminder or the pause off. The time annotators work on each recording is research data,

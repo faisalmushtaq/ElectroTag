@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { BREAK_MIN_S, SNOOZE_S, WorkClock, idleDue, todayKey } from '../../electrotag/web/static/js/annotate/clock.js';
+import { BREAK_MIN_S, SNOOZE_S, WorkClock, breakKey, carriedBreak, idleDue, newestCarry, todayKey } from '../../electrotag/web/static/js/annotate/clock.js';
 import { DEFAULT_COMFORT, MIN_NAME_PX, nameEvery, namePx, normaliseComfort, traceWidths } from '../../electrotag/web/static/js/ui/comfort.js';
 
 /** A clock whose time (milliseconds) the test moves by hand. */
@@ -79,6 +79,59 @@ test('the break reminder: due after the interval of work, put off by Remind me l
   wait(1);
   assert.equal(c.resume().isBreak, true, 'Take a break counts as a break however short');
   assert.equal(c.sinceBreakS, 0);
+});
+
+test('the work since the last break lasts the whole session: carried to the next recording, with a reminder put off', () => {
+  const T = Date.UTC(2026, 10, 6, 9, 0, 0);
+  // 40 minutes of work, the reminder put off: the next recording starts from both
+  const { c, wait } = fakeClock({ sinceBreakS: 600 });
+  wait(1800);
+  c.snooze();
+  const carry = c.carry(T);
+  assert.deepEqual(carry, { s: 2400, remindAtS: 2400 + SNOOZE_S, at: T });
+  const next = carriedBreak(carry, T + 60 * 1000);
+  assert.deepEqual(next, { sinceBreakS: 2400, remindAtS: 2400 + SNOOZE_S });
+  const { c: c2, wait: w2 } = fakeClock(next);
+  assert.equal(c2.breakDue(3000), false, 'put off on the recording before, so not asked again straight away');
+  w2(SNOOZE_S);
+  assert.equal(c2.breakDue(3000), true, 'asked again after the quarter of an hour, whichever recording is open');
+  // away from the recordings for a break: nothing carries
+  assert.deepEqual(carriedBreak(carry, T + BREAK_MIN_S * 1000), { sinceBreakS: 0, remindAtS: null });
+  assert.deepEqual(carriedBreak(carry, T + BREAK_MIN_S * 1000 - 1).sinceBreakS, 2400);
+  // a pause: the time away counts from when it began, so a reload during a long pause finds a break
+  const { c: p, wait: pw } = fakeClock({ sinceBreakS: 100 });
+  pw(60);
+  p.pause('button');
+  pw(240);
+  const paused = p.carry(T);
+  assert.equal(paused.s, 160);
+  assert.equal(paused.at, T - 240 * 1000);
+  assert.equal(carriedBreak(paused, T + 59 * 1000).sinceBreakS, 160);
+  assert.equal(carriedBreak(paused, T + 61 * 1000).sinceBreakS, 0, 'four minutes paused and a minute more away make a break');
+  // Take a break has begun the break: nothing carries, however short
+  const { c: b } = fakeClock({ sinceBreakS: 2000 });
+  b.pause('break');
+  assert.deepEqual(carriedBreak(b.carry(T), T + 1000), { sinceBreakS: 0, remindAtS: null });
+});
+
+test('the carry kept in this browser: per annotator, the newest of two, and nothing for what cannot be read', () => {
+  const T = 1_800_000_000_000;
+  assert.equal(breakKey('A01'), 'electrotag.sinceBreak|A01');
+  assert.notEqual(breakKey('A01'), breakKey('A02'));
+  const older = { s: 100, remindAtS: null, at: T - 1000 };
+  const newer = { s: 30, remindAtS: null, at: T };
+  assert.equal(newestCarry(older, newer), newer);
+  assert.equal(newestCarry(newer, older), newer);
+  assert.equal(newestCarry(null, older), older, 'after a reload, this browser\'s copy');
+  assert.equal(newestCarry(older, null), older);
+  assert.equal(newestCarry(null, null), null);
+  for (const bad of [null, undefined, 'x', {}, { s: 'a', at: T }, { s: -1, at: T }, { s: 10 }, { s: 10, at: 'soon' }]) {
+    assert.deepEqual(carriedBreak(bad, T), { sinceBreakS: 0, remindAtS: null }, JSON.stringify(bad));
+  }
+  assert.equal(carriedBreak({ s: 10, at: T + 30 * 1000 }, T).sinceBreakS, 10, 'a clock a little ahead is no break');
+  assert.equal(carriedBreak({ s: 10, at: T + 2 * 60 * 1000 }, T).sinceBreakS, 0, 'one far ahead cannot be trusted');
+  assert.equal(carriedBreak({ s: 10, remindAtS: 'later', at: T }, T).remindAtS, null);
+  assert.equal(new WorkClock({ remindAtS: -5 }).remindAtS, null);
 });
 
 test('a pause after a while without input, and today\'s key', () => {
