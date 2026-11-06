@@ -751,43 +751,6 @@ export function mailtoHref(email, subject, body) {
   return `mailto:${encodeURIComponent(String(email || '')).replace(/%40/g, '@')}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-/**
- * The lines of "Add several": ID, name and email address, separated by commas, semicolons or tabs.
- * Every line is checked before anything is created: `rows` are the accounts to make and
- * `problems` the lines to correct, [{line, text}], in plain words. A first line of column names is
- * skipped.
- */
-export function parseBulkPeople(text, { existing = [], emailRequired = false, max = 200 } = {}) {
-  const taken = new Set(existing.map((x) => String(x).toUpperCase()));
-  const rows = [];
-  const problems = [];
-  const ids = new Map();
-  const emails = new Map();
-  const lines = String(text || '').split(/\r?\n/);
-  lines.forEach((raw, i) => {
-    const line = i + 1;
-    if (!raw.trim()) return;
-    const parts = raw.split(/[,;\t]/).map((p) => p.trim());
-    if (rows.length + problems.length === 0 && /^(annotator[ _-]?)?id$/i.test(parts[0])) return; // column names
-    if (parts.length > 3) { problems.push({ line, text: `Line ${line} has more than three parts; give the ID, the name and the email address.` }); return; }
-    const [idText, name = '', emailText = ''] = parts;
-    let id;
-    let email;
-    try { id = checkAnnotatorId(idText); } catch (exc) { problems.push({ line, text: `Line ${line}: ${exc.message}` }); return; }
-    try { email = checkEmail(emailText, { required: emailRequired }); } catch (exc) { problems.push({ line, text: `Line ${line} (${id}): ${exc.message}` }); return; }
-    if (taken.has(id)) { problems.push({ line, text: `Line ${line}: ${id} already has an account in this study.` }); return; }
-    if (ids.has(id)) { problems.push({ line, text: `Line ${line}: ${id} is also on line ${ids.get(id)}.` }); return; }
-    if (email && emails.has(email.toLowerCase())) { problems.push({ line, text: `Line ${line}: ${email} is also on line ${emails.get(email.toLowerCase())}.` }); return; }
-    if (name.length > 200) { problems.push({ line, text: `Line ${line}: the name has more than 200 characters.` }); return; }
-    ids.set(id, line);
-    if (email) emails.set(email.toLowerCase(), line);
-    rows.push({ line, annotator_id: id, display_name: name, email });
-  });
-  if (rows.length + problems.length > max) problems.unshift({ line: 0, text: `At most ${max} people can be added at once; split the list.` });
-  if (!rows.length && !problems.length) problems.push({ line: 0, text: 'Paste one line for each person: their ID, then their name and email address, separated by commas.' });
-  return { rows, problems };
-}
-
 /** Comma-separated text (RFC 4180) with a header row; text that a spreadsheet would run as a formula is kept as text. */
 export function csvText(columns, rows) {
   const cell = (v) => {
