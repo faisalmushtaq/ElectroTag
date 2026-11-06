@@ -7,11 +7,11 @@
 
 import { h, clear } from '../ui/dom.js';
 import {
-  GUIDANCE, METRICS, USES, USE_SHORT, checkSetId, criteriaFromRows, criteriaRows, describeProvenance, parseNumber, plural,
+  GUIDANCE, MATCH_CRITERIA, METRICS, USES, USE_SHORT, checkSetId, criteriaFromRows, criteriaRows, describeProvenance, parseNumber, plural,
   SLIVER_S, readAnnotationDocument, scopeText, splitSlivers, tsvText,
 } from './model.js';
 import {
-  actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, downloadBase64, downloadText, field, loading, messageArea,
+  actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, docsLink, downloadBase64, downloadText, field, loading, messageArea,
   numberInput, radios, recordingName, sectionHead, select, tabBar, textArea, textInput,
 } from './ui.js';
 import { snippetsTab } from './snippets.js';
@@ -410,16 +410,32 @@ export class TrainingSection {
     const secs = numberInput({ value: tol.seconds ?? 0.2, min: 0, max: 5, step: 0.05 });
     const frac = numberInput({ value: Math.round((tol.fraction ?? 0.2) * 100), min: 0, max: 100, step: 1 });
     const chans = numberInput({ value: Math.round((tol.channel_jaccard ?? 0.75) * 100), min: 1, max: 100, step: 1 });
-    for (const [input, label] of [[f1, 'Pass mark: share of the experts\' artifacts found (%)'], [acc, 'Pass mark: share given the right type (%)'],
+    // when a trainee's mark matches the reference's, in practice and assessment (the set's analysis settings)
+    const am = s.assessment_matching || {};
+    const criterion = select(Object.entries(MATCH_CRITERIA), am.match_criterion || 'iou');
+    const overlap = numberInput({ value: am.iou_threshold ?? 0.2, min: 0, max: 0.99, step: 0.05 });
+    const onsetTol = numberInput({ value: am.onset_tolerance_s ?? 0.5, min: 0, max: 60, step: 0.1 });
+    const offsetTol = numberInput({ value: am.offset_tolerance_s ?? 0.5, min: 0, max: 60, step: 0.1 });
+    const showMatching = () => {
+      overlap.disabled = criterion.value === 'tolerance';
+      onsetTol.disabled = offsetTol.disabled = criterion.value === 'iou';
+    };
+    criterion.addEventListener('change', showMatching);
+    showMatching();
+    for (const [input, label] of [[f1, 'Pass mark: score against the experts\' artifacts, F1 (%)'], [acc, 'Pass mark: share given the right type (%)'],
+      [criterion, 'Practice and assessment: how marks are matched'], [overlap, 'Practice and assessment: overlap needed'],
+      [onsetTol, 'Practice and assessment: start tolerance (seconds)'], [offsetTol, 'Practice and assessment: end tolerance (seconds)'],
       [secs, 'Guided steps: start and end within (seconds)'], [frac, 'Guided steps: or share of the artifact\'s length (%)'],
       [chans, 'Guided steps: channels the same (%)']]) input.setAttribute('aria-label', label);
     const save = actionButton('Save the settings', { kind: 'primary', working: 'Saving…', msg, log: 'set-update', onClick: async () => {
       const body = {
         set_id: s.set_id, name: name.value.trim(), description: description.value.trim(), practice_review: review.input.checked,
         allowed_annotators: allowed.values(),
-        practice_pass: { event_f1: parseNumber(f1.value, 'Artifacts found', { min: 0, max: 100 }) / 100, label_accuracy: parseNumber(acc.value, 'Right type', { min: 0, max: 100 }) / 100 },
+        practice_pass: { event_f1: parseNumber(f1.value, 'Score', { min: 0, max: 100 }) / 100, label_accuracy: parseNumber(acc.value, 'Right type', { min: 0, max: 100 }) / 100 },
         guided_tolerance: { seconds: parseNumber(secs.value, 'Start and end within', { min: 0, max: 5 }), fraction: parseNumber(frac.value, 'Share of its length', { min: 0, max: 100 }) / 100,
           channel_jaccard: parseNumber(chans.value, 'Channels the same', { min: 1, max: 100 }) / 100 },
+        assessment_matching: { match_criterion: criterion.value, iou_threshold: parseNumber(overlap.value, 'Overlap needed', { min: 0, max: 0.99 }),
+          onset_tolerance_s: parseNumber(onsetTol.value, 'Start tolerance', { min: 0, max: 60 }), offset_tolerance_s: parseNumber(offsetTol.value, 'End tolerance', { min: 0, max: 60 }) },
       };
       await this.area.write('set_update', body);
       await this.reload(['success', 'The set\'s settings are saved.']);
@@ -437,10 +453,16 @@ export class TrainingSection {
     return h('div.admin-stack', {},
       card('About the set', field('Name', name), field('Description', description), review, allowed),
       card('Practice and guided matching',
-        h('p.caption', {}, 'A practice recording is passed when the trainee finds enough of the experts\' artifacts and gives enough of them the right type.'),
-        h('div.row.wrap.sentence', {}, h('span', {}, 'Pass mark: at least'), f1, h('span', {}, '% of the experts\' artifacts found, and'), acc, h('span', {}, '% of them given the right type.')),
+        h('p.caption', {}, 'A practice recording is passed when the trainee\'s marks match the experts\' well enough and enough of the artifacts found have the right type. The score is the F1 of the matching: it falls for every artifact missed and for every mark that matches none of the experts\'.'),
+        h('div.row.wrap.sentence', {}, h('span', {}, 'Pass mark: a score of at least'), f1, h('span', {}, '%, and'), acc, h('span', {}, '% of the artifacts found given the right type.')),
         h('p.caption', {}, 'A guided step matches when the trainee\'s annotation starts and ends close enough to the experts\' and covers enough of the same channels.'),
         h('div.row.wrap.sentence', {}, h('span', {}, 'Start and end within'), secs, h('span', {}, 's or'), frac, h('span', {}, '% of its length; channels'), chans, h('span', {}, '% the same.'))),
+      card('Matching in practice and assessment',
+        h('p.caption', {}, 'When a trainee\'s mark counts as finding one of the experts\' artifacts, for the practice score and for every competency measure. A trainee\'s competency report is made again with the rule as it stands each time it is opened, so a change also reaches trainees who have already finished.'),
+        field('Matched', criterion), field('Overlap needed', overlap, { hint: 'The overlap of the two marks divided by their union, from 0 (any overlap) to just below 1. Used when marks are matched by overlap.' }),
+        field('Start tolerance (s)', onsetTol), field('End tolerance (s)', offsetTol, { hint: 'How far apart the starts, and the ends, may be. Used when marks are matched by their start and end.' }),
+        h('p.caption', {}, 'ElectroTag\'s defaults are starting points: choose the rule for the study\'s artifact types before looking at the results. ',
+          docsLink('Choosing settings', 'reliability_guide.md', 'choosing-settings'), ' in the reliability guide explains how to choose them.')),
       h('div.btn-row', {}, save), msg,
       card('Delete the set', h('p.caption', {}, 'A set that trainees are enrolled in, or have saved work in, stays.'), deleteHost));
   }

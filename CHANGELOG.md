@@ -5,6 +5,15 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Each reference set's Settings tab, in the admin area's Training section, now has Matching in practice
+and assessment: when a trainee's mark counts as finding one of the experts' artifacts, for the
+practice score and every competency measure (by overlap, by start and end within tolerances, or both).
+It was fixed at an overlap of 0.2 unless `reference_set.json` was edited by hand, which a study on
+Firebase could not do (`set_update` with `assessment_matching`; docs/admin_area.md, "Settings" under
+Training). The practice pass mark is now described as what it is, a score (event F1) that falls for
+every artifact missed and every mark matching none, where the admin area and Study settings called it
+the share of the experts' artifacts found.
+
 The competency measures once called "Cohen's kappa over time" and "positive agreement over time" are
 now named "Cohen's kappa, sample by sample" and "positive agreement, sample by sample", which says what
 they are: agreement judged at every sample of the recording, rather than a trend. The measures, and the

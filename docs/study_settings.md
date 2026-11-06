@@ -534,11 +534,24 @@ electrotag admin set-criteria /data/MyStudy pilot \
     --criterion label_accuracy:0.85 --min-reference-events 3
 ```
 
-Matching for competency uses the defaults of the reliability analysis (IoU of
-at least 0.2, one-to-one); a reference set can override them in the
-`analysis` entry of its `reference_set.json`. The ANY-artifact rows and both
-channel modes are always computed for assessments, because the competency
-measures are based on them.
+**Matching in practice and assessment.** A trainee's mark counts as finding
+one of the reference's artifacts by the rule of the reliability analysis: by
+default an overlap (IoU: the time both marks cover divided by the time either
+covers) of at least 0.2, each mark matched at most once. The same rule gives
+the practice score and every competency measure. Each reference set can change
+it in the admin area (Training, the set's Settings tab, Matching in practice
+and assessment): marks matched by overlap, by their start and end each within a
+tolerance (0.5 s by default), or by both, with the overlap needed and the two
+tolerances. These defaults are starting points with no particular artifact
+type behind them; the 0.2 follows the threshold Warby et al. (2014) used for
+sleep spindles, and the [reliability guide](reliability_guide.md#choosing-settings)
+explains how to choose. The set keeps what was changed in the `analysis`
+entry of its `reference_set.json` (`match_criterion`, `primary_iou_threshold`,
+`onset_tolerance_s`, `offset_tolerance_s`), where the other settings of the
+analysis can also be given. A competency report is made again with the rule
+as it stands whenever it is opened, so a change reaches trainees who have
+already finished. The ANY-artifact rows and both channel modes are always
+computed for assessments, because the competency measures are based on them.
 
 ### The training programme
 
@@ -639,10 +652,15 @@ listed in `guided.tolerance.accepted_labels` in `reference_set.json`, for
 example `{"Eye-blink-artifact": ["Eye-artifact"]}`.
 
 **The pass mark for practice.** A practice recording passes when the
-annotator finds at least 80 % of the experts' artifacts (event F1) and gives
-at least 80 % of those found the experts' type, by default; both are set for
-each reference set (`electrotag admin set-programme /data/MyStudy SET
---pass-f1 0.8 --pass-types 0.8` in a folder). One passed practice recording
+annotator's score is at least 80 % and at least 80 % of the artifacts they
+found have the experts' type, by default. The score is the event F1 of the
+matching in practice and assessment (under Competency criteria above): it
+combines the share of the experts' artifacts found with the share of the
+annotator's marks that match one, so it falls both for an artifact missed and
+for a mark that matches nothing. Both thresholds are starting points, to be
+judged from pilot data, and are set for each reference set in the admin area
+(the set's Settings tab) or with `electrotag admin set-programme /data/MyStudy
+SET --pass-f1 0.8 --pass-types 0.8` in a folder. One passed practice recording
 unlocks the assessment. When every practice recording has been done without
 passing, the training path offers one of them again, saved as a second attempt
 (`_attempt-02`).

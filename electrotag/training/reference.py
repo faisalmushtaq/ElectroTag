@@ -516,6 +516,17 @@ class ReferenceSet:
         self.quiz["items"] = items
         self.save()
 
+    def set_assessment_matching(self, given: dict[str, Any]) -> None:
+        """Change when a trainee's mark matches the reference's, in practice and assessment (some or all of
+        ``assessment.ASSESSMENT_MATCHING_KEYS``); the rest of ``analysis`` stays as it is."""
+        from electrotag.reliability.config import AnalysisConfig
+        from electrotag.training.assessment import assessment_matching_update
+
+        analysis = assessment_matching_update(self.analysis, given)
+        AnalysisConfig.from_dict({**AnalysisConfig().to_dict(), **analysis}).validate()
+        self.analysis = analysis
+        self.save()
+
     def set_criteria(self, criteria: dict[str, Any]) -> None:
         from electrotag.training.assessment import CompetencyCriteria
 

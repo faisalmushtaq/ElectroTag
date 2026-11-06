@@ -309,6 +309,20 @@ export const tests = [
       await page.waitForFunction(() => /Saved 1 criterion/.test(document.querySelector('.admin-section[data-section="training"]')?.textContent || ''));
       assert.ok(await noSideways(page));
       await t.screenshot(page, 'admin_narrow_criteria');
+      // When a trainee's mark matches the reference's in practice and assessment: matched by start and end,
+      // the overlap greyed out, the tolerances saved with the set (docs/admin_area.md, "Settings" under Training).
+      await page.click('.admin-tabs [data-tab="settings"]');
+      const matching = page.locator('.admin-card', { hasText: 'Matching in practice and assessment' });
+      assert.match(await matching.innerText(), /F1|Choosing settings/);
+      await matching.locator('.admin-field', { hasText: 'Matched' }).locator('select').selectOption('tolerance');
+      assert.equal(await matching.locator('.admin-field', { hasText: 'Overlap needed' }).locator('input').isDisabled(), true);
+      await matching.locator('.admin-field', { hasText: 'Start tolerance' }).locator('input').fill('0.3');
+      await page.click('[data-log="set-update"]');
+      await page.waitForFunction(() => /settings are saved/.test(document.querySelector('.admin-section[data-section="training"]')?.textContent || ''));
+      const sets = await page.evaluate(() => globalThis.ElectroTag.backend.admin('sets_list', {}));
+      assert.deepEqual(sets.sets[0].assessment_matching, { match_criterion: 'tolerance', iou_threshold: 0.2, onset_tolerance_s: 0.3, offset_tolerance_s: 0.5 });
+      assert.ok(await noSideways(page));
+      await t.screenshot(page, 'admin_narrow_set_settings');
       // Narrowing and widening keeps the admin area (the annotating views still ask for a larger screen).
       await page.setViewportSize({ width: 1280, height: 720 });
       assert.equal(await page.isVisible('.admin-nav'), true);
