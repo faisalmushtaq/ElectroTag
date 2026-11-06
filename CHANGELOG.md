@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Add several, under Annotators, now reads a CSV file saved from a spreadsheet as well as pasted lines, and
+gives roles other than annotator. A first line of column names (ID, Name, Email, Roles) lets a file's columns
+come in any order, quoted cells may hold commas, and files saved with semicolons, in UTF-16 or in an older
+spreadsheet's own encoding are read. Each line may name its roles (annotator, expert, administrator), and
+Roles boxes give the roles of everyone whose line names none. Administrators get a temporary password rather
+than an invitation link, shown once in a table of their own (docs/admin_area.md, "Adding several people").
+
 A person's Work, in Results and on their page under Annotators, now has Download and Withdraw beside each
 saved recording. Download gives every saved version's files in one zip. Withdraw takes a study recording's
 saved work out of the results, the lists, the analyses, the results zip and the export, keeping it aside
