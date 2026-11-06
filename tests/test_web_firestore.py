@@ -613,7 +613,8 @@ def test_the_admin_area_on_firestore(service: StudyService, recordings: Path, tm
     assert any("/training/pilot/quiz/annotator-A01_quiz_assessment_" in n for n in names)
     # the audit log, newest first, in pages
     first = admin_ok(service, "audit", {"limit": 3})
-    assert first["entries"][0]["op"] == "quiz_item_add" and first["next"]
+    # the download of the results is noted (electrotag/web/withdrawals.py), then the last change before it
+    assert [e["op"] for e in first["entries"][:2]] == ["results_zip", "quiz_item_add"] and first["next"]
     second = admin_ok(service, "audit", {"limit": 3, "before": first["next"]})
     assert second["entries"][0]["at"] <= first["entries"][-1]["at"]
     assert admin_err(service, "audit", {"before": "nonsense"}).code == "bad_request"
