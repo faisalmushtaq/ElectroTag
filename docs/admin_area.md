@@ -43,6 +43,7 @@ another way, for example on an encrypted drive, and open them in their own brows
   - [The example training set](#the-example-training-set)
 - [Analyses](#analyses)
 - [Results](#results)
+  - [One person's saved work](#one-persons-saved-work)
 - [Reviewing saved work](#reviewing-saved-work)
 - [Problems](#problems)
 - [Records](#records)
@@ -851,6 +852,39 @@ identifies people, and the download is noted in the audit log. When the results 
 page gives the command to use instead: on a study server the results are already in the study
 folder's `Annotated_Events`, and on Firebase `electrotag-web export` writes them into the same
 folders (docs/firebase.md).
+
+### One person's saved work
+
+A person's Work, here and on their page under Annotators, has two more buttons beside each recording
+they have saved. **Download** gives every saved version of that recording in one zip, a folder for
+each version holding the files the results zip holds for it (the `_annotations.json`, `_events.tsv`,
+`_events.json`, `_session.json` and `_time_viewed.txt`, with `_channels.tsv` when channels were
+marked bad).
+
+**Withdraw** takes every saved version of a study recording out of the study's results: from the
+lists, the progress figures, the analyses, the results zip and `electrotag web export`. It first
+asks what happens to the recording in the person's list. Give it back to annotate again puts it
+back among their recordings to do, and Take it off their list removes it, so that it can be given
+to someone else. The work is kept aside rather than deleted, and is listed under Withdrawn work
+with **Restore**, which puts every version back as it was and the recording back on the person's
+list as done. Restore waits while the person has saved the recording again since, because the new
+work would take the same version numbers; withdraw that first to put the earlier work back.
+
+Some work stays where it is. Training work belongs to the trainee's programme and its competency
+report, so only study recordings can be withdrawn. Work that an expert has corrected, or that an
+adjudication has compared, stays while that correction or adjudication exists, because they were
+made from it. A recording that came to the person through a task can be given back to them, while
+taking it off their list is done by taking them out of the task under Tasks.
+
+When the whole results were downloaded after the work was saved, Withdraw says so first, with when
+and by whom, and asks again: the results zip, the download from the study server's address and
+`electrotag web export` are each noted in the audit log for this, and a copy downloaded then still
+holds the work, which withdrawing cannot reach. Downloads made before this check was added in
+November 2026 are noted only when they included the names and contact details. On a study server,
+anyone who can read the study folder can also copy `Annotated_Events` directly, which the study
+cannot see. Withdrawn work is kept in the study folder's `withdrawn/` folder on a study server and
+in the study's `withdrawn` documents on Firebase. Each withdrawal and restoration is in the audit
+log, with who did it, the versions and what happened to the recording.
 
 Annotators can download their own saved files of each recording themselves, from the Saved dialog
 after Save and Finish and from their History (see "Your own files" in the

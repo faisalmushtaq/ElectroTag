@@ -613,7 +613,8 @@ def test_the_admin_area_on_firestore(service: StudyService, recordings: Path, tm
     assert any("/training/pilot/quiz/annotator-A01_quiz_assessment_" in n for n in names)
     # the audit log, newest first, in pages
     first = admin_ok(service, "audit", {"limit": 3})
-    assert first["entries"][0]["op"] == "quiz_item_add" and first["next"]
+    # the download of the results is noted (electrotag/web/withdrawals.py), then the last change before it
+    assert [e["op"] for e in first["entries"][:2]] == ["results_zip", "quiz_item_add"] and first["next"]
     second = admin_ok(service, "audit", {"limit": 3, "before": first["next"]})
     assert second["entries"][0]["at"] <= first["entries"][-1]["at"]
     assert admin_err(service, "audit", {"before": "nonsense"}).code == "bad_request"
@@ -1649,3 +1650,27 @@ def test_tracking_and_its_export_on_firestore(service: StudyService, recordings:
                                                                                      "set_aside")}
     assert json.loads((folder / "datasets.json").read_text())["datasets"][1]["licence"] == "CC0"
     assert cli(["export", "--firebase-project", PROJECT, "--study", service.store.study_id, "--to", str(out)]) == 0
+
+
+def test_withdrawn_work_on_firestore(service: StudyService, recordings: Path, tmp_path: Path) -> None:
+    """One person's saved work withdrawn from the results and put back (electrotag/web/withdrawals.py)."""
+    from electrotag.web.export import export_study
+
+    ok(service, "submit", A01, submission(recordings, SUB1, [BLINK]))
+    ok(service, "match", A01, {**match_body(recordings, SUB1), "revise": True})
+    ok(service, "submit", A01, {**submission(recordings, SUB1, [BLINK, EMG]), "revises": 1})
+    got = admin_ok(service, "saved_work_get", {"annotator_id": "A01", "recording_id": SUB1})
+    assert [v["version"] for v in got["versions"]] == [1, 2]
+    w = admin_ok(service, "saved_work_withdraw", {"annotator_id": "A01", "recording_id": SUB1,
+                                                  "then": "todo"})["withdrawal"]
+    assert [v["version"] for v in w["versions"]] == [1, 2]
+    assert not [e for e in service.store.completion_entries("A01") if e["recording_id"] == SUB1]
+    assert ok(service, "match", A01, match_body(recordings, SUB1))["status"] == "matched", "to annotate again"
+    counts = export_study(service.store, tmp_path / "out")
+    assert counts["recordings"] == 0, "the export leaves withdrawn work out"
+    assert admin_ok(service, "withdrawals_list", {})["withdrawals"][0]["withdrawal_id"] == w["withdrawal_id"]
+    admin_ok(service, "saved_work_restore", {"withdrawal_id": w["withdrawal_id"]})
+    assert len([e for e in service.store.completion_entries("A01") if e["recording_id"] == SUB1]) == 2
+    assert admin_ok(service, "withdrawals_list", {})["withdrawals"] == []
+    run_audit = admin_ok(service, "audit", {"limit": 2})["entries"]
+    assert run_audit[0]["op"] == "saved_work_restore"

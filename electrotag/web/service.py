@@ -290,6 +290,9 @@ class StudyService:
         from electrotag.web.tracking import Tracking
 
         self.datasets = Datasets(self)
+        from electrotag.web.withdrawals import Withdrawals
+
+        self.withdrawals = Withdrawals(self)  # one person's saved work: download, withdraw, restore
         self.tracking = Tracking(self)
         from electrotag.web.questionnaire import Questionnaire
 

@@ -22,6 +22,7 @@ from datetime import datetime
 from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Any
 
+from electrotag.app.common import now_local_iso
 from electrotag.app.io.atomic import atomic_write_bytes, atomic_write_json
 from electrotag.app.session.register import CompletionRegister, RegisterError
 from electrotag.config.settings import Settings
@@ -76,6 +77,7 @@ class FilesStore(Store):
         self.demo = demo
         self._log_locks: dict[str, threading.Lock] = {}
         self._log_locks_guard = threading.Lock()
+        self._withdraw_lock = threading.Lock()
         #: What the journalled saves of an earlier run left behind and what was done about it.
         self.recovered = self.recover_interrupted()
 
@@ -413,6 +415,84 @@ class FilesStore(Store):
     def save_results(self, make_session: Callable[[Any], Any], *, elapsed_s: float, started_at: str) -> SavedResult:
         return self._save_into(self.layout, make_session, elapsed_s=elapsed_s, started_at=started_at)
 
+    # ------------------------------------------------------- withdrawn work
+    def _withdrawn_dir(self) -> Path:
+        return self.root / WITHDRAWN_DIR
+
+    def withdraw_saved(self, annotator_id: str, recording_id: str, mode: str, context_id: str,
+                       record: dict[str, Any]) -> dict[str, Any] | None:
+        from electrotag.app.io.naming import OUTPUT_SUFFIXES, RECORDING_LOG_SUFFIX
+
+        ctx = context_id if mode != "standard" else ""
+
+        def match(e: dict[str, str]) -> bool:
+            return (e.get("annotator_id") == annotator_id and e.get("recording_id") == recording_id
+                    and e.get("mode", "standard") == mode and e.get("context", "") == ctx)
+
+        register = CompletionRegister(self.layout, self.settings.register_lock_timeout_s)
+        with self._withdraw_lock:
+            rows = [e for e in register.entries() if match(e)]
+            if not rows:
+                return None
+            dest = self._withdrawn_dir() / _safe_id(record["withdrawal_id"])
+            dest.mkdir(parents=True, exist_ok=False)
+            kept = {**record, "versions": rows, "files": []}
+            atomic_write_json(dest / WITHDRAWAL_FILE, kept)
+            # the files first, so that nothing reads them from the results folder, then the register rows
+            for row in rows:
+                folder = _inside(self.layout.root, row["output_dir"])
+                for suffix in (*OUTPUT_SUFFIXES.values(), RECORDING_LOG_SUFFIX):
+                    src = folder / f"{row['output_basename']}{suffix}"
+                    if not src.is_file():
+                        continue
+                    rel = f"{row['output_dir']}/{src.name}"
+                    target = _inside(dest / "files", rel)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(src), str(target))
+                    kept["files"].append(rel)
+                    atomic_write_json(dest / WITHDRAWAL_FILE, kept)
+            register.remove(match)
+            return kept
+
+    def withdrawals(self, annotator_id: str | None = None) -> list[dict[str, Any]]:
+        out = []
+        base = self._withdrawn_dir()
+        for f in sorted(base.glob(f"*/{WITHDRAWAL_FILE}")) if base.is_dir() else []:
+            try:
+                rec = json.loads(f.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if rec.get("restored_at") or (annotator_id is not None and rec.get("annotator_id") != annotator_id):
+                continue
+            out.append(rec)
+        return out
+
+    def restore_withdrawn(self, withdrawal_id: str) -> dict[str, Any] | None:
+        if not WITHDRAWAL_ID_RE.match(str(withdrawal_id)):
+            return None
+        dest = self._withdrawn_dir() / withdrawal_id
+        with self._withdraw_lock:
+            try:
+                rec = json.loads((dest / WITHDRAWAL_FILE).read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                return None
+            if rec.get("restored_at"):
+                return None
+            for rel in rec.get("files", []):
+                target = _inside(self.layout.root, rel)
+                if target.exists():
+                    raise StoreError(f"{rel} is in the results folder already, so the withdrawn copy stays aside")
+            for rel in rec.get("files", []):
+                target = _inside(self.layout.root, rel)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(_inside(dest / "files", rel)), str(target))
+            register = CompletionRegister(self.layout, self.settings.register_lock_timeout_s)
+            for row in rec.get("versions", []):
+                register.add(row)
+            rec["restored_at"] = now_local_iso()
+            atomic_write_json(dest / WITHDRAWAL_FILE, rec)
+            return rec
+
     def _save_into(self, layout: Any, make_session: Callable[[Any], Any], *, elapsed_s: float, started_at: str,
                    derived: bool = False) -> SavedResult:
         from electrotag.web.saving import run_session
@@ -650,6 +730,19 @@ def _chosen_files(root: Path, entries: list[dict[str, str]], attempt: int | None
 def _check_kind(kind: str, record_id: str | None = None) -> None:
     if kind not in RECORD_KINDS or (record_id is not None and not RECORD_ID_RE.match(str(record_id))):
         raise StoreError(f"Unsuitable record {kind!r} {record_id!r}")
+
+
+#: Withdrawn saved work, outside the results folder: ``withdrawn/<withdrawal_id>/`` holds ``withdrawal.json``
+#: (the record, with the register rows) and ``files/`` (the files at their places below ``Annotated_Events``).
+WITHDRAWN_DIR = "withdrawn"
+WITHDRAWAL_FILE = "withdrawal.json"
+WITHDRAWAL_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
+
+
+def _safe_id(withdrawal_id: str) -> str:
+    if not WITHDRAWAL_ID_RE.match(str(withdrawal_id)):
+        raise StoreError(f"Not a withdrawal ID: {withdrawal_id!r}")
+    return str(withdrawal_id)
 
 
 def _inside(root: Path, rel: str) -> Path:
