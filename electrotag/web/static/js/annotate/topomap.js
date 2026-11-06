@@ -54,7 +54,10 @@ export class TopoMap {
       reference: kept && REFERENCE_CHOICES[kept.reference] ? kept.reference : this.studySignal.reference,
     };
     this.measure = MEASURES[local.get(ws._toolKey('topomap_measure'), null)] ? local.get(ws._toolKey('topomap_measure'), 'mean') : 'mean';
-    this.open = local.get(ws._toolKey('topomap_open'), true) !== false;
+    // Folded at first beside a panel of the expert area or a review (adjudicating, correcting, a replay,
+    // everyone's marks), which needs the side panel's height; opened, it stays open as the person chose.
+    const beside = !['annotate', 'tryout', 'tour'].includes(ws.kind) || Boolean(ws.reviewHost && ws.reviewHost.childElementCount);
+    this.open = local.get(ws._toolKey('topomap_open'), true) !== false && !beside;
     this.limitUv = stepLimit(((ws.s.scalings && ws.s.scalings.eeg) || 50e-6) * 1e6);
     // The channels on the map, in the order of the montage.
     this.chans = ws.s.channels.filter((c) => positions.points.has(c.name)).map((c) => ({ ...c, p: positions.points.get(c.name) }));

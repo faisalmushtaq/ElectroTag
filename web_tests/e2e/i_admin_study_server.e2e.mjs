@@ -263,9 +263,10 @@ export const tests = [
       await page.waitForSelector('[data-log="register"]', { timeout: 120000 });
       assert.match(await page.innerText('.admin-review'), /Found 3 recordings/);
       await page.check('[data-log="positions-with"]');
-      await page.click('[data-log="register"]');
-      // They are the study's recordings already: nothing is replaced without asking.
-      await page.waitForFunction(() => /skipped 3/.test(document.querySelector('.admin-review')?.innerText || ''), null, { timeout: 60000 });
+      // They are the study's recordings already: nothing is replaced without asking, and Add says so.
+      assert.equal((await page.innerText('.admin-review')).match(/registered already/g).length, 3);
+      assert.equal(await page.textContent('[data-log="register"]'), 'Nothing to add');
+      assert.equal(await page.isDisabled('[data-log="register"]'), true);
     },
   },
 ];
