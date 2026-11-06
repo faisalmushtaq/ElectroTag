@@ -66,8 +66,21 @@ export function replayProblems(rp) {
   return out;
 }
 
-/** Problems with the review, training and replay blocks of a study's settings (settingsProblems has the others). */
+/** The topographic map's signal for the study (display.topomap_filters and topomap_reference; js/annotate/topomap.js). */
+export const TOPOMAP_FILTER_CHOICES = Object.freeze([['as_shown', 'As in the viewer'], ['none', 'None']]);
+export const TOPOMAP_REFERENCE_CHOICES = Object.freeze([['as_recorded', 'As recorded'], ['average', 'Average of the good channels']]);
+
+/** Problems with the topographic map's settings in the display block, in plain words. */
+export function topomapProblems(d) {
+  const out = [];
+  if ('topomap' in d && typeof d.topomap !== 'boolean') out.push('display.topomap is on or off (true or false).');
+  if ('topomap_filters' in d && !TOPOMAP_FILTER_CHOICES.some(([v]) => v === d.topomap_filters)) out.push('The topographic map\'s filters are as in the viewer or none.');
+  if ('topomap_reference' in d && !TOPOMAP_REFERENCE_CHOICES.some(([v]) => v === d.topomap_reference)) out.push('The topographic map\'s reference is as recorded or the average of the good channels.');
+  return out;
+}
+
+/** Problems with the review, training and replay blocks of a study's settings, and the topographic map's (settingsProblems has the others). */
 export function expertSettingsProblems(s) {
-  return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}),
+  return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}), ...topomapProblems(s.display || {}),
     ...questionnaireProblems(s.questionnaire)]; // the sign-up questionnaire (questionnaire_model.js)
 }

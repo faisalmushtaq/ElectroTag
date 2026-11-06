@@ -78,6 +78,8 @@ export const tests = [
         assert.deepEqual(second, ['chans', 'conf-mark', 'ann-time'], `${where}: the second line of a channel-specific rated row`);
         assert.match(await page.locator('.ann-table tr[data-id="t00"] .ann-time').textContent(), /^0\.000–0\.400$/);
         if (size.width === 820) {
+          // Upright, the topographic map stands beside the panel; folded, it leaves the panel its width.
+          if (await page.locator('.topo:not(.folded)').count()) await page.click('[data-log="topomap-toggle"]');
           const [list, buttons] = await Promise.all(['.ann-body > .table-wrap', '.ann-body > .btn-grid'].map((s) => page.locator(s).boundingBox()));
           assert.ok(buttons.x >= list.x + list.width, `${where}: the buttons stand beside the list`);
         }

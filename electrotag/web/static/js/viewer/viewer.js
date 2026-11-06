@@ -376,7 +376,11 @@ export class EegViewer {
 
   /** The replay's pointer: a small ring at {t, channel}, or null to hide it. */
   setReplayPointer(p) { this.replayPointer = p && Number.isFinite(p.t) ? { t: p.t, channel: p.channel || null } : null; this.invalidate(['over']); }
-  setCursor(t) { this.cursorT = t; this.invalidate(['over']); }
+  setCursor(t) {
+    this.cursorT = t;
+    this.invalidate(['over']);
+    if (this.onCursor) this.onCursor(t); // the topographic map follows the time cursor
+  }
   setPrefix(map) { this.prefix = map || {}; this.invalidate(['over']); }
   setLabelColours(map) { this.labelColours = map || {}; this.invalidate(['over']); }
   /** Tags whose outline is dashed (id -> canvas line dashes), as each person's second cue beside their colour. */

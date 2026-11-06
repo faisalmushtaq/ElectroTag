@@ -56,7 +56,7 @@ async function openRecordingFiles(files) {
 }
 
 /** What is fetched in idle time after signing in, so that opening a recording does not wait for it. */
-const PRELOAD = ['open', 'device', 'deviceStore', 'session', 'workspace'];
+const PRELOAD = ['open', 'device', 'deviceStore', 'session', 'workspace', 'topomap'];
 
 const PART_TEXT = 'This part of ElectroTag could not be loaded, most probably because the internet connection was lost. ' +
   'Check your connection, then press Try again; if it still fails, reload the page.';

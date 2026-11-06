@@ -672,6 +672,38 @@ ol.stages.path .stage {
 }
 .coach-host, .review-host { display: flex; flex-direction: column; min-height: 0; flex: 0 1 auto; max-height: 60%; }
 .coach-host:empty, .review-host:empty { display: none; }
+/* The topographic map (js/annotate/topomap.js): a section above the tabs, folded with its heading. The
+   drawing stays at least 200 pixels across wherever the panel is, so that its electrodes can be pointed at. */
+/* It gives way first when the coach or a review pass needs the height (it scrolls inside itself). */
+.topo-host { flex: 0 4 auto; min-height: 40px; overflow: auto; max-height: 64%; }
+.topo-host:empty { display: none; }
+.topo { background: var(--page); border: 1px solid var(--hairline); border-radius: 0; padding: 4px 12px 8px; }
+.topo-head { margin: 0; font: var(--t-14); }
+.topo-toggle {
+  display: flex; align-items: center; gap: 6px; width: 100%; min-height: 32px; padding: 0; border: none; background: none;
+  color: var(--text); font: var(--t-14); font-weight: 600; cursor: pointer; text-align: left;
+}
+.topo-caption { margin: 0 0 4px; font-variant-numeric: tabular-nums lining-nums; }
+.topo-figure { position: relative; width: fit-content; margin: 0 auto; }
+.topo-canvas { display: block; cursor: pointer; touch-action: manipulation; }
+.topo-tip {
+  position: absolute; transform: translate(-50%, -150%); padding: 0 6px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--ink); font: var(--t-12); white-space: nowrap; pointer-events: none; font-variant-numeric: tabular-nums lining-nums;
+}
+.topo-scale {
+  display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 4px;
+  color: var(--text-secondary); font: var(--t-12); font-variant-numeric: tabular-nums lining-nums;
+}
+.topo-lim { text-align: center; white-space: nowrap; }
+.topo-scale .btn.icon.small { flex: none; }
+.topo-opts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; align-items: center; margin-top: 8px; font: var(--t-14); color: var(--text-secondary); }
+.topo-opts select.field.topo-select { height: 32px; padding: 0 28px 0 8px; background-position: right 6px center; font: var(--t-14); }
+@media (pointer: coarse) { .topo-opts select.field.topo-select { height: 40px; font: var(--t-16); } }
+.topo-signal-toggle {
+  display: flex; align-items: center; gap: 6px; width: 100%; min-height: 32px; margin-top: 4px; padding: 0; border: none; background: none;
+  color: var(--text-secondary); font: var(--t-14); cursor: pointer; text-align: left;
+}
+.topo-signal-note { margin: 4px 0 0; }
 /* The line at the bottom: what happened and what to do next on the left, on up to two lines so that
    an instruction is read to its end, and on the right how much has been viewed, the number of
    annotations and the filters, one above the other. Its height stays the same whatever it says, so
@@ -1001,6 +1033,12 @@ a.btn { text-decoration: none; }
   .view.annotate .ws-eeg { flex: 1 1 auto; min-height: 320px; padding: 8px 8px 0; }
   .view.annotate .ws-side { width: auto; height: 38%; min-height: 240px; flex: none; flex-direction: row; padding: 8px; }
   .view.annotate .ws-side > .coach-host, .view.annotate .ws-side > .review-host { flex: 1 1 0; max-height: none; min-width: 0; }
+  .view.annotate .ws-side > .topo-host { flex: none; max-height: none; width: 248px; }
+  /* folded, the map is a slim strip with its button, and the panels beside it keep their width */
+  .view.annotate .ws-side > .topo-host:has(.topo.folded) { width: 48px; }
+  .view.annotate .topo.folded { height: 100%; padding: 4px; }
+  .view.annotate .topo.folded .topo-title { display: none; }
+  .view.annotate .topo.folded .topo-toggle { justify-content: center; min-height: 40px; }
   .view.annotate .ws-side > .side-tabs { flex: 1 1 0; min-width: 0; min-height: 0; }
   .view.annotate .break-reminder { right: 16px; bottom: 16px; width: min(400px, calc(100% - 32px)); }
   /* The line at the bottom: the message across the width on two lines, the figures under it. */

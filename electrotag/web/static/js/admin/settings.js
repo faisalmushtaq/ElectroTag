@@ -16,7 +16,7 @@ import { h, clear } from '../ui/dom.js';
 import {
   CHANNEL_COLOUR_CHOICES, CHANNEL_TYPES, MATCH_CRITERIA, SCALING_TYPES, SELECTION, deepCopy, fromMicrovolts, mergeSettings, parseNumber, settingsProblems, toMicrovolts,
 } from './model.js';
-import { REASON_RULES, SKIPPABLE_STAGES, TRAINING_GATES, expertSettingsProblems } from './settings_checks.js';
+import { REASON_RULES, SKIPPABLE_STAGES, TOPOMAP_FILTER_CHOICES, TOPOMAP_REFERENCE_CHOICES, TRAINING_GATES, expertSettingsProblems } from './settings_checks.js';
 import { actionButton, card, checkbox, confirmInline, field, loading, messageArea, numberInput, radios, sectionHead, select, textArea, textInput } from './ui.js';
 import { questionnaireEditor } from './questionnaire.js';
 import { K_MAX, K_MIN } from './tasks_model.js';
@@ -132,6 +132,9 @@ export class SettingsSection {
     // display
     const seconds = numberInput({ value: d.duration_s ?? 10, min: 1, max: 600, step: 1 });
     const colours = select(CHANNEL_COLOUR_CHOICES, d.channel_colours || 'off');
+    const topomap = checkbox('Show the topographic map beside the EEG', d.topomap !== false);
+    const topoFilters = select(TOPOMAP_FILTER_CHOICES, d.topomap_filters || 'as_shown');
+    const topoReference = select(TOPOMAP_REFERENCE_CHOICES, d.topomap_reference || 'as_recorded');
     const nch = numberInput({ value: d.n_channels ?? 32, min: 1, step: 1 });
     const scal = Object.fromEntries(SCALING_TYPES.map((t) => [t, numberInput({ value: (d.scalings || {})[t] !== undefined ? toMicrovolts(d.scalings[t]) : '', min: 0, step: 'any' })]));
     // channels
@@ -238,6 +241,7 @@ export class SettingsSection {
         display: { duration_s: numberOf(seconds, 'Seconds on the screen', { min: 1, max: 600 }),
           n_channels: numberOf(nch, 'Channels on the screen', { min: 1, integer: true }),
           channel_colours: colours.value,
+          topomap: topomap.input.checked, topomap_filters: topoFilters.value, topomap_reference: topoReference.value,
           scalings: Object.fromEntries(SCALING_TYPES.filter((t) => String(scal[t].value).trim() !== '')
             .map((t) => [t, fromMicrovolts(numberOf(scal[t], `Scale for ${t.toUpperCase()}`, { min: 0.001 }))])) },
         channels: { hide: hide.value.split('\n').map((x) => x.trim()).filter(Boolean), types },
@@ -305,7 +309,11 @@ export class SettingsSection {
           field('Channel colours at first', colours, { hint: 'Colours the traces by region, side or type, in a palette checked for colour-blind readers; each annotator can change it for themselves.' })),
         h('h3', {}, 'Starting amplitude of each channel type (µV; the scale bar shows twice the value)'),
         h('div.form-grid.narrow', {}, SCALING_TYPES.map((t) => field(t.toUpperCase(), scal[t]))),
-        h('p.caption', {}, 'A recording whose amplitudes are unusual is shown with a scale of its own, and says so.')),
+        h('p.caption', {}, 'A recording whose amplitudes are unusual is shown with a scale of its own, and says so.'),
+        h('h3', {}, 'Topographic map'),
+        topomap,
+        h('div.form-grid', {}, field('Its filters at first', topoFilters), field('Its reference at first', topoReference)),
+        h('p.caption', {}, 'The map shows each channel at the time cursor, or its mean or RMS over the selected mark, spread over the head. Each annotator can choose other filters or the average reference for themselves. Recordings added without electrode positions have no map.')),
       card('Channels',
         field('Channels to hide', hide, { hint: 'Not shown and not annotated: headset housekeeping channels, for example. * stands for any characters.' }),
         h('h3', {}, 'Channel types by name'),

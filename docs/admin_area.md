@@ -480,6 +480,22 @@ saved results for is replaced only by the very same file (the same fingerprint),
 match the file that was annotated. Recordings in a reference set are offered only for training,
 never for the study's own annotation.
 
+Before Add, the page asks whether to add the recordings with their electrode positions, for the
+topographic map that annotators see beside the EEG ([using ElectroTag](using.md), "The topographic
+map"); Add waits for the answer. With positions, each recording takes those of its own BIDS
+electrodes.tsv among the files chosen (with its coordsystem.json, matched to the recording as BIDS
+matches sidecars), or, without one, the standard positions of its channel names when those are
+10-20, 10-10 or 10-05 names. The Electrode positions column of the table says which, and Choose
+position files… adds electrodes.tsv and coordsystem.json files that were not among those chosen. A
+recording for which neither is found is named in a note and added without a map. Without positions,
+a note says that the recordings will have no topographic map while they are annotated. Only the
+electrodes' places on the map's drawing of the head are sent, for the EEG channels; the files stay
+on this computer. To change a recording's positions later, add it again with Replace ticked, which a
+recording with saved results allows for the very same file. A recording's page says where its
+positions came from; recordings added before this question, or with `electrotag-web register`, have
+no positions of their own, and each annotator's browser places their electrodes as the channel
+chooser does (from an electrodes.tsv opened with the recording, or from standard names).
+
 If you close the page before Add, nothing is registered. If the connection fails part of the way
 through, the page says how many recordings were added; choose Add again for the rest, and those
 added already are skipped. The `electrotag-web register` command remains for registering from the
@@ -1018,7 +1034,12 @@ first, the starting choice of channel colours (none, by region of the head, by s
 type, in a palette checked for colour-blind readers; `display.channel_colours`), and the starting
 amplitude of each channel type in microvolts (the scale bar shows twice the value); annotators can
 still change the colours and the amplitude for themselves, and a recording whose amplitudes are
-implausible is shown at a scale of its own, with a warning.
+implausible is shown at a scale of its own, with a warning. Under Topographic map, Show the
+topographic map beside the EEG (on at first; `display.topomap`) gives annotators the map of
+"The topographic map" in the guide for annotators, and Its filters at first and Its reference at
+first choose the signal it maps (`display.topomap_filters`: as in the viewer, or none;
+`display.topomap_reference`: as recorded, or the average of the good channels). Each annotator can
+choose another signal for themselves, in their browser.
 
 **Channels** lists the channels to hide (headset housekeeping channels, for example; `*` stands for
 any characters), the channel types to give by name pattern (EXG1 to EXG8 as EOG, for example), and

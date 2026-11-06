@@ -156,6 +156,7 @@ async function flow(t, page, { people, folder, collide, study }) {
   assert.equal(await add.locator('.admin-field', { hasText: 'Dataset' }).locator('select').inputValue(), datasetId, 'the dataset is chosen for adding');
   await chooseFolder(page, 'input[data-log="register-folder"]', folder);
   await page.waitForSelector('[data-log="register"]', { timeout: 120000 });
+  await page.check('[data-log="positions-with"]');
   assert.match(await text(page, '.admin-review'), /Into the dataset Youth low-density 2026, with their IDs starting youth\//);
   if (collide) {
     // A new dataset without a prefix, made on the page: the IDs belong to the built-in dataset's recordings.

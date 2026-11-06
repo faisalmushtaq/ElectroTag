@@ -28,6 +28,7 @@ at the end of the Help tab of the annotation view; each link opens the guide in 
 - [Recordings kept on this device](#recordings-kept-on-this-device)
 - [The annotation view](#the-annotation-view)
   - [The artifact reference guide](#the-artifact-reference-guide)
+  - [The topographic map](#the-topographic-map)
 - [Marking an artifact](#marking-an-artifact)
 - [Changing annotations](#changing-annotations)
 - [Bad channels](#bad-channels)
@@ -452,7 +453,8 @@ types after "Draw as", then Whole montage or Selected channels with Channels… 
 selection, Overlay, and the scales: Time, the seconds on the screen, and Amplitude, the height of a
 row of EEG, each with − and + beside it. Each type button shows its number and a short name (1
 Blink, 2 HEM, 3 EMG and so on); when the window is too narrow for one line, the toolbar continues on
-a second. On the right, the Annotations tab
+a second. On the right, above the tabs, the topographic map (below) shows how the channels' values
+spread over the head. The Annotations tab
 lists everything you have marked, the Recording tab shows the time you have worked, how much of the
 recording you have viewed, the viewing options, your comfort choices and details of the recording,
 the Guide tab holds the artifact reference guide (below), and the Help tab lists every key. The line at the bottom reminds you of the main keys and shows what
@@ -481,6 +483,46 @@ you annotate, Open beside the EEG or Open in a new tab in the Help tab, About th
 list (/, Find a type), which shows the highlighted type in the Guide tab, the link on the training
 path, and its own address, the application's address followed by `#guide`, which opens in any tab
 without signing in.
+
+### The topographic map
+
+The topographic map, at the top of the side panel, spreads the channels' values over a drawing of
+the head seen from above, with the nose at the top: red where the signal is positive, blue where it
+is negative and white near zero, so that you can see where on the scalp something is largest. A
+blink, for example, is red over the front of the head. What it shows follows what you do on the EEG.
+After a click on the EEG (a tap on an iPad), it is the value of every channel at the time cursor,
+and the line above the map gives the time ("At 3.200 s"). With a mark selected, or just drawn, it is
+the mean of each channel over the mark, or its root mean square (RMS), the size of the signal there
+whatever its sign; Over a mark chooses which. The map follows the first 30 seconds of a longer mark.
+
+Each electrode is a black dot. Point at one to read its name and value; click or tap it to choose its
+channel on the EEG, as a click on the channel's name does (the view scrolls to it, and when the next
+mark is for the whole montage, Selected channels is chosen first). A channel marked bad, by you or in
+the recording's channels.tsv, is a grey ring and is left out of the map at once, the map being
+spread over the other channels. The colours run from − to + the scale written under the map, at
+first the recording's starting EEG amplitude (50 µV unless the study chose another), and stay the
+same for the whole recording so that maps can be compared with each other; − and + beside the scale
+make it narrower or wider. Values beyond the scale take its end colours.
+
+The map uses the signal as the viewer shows it, with the display filters of the Recording tab and
+each channel as recorded, unless your study chose otherwise. Signal, under the map, lets you choose
+for yourself: Filters as in the viewer or None, and Reference as recorded or the Average of the good
+channels (the average reference, which takes away at each moment the mean of the channels not marked
+bad). Your choice is kept in this browser for your next recordings, and the line under it says
+whether it is the study's or your own. As the viewer does with its traces, each channel is centred
+on its mean over the seconds on the screen (up to 20 seconds around what is mapped), so that a
+channel's steady offset does not colour the map. The map is drawn with spherical splines (Perrin, Pernier, Bertrand and
+Echallier, 1989; [references](references.md)): the values at the electrodes are spread smoothly over a sphere, the head, and the
+sphere is drawn flat as the channel chooser's map draws it, so that the ring at the edge of the head
+runs through Fpz, T7, Oz and T8 and electrodes below it lie just outside.
+
+The heading folds the map away, and ElectroTag remembers that in this browser too. On an iPad held
+upright, the map stands beside the Annotations panel; folded, it is a narrow strip, which gives the
+panel back its width. The map needs to know where each electrode is: from the positions given when
+the recording was added to the study, from an electrodes.tsv opened with the recording, or from the
+standard positions of 10-20, 10-10 and 10-05 names. A recording added without positions, a montage
+whose names say nothing about where the electrodes are (BioSemi's A1 to H32, for example) with no
+electrodes.tsv, and a study that has turned the map off show no map.
 
 ## Marking an artifact
 

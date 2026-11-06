@@ -432,6 +432,8 @@ async function script(call) {
   await call('admin problem_resolve', (s) => s.b.admin('problem_resolve', { problem_id: hex(0xa1), note: 'Known; carry on' }));
   await call('admin problem_resolve (again)', (s) => s.b.admin('problem_resolve', { problem_id: hex(0xa1) }));
   await call('admin settings_update', (s) => s.b.admin('settings_update', { settings: { annotation: { min_duration_samples: 2 } } }));
+  await call('admin settings_update (the topographic map)', (s) => s.b.admin('settings_update', { settings: { display: { topomap: false, topomap_reference: 'average' } } }));
+  await call('me (the topographic map)', (s) => s.b.me());
   await call('admin settings_update (unknown block)', (s) => s.b.admin('settings_update', { settings: { output: { directory: '/' } } }));
   await call('admin set_update', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, practice_pass: { event_f1: 0.75, label_accuracy: 0.75 } }));
   await call('admin set_update (quiz only for T01)', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, allowed_annotators: ['t01'] }));

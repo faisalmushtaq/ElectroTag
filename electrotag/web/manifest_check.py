@@ -17,7 +17,7 @@ from pathlib import PurePosixPath
 from typing import Any
 
 from electrotag.config.settings import CHANNEL_TYPES
-from electrotag.web.manifest import FINGERPRINT_ROLE, SCHEMA, SCHEMA_VERSION
+from electrotag.web.manifest import FINGERPRINT_ROLE, POSITION_SOURCES, SCHEMA, SCHEMA_VERSION
 
 #: Limits of what one call may register.
 MAX_MANIFEST_BYTES = 2_000_000
@@ -207,6 +207,37 @@ def _events(value: Any, n_samples: int) -> dict[str, Any]:
     return out
 
 
+def _positions(value: Any, ch_names: list[str], types: dict[str, Any]) -> dict[str, Any]:
+    """The electrode positions chosen when the recording was added: {"source": "file", "points": {channel:
+    [x, y]}} (map positions of EEG channels shown, within three head radii), {"source": "standard"} or
+    {"source": "none"}."""
+    if not isinstance(value, dict) or value.get("source") not in POSITION_SOURCES:
+        raise ManifestProblem(f"electrode_positions must give a source: {', '.join(POSITION_SOURCES)}")
+    if set(value) - {"source", "points"}:
+        raise ManifestProblem("electrode_positions holds only source and points")
+    if value["source"] != "file":
+        if "points" in value:
+            raise ManifestProblem("electrode_positions has points only for the source file")
+        return {"source": value["source"]}
+    pts = value.get("points")
+    if not isinstance(pts, dict) or not pts:
+        raise ManifestProblem("electrode_positions.points must give the position of at least one channel")
+    shown = set(ch_names)
+    out: dict[str, list[float]] = {}
+    for name, p in pts.items():
+        if name not in shown:
+            raise ManifestProblem(f"electrode_positions.points: {name!r} is not a channel shown")
+        if types.get(name) != "eeg":
+            raise ManifestProblem(f"electrode_positions.points: {name!r} is not an EEG channel")
+        if not isinstance(p, (list, tuple)) or len(p) != 2 or any(
+                isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or abs(v) > 3
+                for v in p):
+            raise ManifestProblem(f"electrode_positions.points: {name!r} must be [x, y], two numbers "
+                                  "from -3 to 3")
+        out[name] = [float(p[0]), float(p[1])]
+    return {"source": "file", "points": {c: out[c] for c in ch_names if c in out}}
+
+
 def check_manifest(m: Any, *, scope: str, suffixes: tuple[str, ...]) -> dict[str, Any]:
     """A clean, checked copy of a browser's manifest for ``scope`` (see the module docstring)."""
     if not isinstance(m, dict):
@@ -334,6 +365,8 @@ def check_manifest(m: Any, *, scope: str, suffixes: tuple[str, ...]) -> dict[str
             "warnings": _texts(m.get("warnings"), "warnings"),
             "notes": _texts(m.get("notes"), "notes"),
         }
+        if m.get("electrode_positions") is not None:
+            out["electrode_positions"] = _positions(m["electrode_positions"], ch_names, out["channel_types"])
         if out["files"]["path"] != rid:
             raise ManifestProblem("files.path must be the recording's own file (recording_id)")
         _usable(out)

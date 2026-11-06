@@ -224,6 +224,9 @@ export const tests = [
         assert.match(review, /sub-new01_task-rest_eeg\.edf/);
         assert.match(review, /Read by the test builder/);
         assert.match(review, /1 file could not be read README\.txt: This is not an EEG recording\./);
+        // Add waits for the choice of electrode positions.
+        assert.equal(await page.textContent('[data-log="register"]'), 'Choose whether to add electrode positions');
+        await page.check('[data-log="positions-with"]');
         await t.screenshot(page, 'admin_register_review');
         await page.click('[data-log="register"]');
         await page.waitForFunction(() => /Added 1 recording/.test(document.querySelector('.admin-review')?.textContent || ''));
@@ -238,8 +241,15 @@ export const tests = [
         await chooseFolder(page, 'input[data-log="register-folder"]', data.folder);
         await page.waitForSelector('[data-log="register"]');
         assert.match(await page.textContent('.admin-review'), /registered already/);
+        await page.check('[data-log="positions-without"]');
+        assert.match(await page.innerText('.admin-review'), /Without electrode positions these recordings have no topographic map/);
+        // registered already, and Replace is not ticked: nothing to add
+        assert.equal(await page.textContent('[data-log="register"]'), 'Nothing to add');
+        assert.equal(await page.isDisabled('[data-log="register"]'), true);
+        await page.check('.admin-section[data-section="recordings"] label:has-text("Replace recordings") input');
         await page.click('[data-log="register"]');
-        await page.waitForFunction(() => /skipped 1/.test(document.querySelector('.admin-review')?.textContent || ''));
+        await page.waitForFunction(() => /replaced 1/.test(document.querySelector('.admin-review')?.textContent || ''));
+        await page.uncheck('.admin-section[data-section="recordings"] label:has-text("Replace recordings") input');
 
         // Assign it to A01, who opens the file from disk, annotates and saves.
         await goSection(page, 'Assignments', 'admin-assignments');

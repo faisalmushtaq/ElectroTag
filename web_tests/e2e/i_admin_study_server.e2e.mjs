@@ -262,6 +262,7 @@ export const tests = [
       await chooseFolder(page, 'input[data-log="register-folder"]', path.join(t.study.dir, 'recordings', 'study'));
       await page.waitForSelector('[data-log="register"]', { timeout: 120000 });
       assert.match(await page.innerText('.admin-review'), /Found 3 recordings/);
+      await page.check('[data-log="positions-with"]');
       await page.click('[data-log="register"]');
       // They are the study's recordings already: nothing is replaced without asking.
       await page.waitForFunction(() => /skipped 3/.test(document.querySelector('.admin-review')?.innerText || ''), null, { timeout: 60000 });

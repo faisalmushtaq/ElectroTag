@@ -163,6 +163,10 @@ DEFAULT_QUICK_LABELS: tuple[str, ...] = (
 
 #: How the browser may colour the EEG's channels: not at all, or by region, side or channel type.
 CHANNEL_COLOUR_MODES = ("off", "region", "side", "type")
+#: The signal of the topographic map (docs/using.md, "The topographic map"): its filters (those the viewer
+#: shows, or none) and its reference (as recorded, or the average of the good channels).
+TOPOMAP_FILTERS = ("as_shown", "none")
+TOPOMAP_REFERENCES = ("as_recorded", "average")
 
 
 @dataclass(frozen=True)
@@ -175,6 +179,11 @@ class DisplaySettings:
     # The study's default for colouring the EEG's channels by group in the browser; each annotator
     # can choose otherwise in the Recording tab (their choice is kept in their browser).
     channel_colours: str = "off"
+    # The topographic map beside the EEG in the browser, and the signal it maps unless an annotator
+    # chooses otherwise for themselves (their choice is kept in their browser).
+    topomap: bool = True
+    topomap_filters: str = "as_shown"
+    topomap_reference: str = "as_recorded"
 
 
 def _flag(block: dict[str, Any], name: str, key: str, default: bool) -> bool:
@@ -425,6 +434,9 @@ class Settings:
                     theme=str(disp.get("theme", "light")),
                     overview_mode=str(disp.get("overview_mode", "empty")),
                     channel_colours=str(disp.get("channel_colours", "off")),
+                    topomap=_flag(disp, "display", "topomap", True),
+                    topomap_filters=str(disp.get("topomap_filters", "as_shown")),
+                    topomap_reference=str(disp.get("topomap_reference", "as_recorded")),
                 ),
                 preload_memory_limit_mb=float(load["preload_memory_limit_mb"]),
                 hash_source_files=bool(load["hash_source_files"]),
@@ -487,6 +499,12 @@ class Settings:
                 raise SettingsError(
                     f"channels.types: {pattern!r} is given the type {ch_type!r}; use one of {', '.join(CHANNEL_TYPES)}"
                 )
+        if self.display.topomap_filters not in TOPOMAP_FILTERS:
+            raise SettingsError(f"display.topomap_filters must be one of {', '.join(TOPOMAP_FILTERS)}, "
+                                f"got {self.display.topomap_filters!r}")
+        if self.display.topomap_reference not in TOPOMAP_REFERENCES:
+            raise SettingsError(f"display.topomap_reference must be one of {', '.join(TOPOMAP_REFERENCES)}, "
+                                f"got {self.display.topomap_reference!r}")
         if self.display.channel_colours not in CHANNEL_COLOUR_MODES:
             raise SettingsError(
                 f"display.channel_colours must be one of {', '.join(CHANNEL_COLOUR_MODES)}, "
