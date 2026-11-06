@@ -2,7 +2,8 @@
 // them) in a mode and context, see the status of every assignment, and take one away.
 
 import { h, clear } from '../ui/dom.js';
-import { MODES, STATUS, fileParts, plural, rolesOf, setLabel, unassignQuestion, whenText } from './model.js';
+import { newId } from '../util.js';
+import { MODES, STATUS, dateText, fileParts, plural, rolesOf, setLabel, unassignQuestion, whenText } from './model.js';
 import {
   actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, messageArea, recordingName, sectionHead, select, textInput,
 } from './ui.js';
@@ -74,6 +75,14 @@ export class AssignmentsSection {
     const context = select([['', '–']]);
     const contextField = field('Reference set', context, { hint: 'Training recordings come from a reference set.' });
     const all = checkbox('Every recording (retired ones are left out)');
+    // A due date makes the assignment a hand-out of the recordings chosen (docs/admin_area.md, "Hand-outs"), so that
+    // work still open after it is overdue, here and on the annotator's home page. Study recordings only.
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const due = textInput({ type: 'date' });
+    due.min = today;
+    due.dataset.log = 'assign-due';
+    const dueField = field('Due date (optional)', due, { hint: 'Work still open after this day is marked overdue, here and on the annotator\'s home page, where the recordings are grouped under "Recordings due" with the date. It does not change the order of work.' });
     const recHost = h('div');
     let recs = null;
     const fillRecordings = () => {
@@ -91,6 +100,7 @@ export class AssignmentsSection {
       if (mode.value === 'standard') context.append(h('option', { value: '' }, '–'));
       else for (const s of this.sets) context.append(h('option', { value: s.set_id }, setLabel(s)));
       contextField.hidden = mode.value === 'standard';
+      dueField.hidden = mode.value !== 'standard';
       fillRecordings();
     };
     mode.addEventListener('change', fillContext);
@@ -102,6 +112,8 @@ export class AssignmentsSection {
       requestAnimationFrame(() => recHost.scrollIntoView({ block: 'nearest' }));
     }
     const msg = messageArea();
+    let requestId = null;
+    this.assignHost.addEventListener('change', () => { requestId = null; });
     const go = actionButton('Assign', {
       kind: 'primary', working: 'Assigning…', msg, log: 'assign',
       onClick: async () => {
@@ -115,6 +127,22 @@ export class AssignmentsSection {
           body.recording_ids = recs.values();
           if (!body.recording_ids.length) throw new Error('Choose at least one recording, or tick Every recording.');
         }
+        if (mode.value === 'standard' && due.value) {
+          if (due.value < today) throw new Error('The due date has passed. Choose a day from today on, or leave it empty.');
+          const rids = body.all ? this.recordings.filter((x) => x.scope === 'study' && !x.retired).map((x) => x.recording_id) : body.recording_ids;
+          if (!rids.length) throw new Error('There are no study recordings in use to assign.');
+          // made once, however often the button is pressed or however late the answer arrives: the request ID is
+          // kept until it succeeds, and a change to the choices starts a new one
+          requestId = requestId || newId();
+          const r = await this.area.write('handout_create', { request_id: requestId, target: { kind: 'recordings', recording_ids: rids },
+            people: ids, mode: 'all', due_at: due.value });
+          requestId = null;
+          await this.reload();
+          const kept = r.already_had ? `; ${r.already_had} ${r.already_had === 1 ? 'was' : 'were'} assigned already and now ${r.already_had === 1 ? 'has' : 'have'} this due date` : '';
+          this.msg.show('success', `Assigned, due ${dateText(due.value)}: ${plural(r.added ?? 0, 'new assignment')}${kept}.`,
+            h('p', {}, 'It is listed under Hand-outs as ', h('b', {}, r.handout.title), ', where the due date can be changed and the overdue work followed.'));
+          return;
+        }
         const r = await this.area.write('assign', body);
         await this.reload();
         this.msg.show('success', `Assigned: ${plural(r.added ?? 0, 'new assignment')}${r.already ? `; ${r.already} ${r.already === 1 ? 'was' : 'were'} assigned already` : ''}.`);
@@ -122,7 +150,7 @@ export class AssignmentsSection {
     });
     this.assignHost.append(h('div.admin-grid', {}, people, h('div', {},
       h('div.row.wrap', {}, field('Mode', mode, { hint: 'Annotation is the study\'s own work; the training modes use a reference set.' }), contextField),
-      all, recHost)), h('div.btn-row', {}, go), msg);
+      all, recHost, dueField)), h('div.btn-row', {}, go), msg);
   }
 
   // ----------------------------------------------------------------- table

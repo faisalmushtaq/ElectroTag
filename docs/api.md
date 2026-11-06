@@ -1147,10 +1147,17 @@ HandoutOut = {"handout_id": "h-<10 hex>", "name", "title" /* what annotators see
   "given_at", "given_by", "added", "already"}], "n_tasks": 40 | null, "new_recordings": 0,
   "counts": {"people", "recordings", "given", "opened", "in_progress", "saved", "set_aside", "overdue_people"},
   "per_person": [{"annotator_id", "given", "saved", "set_aside", "remaining", "overdue"}], "complete": false}
-HandoutRequest = {"target": {"kind": "dataset" | "collection", "id"}, "people"?: [aid], "groups"?: [gid],
+HandoutRequest = {"target": {"kind": "dataset" | "collection", "id"}
+                            | {"kind": "recordings", "recording_ids": [rid]},
+  "people"?: [aid], "groups"?: [gid],
   "mode": "all" | "k", "k"?: 2 /* review.k_default */, "due_at"?: "YYYY-MM-DD" | null, "name"?, "title"?,
   "note"?, "follow_groups"?: false}
 ```
+
+A target of kind `recordings` gives the recordings named one by one (each once, up to 2,000), as the
+admin area's Assignments does when a due date is chosen; the hand-out keeps them in its record
+(`target: {"kind": "recordings", "id": "", "recording_ids": [...]}`), its default name is "3 recordings
+chosen in Assignments" and its default title, as for a collection, "Recordings due 20 November".
 
 A due date is a day: the hand-out is **overdue** for a person from the day
 after it (by the study's local date) while something it gives them is neither

@@ -141,3 +141,18 @@ test('the tracking grid and the overview read the sandbox\'s saves, revisions an
   assert.deepEqual(n.notices.map((x) => [x.kind, x.to, x.subject]), [['overdue', ['A01'], 'Study recordings: 1 recording still to annotate']]);
   assert.equal(n.sent, false);
 });
+
+test('recordings chosen in Assignments with a due date are a hand-out of their own', async () => {
+  const { b, rids } = await admin();
+  // A01 holds the sandbox's recordings already: they stay where they are and take the due date
+  const made = await b.admin('handout_create', { request_id: hex(0x31), target: { kind: 'recordings', recording_ids: rids.slice(0, 2) }, people: ['A01'], mode: 'all', due_at: '2099-11-20' });
+  assert.deepEqual([made.added, made.already_had], [0, 2]);
+  assert.equal(made.handout.title, 'Recordings due 20 November');
+  assert.equal(made.handout.name, '2 recordings chosen in Assignments');
+  assert.equal(made.handout.target.kind, 'recordings');
+  await assert.rejects(() => b.admin('handout_create', { request_id: hex(0x32), target: { kind: 'recordings', recording_ids: [] }, people: ['A01'] }),
+    (e) => e.status === 400 && /recording_ids/.test(e.message));
+  await as(b, 'A01');
+  const items = (await b.assignments()).items.filter((i) => rids.slice(0, 2).includes(i.recording_id));
+  assert.deepEqual(items.map((i) => i.handout && i.handout.due_at), ['2099-11-20', '2099-11-20'], 'held already: it takes the due date too');
+});
