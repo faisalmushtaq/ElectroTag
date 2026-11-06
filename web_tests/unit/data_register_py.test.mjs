@@ -5,7 +5,6 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -14,14 +13,10 @@ import { decodeUtf8Python, parsePythonJson, pyValueText } from "../../electrotag
 import { parseFloatPy, parseIntCode } from "../../electrotag/web/static/js/eeg/events.js";
 import { parseBidsName, parseTsvText, TsvError } from "../../electrotag/web/static/js/eeg/bids.js";
 import { ROOT } from "./_fixtures.mjs";
+import { findPython } from "../python.mjs";
 
 function python() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, join(ROOT, ".venv", "bin", "python"), join(ROOT, ".venv", "Scripts", "python.exe"), "python3"]) {
-    if (!p || ((p.includes("/") || p.includes("\\")) && !existsSync(p))) continue;
-    const r = spawnSync(p, ["-I", "-c", "import mne"], { cwd: ROOT, encoding: "utf8" });
-    if (r.status === 0) return p;
-  }
-  return null;
+  return findPython("import mne", { args: ["-I"], cwd: ROOT });
 }
 const PYTHON = python();
 

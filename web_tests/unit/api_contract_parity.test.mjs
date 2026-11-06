@@ -7,12 +7,13 @@
 // and the texts shown to the person) except where ALLOWED below says why they differ.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import readline from 'node:readline';
 import { fileURLToPath } from 'node:url';
+import { findPython as firstPython } from '../python.mjs';
 
 import { DemoBackend, exampleRecording, QUIZ, recordingIdOf, TRAINING_SET } from '../../electrotag/web/static/js/api/demo.js';
 import { HttpBackend } from '../../electrotag/web/static/js/api/http.js';
@@ -23,14 +24,9 @@ import { channelType, demoSpecs, exampleNote, syntheticEdfBytes, truthAnnotation
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-// A Python with ElectroTag's server (FastAPI and MNE-Python): $ELECTROTAG_PYTHON, the repository's .venv, or python3.
+// A Python with ElectroTag's server (FastAPI and MNE-Python), found as ../python.mjs says.
 function findPython() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, path.join(REPO, '.venv', 'bin', 'python'), 'python3']) {
-    if (!p || (p.includes('/') && !fs.existsSync(p))) continue;
-    const r = spawnSync(p, ['-c', 'import fastapi, httpx, mne, electrotag.web.app'], { cwd: REPO, encoding: 'utf8', env: { ...process.env, PYTHONPATH: REPO } });
-    if (r.status === 0) return p;
-  }
-  return null;
+  return firstPython('import fastapi, httpx, mne, electrotag.web.app', { env: { ...process.env, PYTHONPATH: REPO } });
 }
 const PYTHON = findPython();
 

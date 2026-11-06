@@ -8,16 +8,14 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { findPython } from '../python.mjs';
 
 const { zipBytes, crc32 } = await import('../../electrotag/web/static/js/data/zip.js');
 const { filesToSave, WHAT_FILES } = await import('../../electrotag/web/static/js/views/my_files.js');
 const { eventsTsv, exampleEventRows, edfEventRows } = await import('../../electrotag/web/static/js/api/demo_export.js');
 
 function python() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, 'python3']) {
-    if (p && spawnSync(p, ['-c', 'import zipfile'], { encoding: 'utf8' }).status === 0) return p;
-  }
-  return null;
+  return findPython('import zipfile');
 }
 
 test('the CRC-32 is the standard one', () => {

@@ -5,10 +5,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { signIn, waitForRoute, waitForTraces, openExample, eegPoint, drag, pressSave, clickDialogButton } from './helpers.mjs';
+import { defaultPython } from '../python.mjs';
 
 /** The files of a downloaded zip, read with Python's zipfile: {name: text}. */
 function unzip(file) {
-  const py = process.env.ELECTROTAG_PYTHON || 'python3';
+  const py = defaultPython();
   const r = spawnSync(py, ['-I', '-c', 'import json, sys, zipfile\nz = zipfile.ZipFile(sys.argv[1])\nassert z.testzip() is None\n'
     + 'print(json.dumps({i.filename: z.read(i).decode("utf-8") for i in z.infolist()}))', file], { encoding: 'utf8' });
   if (r.status !== 0) throw new Error(r.stderr);
