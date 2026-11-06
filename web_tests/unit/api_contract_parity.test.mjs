@@ -69,6 +69,7 @@ export const ALLOWED = [
     "the visit's log as each side keeps it: the server writes the desktop's visit_started and times log_closed by its clock"],
 
   ['admin contacts_download', 'csv', 'numbers', 'the contacts list gives the time of each change, which each side stamps'],
+  ['admin audit.*', 'next', 'type', "the cursor of the next page is each side's own: the server's row number, the sandbox's place in its list"],
   ['admin saved_work_get', 'versions\\[\\]\\.files\\[\\]\\.text', 'any', "the files as each side writes them (as for my results)"],
   ['admin (saved_work_withdraw|saved_work_restore|withdrawals_list)', '(withdrawal|withdrawals\\[\\])\\.(withdrawal_id|withdrawn_at)', 'type', 'each side makes its own ID and stamps its own time'],
 
