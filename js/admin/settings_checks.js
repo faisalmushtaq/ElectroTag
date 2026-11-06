@@ -3,6 +3,7 @@
 // section, and by the sandbox when its settings are changed, so the sign-in page never needs them.
 
 import { MATCH_CRITERIA } from './model.js';
+import { K_MAX, K_MIN } from './tasks_model.js';
 import { questionnaireProblems } from '../views/questionnaire_model.js';
 
 /** When an adjudicator gives a reason (review.reason_required). */
@@ -26,7 +27,7 @@ export function reviewProblems(r) {
   for (const k of ['corrections', 'show_corrections_to_annotators', 'show_outcomes_to_annotators']) {
     if (k in r && typeof r[k] !== 'boolean') out.push(`review.${k} is on or off (true or false).`);
   }
-  if ('k_default' in r && !(Number.isInteger(r.k_default) && r.k_default >= 2 && r.k_default <= 6)) out.push('Each task goes to between 2 and 6 annotators.');
+  if ('k_default' in r && !(Number.isInteger(r.k_default) && r.k_default >= K_MIN && r.k_default <= K_MAX)) out.push(`Each task goes to between ${K_MIN} and ${K_MAX} annotators.`);
   if ('gold_min_items' in r && !(Number.isInteger(r.gold_min_items) && r.gold_min_items >= 1 && r.gold_min_items <= 100)) {
     out.push('A person\'s accuracy counts after between 1 and 100 known-answer items.');
   }

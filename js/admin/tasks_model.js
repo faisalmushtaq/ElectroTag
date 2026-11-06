@@ -6,9 +6,10 @@
 import { clockText } from '../viewer/bounds.js';
 import { plural, rolesOf } from './model.js';
 
-/** How many annotators a task may have (electrotag/web/tasks.py K_MIN, K_MAX) and the shortest window. */
+/** How many annotators a task or hand-out gives each recording: electrotag/config/settings.py ANNOTATORS_PER_TASK_MIN
+ *  and _MAX, kept the same by tests/test_tasks_limits.py. The settings form and its checks take them from here. */
 export const K_MIN = 2;
-export const K_MAX = 6;
+export const K_MAX = 10;
 export const MIN_WINDOW_S = 2;
 
 /** A task's derived status, as the list shows it, with the kind of its chip. */

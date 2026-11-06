@@ -19,6 +19,7 @@ import {
 import { REASON_RULES, SKIPPABLE_STAGES, TRAINING_GATES, expertSettingsProblems } from './settings_checks.js';
 import { actionButton, card, checkbox, confirmInline, field, loading, messageArea, numberInput, radios, sectionHead, select, textArea, textInput } from './ui.js';
 import { questionnaireEditor } from './questionnaire.js';
+import { K_MAX, K_MIN } from './tasks_model.js';
 
 /** A number from a field, or an error that names the field and knows which control to focus. */
 function numberOf(control, what, limits) {
@@ -192,7 +193,7 @@ export class SettingsSection {
     const corrections = checkbox('Let experts correct saved work, as new versions linked to the original', rv.corrections !== false);
     const showCorrections = checkbox('Show annotators the corrections of their work, with the reasons given', rv.show_corrections_to_annotators !== false);
     const showOutcomes = checkbox('Show annotators the decisions on the conflicts in their work (who else marked what is never said)', rv.show_outcomes_to_annotators !== false);
-    const kDefault = numberInput({ value: rv.k_default ?? 2, min: 2, max: 6, step: 1 });
+    const kDefault = numberInput({ value: rv.k_default ?? 2, min: K_MIN, max: K_MAX, step: 1 });
     kDefault.name = 'k_default';
     const reasons = select(Object.entries(REASON_RULES), rv.reason_required || 'always');
     const criterion = select(Object.entries(MATCH_CRITERIA), mt.match_criterion || 'iou');
@@ -251,7 +252,7 @@ export class SettingsSection {
           confidence: confidence.value() },
         gamification: { enabled: games.input.checked, leaderboard: board.input.checked, leaderboard_viewed_only: boardFull.input.checked },
         review: { corrections: corrections.input.checked, show_corrections_to_annotators: showCorrections.input.checked,
-          k_default: numberOf(kDefault, 'Annotators per task', { min: 2, max: 6, integer: true }),
+          k_default: numberOf(kDefault, 'Annotators per task', { min: K_MIN, max: K_MAX, integer: true }),
           show_outcomes_to_annotators: showOutcomes.input.checked, reason_required: reasons.value,
           // in the order the study keeps them, so that an unchanged block is not sent again
           matching: { ...mt, match_criterion: criterion.value, iou_threshold: numberOf(overlap, 'Overlap needed', { min: 0, max: 0.99 }),
@@ -343,7 +344,7 @@ export class SettingsSection {
           + 'These choices apply to the expert area\'s corrections, tasks and adjudication as the study offers them.'),
         corrections, showCorrections, showOutcomes,
         h('div.form-grid', {},
-          field('Annotators per task', kDefault, { hint: 'When the study shares recordings out as tasks: between 2 and 6.' }),
+          field('Annotators per task', kDefault, { hint: `When the study shares recordings out as tasks: between ${K_MIN} and ${K_MAX}.` }),
           field('A reason for each decision', reasons),
           field('Known-answer recordings before accuracy counts', goldMin, { hint: 'A person\'s measured accuracy on known-answer tasks weighs their marks once this many are scored.' })),
         h('h3', {}, 'When two marks are the same'),

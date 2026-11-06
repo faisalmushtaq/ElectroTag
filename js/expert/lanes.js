@@ -17,9 +17,10 @@ export class Lanes {
   /**
    * @param {object} viewer the workspace's EegViewer
    * @param {{versions: object[], catalogue: object, colours?: object, original?: object|null, onPick?: Function}} o
-   *   versions: [{letter, annotator_id, display_name, annotations}]; colours: letter -> colour; original: {annotator_id, annotations}
+   *   versions: [{letter, annotator_id, display_name, annotations}]; colours: letter -> colour; letterStyles: letter -> the
+   *   letter's style (adjudicate.js letterStyle, with the underline past F); original: {annotator_id, annotations}
    */
-  constructor(viewer, { versions, catalogue, colours = {}, original = null, onPick = null, name = null, style = null, text = null, className = '' }) {
+  constructor(viewer, { versions, catalogue, colours = {}, letterStyles = {}, original = null, onPick = null, name = null, style = null, text = null, className = '' }) {
     this.viewer = viewer;
     this.styleOf = style;
     this.textOf = text;
@@ -35,7 +36,7 @@ export class Lanes {
       const label = name ? name(v) : v.original
         ? h('span.lane-name', { title: `The original: ${v.annotator_id}'s version, which was corrected` }, h('b', {}, 'Original'))
         : h('span.lane-name', { title: `${v.letter}: ${v.annotator_id}${v.display_name ? ` (${v.display_name})` : ''}` },
-          h('b', { style: { color: colours[v.letter] || null } }, v.letter), ` ${v.annotator_id}`);
+          h('b', { style: letterStyles[v.letter] || { color: colours[v.letter] || null } }, v.letter), ` ${v.annotator_id}`);
       const row = h(`div.lane${v.original ? '.original' : ''}`, { 'data-letter': v.letter }, label, track);
       return { v, row, track };
     });

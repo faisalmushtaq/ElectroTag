@@ -10,7 +10,10 @@ import { bytesText, dateText, durationText, formatName, plural, whenText } from 
 export const DEFAULT_DATASET_ID = 'study-recordings';
 export const RATINGS_TARGET = 2;
 export const RATINGS_MIN = 1;
-export const RATINGS_MAX = 20;
+/** No upper limit for the study (datasets.py): only the largest whole number a browser holds exactly. */
+export const RATINGS_MAX = Number.MAX_SAFE_INTEGER;
+/** A target this large or larger is asked about before it is saved, in case of a slip. */
+export const RATINGS_LARGE = 100;
 /** The most recordings a collection may hold (datasets.py MAX_COLLECTION) and a page of the recording grid. */
 export const MAX_COLLECTION = 2000;
 export const TRACKING_PAGE = 1000;
@@ -170,11 +173,19 @@ export function datasetBody(f, { creating = false } = {}) {
   return body;
 }
 
-/** A target of ratings per recording, checked: a whole number from 1 to 20. */
+/** A target of ratings per recording, checked: a whole number of people, 1 or more. */
 export function ratingsTarget(v) {
-  const n = Number(v);
-  if (!Number.isInteger(n) || n < RATINGS_MIN || n > RATINGS_MAX) throw new Error(`The target is a whole number of people from ${RATINGS_MIN} to ${RATINGS_MAX}.`);
+  const t = String(v ?? '').trim().replace(/[,\s]/g, '');
+  const n = /^\d+$/.test(t) ? Number(t) : NaN;
+  if (!Number.isInteger(n) || n < RATINGS_MIN || n > RATINGS_MAX) throw new Error(`The target is a whole number of people, ${RATINGS_MIN} or more.`);
   return n;
+}
+
+/** The question asked before a target of RATINGS_LARGE or more is saved ('' for a smaller one). */
+export function largeTargetQuestion(n) {
+  if (!(n >= RATINGS_LARGE)) return '';
+  return `A recording would count as rated only once ${n.toLocaleString('en-GB')} different people have saved it. `
+    + 'Is that the target you meant?';
 }
 
 /** Why a path prefix cannot be used ('' when it can): a plain relative folder, without '.' or '..' (datasets.py prefix_problem). */
