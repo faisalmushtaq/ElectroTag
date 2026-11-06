@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, openAsBlob, readFileSync, rmSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { defaultPython } from "../python.mjs";
 
 export const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 export const FIXTURES = join(ROOT, "web_tests", "fixtures");
@@ -13,15 +14,13 @@ export const DATA = join(ROOT, "electrotag", "web", "static", "js", "data");
 /** Must equal FIXTURE_VERSION in scripts/make_web_fixtures.py. */
 export const FIXTURE_VERSION = 6;
 
-/** The Python that writes the fixtures: ELECTROTAG_PYTHON, the repository's .venv, or python3. */
+/** The Python that writes the fixtures, as ../python.mjs chooses it. */
 export function fixturePython() {
   return python();
 }
 
 function python() {
-  if (process.env.ELECTROTAG_PYTHON) return process.env.ELECTROTAG_PYTHON;
-  for (const p of [join(ROOT, ".venv", "bin", "python"), join(ROOT, ".venv", "Scripts", "python.exe")]) if (existsSync(p)) return p;
-  return process.platform === "win32" ? "python" : "python3";
+  return defaultPython();
 }
 
 function manifestOk(needPerf) {

@@ -11,7 +11,7 @@
 
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, openAsBlob, readdirSync, readFileSync, statSync } from "node:fs";
+import { openAsBlob, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import test from "node:test";
 
@@ -24,16 +24,12 @@ import {
 } from "../../electrotag/web/static/js/eeg/register.js";
 import { CATALOGUE } from "../../electrotag/web/static/js/api/demo_catalogue.js";
 import { ensureFixtures, FIXTURES, ROOT } from "./_fixtures.mjs";
+import { findPython } from "../python.mjs";
 
 const manifest = ensureFixtures();
 
 function python() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, join(ROOT, ".venv", "bin", "python"), join(ROOT, ".venv", "Scripts", "python.exe"), "python3"]) {
-    if (!p || ((p.includes("/") || p.includes("\\")) && !existsSync(p))) continue;
-    const r = spawnSync(p, ["-I", "-c", "import mne, pybv"], { cwd: ROOT, encoding: "utf8" });
-    if (r.status === 0) return p;
-  }
-  return null;
+  return findPython("import mne, pybv", { args: ["-I"], cwd: ROOT });
 }
 const PYTHON = python();
 

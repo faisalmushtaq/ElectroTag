@@ -41,8 +41,8 @@ macOS and Linux (Terminal):
 
 ```bash
 node --test web_tests/unit/*.test.mjs                     # the browser modules (Node.js 22)
-ELECTROTAG_PYTHON=python node web_tests/run_e2e.mjs     # the application in Chromium (Playwright)
-ELECTROTAG_PYTHON=python node web_tests/run_e2e.mjs --browser webkit   # the same in WebKit, Safari's engine
+node web_tests/run_e2e.mjs                                # the application in Chromium (Playwright)
+node web_tests/run_e2e.mjs --browser webkit               # the same in WebKit, Safari's engine
 bash scripts/test_firebase_emulators.sh                   # the functions and the Firestore store (Java 21)
 bash scripts/test_web_firebase.sh                         # the application with a study on Firebase's emulators
 ```
@@ -51,15 +51,32 @@ Windows (PowerShell):
 
 ```powershell
 node --test web_tests/unit/*.test.mjs                     # the browser modules (Node.js 22)
-$env:ELECTROTAG_PYTHON = "python"                         # the Python of the tests below, for this terminal
 node web_tests/run_e2e.mjs                                # the application in Chromium (Playwright)
 node web_tests/run_e2e.mjs --browser webkit               # the same in WebKit, Safari's engine
 ```
 
-In PowerShell the Python is named once, with `$env:ELECTROTAG_PYTHON`, and holds for the rest of
-that terminal; Terminal names it on each line. On Windows it is needed: without it the tests look
-for `.venv/bin/python` and then `python3`, names that a Windows virtual environment does not use. The two Firebase scripts are Bash scripts: on Windows they run in the Windows
-Subsystem for Linux, as [the Firebase guide](firebase.md) says of them.
+The two Firebase scripts are Bash scripts: on Windows they run in the Windows Subsystem for Linux,
+as [the Firebase guide](firebase.md) says of them.
+
+Some of these tests run Python beside Node.js, to compare the browser's answers with the study's
+own code or to start the real server. They use the Python of the repository's virtual environment,
+`.venv`, wherever the system puts it (`.venv/bin/python` on macOS and Linux,
+`.venv\Scripts\python.exe` on Windows), and otherwise a Python on the PATH (`python3`, then
+`python` on macOS and Linux; `python`, then `py` on Windows), as `web_tests/python.mjs` sets out.
+A virtual environment somewhere else is named with `ELECTROTAG_PYTHON`, which comes first:
+
+macOS and Linux (Terminal):
+
+```bash
+ELECTROTAG_PYTHON=/path/to/env/bin/python node web_tests/run_e2e.mjs
+```
+
+Windows (PowerShell), where it then holds for the rest of the terminal:
+
+```powershell
+$env:ELECTROTAG_PYTHON = "C:\path\to\env\Scripts\python.exe"
+node web_tests/run_e2e.mjs
+```
 
 The unit tests compare the browser's readers, filters, amplitude check and
 fingerprints (the EEG library in `js/eeg/`, whose README says which test checks

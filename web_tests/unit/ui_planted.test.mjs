@@ -4,9 +4,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findPython as firstPython } from '../python.mjs';
 
 import { scoreCorrections, scoreMessage } from '../../electrotag/web/static/js/training/planted_scoring.js';
 import { KINDS, madeText, makeBody } from '../../electrotag/web/static/js/admin/planted.js';
@@ -16,12 +16,7 @@ import { demoSpecs, truthAnnotations } from '../../electrotag/web/static/js/eeg/
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function findPython() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, path.join(REPO, '.venv', 'bin', 'python'), 'python3']) {
-    if (!p || (p.includes('/') && !fs.existsSync(p))) continue;
-    const r = spawnSync(p, ['-c', 'import electrotag.training.planted'], { cwd: REPO, encoding: 'utf8' });
-    if (r.status === 0) return p;
-  }
-  return null;
+  return firstPython('import electrotag.training.planted');
 }
 const PYTHON = findPython();
 const python = (cases) => {

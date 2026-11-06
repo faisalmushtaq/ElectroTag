@@ -34,8 +34,9 @@ bash scripts/test_web_firebase.sh                         # the application on t
 electrotag web demo                                     # the whole system on http://localhost:8000/
 ```
 
-`run_e2e.mjs` and the unit tests find Python through `ELECTROTAG_PYTHON`, then the repository's
-`.venv`, then `python3`. The emulators use the project ID `demo-electrotag`, which never reaches a
+`run_e2e.mjs` and the unit tests find Python through `web_tests/python.mjs`: `ELECTROTAG_PYTHON`, then
+the repository's `.venv` (`bin/python`, or `Scripts\python.exe` on Windows), then `python3` or `python`
+(`python` or `py` on Windows); new tests that run Python use it too. The emulators use the project ID `demo-electrotag`, which never reaches a
 real Firebase project. They take fixed ports, so run one Firebase script at a time on a machine
 ("port taken" means another run holds them), and stop the function workers an emulator run can
 leave behind (`ps -eo pid,ppid,args | awk '$2==1 && /functions\/venv/'`). `requirements.txt` holds everything the server and the commands need;

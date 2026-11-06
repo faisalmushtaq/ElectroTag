@@ -2,9 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findPython as firstPython } from '../python.mjs';
 
 import * as rules from '../../electrotag/web/static/js/training/rules.js';
 import { demoSpecs, exampleNote } from '../../electrotag/web/static/js/eeg/synthetic.js';
@@ -62,14 +62,9 @@ test('feedback for the common mistakes', () => {
   assert.deepEqual(r[11].problems, ['missing']); // an annotation already used for another step does not count
 });
 
-// A Python that can import ElectroTag: $ELECTROTAG_PYTHON, the repository's .venv, or python3.
+// A Python that can import ElectroTag, found as ../python.mjs says.
 function findPython() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, path.join(REPO, '.venv', 'bin', 'python'), 'python3']) {
-    if (!p || (p.includes('/') && !fs.existsSync(p))) continue;
-    const r = spawnSync(p, ['-c', 'import electrotag.training.guided'], { cwd: REPO, encoding: 'utf8' });
-    if (r.status === 0) return p;
-  }
-  return null;
+  return firstPython('import electrotag.training.guided');
 }
 const PYTHON = findPython();
 

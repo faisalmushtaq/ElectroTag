@@ -9,7 +9,7 @@
 // share, the types and who on hover, a click lists everyone there, and Show in a lane promotes one of
 // them; a redraw with the crowd stays fast. An annotator is refused. A trainee, once the study allows it, sees
 // the unnamed crowd of a training recording for learning with the experts from the training path.
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
@@ -17,6 +17,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SkipTest, signIn, skipFirstStages, waitForRoute, waitForTraces } from './helpers.mjs';
+import { findPython } from '../python.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PASSWORD = 'electrotag';
@@ -31,11 +32,7 @@ const ann = (label, onset, dur, channels = []) => ({ annotation_id: crypto.creat
   duration_samples: dur, channels, created_at: '2026-10-30T10:00:00.000+00:00', modified_at: '2026-10-30T10:00:00.000+00:00' });
 
 function python() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, path.join(REPO, '.venv', 'bin', 'python'), 'python3']) {
-    if (!p || (p.includes('/') && !fs.existsSync(p))) continue;
-    if (spawnSync(p, ['-c', 'import fastapi, uvicorn, mne'], { stdio: 'ignore' }).status === 0) return p;
-  }
-  return null;
+  return findPython('import fastapi, uvicorn, mne');
 }
 
 const freePort = () => new Promise((resolve) => {

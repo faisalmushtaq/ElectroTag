@@ -6,9 +6,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findPython as firstPython } from '../python.mjs';
 
 import { AnnotationStore, AnnotationError } from '../../electrotag/web/static/js/annotate/store.js';
 import { CATALOGUE } from '../../electrotag/web/static/js/api/demo_catalogue.js';
@@ -16,12 +16,7 @@ import { CATALOGUE } from '../../electrotag/web/static/js/api/demo_catalogue.js'
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function findPython() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, path.join(REPO, '.venv', 'bin', 'python'), 'python3']) {
-    if (!p || (p.includes('/') && !fs.existsSync(p))) continue;
-    const r = spawnSync(p, ['-c', 'import electrotag.app.annotations.store'], { cwd: REPO, encoding: 'utf8' });
-    if (r.status === 0) return p;
-  }
-  return null;
+  return firstPython('import electrotag.app.annotations.store');
 }
 const PYTHON = findPython();
 

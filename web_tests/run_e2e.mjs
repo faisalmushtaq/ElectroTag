@@ -21,6 +21,7 @@ import net from 'node:net';
 import os from 'node:os';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import assert from 'node:assert/strict';
+import { defaultPython } from './python.mjs';
 
 const require = createRequire(import.meta.url);
 const playwright = require('playwright');
@@ -153,8 +154,7 @@ async function studyServer(python) {
 // ---------------------------------------------------------------------------- running
 async function main() {
   const [port, apiPort, cfgPort] = await Promise.all([freePort(), freePort(), freePort()]);
-  const venv = path.join(REPO, '.venv', 'bin', 'python');
-  const python = process.env.ELECTROTAG_PYTHON || (fs.existsSync(venv) ? venv : 'python3');
+  const python = defaultPython();
   const py = spawn(python, ['-m', 'http.server', String(port), '--bind', '127.0.0.1', '--directory', STATIC], { stdio: ['ignore', 'ignore', 'pipe'] });
   // http.server logs every request to stderr: read it (keeping the end for diagnostics), or the pipe
   // fills up after a few hundred requests and the server stops answering.

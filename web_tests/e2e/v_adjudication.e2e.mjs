@@ -8,7 +8,7 @@
 //
 // The test starts a study server of its own (electrotag-web demo in a fresh folder), so that what the
 // other specs save on the shared server does not change which conflicts there are.
-import { spawn, spawnSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
@@ -16,6 +16,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SkipTest, clickDialogButton, signIn, waitForRoute, waitForTraces } from './helpers.mjs';
+import { findPython } from '../python.mjs';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const PASSWORD = 'electrotag';
@@ -28,11 +29,7 @@ const MINE = [ann('a'.repeat(32), 'Eye-blink-artifact', 500, 100, ['Fp1', 'Fp2']
 const THEIRS = [ann('d'.repeat(32), 'Eye-movement-artifact', 500, 100, ['Fp1', 'Fp2']), ann('e'.repeat(32), 'EMG-artifact', 3000, 250), ann('f'.repeat(32), 'Eye-blink-artifact', 8000, 75)];
 
 function python() {
-  for (const p of [process.env.ELECTROTAG_PYTHON, path.join(REPO, '.venv', 'bin', 'python'), 'python3']) {
-    if (!p || (p.includes('/') && !fs.existsSync(p))) continue;
-    if (spawnSync(p, ['-c', 'import fastapi, uvicorn, mne'], { stdio: 'ignore' }).status === 0) return p;
-  }
-  return null;
+  return findPython('import fastapi, uvicorn, mne');
 }
 
 const freePort = () => new Promise((resolve) => {

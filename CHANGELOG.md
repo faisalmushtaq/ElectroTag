@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The browser tests now find the Python of a Windows virtual environment (`.venv\Scripts\python.exe`)
+and Windows's own names for Python (`python`, `py`) by themselves, as they already found
+`.venv/bin/python` and `python3` on macOS and Linux, so `ELECTROTAG_PYTHON` is needed only for a
+virtual environment outside the repository (`web_tests/python.mjs`; docs/testing_guide.md,
+"Running the tests").
+
 The guides now give a PowerShell version of every command that is typed differently on Windows, as
 the Firebase guide already did: the commands written over several lines, which PowerShell continues
 with a backtick (Study settings and the reliability guide), the examples that use a folder such as
