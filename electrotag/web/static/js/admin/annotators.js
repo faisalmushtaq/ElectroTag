@@ -11,6 +11,7 @@
 
 import { h, clear } from '../ui/dom.js';
 import { reviewButton, reviewCount, reviewsCard } from './reviews.js';
+import { invited, parseBulkPeople, readPeopleFile } from './bulk_people.js';
 import { savedWorkButtons, withdrawnCard } from './saved_work.js';
 import { setAsideButton } from './assignments.js';
 import { trainingGateCard } from './training_gate.js';
@@ -18,7 +19,7 @@ import { answeredChip, questionnaireCard } from './questionnaire.js';
 import { icon } from '../views/common.js';
 import {
   INVITE_STATES, MODES, ROLES, STATUS, checkAnnotatorId, checkEmail, csvText, dateText, invitationText, inviteLink, inviteMessage, mailtoHref,
-  minutesText, parseBulkPeople, plural, roleWords, rolesOf, setLabel, unassignQuestion, whenText,
+  minutesText, plural, roleWords, rolesOf, setLabel, unassignQuestion, whenText,
 } from './model.js';
 import {
   actionButton, put, card, chip, confirmInline, copyButton, copyText, dataTable, eachInTurn, oneAtATime, field, infoTable, loading, messageArea, nextId, progressLine,
@@ -268,6 +269,17 @@ export class AnnotatorsSection {
       h('div.btn-row', {}, copyButton(all, { label: 'Copy all' }), h('button.btn.small', { type: 'button', 'data-log': 'links-csv', onclick: csv }, 'Download the links (CSV)')));
   }
 
+  /** The temporary passwords of administrators added with Add several, shown once, to pass on by hand. */
+  _passwordsTable(rows) {
+    return h('div.success.passwords-made', { role: 'status' },
+      h('p', {}, h('b', {}, plural(rows.length, 'temporary password')), ' Administrators sign in with these and choose their own password at once. They are shown only now: pass each on to its person by hand, apart from the ID, and do not email them with it.'),
+      dataTable([
+        { title: 'Person', render: (m) => h('span', {}, h('b', {}, m.annotator_id), m.display_name ? ` · ${m.display_name}` : '', m.email ? h('span.caption.block', {}, m.email) : null) },
+        { title: 'Temporary password', render: (m) => h('output.secret-value', {}, m.password) },
+        { title: '', cls: 'actions', render: (m) => copyButton(m.password, { label: 'Copy' }) },
+      ], rows, { pageSize: 100, rowKey: (m) => m.annotator_id, caption: 'Temporary passwords' }));
+  }
+
   _addCard() {
     const fb = this.area.isFirebase;
     const id = textInput({ placeholder: 'for example A03' });
@@ -452,9 +464,27 @@ export class AnnotatorsSection {
   // ------------------------------------------------------------- add several
   _severalPanel() {
     const fb = this.area.isFirebase;
-    const text = textArea({ rows: 8, placeholder: 'A11, Alex Smith, alex.smith@example.org\nA12, Sam Jones, sam.jones@example.org' });
-    text.setAttribute('aria-label', 'One person on each line: ID, name, email address');
+    const text = textArea({ rows: 8, placeholder: 'A11, Alex Smith, alex.smith@example.org\nA12, Sam Jones, sam.jones@example.org, expert' });
+    text.setAttribute('aria-label', 'One person on each line: ID, name, email address, roles');
     text.dataset.log = 'several-text';
+    // a CSV file saved from a spreadsheet: its text goes into the box, to be seen and corrected before the check
+    const file = h('input', { type: 'file', accept: '.csv,.tsv,.txt,text/csv,text/plain', 'data-log': 'several-file', hidden: true });
+    const fileNote = h('span.caption', { 'aria-live': 'polite' });
+    const chooseFile = h('button.btn', { type: 'button', 'data-log': 'several-choose-file', onclick: () => file.click() }, 'Choose a CSV file…');
+    file.addEventListener('change', async () => {
+      const f = file.files && file.files[0];
+      file.value = '';
+      if (!f) return;
+      const out = await readPeopleFile(f);
+      if (out.problem) { msg.show('error', out.problem); return; }
+      text.value = out.text.replace(/\s+$/, '');
+      text.dispatchEvent(new Event('input'));
+      fileNote.textContent = `${f.name} read: check the lines below, then Check the list.`;
+      msg.clear();
+    });
+    // the roles of everyone whose line gives none
+    const roles = roleBoxes(['annotator']);
+    roles.querySelector('legend').textContent = 'Roles for people whose line names none';
     const days = select(DAYS, '14');
     days.id = nextId('several-days');
     const msg = messageArea();
@@ -470,24 +500,32 @@ export class AnnotatorsSection {
       clear(result);
       create.hidden = true;
       const users = (await this.area.read('users_list')).users || [];
-      const out = parseBulkPeople(text.value, { existing: users.map((u) => u.annotator_id), emailRequired: fb });
+      let fallback;
+      try { fallback = chosenRoles(roles); } catch (exc) { msg.show('error', exc.message); return; }
+      const out = parseBulkPeople(text.value, { existing: users.map((u) => u.annotator_id), emailRequired: fb, roles: fallback });
       if (out.problems.length) {
         checked = null;
         msg.show('error', `Correct ${plural(out.problems.length, 'line')} first; nothing has been created.`, h('ul', {}, out.problems.map((p) => h('li', {}, p.text))));
         return;
       }
-      checked = { text: text.value, rows: out.rows };
-      preview.append(h('p', {}, h('b', {}, `${plural(out.rows.length, 'account')} to create`), ', each with a private invitation link.'),
+      checked = { text: text.value, rows: out.rows, roles: fallback.join() };
+      const admins = out.rows.filter((r) => !invited(r)).length;
+      preview.append(h('p', {}, h('b', {}, `${plural(out.rows.length, 'account')} to create`),
+        admins ? `: each annotator and expert with a private invitation link, and ${plural(admins, 'administrator')} with ${fb ? 'a link to choose a password' : 'a temporary password'}, since an invitation link must never open the admin area.`
+          : ', each with a private invitation link.'),
         dataTable([
           { title: 'Line', num: true, key: 'line' },
           { title: 'ID', key: 'annotator_id' },
           { title: 'Name', render: (r) => r.display_name || '–' },
           { title: 'Email', render: (r) => r.email || '–' },
+          { title: 'Roles', render: (r) => roleWords(r.roles) },
         ], out.rows, { pageSize: 100, caption: 'Accounts to create', rowKey: (r) => r.annotator_id }));
       create.textContent = `Create ${plural(out.rows.length, 'account')}`;
       create.hidden = false;
     } });
-    text.addEventListener('input', () => { if (checked && checked.text !== text.value) { checked = null; create.hidden = true; clear(preview); } });
+    const stale = () => { if (checked && (checked.text !== text.value || checked.roles !== roles.value().join())) { checked = null; create.hidden = true; clear(preview); } };
+    text.addEventListener('input', stale);
+    roles.addEventListener('change', stale);
     create.addEventListener('click', async () => {
       if (!checked || create.dataset.busy === '1') return;
       create.dataset.busy = '1';
@@ -495,20 +533,29 @@ export class AnnotatorsSection {
       check.disabled = true;
       const rows = checked.rows;
       try {
-        const results = await eachInTurn(rows, (r) => this.area.write('user_add', { annotator_id: r.annotator_id, display_name: r.display_name, email: r.email, role: 'annotator',
-          invite: true, ...(fb ? {} : { expires_days: Number(days.value) }) }), { progress, words: (i, n, r) => `Creating ${r.annotator_id} (${i} of ${n})…` });
+        // annotators and experts get a private invitation link; administrators a temporary password (or, on
+        // Firebase, Firebase's own link to choose one), as when one account is added
+        const results = await eachInTurn(rows, (r) => this.area.write('user_add', { annotator_id: r.annotator_id, display_name: r.display_name, email: r.email, ...rolesBody(r.roles),
+          ...(invited(r) ? { invite: true, ...(fb ? {} : { expires_days: Number(days.value) }) } : {}) }), { progress, words: (i, n, r) => `Creating ${r.annotator_id} (${i} of ${n})…` });
         clear(preview);
         checked = null;
         create.hidden = true;
         const made = [];
+        const passwords = [];
         for (const r of results) {
           if (!r.ok) continue;
+          if (r.value.temporary_password) {
+            passwords.push({ annotator_id: r.item.annotator_id, display_name: r.item.display_name, email: r.item.email || '', password: r.value.temporary_password });
+            continue;
+          }
           const link = this._remember(r.item.annotator_id, r.value);
           if (link) made.push({ annotator_id: r.item.annotator_id, display_name: r.item.display_name, email: r.item.email || '', link, expires_at: r.value.expires_at || '' });
         }
         clear(result);
         put(result, h('h3', {}, `Created ${results.filter((r) => r.ok).length} of ${plural(results.length, 'account')}`),
-          resultsTable(results, { name: (r) => r.annotator_id, done: () => 'Account created with an invitation link', title: 'Person' }), made.length ? this._linksTable(made) : null,
+          resultsTable(results, { name: (r) => r.annotator_id, title: 'Person',
+            done: (r) => `Account created as ${roleWords(r.item.roles).toLowerCase()} with ${r.value.temporary_password ? 'a temporary password' : 'an invitation link'}` }),
+          made.length ? this._linksTable(made) : null, passwords.length ? this._passwordsTable(passwords) : null,
           h('div.btn-row', {}, h('button.btn.small', { type: 'button', onclick: () => this.area.go('assignments', { annotators: made.map((m) => m.annotator_id) }) }, 'Assign recordings to them…')));
         if (results.every((r) => r.ok)) text.value = '';
         await this.reload();
@@ -520,9 +567,12 @@ export class AnnotatorsSection {
     });
     return h('div.admin-stack', { role: 'tabpanel', 'data-panel': 'several' },
       card('Add several people',
-        h('p', {}, 'Paste one line for each person: their annotator ID, their name and their email address, separated by commas (a spreadsheet\'s columns pasted with tabs work too). Every line is checked before any account is made; then each person gets an account as an annotator and a private invitation link.'),
+        h('p', {}, 'Paste one line for each person, or choose a CSV file saved from a spreadsheet: their annotator ID, their name, their email address and, if you like, their roles, separated by commas (a spreadsheet\'s columns pasted with tabs work too). A first line of column names (ID, Name, Email, Roles) may give the columns in another order. Every line is checked before any account is made; then each annotator and expert gets a private invitation link, and each administrator a temporary password.'),
         fb ? h('p.caption', {}, 'On Firebase each person signs in with their email address, so every line needs one.') : null,
+        h('div.btn-row', {}, chooseFile, fileNote), file,
         field('People', text, { wide: true }),
+        roles,
+        h('p.caption', {}, 'Roles in a line (annotator, expert, administrator, several separated by spaces or semicolons) are given instead of these.'),
         fb ? null : h('div.row.inline-form.invite-days', {}, h('label.form-label.inline', { for: days.id }, 'The links last'), days),
         h('div.btn-row', {}, check, create), progress, msg, preview, result, this.severalMail));
   }

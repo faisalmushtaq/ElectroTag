@@ -172,6 +172,28 @@ export const tests = [
       assert.match(href, /^mailto:lee@example\.org\?subject=/);
       assert.ok(decodeURIComponent(href).includes(links.L11));
       await t.screenshot(page, 'admin_add_several');
+      // A CSV file saved from a spreadsheet, with its columns in another order and roles: its text is shown to
+      // check; an expert gets a link, an administrator a temporary password, and the roles chosen above the
+      // list go to anyone whose line names none.
+      await page.setInputFiles('[data-log="several-file"]', { name: 'people.csv', mimeType: 'text/csv',
+        buffer: Buffer.from('\uFEFFEmail,ID,Roles,Name\r\nexp@example.org,L13,expert,"Ex, Pert"\r\nadm@example.org,L14,Administrator,Ad Min\r\n,L15,,Noroles\r\n') });
+      await page.waitForFunction(() => /^Email,ID/.test(document.querySelector('[data-log="several-text"]').value));
+      assert.match(await page.innerText('[data-panel="several"]'), /people\.csv read/);
+      await page.locator('[data-panel="several"] input[data-role="expert"]').check(); // the roles for L15
+      await page.click('[data-log="several-check"]');
+      await page.waitForSelector('[data-log="several-create"]:not([hidden])');
+      const preview = await page.innerText('[data-panel="several"] .several-out');
+      assert.match(preview, /1 administrator with a temporary password/);
+      assert.match(preview, /L14[\s\S]*Administrator/);
+      await page.click('[data-log="several-create"]');
+      await page.waitForSelector('.passwords-made output.secret-value', { timeout: 30000 });
+      assert.deepEqual(await page.$$eval('.passwords-made tr[data-key]', (rows) => rows.map((r) => r.dataset.key)), ['L14']);
+      assert.deepEqual((await page.$$eval('.links-made tr[data-key]', (rows) => rows.map((r) => r.dataset.key))).sort(), ['L13', 'L15']);
+      const roles = await page.evaluate(async () => Object.fromEntries((await globalThis.ElectroTag.backend.admin('users_list', {})).users
+        .filter((u) => ['L13', 'L14', 'L15'].includes(u.annotator_id)).map((u) => [u.annotator_id, [...(u.roles || [u.role])].sort().join('+')])));
+      assert.deepEqual(roles, { L13: 'expert', L14: 'admin', L15: 'annotator+expert' });
+      assert.equal(await page.locator('.passwords-made', { hasText: 'Ex, Pert' }).count(), 0);
+      await t.screenshot(page, 'admin_add_several_file');
       // The Invitations tab: where each link stands.
       await page.click('.admin-section[data-section="annotators"] .admin-tabs [data-tab="invitations"]');
       const row = page.locator('[data-panel="invitations"] tr[data-key="L12"]');
@@ -278,7 +300,10 @@ export const tests = [
       await acceptInvite(person, { id: 'L31', password: 'lane chooses this' });
       await t.screenshot(person, 'admin_invite_home');
       // Several people, with a table of links; the second one welcomes its person.
-      const links = await addSeveral(page, 'L32, Lou\nL33, Lin, lin@example.org');
+      const links = await addSeveral(page, 'L32, Lou\nL33, Lin, lin@example.org\nL34, Lars, lars@example.org, administrator');
+      // the administrator gets a temporary password from the study server, never a link
+      assert.deepEqual(Object.keys(links).sort(), ['L32', 'L33']);
+      assert.deepEqual(await page.$$eval('.passwords-made tr[data-key]', (rows) => rows.map((r) => r.dataset.key)), ['L34']);
       const welcome = await t.newPage({ url: links.L33, width: 1280, height: 800 });
       await welcome.waitForSelector('.invite-card[data-invite="welcome"]');
       await t.screenshot(welcome, 'admin_invite_welcome');

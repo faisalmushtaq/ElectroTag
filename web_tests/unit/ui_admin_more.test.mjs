@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import * as m from '../../electrotag/web/static/js/admin/model.js';
+import * as bulk from '../../electrotag/web/static/js/admin/bulk_people.js';
 import { niceTicks } from '../../electrotag/web/static/js/admin/chart.js';
 import { DemoBackend } from '../../electrotag/web/static/js/api/demo.js';
 import { inviteToken } from '../../electrotag/web/static/js/api/demo_admin.js';
@@ -68,18 +69,18 @@ test('the invitation\'s states and its friendly message', () => {
 });
 
 test('"Add several": every line is checked before anything is made', () => {
-  const ok = m.parseBulkPeople('annotator_id, name, email\nA11, Alex Smith, alex@example.org\n\na12\tSam Jones\tsam@example.org\nA13;Kim', { existing: ['A01'] });
+  const ok = bulk.parseBulkPeople('annotator_id, name, email\nA11, Alex Smith, alex@example.org\n\na12\tSam Jones\tsam@example.org\nA13;Kim', { existing: ['A01'] });
   assert.deepEqual(ok.problems, []);
   assert.deepEqual(ok.rows.map((r) => [r.line, r.annotator_id, r.display_name, r.email]),
     [[2, 'A11', 'Alex Smith', 'alex@example.org'], [4, 'A12', 'Sam Jones', 'sam@example.org'], [5, 'A13', 'Kim', null]]);
-  const bad = m.parseBulkPeople('A01, Taken\nA11, One, one@example.org\nA11, Again\nA12, Two, one@example.org\nA 13, Space\nA14, Four, not-an-address\nA15,a,b@c.org,extra', { existing: ['a01'] });
+  const bad = bulk.parseBulkPeople('A01, Taken\nA11, One, one@example.org\nA11, Again\nA12, Two, one@example.org\nA 13, Space\nA14, Four, not-an-address\nA15,a,b@c.org,extra', { existing: ['a01'] });
   assert.deepEqual(bad.problems.map((p) => p.line), [1, 3, 4, 5, 6, 7]);
   assert.match(bad.problems[0].text, /A01 already has an account/);
   assert.match(bad.problems[1].text, /A11 is also on line 2/);
   assert.match(bad.problems[2].text, /one@example\.org is also on line 2/);
-  assert.match(m.parseBulkPeople('A11, Alex', { emailRequired: true }).problems[0].text, /^Line 1 \(A11\)/);
-  assert.equal(m.parseBulkPeople('   \n').problems.length, 1);
-  assert.match(m.parseBulkPeople(Array.from({ length: 3 }, (_, i) => `B${i}`).join('\n'), { max: 2 }).problems[0].text, /At most 2/);
+  assert.match(bulk.parseBulkPeople('A11, Alex', { emailRequired: true }).problems[0].text, /^Line 1 \(A11\)/);
+  assert.equal(bulk.parseBulkPeople('   \n').problems.length, 1);
+  assert.match(bulk.parseBulkPeople(Array.from({ length: 3 }, (_, i) => `B${i}`).join('\n'), { max: 2 }).problems[0].text, /At most 2/);
 });
 
 test('CSV, sorting and the words of the progress figures', () => {

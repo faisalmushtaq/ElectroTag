@@ -231,16 +231,29 @@ person signing in.
 
 ### Adding several people
 
-Add several makes many accounts at once. Paste one line for each person with their annotator ID,
-their name and their email address, separated by commas (a spreadsheet's columns pasted with tabs
-work too, and a first line of column names is skipped), then choose Check the list. Every line is
-checked before anything is made: IDs that are malformed, taken already or given twice, and email
-addresses that are malformed or given twice, are listed by line, and nothing is created until they
-are corrected. When the list is right, Create makes each account as an annotator with a private
-invitation link, showing how far it has got and what happened to each person. The links then
-appear in a table, with Copy all and a download as a CSV file of the IDs, names, email addresses,
-links and their expiry dates. Keep the file safe, since each link signs a person in, and send each
-link to its person in a separate message.
+Add several makes many accounts at once. Paste one line for each person, or choose a CSV file saved
+from a spreadsheet with Choose a CSV file…, whose lines then appear in the box to look over before
+anything is made. Each line gives the person's annotator ID, their name, their email address and,
+if you like, their roles, separated by commas (a spreadsheet's columns pasted with tabs work too, as
+does a file saved with semicolons, and a cell in double quotes may hold a comma). A first line of
+column names is read as such, so a file's columns may come in any order: ElectroTag reads the
+columns ID, Name, Email and Roles (Annotator ID, Display name and Email address are understood too),
+and points out any other column rather than guess at it. Roles in a line are annotator, expert and
+administrator, several separated by spaces, semicolons or "and"; the Roles boxes under the list give
+the roles of everyone whose line names none, Annotator unless you choose otherwise. A spreadsheet
+file (.xlsx) is turned away with a request to save it as CSV first.
+
+Choose Check the list: every line is checked before anything is made. IDs that are malformed, taken
+already or given twice, email addresses that are malformed or given twice, and roles ElectroTag
+does not know are listed by line, and nothing is created until they are corrected. The list then
+shows each account with its roles. When the list is right, Create makes the accounts, showing how
+far it has got and what happened to each person. Annotators and experts each get a private
+invitation link, and the links appear in a table, with Copy all and a download as a CSV file of the
+IDs, names, email addresses, links and their expiry dates. Keep the file safe, since each link signs
+a person in, and send each link to its person in a separate message. An administrator gets a
+temporary password instead, shown once in a table of its own, because a link sent by email must
+never open the admin area; pass it on by hand, apart from the ID. On Firebase an administrator gets
+Firebase's own link to choose a password, as when one account is added.
 
 ### Several people at once
 
