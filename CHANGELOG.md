@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The guides now give a PowerShell version of every command that is typed differently on Windows, as
+the Firebase guide already did: the commands written over several lines, which PowerShell continues
+with a backtick (Study settings and the reliability guide), the examples that use a folder such as
+`/data/MyStudy` (Study settings), and the test commands that set an environment variable (the
+testing guide). The README's installation gives its two versions in the same way, and each guide
+says that a command shown once works as it stands in both terminals.
+
 Each reference set's Settings tab, in the admin area's Training section, now has Matching in practice
 and assessment: when a trainee's mark counts as finding one of the experts' artifacts, for the
 practice score and every competency measure (by overlap, by start and end within tolerances, or both).
