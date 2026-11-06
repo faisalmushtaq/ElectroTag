@@ -2,7 +2,10 @@
 // view uses and the unit tests check. The clock counts the time a recording is open and not paused:
 // a pause (the Pause button or key, no input for a while, or the page out of sight) stops it, and
 // the time worked so far is what drafts and Save and Finish record as elapsed_s. It also keeps the
-// time worked since the last break, for the break reminder.
+// time worked since the last break, for the break reminder. That time belongs to the person, not to
+// the recording: carry() gives what goes on to the next recording they open (kept in this browser per
+// annotator, so a reload or signing in again keeps it too), and carriedBreak() what a recording opened
+// later starts from, which is nothing once they have been away from their recordings for a break.
 
 /** A pause at least this long (seconds) counts as a break: the break reminder starts again. */
 export const BREAK_MIN_S = 5 * 60;
@@ -17,11 +20,12 @@ const nowMs = () => (typeof performance !== 'undefined' ? performance.now() : Da
 
 export class WorkClock {
   /**
-   * @param {{baseS?: number, sinceBreakS?: number, now?: () => number}} o baseS: time worked before
-   *   (a restored draft); sinceBreakS: work since the last break carried over from the recording
-   *   before; now: a clock in milliseconds (performance.now by default; the tests give their own).
+   * @param {{baseS?: number, sinceBreakS?: number, remindAtS?: number|null, now?: () => number}} o baseS: time
+   *   worked before (a restored draft); sinceBreakS: work since the last break carried over from the recording
+   *   before, and remindAtS the reminder put off there (carriedBreak); now: a clock in milliseconds
+   *   (performance.now by default; the tests give their own).
    */
-  constructor({ baseS = 0, sinceBreakS = 0, now = nowMs } = {}) {
+  constructor({ baseS = 0, sinceBreakS = 0, remindAtS = null, now = nowMs } = {}) {
     this.now = now;
     this.baseS = Math.max(0, Number(baseS) || 0);
     this.startedAt = now();
@@ -31,7 +35,8 @@ export class WorkClock {
     this.pause_ = null; // { reason, at, workedAtS }
     this.pausedTotalS = 0;
     this.nPauses = 0;
-    this.remindAtS = null; // the work since the last break at which to remind (null: the study's interval)
+    // the work since the last break at which to remind (null: the study's interval)
+    this.remindAtS = Number.isFinite(remindAtS) && remindAtS > 0 ? remindAtS : null;
   }
 
   get paused() { return this.pause_ !== null; }
@@ -92,6 +97,43 @@ export class WorkClock {
 
   /** "Remind me later": ask again after another `snoozeS` of work. */
   snooze(snoozeS = SNOOZE_S) { this.remindAtS = this.sinceBreakS + snoozeS; }
+
+  /**
+   * What carries on to the next recording: {s, remindAtS, at}, the work since the last break, the reminder put
+   * off, and when the work stopped (`epochMs`, milliseconds since 1970: now, or when the pause began). During
+   * Take a break the break has begun, so nothing carries.
+   */
+  carry(epochMs = Date.now()) {
+    if (this.pause_ && this.pause_.reason === 'break') return { s: 0, remindAtS: null, at: epochMs };
+    const stoppedMsAgo = this.pause_ ? Math.max(0, this.now() - this.pause_.at) : 0;
+    return { s: Math.round(this.sinceBreakS * 10) / 10, remindAtS: this.remindAtS, at: epochMs - stoppedMsAgo };
+  }
+}
+
+/** Where this browser keeps an annotator's work since their last break (localStorage). */
+export function breakKey(who) { return `electrotag.sinceBreak|${who}`; }
+
+/** Of two carries (the page's own and this browser's copy), the one written last; either may be missing. */
+export function newestCarry(a, b) {
+  const at = (c) => (c && Number.isFinite(Number(c.at)) ? Number(c.at) : -Infinity);
+  return at(b) > at(a) ? b : (a || b || null);
+}
+
+/**
+ * What a recording opened at `epochMs` starts from: {sinceBreakS, remindAtS}. The carry counts while the person
+ * has been away from their recordings for less than BREAK_MIN_S; longer away is a break, and so is a carry that
+ * cannot be read or that comes from a clock set later than this one by more than a minute.
+ */
+export function carriedBreak(carry, epochMs = Date.now()) {
+  const fresh = { sinceBreakS: 0, remindAtS: null };
+  if (!carry || typeof carry !== 'object') return fresh;
+  const s = Number(carry.s);
+  const at = Number(carry.at);
+  if (!Number.isFinite(s) || s < 0 || !Number.isFinite(at)) return fresh;
+  const awayMs = epochMs - at;
+  if (awayMs >= BREAK_MIN_S * 1000 || awayMs < -60 * 1000) return fresh;
+  const r = carry.remindAtS === null || carry.remindAtS === undefined ? null : Number(carry.remindAtS);
+  return { sinceBreakS: s, remindAtS: Number.isFinite(r) && r > 0 ? r : null };
 }
 
 /** Whether `idleMs` without input should pause the clock (`idleMinutes` 0 means never). */

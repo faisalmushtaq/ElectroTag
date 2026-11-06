@@ -180,6 +180,57 @@ export const tests = [
     },
   },
   {
+    name: 'the work since the last break lasts the session: the next recording, a reload and signing in again, until a break',
+    async run(t) {
+      const { assert } = t;
+      const page = await t.newPage({ width: 1600, height: 950 });
+      const close = async () => {
+        await page.click('[data-log="close"]');
+        await clickDialogButton(page, 'Close and finish later');
+        await waitForRoute(page, 'home');
+      };
+      const since = () => page.evaluate(() => { const k = globalThis.ElectroTag.ws.clock; return { s: k.sinceBreakS, remindAt: k.remindAtS }; });
+      const home = async () => {
+        // signed in still, or asked to sign in again: the recordings, or the sign-in form
+        await page.waitForSelector('ul.examples button, #signin-id', { state: 'visible', timeout: 30000 });
+        if (await page.locator('#signin-id').isVisible()) { await signIn(page, 'A01'); await waitForRoute(page, 'home'); }
+      };
+      await signIn(page, 'A01');
+      await waitForRoute(page, 'home');
+      await studySettings(page, { idle_pause_minutes: 0, break_reminder_minutes: 50 });
+      await openExample(page, 0);
+      // 52 minutes of work (brought forward here): the reminder comes, and is put off for a quarter of an hour
+      await page.evaluate(() => { globalThis.ElectroTag.ws.clock.breakBaseS += 52 * 60; });
+      await page.waitForSelector('.break-reminder', { timeout: 10000 });
+      await page.click('[data-log="break-later"]');
+      const before = await since();
+      assert.ok(before.remindAt > before.s + 890);
+      await close();
+      // the page reloaded, signing in again if it asks: the next recording goes on from there
+      await page.reload();
+      await home();
+      await openExample(page, 1);
+      const after = await since();
+      assert.ok(after.s >= before.s && after.s < before.s + 120, `carried ${before.s} s, now ${after.s} s`);
+      assert.equal(after.remindAt, before.remindAt, 'Remind me in 15 minutes carries too');
+      await page.waitForTimeout(2500);
+      assert.equal(await page.locator('.break-reminder').count(), 0, 'not asked again straight away on the next recording');
+      // away from the recordings for five minutes or more (brought forward here): a break, and it starts again
+      await close();
+      await page.evaluate(() => {
+        const app = globalThis.ElectroTag;
+        const key = 'electrotag.sinceBreak|A01';
+        const kept = JSON.parse(localStorage.getItem(key));
+        localStorage.setItem(key, JSON.stringify({ ...kept, at: kept.at - 6 * 60 * 1000 }));
+        if (app.sinceBreak) app.sinceBreak = { ...app.sinceBreak, at: app.sinceBreak.at - 6 * 60 * 1000 };
+      });
+      await openExample(page, 0);
+      const fresh = await since();
+      assert.ok(fresh.s < 10, `starts again after a break: ${fresh.s} s`);
+      assert.equal(fresh.remindAt, null);
+    },
+  },
+  {
     name: 'the parts viewed: the overview bar, Next part not yet viewed, the check before Save and Finish, and fast drawing',
     async run(t) {
       const { assert } = t;

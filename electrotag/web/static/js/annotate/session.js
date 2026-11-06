@@ -157,9 +157,10 @@ export class AnnotationSession {
   /** Seconds worked on the recording, earlier sessions included and pauses left out. */
   get elapsedS() { return this.clock ? this.clock.elapsedS : this.elapsedBase; }
 
-  /** Start the working-time clock (the recording is on screen); `sinceBreakS` carries the work since the last break. */
-  startClock({ sinceBreakS = 0, now } = {}) {
-    if (!this.clock) this.clock = new WorkClock({ baseS: this.elapsedBase, sinceBreakS, ...(now ? { now } : {}) });
+  /** Start the working-time clock (the recording is on screen); `sinceBreakS` and `remindAtS` carry the work since the
+   *  last break and a reminder put off (clock.js carriedBreak). */
+  startClock({ sinceBreakS = 0, remindAtS = null, now } = {}) {
+    if (!this.clock) this.clock = new WorkClock({ baseS: this.elapsedBase, sinceBreakS, remindAtS, ...(now ? { now } : {}) });
     return this.clock;
   }
 

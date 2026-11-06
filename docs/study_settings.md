@@ -278,7 +278,10 @@ that is accepted.
 Three settings make long sessions easier for annotators.
 `annotation.break_reminder_minutes` (50 by default, from 0 to 240) is how many
 minutes of work since the last break pass before a gentle reminder offers a
-break; a pause of five minutes or more counts as a break. `annotation.idle_pause_minutes`
+break; a pause of five minutes or more counts as a break. The work since the
+last break is counted across the annotator's whole session, from one recording
+to the next and through a reload or a new sign-in in the same browser, until
+they have been away from their recordings for five minutes. `annotation.idle_pause_minutes`
 (3 by default, from 0 to 60) is how many minutes without any input pass before
 the working-time clock pauses itself. A value of 0 turns either off.
 `annotation.coverage_check` is `"warn"` (the default), with which Save and

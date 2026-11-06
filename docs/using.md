@@ -778,8 +778,12 @@ counted.
 After a long stretch of work without a break (50 minutes unless your study chose otherwise), a small
 note at the foot of the side panel suggests a break, where it covers none of the EEG. Take a break pauses straight away; Remind me in 15
 minutes puts the note away for another quarter of an hour of work. The note never stops you working,
-and any pause of five minutes or more counts as a break. The time since your last break carries over
-from one recording to the next.
+and any pause of five minutes or more counts as a break. The time since your last break is counted
+across your whole session rather than for one recording: it carries over from one recording to the
+next, in your study work and your training alike, and so does a reminder you put off, even when the
+page is reloaded or you sign in again in the same browser. Time away from your recordings counts as
+a break once it reaches five minutes, whether you paused, closed the recording or left the page; time
+spent elsewhere in ElectroTag, such as on My recordings or reading feedback, is not counted as work.
 
 Pausing works the same way in guided training, where the coach waits behind the panel and the time
 paused is left out of the time a step took. The short-segment quiz has no Pause, since it measures

@@ -5,6 +5,14 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The break reminder now counts the work since the last break across an annotator's whole session. That
+time was kept only by the open page, so a reload, a new tab or signing in again started it from nothing,
+and a reminder put off with Remind me in 15 minutes came back as soon as the next recording opened. It is
+now kept in the browser for each annotator, with a reminder put off, and carries from one recording to
+the next until they have been away from their recordings for five minutes, which counts as a break as
+before. Views that do not count working time, such as reading feedback, no longer add their time to it
+(docs/using.md, "Pausing and breaks").
+
 Problems, in the admin area, now lists the recordings for which the checks noticed something when they
 were added (an unusual amplitude, events outside the recording, sidecars read with a warning), with what
 was found and when and by whom each was added. An administrator can dismiss a recording from the list
