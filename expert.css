@@ -180,3 +180,16 @@
 .view.annotate.overlaying .ws-side > .review-host { flex: 1 1 auto; max-height: none; min-height: 0; }
 .view.annotate.overlaying .ws-side > .side-tabs { flex: 0 1 30%; min-height: 160px; }
 .view.annotate.overlaying .ws-side > .side-tabs.folded { flex: none; min-height: 0; }
+
+/* The probability map, for administrators (js/expert/probability_panel.js) */
+.prob-lane { height: 44px; border-bottom: 1px solid var(--hairline); }
+.lanes .prob-lane .prob-track, .prob-track { height: 40px; background: var(--page); }
+.prob-panel { border-top: 1px solid var(--hairline); margin-top: 12px; padding-top: 8px; }
+.prob-body { display: grid; gap: 8px; }
+.prob-warn { margin: 0; padding: 6px 8px; border-left: 3px solid var(--warning-bar); background: var(--warning-bg); color: var(--warning-text); }
+.prob-weights { display: grid; gap: 4px; }
+.prob-weight { display: grid; grid-template-columns: minmax(0, 1fr) 120px 44px; align-items: center; gap: 8px; }
+.prob-slider { width: 100%; }
+.prob-value { text-align: right; font-variant-numeric: tabular-nums; }
+.prob-question { margin: 4px 0; }
+.prob-details summary { cursor: pointer; }

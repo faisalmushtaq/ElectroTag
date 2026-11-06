@@ -660,6 +660,16 @@ export class DemoLibrary {
     return { withdrawal: DemoLibrary._public(w) };
   }
 
+  // ------------------------------------------------------- probability maps (probability.py; demo_probability.js)
+  async _probability() {
+    if (!this._prob) { const { Probability } = await import('./demo_probability.js'); this._prob = new Probability(this); }
+    return this._prob;
+  }
+
+  async op_probability_get(body) { return (await this._probability()).get(body); }
+
+  async op_probability_export(body) { return (await this._probability()).export(body, this.user); }
+
   /** user_remove: the person's membership of groups ends. */
   async hook_user_remove(body) {
     const out = await this.a.op_user_remove(body);
