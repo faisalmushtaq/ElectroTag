@@ -18,6 +18,7 @@ import {
   sectionHead, select, textArea, textInput,
 } from './ui.js';
 import { DEFAULT_DATASET_ID, collisionsOf, datasetBody, prefixed } from './datasets_model.js';
+import { findPositions, positionsText, withElectrodePositions } from './positions.js';
 
 /** The module that reads recordings for the register (js/eeg/register.js); tests may replace it. */
 export async function loadRegisterModule() {
@@ -314,7 +315,7 @@ export class RecordingsSection {
         r.scope === 'study' ? ['Dataset', h('button.link', { type: 'button', onclick: () => this.area.go('datasets', { dataset: r.dataset_id || DEFAULT_DATASET_ID }) }, this._datasetName(r.dataset_id))] : null,
         ['Format', formatName(r.format)],
         ['Length', `${durationText(r.duration_s)} at ${r.sfreq} Hz (${Number(r.n_samples || 0).toLocaleString('en-GB')} samples)`],
-        ['Channels', String(r.n_channels ?? '')], ['File size', bytesText(r.size_bytes)],
+        ['Channels', String(r.n_channels ?? '')], ['Electrode positions', positionsText(r.electrode_positions || 'unset')], ['File size', bytesText(r.size_bytes)],
         ['Fingerprint', h('code.fingerprint', {}, r.sha256 || '–')],
         ['Added', `${whenText(r.registered_at)} by ${r.registered_by || '–'}${r.registered_via === 'browser' ? ', from a browser' : r.registered_via === 'command' ? ', with the command' : ''}`],
         ['Work', `${r.done ?? 0} of ${r.assigned ?? 0} done`],
@@ -367,7 +368,8 @@ export class RecordingsSection {
     for (const b of [this.folderBtn, this.filesBtn]) b.disabled = Boolean(job);
     this.addScope.disabled = job === 'registering';
     this.addDataset.disabled = job === 'registering';
-    if (this.registerBtn) this.registerBtn.disabled = Boolean(job);
+    // when nothing runs, Add counts what it would add again (and stays off with nothing to add)
+    if (this.registerBtn) { if (job || !this._countAdd || !this.found) this.registerBtn.disabled = Boolean(job); else this._countAdd(); }
   }
 
   /** Read the chosen files with the recording builder and show what was found. */
@@ -395,7 +397,8 @@ export class RecordingsSection {
         settings, scope, catalogue,
         onProgress: (p) => { const { text, fraction } = progressText(p); this.progress.set(fraction, text); },
       });
-      this.found = { manifests: out.manifests || [], failures: out.failures || [] };
+      this.found = { manifests: out.manifests || [], failures: out.failures || [], files: [...files], withPositions: null };
+      this.found.positions = await findPositions(this.found.manifests, this.found.files);
       this.progress.hide();
       this._showReview();
     } catch (exc) {
@@ -428,16 +431,25 @@ export class RecordingsSection {
       { title: 'Format', render: ({ s }) => formatName(s.format) },
       { title: 'Channels', num: true, render: ({ s }) => `${s.nChannels}${s.nHidden ? ` (+${s.nHidden} hidden)` : ''}` },
       { title: 'Length', num: true, render: ({ s }) => durationText(s.durationS) },
+      { title: 'Electrode positions', render: ({ m }) => this._positionsCell(m) },
       { title: 'Warnings', render: ({ s }) => (s.warnings.length ? h('ul.warnings', {}, s.warnings.map((w) => h('li', {}, w))) : '–') },
     ], rows, { empty: 'No recordings were found among these files.', pageSize: 20, caption: 'Recordings found' });
     this.allowCopies = checkbox('Add the copies too (each is then annotated as a recording of its own)');
     this.registerBtn = h('button.btn.primary', { type: 'button', 'data-log': 'register', onclick: () => this.register() });
     // The button counts what will be added: recordings registered already only with Replace, copies only when ticked.
     const count = () => {
+      if (!this.found) return; // added, or started again: nothing waits
+      if (this.found.withPositions === null) {
+        this.registerBtn.textContent = 'Choose whether to add electrode positions';
+        this.registerBtn.disabled = true;
+        return;
+      }
       const n = manifests.filter((m) => !elsewhere.has(m.recording_id) && (this.replace.input.checked || !isKnown(m.recording_id)) && (this.allowCopies.input.checked || !same.has(m.recording_id))).length;
       this.registerBtn.textContent = n ? `Add ${plural(n, 'recording')}` : 'Nothing to add';
       this.registerBtn.disabled = !n;
     };
+    this._countAdd = count;
+    this._reviewTable = () => table.update(rows, { keepPage: true });
     this.allowCopies.input.addEventListener('change', count);
     this.replace.input.onchange = count;
     count();
@@ -446,6 +458,7 @@ export class RecordingsSection {
       h('h3', {}, `Found ${plural(manifests.length, 'recording')}`),
       target && this.datasets.length ? h('p.caption', {}, `Into the dataset ${this._datasetName(target.id)}${prefix ? `, with their IDs starting ${prefix}/` : ''}.`) : null,
       table,
+      this._posBlock = this._positionsBlock(),
       elsewhere.size ? h('div.banner.elsewhere', { role: 'status' },
         h('p', {}, h('b', {}, `${plural(elsewhere.size, 'recording')} ${elsewhere.size === 1 ? 'has' : 'have'} the ID of a recording in another dataset`),
           ', so the study leaves them as they are, even when replacing. If they are different recordings (two BIDS datasets that both have sub-001, for example), '
@@ -460,6 +473,70 @@ export class RecordingsSection {
       h('div.btn-row', {}, this.registerBtn, again));
   }
 
+  // ---------------------------------------------------- electrode positions
+  _positionsCell(m) {
+    const f = this.found && this.found.positions ? this.found.positions.get(m.recording_id) : null;
+    if (!f) return '–';
+    if (this.found.withPositions === false) return h('span.caption', {}, 'None: no topographic map');
+    return f.source === 'file' ? h('span', { title: f.fileName }, `${f.fileName} (${plural(f.placed, 'channel')})`)
+      : f.source === 'standard' ? 'Standard positions of the channel names' : h('span.chip.warning', {}, 'none found');
+  }
+
+  /** After a change of the positions: the table's column, the block under it and Add, the rest of the review as it was. */
+  _positionsChanged() {
+    this._reviewTable();
+    const block = this._positionsBlock();
+    this._posBlock.replaceWith(block);
+    this._posBlock = block;
+    this._countAdd();
+  }
+
+  /**
+   * The question asked before Add: with or without electrode positions, for the topographic map. With them,
+   * the line under the question says where each recording's come from, and Choose position files… adds
+   * electrodes.tsv files (with their coordsystem.json) to those already chosen.
+   */
+  _positionsBlock() {
+    const found = this.found;
+    const counts = { file: 0, standard: 0, none: 0 };
+    for (const f of found.positions.values()) counts[f.source] += 1;
+    const choice = h('div.radio-col', { role: 'radiogroup', 'aria-label': 'Electrode positions' });
+    const option = (value, text, hint) => {
+      const input = h('input', { type: 'radio', name: `positions-${this.addKey || (this.addKey = newId())}`, value: String(value), 'data-log': value ? 'positions-with' : 'positions-without' });
+      input.checked = found.withPositions === value;
+      input.addEventListener('change', () => { found.withPositions = value; this._positionsChanged(); });
+      return h('label.check', {}, input, h('span', {}, text, h('span.caption.block', {}, hint)));
+    };
+    choice.append(
+      option(true, 'Add them with their electrode positions', 'From each recording\'s electrodes.tsv, or the standard positions of its channel names where those are 10-20 names.'),
+      option(false, 'Add them without electrode positions', 'They will have no topographic map.'));
+    const picker = h('input', { type: 'file', multiple: true, hidden: true, 'data-log': 'positions-files', accept: acceptFiles('.tsv,.json'),
+      onchange: async () => {
+        const more = [...picker.files];
+        picker.value = '';
+        if (!more.length) return;
+        found.files.push(...more);
+        found.positions = await findPositions(found.manifests, found.files);
+        this._positionsChanged();
+      } });
+    const where = [counts.file ? `${plural(counts.file, 'recording')} from ${counts.file === 1 ? 'its' : 'their'} electrodes.tsv` : '',
+      counts.standard ? `${plural(counts.standard, 'recording')} from the standard positions of ${counts.standard === 1 ? 'its' : 'their'} channel names` : ''].filter(Boolean);
+    return h('div.positions-choice', {},
+      h('h3', {}, 'Electrode positions'),
+      h('p.caption', {}, 'The topographic map beside the EEG needs to know where each electrode is. Only the electrodes\' places on the map are sent, never the files.'),
+      choice,
+      found.withPositions === false ? h('div.banner.positions-none', { role: 'status' },
+        h('p', {}, h('b', {}, 'Without electrode positions these recordings have no topographic map'),
+          ' while they are annotated. To give them one later, add them again with their positions and Replace ticked.')) : null,
+      found.withPositions === true ? h('div.positions-with', {},
+        where.length ? h('p', {}, `Positions for ${where.join(' and ')}.`) : null,
+        counts.none ? h('div.banner.positions-missing', { role: 'status' },
+          h('p', {}, h('b', {}, `No positions were found for ${plural(counts.none, 'recording')}`),
+            ': no electrodes.tsv among the files chosen belongs to ', counts.none === 1 ? 'it' : 'them',
+            ', and the channel names are not standard 10-20 names. Choose their electrodes.tsv files, or ', counts.none === 1 ? 'it is' : 'they are', ' added without a topographic map.')) : null,
+        h('div.btn-row', {}, h('button.btn.small', { type: 'button', onclick: () => picker.click() }, 'Choose position files…'), picker)) : null);
+  }
+
   /** Send the manifests found, in groups small enough for one request each. */
   async register() {
     if (this.job || !this.found || !this.found.manifests.length) return;
@@ -472,7 +549,12 @@ export class RecordingsSection {
       this.addMsg.show('error', 'Make the new dataset first, or choose one of the list.');
       return;
     }
-    const manifests = this.found.manifests.map((m) => ({ ...m, scope }));
+    if (this.found.withPositions === null) {
+      this._setJob(null);
+      this.addMsg.show('error', 'Choose whether to add the recordings with their electrode positions or without them.');
+      return;
+    }
+    const manifests = this.found.manifests.map((m) => ({ ...withElectrodePositions(m, this.found.positions.get(m.recording_id), this.found.withPositions), scope }));
     const groups = chunkManifests(manifests);
     const results = [];
     let sent = 0;
