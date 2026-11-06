@@ -953,7 +953,17 @@ export class DemoLibrary {
 
   /** {kind, id, name, rids: every recording of it, in order}. */
   targetOf(target, { active = true } = {}) {
-    if (!target || typeof target !== 'object' || !TARGET_KINDS.includes(target.kind)) throw bad('target must be {"kind": "dataset" or "collection", "id"}');
+    if (!target || typeof target !== 'object' || ![...TARGET_KINDS, 'recordings'].includes(target.kind)) {
+      throw bad('target must be {"kind": "dataset" or "collection", "id"}, or {"kind": "recordings", "recording_ids": [...]}');
+    }
+    if (target.kind === 'recordings') { // chosen one by one in Assignments, with a due date (datasets.py)
+      const ids = target.recording_ids;
+      if (!Array.isArray(ids) || !ids.length || !ids.every((r) => typeof r === 'string' && r) || new Set(ids).size !== ids.length) {
+        throw bad('recording_ids must be a list of recording IDs, each once');
+      }
+      if (ids.length > MAX_COLLECTION) throw new ApiError(413, 'too_large', `At most ${MAX_COLLECTION.toLocaleString('en-GB')} recordings can be given at once`);
+      return { kind: 'recordings', id: '', rids: [...ids], name: `${ids.length} recording${ids.length === 1 ? '' : 's'} chosen in Assignments` };
+    }
     if (target.kind === 'dataset') {
       const rec = this.needDataset(target.id, { active });
       return { kind: 'dataset', id: rec.dataset_id, name: rec.name || '', rids: this.heads().filter((h) => h.dataset_id === rec.dataset_id).map((h) => h.recording_id) };
@@ -1098,7 +1108,7 @@ export class DemoLibrary {
     const [live, skipped] = this._live(req.target.rids);
     const now = nowLocalIso();
     const record = { schema: 'electrotag.handout', schema_version: 1, handout_id: hid, name: req.name, title: req.title,
-      target: { kind: req.target.kind, id: req.target.id }, mode: req.mode, k: req.k, people: req.people, groups: req.groups,
+      target: req.target.kind === 'recordings' ? { kind: 'recordings', id: '', recording_ids: [...req.target.rids] } : { kind: req.target.kind, id: req.target.id }, mode: req.mode, k: req.k, people: req.people, groups: req.groups,
       follow_groups: req.follow_groups, due_at: req.due_at, note: req.note, state: 'open', handed_out_at: now, handed_out_by: this.user,
       request_id: rq, task_request_id: null,
       recipients: req.recipients.map(([a, via]) => ({ annotator_id: a, via, given_at: now, given_by: this.user, added: 0, already: 0 })),
@@ -1116,7 +1126,7 @@ export class DemoLibrary {
     }
     this.lib.handouts[hid] = record;
     const people = req.recipients.map(([a]) => a);
-    this._audit('handout_create', `Handed out ${req.target.kind} ${req.target.name} (to everyone) to ${people.slice(0, 6).join(', ')}${people.length > 6 ? ' …' : ''}: `
+    this._audit('handout_create', `Handed out ${req.target.kind === 'recordings' ? req.target.name : `${req.target.kind} ${req.target.name}`} (to everyone) to ${people.slice(0, 6).join(', ')}${people.length > 6 ? ' …' : ''}: `
       + `${count(added, 'new assignment')}`, { handout_id: hid, target: record.target, mode: req.mode, k: req.k, annotator_ids: people, groups: req.groups,
       due_at: req.due_at, added, already, skipped: skipped.map((s) => s.recording_id), note_chars: req.note.length });
     return { handout: this.handoutOut(record), added, already_had: already, skipped, tasks: null, already: false };
@@ -1410,6 +1420,7 @@ export class DemoLibrary {
 
   _memberTest(target) {
     if (target && target.kind === 'dataset') return (rid) => ((this.a.record('study', rid) || {}).dataset_id || DEFAULT_DATASET_ID) === target.id;
+    if (target && target.kind === 'recordings') { const chosen = new Set(target.recording_ids || []); return (rid) => chosen.has(rid); }
     const rec = this.lib.collections[String((target && target.id) || '')] || {};
     const set = new Set(rec.recording_ids || []);
     return (rid) => set.has(rid);
