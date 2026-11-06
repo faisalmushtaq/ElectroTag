@@ -510,7 +510,7 @@ class Admin:
                 "warnings_dismissed": warnings_dismissed(m)}
 
     def set_record(self, rs: ReferenceSet) -> dict[str, Any]:
-        from electrotag.training.assessment import CompetencyCriteria
+        from electrotag.training.assessment import CompetencyCriteria, assessment_matching
         from electrotag.training.guided import Tolerance
         from electrotag.training.programme import PassRule
         from electrotag.web.quiz import feedback_of
@@ -536,10 +536,15 @@ class Admin:
             practice_pass = PassRule.from_dict(rs.practice_pass).to_dict()
         except (ValueError, TypeError):
             practice_pass = dict(rs.practice_pass)
+        try:
+            matching = assessment_matching(rs)
+        except (ValueError, TypeError):
+            matching = {}
         return {"set_id": rs.set_id, "name": rs.name, "description": rs.description, "created_at": rs.created_at,
                 "created_by": rs.created_by, "practice_review": rs.practice_review,
                 "allowed_annotators": list(rs.assigned_annotators), "practice_pass": practice_pass,
-                "guided_tolerance": tolerance, "criteria": criteria, "recordings": recs,
+                "guided_tolerance": tolerance, "assessment_matching": matching, "criteria": criteria,
+                "recordings": recs,
                 "quiz_items": len(rs.quiz_items), "self_contained": rs.self_contained, "scope": scope,
                 "provenance": dict(rs.provenance),
                 "quiz": {"include_none_option": bool(rs.quiz.get("include_none_option", False)),
@@ -1123,6 +1128,12 @@ class Admin:
                     numbers["accepted_labels"] = _accepted(given["accepted_labels"], self.store.catalogue)
                 rs.set_guided_tolerance({**dict(rs.guided.get("tolerance") or {}), **numbers})
                 changed.append("guided tolerance")
+            if body.get("assessment_matching") is not None:
+                try:
+                    rs.set_assessment_matching(_plain(body["assessment_matching"], "assessment_matching"))
+                except ValueError as exc:
+                    raise ApiError(400, "invalid_set", str(exc)) from None
+                changed.append("matching for practice and assessment")
             if body.get("criteria") is not None:
                 rs.set_criteria(_criteria(body["criteria"]))
                 changed.append("competency criteria")
@@ -1150,7 +1161,8 @@ class Admin:
         self._audit(user, "set_update", f"Changed the reference set {rs0.set_id}: {', '.join(changed)}",
                     set_id=rs0.set_id, **{k: body[k] for k in ("name", "description", "practice_review",
                                                                "allowed_annotators", "practice_pass",
-                                                               "guided_tolerance", "criteria", "quiz",
+                                                               "guided_tolerance", "assessment_matching",
+                                                               "criteria", "quiz",
                                                                "show_full_report_to_annotator") if k in body})
         return {"set": self.set_record(self.service.reference_set(rs0.set_id))}
 

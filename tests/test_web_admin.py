@@ -572,7 +572,27 @@ def test_set_settings_and_deletion(client: TestClient, admin: Api, study: Path) 
     assert s["criteria"]["criteria"] == [{"metric": "event_f1", "threshold": 0.75, "scope": "overall"}]
     assert s["quiz"] == {"include_none_option": True, "feedback": "end"} and s["show_full_report_to_annotator"]
     assert s["provenance"]["method"] == "consensus" and s["provenance"]["experts"] == ["E1", "E2"]
-    for bad in ({"practice_pass": {"event_f1": 2}}, {"guided_tolerance": {"channel_jaccard": 0}},
+    # the matching against the reference in practice and assessment: ElectroTag's defaults until changed
+    assert s["assessment_matching"] == {"match_criterion": "iou", "iou_threshold": 0.2, "onset_tolerance_s": 0.5,
+                                        "offset_tolerance_s": 0.5}
+    m = admin.admin_ok("set_update", {"set_id": "s2", "assessment_matching": {
+        "match_criterion": "iou_and_tolerance", "iou_threshold": 0.5, "onset_tolerance_s": 0.25}})["set"]
+    assert m["assessment_matching"] == {"match_criterion": "iou_and_tolerance", "iou_threshold": 0.5,
+                                        "onset_tolerance_s": 0.25, "offset_tolerance_s": 0.5}
+    from electrotag.training.assessment import _analysis_config
+    rs2 = client.app.state.service.reference_set("s2")
+    cfg = _analysis_config(rs2)
+    assert (cfg.match_criterion, cfg.primary_iou_threshold, cfg.onset_tolerance_s) == ("iou_and_tolerance", 0.5, 0.25)
+    assert rs2.analysis == {"match_criterion": "iou_and_tolerance", "primary_iou_threshold": 0.5,
+                            "onset_tolerance_s": 0.25}, "only what was changed is kept with the set"
+    entry = admin.admin_ok("audit", {"limit": 1})["entries"][0]
+    assert entry["op"] == "set_update" and "matching for practice and assessment" in entry["summary"]
+    admin.admin_error("set_update", {"set_id": "s2", "assessment_matching": "strict"}, 400, "bad_request")
+    for bad in ({"practice_pass": {"event_f1": 2}}, {"assessment_matching": {"iou_threshold": 1}},
+                {"assessment_matching": {"onset_tolerance_s": -0.1}},
+                {"assessment_matching": {"offset_tolerance_s": 61}},
+                {"assessment_matching": {"match_criterion": "closest"}}, {"assessment_matching": {"many": True}},
+                {"assessment_matching": {"iou_threshold": "half"}}, {"guided_tolerance": {"channel_jaccard": 0}},
                 {"criteria": {"criteria": [{"metric": "telepathy", "threshold": 1}]}},
                 {"criteria": {"criteria": [{"threshold": 1}]}}, {"quiz": {"feedback": "sometimes"}},
                 {"criteria": {"criteria": [{"metric": "event_f1", "threshold": "high"}]}},

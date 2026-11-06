@@ -26,7 +26,7 @@ from electrotag.app.io.atomic import atomic_write_json, atomic_write_text, sha25
 from electrotag.app.io.canonical import read_annotations_json
 from electrotag.app.io.naming import OutputLayout, is_flawed_file
 from electrotag.reliability.analysis import run_analysis
-from electrotag.reliability.config import ANY_ARTIFACT, AnalysisConfig
+from electrotag.reliability.config import ANY_ARTIFACT, MATCH_CRITERIA, AnalysisConfig
 from electrotag.reliability.data import build_dataset
 from electrotag.report_style import BASE_CSS, COLOURS
 from electrotag.training.reference import METHOD_NAMES, REFERENCE_ANNOTATOR, ReferenceSet
@@ -150,6 +150,42 @@ class CompetencyCriteria:
             "min_reference_events": self.min_reference_events,
             "categories": self.categories,
         }
+
+
+#: The matching settings of a reference set that the admin area edits (``set_update``), by their names in the
+#: request and in :class:`AnalysisConfig`. They decide when a trainee's mark matches the reference's, in practice
+#: and in assessment; the rest of the analysis keeps ElectroTag's defaults unless ``reference_set.json`` says
+#: otherwise.
+ASSESSMENT_MATCHING_KEYS = {"match_criterion": "match_criterion", "iou_threshold": "primary_iou_threshold",
+                            "onset_tolerance_s": "onset_tolerance_s", "offset_tolerance_s": "offset_tolerance_s"}
+#: The largest tolerance accepted, in seconds (as for the study's own matching rules).
+MAX_TOLERANCE_S = 60.0
+
+
+def assessment_matching(rs: ReferenceSet | None) -> dict[str, Any]:
+    """The set's matching against the reference, as the admin area shows it."""
+    cfg = _analysis_config(rs).to_dict()
+    return {key: cfg[name] for key, name in ASSESSMENT_MATCHING_KEYS.items()}
+
+
+def assessment_matching_update(analysis: dict[str, Any], given: dict[str, Any]) -> dict[str, Any]:
+    """The set's ``analysis`` entry with the matching settings ``given`` (some or all of
+    ``ASSESSMENT_MATCHING_KEYS``) applied; raises ValueError, in plain words, for a setting it cannot take."""
+    out = dict(analysis)
+    for key, value in given.items():
+        if key not in ASSESSMENT_MATCHING_KEYS:
+            raise ValueError(f"The matching has no setting {key!r}; it has {', '.join(ASSESSMENT_MATCHING_KEYS)}")
+        if key == "match_criterion":
+            if value not in MATCH_CRITERIA:
+                raise ValueError(f"match_criterion is one of {', '.join(MATCH_CRITERIA)}")
+        elif isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            raise ValueError(f"{key} must be a number")
+        elif key == "iou_threshold" and not 0 <= value < 1:
+            raise ValueError("The overlap needed is from 0 (any overlap) to just below 1")
+        elif key != "iou_threshold" and not 0 <= value <= MAX_TOLERANCE_S:
+            raise ValueError(f"A tolerance is from 0 to {MAX_TOLERANCE_S:g} seconds")
+        out[ASSESSMENT_MATCHING_KEYS[key]] = value if key == "match_criterion" else float(value)
+    return out
 
 
 def _analysis_config(rs: ReferenceSet | None) -> AnalysisConfig:

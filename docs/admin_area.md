@@ -700,10 +700,19 @@ set takes the recording and its reference out of the set.
 
 The set's name and description; whether trainees are offered a review of each practice recording
 against the reference; who may use the set (nobody ticked means everyone); the pass mark for
-practice, as the share of the experts' artifacts found and the share of those given the right type;
-and when a guided step matches, as how close the start and end must be (in seconds or as a share of
-the artifact's length) and how many of the channels must be the same. A set that trainees are
-enrolled in, or have saved work in, cannot be deleted.
+practice, as a score (the F1 of matching the experts' artifacts, which falls for each one missed and
+for each mark that matches none) and the share of the artifacts found given the right type; and when
+a guided step matches, as how close the start and end must be (in seconds or as a share of the
+artifact's length) and how many of the channels must be the same. A set that trainees are enrolled
+in, or have saved work in, cannot be deleted.
+
+**Matching in practice and assessment** decides when a trainee's mark counts as finding one of the
+experts' artifacts, for the practice score and for every competency measure: by overlap (the time
+both marks cover divided by the time either covers, at least 0.2 by default), by start and end each
+within a tolerance (0.5 s by default), or by both. Changing it changes the result of a competency
+report the next time the report is opened, including for trainees who have already finished. The
+defaults are starting points; [Study settings](study_settings.md#competency-criteria) says where
+they come from, and the [reliability guide](reliability_guide.md#choosing-settings) how to choose.
 
 ### Competency criteria
 

@@ -106,6 +106,35 @@ def test_competency_status_needs_evaluated_criteria():
     assert evaluate_criteria(metrics, crit)["status"] == "not_determined"
 
 
+
+def test_the_sets_matching_decides_what_counts_as_found():
+    """A reference set's assessment matching (the admin area's Matching in practice and assessment) is used by
+    every competency measure and by the practice score."""
+    from types import SimpleNamespace
+
+    from electrotag.training.assessment import assessment_matching, assessment_matching_update
+
+    blink = "Eye-blink-artifact"
+    ref = doc("REFERENCE", [(blink, 1.0, 1.3, ())])
+    late = doc("A04", [(blink, 1.25, 1.55, ())])  # overlap 0.05 s of 0.55 s: an IoU of 0.09
+
+    def recall(analysis):
+        rs = SimpleNamespace(analysis=analysis)
+        return compare_with_reference([late], [ref], _analysis_config(rs))["overall"]["event_recall"]
+
+    assert assessment_matching(None) == {"match_criterion": "iou", "iou_threshold": 0.2, "onset_tolerance_s": 0.5,
+                                         "offset_tolerance_s": 0.5}
+    assert recall({}) == 0.0
+    assert recall(assessment_matching_update({}, {"iou_threshold": 0.05})) == 1.0
+    assert recall(assessment_matching_update({}, {"match_criterion": "tolerance", "onset_tolerance_s": 0.3,
+                                                  "offset_tolerance_s": 0.3})) == 1.0
+    assert recall(assessment_matching_update({}, {"match_criterion": "tolerance", "onset_tolerance_s": 0.1})) == 0.0
+    with pytest.raises(ValueError, match="just below 1"):
+        assessment_matching_update({}, {"iou_threshold": 1})
+    with pytest.raises(ValueError, match="no setting 'allow_many_to_one'"):
+        assessment_matching_update({}, {"allow_many_to_one": True})
+
+
 def test_consensus_channel_vote():
     e1 = doc("E1", [("Electrode-pops-artifact", 1, 2, ("C1", "C2"))])
     e2 = doc("E2", [("Electrode-pops-artifact", 1, 2, ("C2",))])

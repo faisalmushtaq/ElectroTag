@@ -417,6 +417,11 @@ async function script(call) {
   await call('admin set_update', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, practice_pass: { event_f1: 0.75, label_accuracy: 0.75 } }));
   await call('admin set_update (quiz only for T01)', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, allowed_annotators: ['t01'] }));
   await call('admin set_update (nothing)', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id }));
+  // when a trainee's mark matches the reference's, in practice and assessment, and two it refuses
+  await call('admin set_update (matching)', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, assessment_matching: { match_criterion: 'iou_and_tolerance', iou_threshold: 0.5, onset_tolerance_s: 0.25 } }));
+  await call('admin set_update (matching, overlap of 1)', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, assessment_matching: { iou_threshold: 1 } }));
+  await call('admin set_update (matching, unknown setting)', (s) => s.b.admin('set_update', { set_id: QUIZ.set_id, assessment_matching: { many: true } }));
+  await call('admin sets_list (after matching)', (s) => s.b.admin('sets_list', {}));
   await call('admin set_guided_notes', (s) => s.b.admin('set_guided_notes', { set_id: QUIZ.set_id, recording_id: r1 }));
   await call('admin users_list (after)', (s) => s.b.admin('users_list', {}));
   await call('admin audit (after)', (s) => s.b.admin('audit', {}));
