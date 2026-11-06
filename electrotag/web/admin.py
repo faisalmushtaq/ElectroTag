@@ -106,6 +106,11 @@ from electrotag.web.withdrawals import WRITES as WITHDRAWAL_WRITES  # noqa: E402
 
 READ_ONLY += WITHDRAWAL_READS
 OPERATIONS += WITHDRAWAL_READS + WITHDRAWAL_WRITES
+# The probability maps of several raters' marks (electrotag/web/probability.py), for administrators only.
+from electrotag.web.probability import READS as PROBABILITY_READS  # noqa: E402
+
+READ_ONLY += PROBABILITY_READS
+OPERATIONS += PROBABILITY_READS
 
 
 # ------------------------------------------------------------------ checking input
@@ -1815,6 +1820,19 @@ def _withdrawal_op(name: str) -> Any:
 
 for _name in WITHDRAWAL_READS + WITHDRAWAL_WRITES:
     setattr(Admin, f"op_{_name}", _withdrawal_op(_name))
+
+
+def _probability_op(name: str) -> Any:
+    def op(self: Admin, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return getattr(self.service.probability, f"op_{name}")(user, body)
+
+    op.__name__ = f"op_{name}"
+    op.__doc__ = f"``{name}``: :meth:`electrotag.web.probability.Probability.op_{name}`."
+    return op
+
+
+for _name in PROBABILITY_READS:
+    setattr(Admin, f"op_{_name}", _probability_op(_name))
 for _name in DATASET_READS + DATASET_WRITES:
     setattr(Admin, f"op_{_name}", _dataset_op(_name))
 for _name in TRACKING_READS:

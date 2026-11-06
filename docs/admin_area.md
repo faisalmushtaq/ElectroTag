@@ -856,6 +856,14 @@ are met; download it as HTML, and its data as JSON. The trainee list offers firs
 training programme is the set chosen. When the report cannot be made yet, the message says what is
 missing and where to look.
 
+**Probability maps** downloads, for every recording with at least the number of raters chosen (two or
+more), the weighted share of its raters who marked each sample as an artifact: one TSV a recording, with
+`probability.json` beside them recording the weights and the raters, for training and checking automatic
+artifact detection. Maps of chooses any artifact alone or each type as well, and Break each map down by channel as well
+adds a map for each channel. The weights are those last chosen in a recording's probability map (Everyone's marks,
+"Probability maps"), and the card says what they are. The answer names the recordings left out for having
+too few raters and those that come from only two.
+
 ## Results
 
 Each person's work lists each person with their work done, in progress and to do (and any that
@@ -1288,6 +1296,28 @@ marks as a crowd), on the training recordings for learning with the experts, as 
 on a study recording, nor a practice or assessment recording. The view is logged as
 `overlay_opened`, `overlay_lane`, `overlay_filter`, `overlay_disagreement`, `overlay_downloaded`
 and `overlay_closed`, with IDs and counts only.
+
+#### Probability maps
+
+Administrators, and nobody else, find a **Probability map** section in the side panel of Everyone's
+marks on a study recording. Show the probability map draws a lane above the others with the weighted
+share of the raters who marked each moment, from 0 at the foot to 1 at the top, with a faint line at
+one half; rest the pointer on it to read the value and how many raters marked that moment. What the map
+is of chooses any artifact or one type, and Break it down by channel shades the band under each channel
+by that channel's map in place of the crowd's share. The raters are listed with their weights. They are
+everyone's latest study work on the recording and, for a recording of a training reference set, the
+experts' own files kept with its reference; practice and assessment work, corrections and adjudicated
+versions are left out. A map needs two raters, and with only two a warning says that the sample is small.
+
+Weights holds how raters count. The confidence sliders give the weight of a mark rated 1 to 5 (20 % to
+100 % at first); marks without a confidence and unmarked time always count in full. Below them, tick a
+question of the sign-up questionnaire to weigh raters by their answers to it, as they stood when they
+saved the recording, with a slider for each answer and one for no answer; with several questions ticked,
+a rater's weights are multiplied. Back to equal weights undoes it all. The weights are kept in this
+browser and used by the downloads here and on the Analyses page. Download this recording (TSV) saves the
+map of the recording, and Download every recording (zip) the maps of every recording with two raters
+or more, with the types chosen under Types in the download. The reliability guide's "Probability
+maps" gives the calculation and how to read a map with MNE-Python, and the file formats guide the files.
 
 ## Adjudication
 

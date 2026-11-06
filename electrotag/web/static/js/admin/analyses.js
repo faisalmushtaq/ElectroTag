@@ -5,11 +5,12 @@
 // while it runs.
 
 import { h, clear } from '../ui/dom.js';
+import { local } from '../util.js';
 import {
   MATCH_CRITERIA, agreementSettingsFile, agreementSummaryRows, analysisProblems, defaultAnalysisConfig, fileParts, parseList, parseNumber, parseNumbers, setLabel,
 } from './model.js';
 import {
-  card, checkbox, checkList, dataTable, docsLink, downloadText, elapsedTimer, field, infoTable, messageArea, numberInput, progressLine, reportFrame, sectionHead, select,
+  card, checkbox, checkList, dataTable, docsLink, downloadBase64, downloadText, elapsedTimer, field, infoTable, messageArea, numberInput, progressLine, reportFrame, sectionHead, select,
   textInput,
 } from './ui.js';
 import { UNIT_CHOICES, VERSION_CHOICES, VERSION_WORDS, compareKeyResults, comparisonTsv, numberText, versionHint, versionSummaryRows } from './versions_model.js';
@@ -70,11 +71,12 @@ export class AnalysesSection {
     this.agreementHost = h('div.admin-stack');
     this.activityHost = h('div.admin-stack');
     this.competencyHost = h('div.admin-stack');
+    this.probabilityHost = h('div.admin-stack');
     // Results stay when the forms are made again (when the lists of people or recordings changed).
     this.results = { agreement: h('div.admin-stack'), activity: h('div.admin-stack'), competency: h('div.admin-stack') };
     this.el = h('section.admin-section', { 'data-section': 'analyses' },
       sectionHead('Analyses', 'The study computes these from the saved annotations and the interaction logs, with the same code as the command-line tools. Large studies take a while.'),
-      this.msg, this.agreementHost, this.activityHost, this.competencyHost);
+      this.msg, this.agreementHost, this.activityHost, this.competencyHost, this.probabilityHost);
   }
 
   async show(params = {}) {
@@ -93,10 +95,11 @@ export class AnalysesSection {
     const lists = JSON.stringify([this.users.map((u) => u.annotator_id), this.recordings.map((r) => r.recording_id), this.sets.map((x) => x.set_id)]);
     if (lists !== this.lists) {
       this.lists = lists;
-      for (const host of [this.agreementHost, this.activityHost, this.competencyHost]) clear(host);
+      for (const host of [this.agreementHost, this.activityHost, this.competencyHost, this.probabilityHost]) clear(host);
       this._agreementForm();
       this._activityForm();
       this._competencyForm();
+      this._probabilityForm();
     }
     // From a trainee's page in People ("Write T03's competency report"): their set and their name chosen.
     if (params && params.competency && this.competencyChoice) this.competencyChoice(params.competency, params.annotator);
@@ -327,5 +330,41 @@ export class AnalysesSection {
       this.sets.length ? h('div.row.wrap', {}, field('Reference set', set), field('Trainee', who)) : h('p.caption', {}, 'There are no reference sets yet.'),
       h('div.btn-row', {}, run), progress, msg), result);
   }
-}
 
+  /**
+   * The probability maps of every recording with two raters or more, as files for training a detector
+   * (docs/admin_area.md, "Probability maps"): with the weights last chosen in a recording's probability map,
+   * kept in this browser (equal weights until then).
+   */
+  _probabilityForm() {
+    const kinds = select([['any', 'Any artifact'], ['each', 'Any artifact and each type']], 'any');
+    const byChannel = checkbox('Break each map down by channel as well');
+    const least = numberInput({ value: 2, min: 2, step: 1 });
+    least.dataset.log = 'probability-min-raters';
+    const msg = messageArea();
+    const progress = progressLine();
+    const said = h('p.caption', {});
+    const describe = async () => {
+      const { checkedWeights } = await import('../expert/probability.js');
+      const w = checkedWeights(local.get('electrotag.probability.weights', null));
+      const qs = Object.keys(w.questions);
+      said.textContent = `Weights: confidence 1 to 5 at ${w.confidence.map((x) => `${Math.round(x * 100)}%`).join(', ')}; ${qs.length ? `raters weighed by their answers to ${qs.join(', ')}` : 'every rater at full weight'}. Change them in a recording's probability map (Recordings, Everyone's marks).`;
+      return w;
+    };
+    describe();
+    const run = h('button.btn.primary', { type: 'button', 'data-log': 'probability-run' }, 'Download the probability maps');
+    run.addEventListener('click', () => this._run('probability', run, progress, msg, async () => {
+      const weights = await describe();
+      const n = Number(least.value);
+      if (!Number.isInteger(n) || n < 2) throw new Error('A map needs at least 2 raters.');
+      const r = await this.area.backend.admin('probability_export', { weights, category: kinds.value, by_channel: byChannel.input.checked, min_raters: n });
+      downloadBase64(r.file_name, r.base64, 'application/zip');
+      msg.show('success', `${r.recordings} map${r.recordings === 1 ? '' : 's'} in ${r.file_name}${r.left_out.length ? `; ${r.left_out.length} recording${r.left_out.length === 1 ? ' has' : 's have'} fewer raters and ${r.left_out.length === 1 ? 'is' : 'are'} left out` : ''}.`,
+        r.low_sample.length ? h('p', {}, `${r.low_sample.length} map${r.low_sample.length === 1 ? ' comes' : 's come'} from only two raters, a small sample: probability.json marks ${r.low_sample.length === 1 ? 'it' : 'them'} low_sample.`) : null);
+    }));
+    this.probabilityHost.append(card('Probability maps',
+      h('p.caption', {}, 'For each recording, the weighted share of its raters who marked each sample as an artifact, as one TSV a recording with probability.json beside them: for training and checking automatic artifact detection with MNE-Python. Raters are everyone\'s latest study work and the experts\' own files kept with a training reference.'),
+      said, h('div.row.wrap', {}, field('Maps of', kinds), field('Fewest raters', least)), byChannel,
+      h('div.btn-row', {}, run), progress, msg));
+  }
+}

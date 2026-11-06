@@ -18,6 +18,7 @@ training component.
 - [4. Category disagreements](#4-category-disagreements)
 - [5. Confidence of the annotations](#5-confidence-of-the-annotations)
 - [Versions of the annotations](#versions-of-the-annotations)
+- [Probability maps](#probability-maps)
 - [Choosing settings](#choosing-settings)
 - [Extending the analysis](#extending-the-analysis)
 - [References](#references)
@@ -440,6 +441,87 @@ the recording as agreement and inflate the time-resolved measures.
 report opens with a paragraph saying which versions were analysed. In the admin
 area, "Compare with the original versions" runs the analysis of the originals
 as well and shows the key results of both side by side with their difference.
+
+## Probability maps
+
+The agreement measures above say how far annotators agree. A probability map
+keeps the disagreement instead, as a graded judgement of every moment of a
+recording: the weighted share of the raters who marked an artifact there. It is
+meant for training and checking automatic artifact detection, where a detector's
+own probability that a moment holds an artifact can be compared with the
+raters', sample by sample, rather than with one reference that hides how
+divided the raters were. Administrators draw it over a recording in the admin
+area and download it for every recording ([admin area](admin_area.md),
+"Probability maps"); annotators and experts never see it.
+
+At every sample t, each rater r either marked an artifact there
+(m_r(t) = 1) or left it unmarked (m_r(t) = 0), and the map is
+
+```text
+p(t) = sum_r w_r * c_r(t) * m_r(t) / sum_r w_r * c_r(t)
+```
+
+where c_r(t) is the weight of the rater's confidence at that moment and w_r
+the weight of the rater. The confidence of a mark rated 1 to 5 counts 20 %,
+40 %, 60 %, 80 % and 100 % by default, and the administrator can change each
+of these. A mark without a confidence counts in full, because annotators
+mostly use the scale when they are unsure, and so does time a rater left
+unmarked, which counts in full as their judgement that there is no artifact.
+A rater who is unsure of a mark therefore counts for less at that moment, in
+the denominator as well as the numerator, so an unsure mark among confident
+silence pulls the map up only a little. Where a rater's own marks overlap, the
+most confident of them counts. The rater's weight is 1 unless the
+administrator weighs raters by their answers to the sign-up questionnaire's
+single-choice questions (career stage, or years of EEG analysis, for example):
+each answer is then given a weight, the rater's weight is the product of the
+weights of their answers to the questions chosen, and a rater without an
+answer to one of them takes the weight set for no answer. Answers are taken as
+they stood when the rater saved the recording. Accuracy on known answers is
+not used as a weight, since experts whose annotations are in the dataset do not
+take the training. When every rater weighs nothing at a moment, the map has no
+value there.
+
+The raters of a recording are everyone's latest saved version of it as study
+work, and, for a recording of a reference set, each expert whose own
+annotations of it were kept with the reference (the expert's file of a
+single-expert reference, or the experts' files of a consensus or an
+adjudication), since those are independent ratings made for a training
+exercise. Practice and assessment work, corrected versions and adjudicated
+versions are left out, because they are not independent judgements of the
+recording. Someone who both saved the recording and gave an expert file counts
+once, with their saved work. A map needs at least two raters; a map from
+exactly two is flagged as a small sample, in the admin area and as
+`low_sample` in `probability.json`, since the share can then only be 0, 0.5
+or 1 apart from the effect of the weights.
+
+A map is of any artifact (every mark counts, whatever its type) or of one
+HED-SCORE type, and is either for the recording as a whole (a mark on any
+channel counts) or for each channel, where a mark counts for the channels it
+names and a mark on the whole montage counts for every channel. The map
+changes only where some rater's mark begins or ends, so it is exact and is
+written as runs of samples with one value each, `start_sample` to
+`end_sample` with the end not included, from the first sample of the file to
+the last; nothing is binned or smoothed. The columns are given in
+[file formats](file_formats.md), "Probability maps (`probability_maps.zip`)". With MNE-Python, sample 0
+of a map is the first sample of `raw.get_data()`, and
+`electrotag.reliability.probability.probability_array` turns a map into an
+array of one value a sample:
+
+```python
+import mne
+from electrotag.reliability.probability import probability_array
+
+raw = mne.io.read_raw("sub-01_task-rest_eeg.vhdr")
+p = probability_array("sub-01_task-rest_eeg_probability.tsv", "any", n_samples=raw.n_times)
+blink_fp1 = probability_array("sub-01_task-rest_eeg_probability.tsv", "Eye-blink-artifact",
+                              channel="Fp1", n_samples=raw.n_times)
+```
+
+`p[i]` is then the probability at the sample `raw.get_data()[:, i]`, and NaN
+where every rater weighs nothing. The browser draws the map with the same
+calculation (`js/expert/probability.js`), summing the raters in the order of
+their IDs as Python does, and the tests check that both give the same numbers
+exactly.
 
 ## Choosing settings
 

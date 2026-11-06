@@ -174,6 +174,11 @@ export class OverlayView {
     this._recount();
     if (Number.isFinite(target.at)) ws.viewer.setView({ startS: target.at - ws.viewer.view.durationS / 3 }, 'overlay');
     ws.onDestroy(() => this.destroy());
+    // the probability map, for administrators on a study recording (js/expert/probability_panel.js)
+    if (app && app.isAdmin && !this.data.anonymous && (target.mode || 'standard') === 'standard') {
+      import('./probability_panel.js').then(({ ProbabilityPanel }) => { if (!this.destroyed) this.prob = new ProbabilityPanel(this); })
+        .catch((exc) => console.error('The probability map could not be loaded', exc));
+    }
     logger.event('overlay_opened', { recording_id: this.data.recording_id, people: saved.length, lanes: this.laneKeys.length,
       anonymous: this.data.anonymous, load_ms: Math.round(target.loadMs || 0) });
   }
@@ -394,6 +399,7 @@ export class OverlayView {
     this.ws.viewer.setLayers(versions.map((v, i) => ({ id: `lane-${v.annotator_id}`, annotations: v.annotations, colour: LANE_COLOURS[i], dash: LANE_DASHES[i],
       prefix: `${shortName(v.person)}: ` })));
     this._drawLegend();
+    if (this.prob) this.prob.redraw(); // its lane goes back above the others
   }
 
   _drawLegend() {
@@ -460,6 +466,7 @@ export class OverlayView {
   _drawStrips() {
     if (this.lanes) this.lanes.draw();
     this._paintCrowdLane();
+    if (this.prob) this.prob.drawLane();
   }
 
   _drawDisagreement() {
@@ -495,6 +502,7 @@ export class OverlayView {
   // ---------------------------------------------------------------- drawing
   /** The crowd's band under each channel on screen (viewer.setCrowd). */
   paint(ctx, v) {
+    if (this.prob && this.prob.channelsShown && !v.overlay) { this.prob.paintChannels(ctx, v); return; }
     if (!this.bands || !this.bands.n || v.overlay) return;
     const s0 = v.view.startS * this.sf;
     const s1 = (v.view.startS + v.view.durationS) * this.sf;
@@ -647,6 +655,8 @@ export class OverlayView {
   }
 
   destroy() {
+    this.destroyed = true;
+    if (this.prob) this.prob.destroy();
     const over = this.ws.viewer && this.ws.viewer.over;
     if (over) {
       over.removeEventListener('pointermove', this._onMove);
