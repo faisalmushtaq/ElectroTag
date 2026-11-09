@@ -532,6 +532,15 @@ async function script(call) {
   await call('admin training_reopen (before an assessment)', (s) => s.b.admin('training_reopen', { annotator_id: 'T01' }));
   await call('admin training_reopen (not a trainee)', (s) => s.b.admin('training_reopen', { annotator_id: 'A01' }));
   await call('admin training_assessment_set (the same set)', (s) => s.b.admin('training_assessment_set', { annotator_id: 'T01', set_id: QUIZ.set_id }));
+  await call('admin artifact_texts_list', (s) => s.b.admin('artifact_texts_list', {}));
+  await call('admin artifact_text_set', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { description: ' A blink, in our words. ', shape: 'A quick dip.', apart: [['EMG-artifact', 'is fast.']] } }));
+  await call('admin artifact_text_set (the same again)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { shape: 'A quick dip.' } }));
+  await call('admin artifact_text_set (unknown type)', (s) => s.b.admin('artifact_text_set', { label: 'Nothing', fields: { shape: 'x' } }));
+  await call('admin artifact_text_set (empty description)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { description: ' ' } }));
+  await call('admin artifact_text_set (not a text)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { colour: 'red' } }));
+  await call('admin artifact_text_set (a look-alike that is no type)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { apart: [['Nothing', 'x']] } }));
+  await call('me, with the study\'s own words', (s) => s.b.me());
+  await call('admin artifact_text_set (back to the original)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { description: null, shape: null, apart: null } }));
   await call('admin snippets_list', (s) => s.b.admin('snippets_list', { set_id: QUIZ.set_id }));
   const snippet = { set_id: QUIZ.set_id, recording_id: RIDS[1], start_s: 14, end_s: 17, label: 'Chewing-artifact', explanation: 'Rhythmic bursts on T7 and T8', channels: ['T7', 'T8'], snippet_id: 'chew' };
   await call('admin snippet_add', (s) => s.b.admin('snippet_add', snippet));

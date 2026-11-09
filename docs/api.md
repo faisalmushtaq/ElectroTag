@@ -184,7 +184,8 @@ password.
   },
   "catalogue": {"labels": [{"label": "Eye-blink-artifact", "value": 103, "short_code": "BLINK",
                              "colour": "#0067A5", "section": "Eye", "is_group": false,
-                             "parent": "Eye-artifact" | null, "description": "…"}]},
+                             "parent": "Eye-artifact" | null, "description": "…",
+                             "guide"?: {"where"?, "frequency"?, "shape"?, "duration"?, "apart"?}}]},  // the study's own words (artifact_text_set)
   "programme": null | {"set_id": "example", "name": "…", "complete": false},  // in a training programme; complete when every stage is done
   "training_gate": {"open": true, "reason": "" | "training_required", "message": "…",
                     "result": "" | "not_met" | "not_determined"},  // see "Training stages"
@@ -813,6 +814,8 @@ These are the administrative operations of the training path (`POST /admin/{op}`
 
 | op | body | answer |
 | --- | --- | --- |
+| `artifact_texts_list` | `{}` | `{"texts": {label: {"fields": {"description"?, "where"?, "frequency"?, "shape"?, "duration"?, "apart"?: [[label, text]]}, "changed_at", "changed_by"}}, "original": {label: description}}`: the study's own words for its artifact types (only the fields changed), and the catalogue's descriptions. Experts may use it too. Read only. |
+| `artifact_text_set` | `{"label", "fields": {name: text \| null}}` | `{"label", "text": {"fields", "changed_at", "changed_by"} \| null}`: puts fields of a type's description and guide entry in the study's own words (`description`, `where`, `frequency`, `shape`, `duration`, each at most 2000 characters; `apart`, at most 12 `[label, text]`), or back to the original with null. `GET /me`'s catalogue then carries the description in place of the original and the guide's fields under the label's `guide`. The same again changes nothing. 400 `bad_request` for an unknown type, field or look-alike, an empty description or text too long. Experts may use it too. Audited, with the words saved. |
 | `snippets_list` | `{"set_id"}` | `{"set_id", "snippets": [Snippet] (the study team's), "guided": [Snippet] (made from the guided references), "recordings": [{"recording_id", "file_name", "use", "duration_s", "ch_names"}]}`, the recordings a snippet may come from (the set's own, less the practice and assessment recordings of any set) |
 | `snippet_add` | `{"set_id", "recording_id", "start_s", "end_s", "label", "explanation"?, "context_s"?: 2.0, "channels"?: [..], "snippet_id"?, "source"?}` | `{"snippet"}`. The same `snippet_id` again replaces it, so a request that reaches the study twice keeps one; without one the next free `s01`, `s02`, … is used. At most 60 s long, with up to 10 s of context. 422 `reveals_answers` for a practice or assessment recording of the set or of another set that holds the same file; 404 `unknown_recording`; 400 `bad_request` for times outside the recording, a type that is not the study's or a channel it does not have. Audited (`snippet_add`, the explanation counted by its length). |
 | `snippet_remove` | `{"set_id", "snippet_id"}` | `{}`; one that is gone already changes nothing. 409 `guided_snippet` for one made from a guided reference. Audited. |

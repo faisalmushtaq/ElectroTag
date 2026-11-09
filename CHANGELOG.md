@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Experts and administrators can put any artifact type's description, and the words of its entry in the artifact
+reference guide (where, frequency, shape, duration and how to tell it from its look-alikes), in the study's own
+words, under Training (and Training sets in the expert area), or take them back to the original; annotators and
+trainees see them on the type buttons, in the type picker, in training and in the guide. Each change is audited
+(docs/admin_area.md, "Artifact type descriptions").
+
 Assignments, Hand-outs and Tasks are now the tabs of one page in the admin area, Giving out work, with a fourth
 tab, Everything given out, that lists every recording each person has and how it reached them: assigned by itself,
 by a hand-out, by a task or in the training programme. Recordings assigned one by one, which the lists of

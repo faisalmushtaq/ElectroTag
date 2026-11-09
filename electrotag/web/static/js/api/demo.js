@@ -5,9 +5,8 @@
 // programme, ADMIN runs the study in the admin area; password "demo"), three built-in example
 // recordings with simulated artifacts (synthetic.js), drafts and results kept in this browser (and
 // downloadable), the guided training rules (training/rules.js) and the practice scoring
-// (training/scoring.js). Its answers follow docs/api.md as the server gives them, which
-// web_tests/unit/api_contract_parity.test.mjs checks call by call against the real service; the
-// few places where they differ for good reason are listed there. The admin area's operations are in
+// (training/scoring.js). Its answers follow docs/api.md, which api_contract_parity.test.mjs checks
+// call by call against the real service, listing the few differences. The admin area's operations are in
 // demo_admin.js, problem reports and reviews in demo_feedback.js.
 
 import {
@@ -40,7 +39,8 @@ const STATE_KEY = 'electrotag.demo.v2';
 const QUESTIONNAIRE_GATED = ['match', 'putDraft', 'submit', 'training', 'guided', 'guidedCheck', 'guidedContinue', 'guidedShowMe',
   'trainingStage', 'trainingSnippets', 'quiz', 'expert'];
 const QUESTIONNAIRE_ADMIN_OPS = ['questionnaire_get', 'questionnaire_summary', 'contacts_download', 'users_list'];
-const TRAINING_ADMIN_OPS = ['snippets_list', 'snippet_add', 'snippet_remove', 'training_gate_get', 'training_reopen', 'training_assessment_set'];
+const TRAINING_ADMIN_OPS = ['snippets_list', 'snippet_add', 'snippet_remove', 'training_gate_get', 'training_reopen', 'training_assessment_set',
+  'artifact_texts_list', 'artifact_text_set'];
 const TOKEN_KEY = 'electrotag.demo.token';
 export const DEMO_PASSWORD = 'demo';
 const FIND_WINDOW_S = 10;
@@ -301,7 +301,7 @@ export class DemoBackend {
     return {
       annotator_id: aid, display_name: acc.display_name, role: primaryRole(rolesOf(acc)), roles: rolesOf(acc),
       study: this._admin.studyBlock(),
-      catalogue: CATALOGUE,
+      catalogue: (await this._trainingPart()).catalogue(),
       programme: this._inProgramme(aid) ? { set_id: TRAINING_SET.set_id, name: this._exampleSet().name, complete: !this._nextStep(aid).stage } : null,
       training_gate: this._gate(),
       questionnaire: (await this._questionnairePart()).status(aid),

@@ -517,7 +517,9 @@ its typical duration) and how to tell it from the types it is most often confuse
 the specific types have a small live example beside them: ten seconds of simulated EEG, drawn
 without filters by the same viewer as the training snippets, with the artifact outlined where it was
 placed. The simulation is the sandbox's own, so the examples work offline and without a study; your
-study's real examples are in Meet the artifacts on your training path. The group terms, and the
+study's real examples are in Meet the artifacts on your training path. Your study team may have put
+some types' descriptions and guide entries in the study's own words; those are the words shown, here
+and on the type buttons. The group terms, and the
 types the sandbox does not simulate (rocking or patting and sucking in infants, salt bridges,
 induction, artificial ventilation and dialysis), are described without an example.
 

@@ -300,6 +300,9 @@ class StudyService:
         from electrotag.web.questionnaire import Questionnaire
 
         self.questionnaire = Questionnaire(self)
+        from electrotag.web.artifact_texts import ArtifactTexts
+
+        self.artifact_texts = ArtifactTexts(self)  # the study's own words for its artifact types
 
     # ----------------------------------------------------------------- basics
     @property
@@ -363,11 +366,11 @@ class StudyService:
                 "idle_after_s": s.logging_idle_after_s}
 
     def catalogue_info(self) -> dict[str, Any]:
-        return {"labels": [
+        return {"labels": self.artifact_texts.apply([
             {"label": lab.label, "value": lab.value, "short_code": lab.short_code, "colour": lab.colour,
              "section": lab.section, "is_group": lab.is_group, "parent": lab.parent, "description": lab.description}
             for lab in self.store.catalogue.labels
-        ]}
+        ])}
 
     # --------------------------------------------------------------------- me
     def me(self, user: User, body: dict[str, Any] | None = None) -> dict[str, Any]:
