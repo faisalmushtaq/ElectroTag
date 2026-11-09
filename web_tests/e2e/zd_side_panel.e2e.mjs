@@ -41,7 +41,8 @@ export const tests = [
       assert.ok(Math.abs(usual.w - 360) <= 1, `the usual width on a laptop (${usual.w})`);
       assert.equal(await page.locator('.ws-side.wide').count(), 0);
       const grip = page.locator('.ws-side-grip[role="separator"]');
-      assert.equal(await grip.getAttribute('aria-valuenow'), String(Math.round(usual.w)));
+      // (the panel's width is said a frame after a change of size: side_panel.js)
+      await page.waitForFunction((w) => document.querySelector('.ws-side-grip').getAttribute('aria-valuenow') === w, String(Math.round(usual.w)));
 
       // dragged 320 pixels to the left: the panel is wide, the map on the left and the tabs on the right, as tall as the panel
       const g = await grip.boundingBox();
@@ -96,7 +97,7 @@ export const tests = [
       // a double click goes back to the usual width
       await page.locator('.ws-side-grip').dblclick();
       await page.waitForFunction((w) => Math.abs(document.querySelector('.ws-side').getBoundingClientRect().width - w) <= 1, usual.w);
-      assert.equal(await page.locator('.ws-side.wide').count(), 0);
+      await page.waitForFunction(() => !document.querySelector('.ws-side.wide'));
     },
   },
   {

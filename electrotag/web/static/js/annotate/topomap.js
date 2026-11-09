@@ -71,7 +71,15 @@ export class TopoMap {
     this._build();
     // redrawn to the panel's width when the layout changes (a tablet turned, the window resized)
     this._width = 0;
-    this._resize = new ResizeObserver(() => { const w = this.body.clientWidth; if (w && w !== this._width) { this._width = w; this._draw(); } });
+    // drawn in the next frame, not inside the observer: a drawing that changes the map's height there makes the
+    // browser report a loop of resizes (WebKit says so as a page error)
+    this._resize = new ResizeObserver(() => {
+      cancelAnimationFrame(this._resizeFrame);
+      this._resizeFrame = requestAnimationFrame(() => {
+        const w = this.body.clientWidth;
+        if (!this._destroyed && w && w !== this._width) { this._width = w; this._draw(); }
+      });
+    });
     this._resize.observe(this.body);
     this._draw(); // the head and the scale at once; the values follow
     this.update();
@@ -80,6 +88,7 @@ export class TopoMap {
   destroy() {
     this._destroyed = true;
     clearTimeout(this._later);
+    cancelAnimationFrame(this._resizeFrame);
     if (this._resize) this._resize.disconnect();
     this.el.remove();
   }
