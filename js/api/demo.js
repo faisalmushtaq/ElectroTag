@@ -5,9 +5,8 @@
 // programme, ADMIN runs the study in the admin area; password "demo"), three built-in example
 // recordings with simulated artifacts (synthetic.js), drafts and results kept in this browser (and
 // downloadable), the guided training rules (training/rules.js) and the practice scoring
-// (training/scoring.js). Its answers follow docs/api.md as the server gives them, which
-// web_tests/unit/api_contract_parity.test.mjs checks call by call against the real service; the
-// few places where they differ for good reason are listed there. The admin area's operations are in
+// (training/scoring.js). Its answers follow docs/api.md, which api_contract_parity.test.mjs checks
+// call by call against the real service, listing the few differences. The admin area's operations are in
 // demo_admin.js, problem reports and reviews in demo_feedback.js.
 
 import {
@@ -304,6 +303,7 @@ export class DemoBackend {
       catalogue: CATALOGUE,
       programme: this._inProgramme(aid) ? { set_id: TRAINING_SET.set_id, name: this._exampleSet().name, complete: !this._nextStep(aid).stage } : null,
       training_gate: this._gate(),
+      tour: (await this._trainingPart()).tourOf(aid),
       questionnaire: (await this._questionnairePart()).status(aid),
       quizzes: this._quizAllowed(aid) ? [{ set_id: QUIZ.set_id, name: this._exampleSet().name, n_items: QUIZ.items.length,
         n_answered: Object.keys(quiz.answers).length, finished: Boolean(quiz.finished), feedback: QUIZ.feedback }] : [],

@@ -144,9 +144,10 @@ export function homeView(app) {
     h('main.page', {},
       h('h1', {}, `Hello${app.me && app.me.display_name ? `, ${app.me.display_name}` : ''}`),
       guideLine(),
+      tourLine(app),
       questionnaireLine(app),
       h('div.home-grid', {},
-        h('div.col', {}, nextCard, dueHost(app), outcomesHost(app), expertCard(app), !training && items.length ? progressCard(p) : null, programme && !training && !waiting ? trainingDoneCard(app) : null,
+        h('div.col', {}, tourCard(app), nextCard, dueHost(app), outcomesHost(app), expertCard(app), !training && items.length ? progressCard(p) : null, programme && !training && !waiting ? trainingDoneCard(app) : null,
           list, quizCard(app)),
         sideColumn([...games(app), demo]))));
 }
@@ -219,6 +220,45 @@ export function questionnaireLine(app) {
 }
 
 /** Where the annotators' guide is read (docs/using.md, in a new tab). */
+/**
+ * The platform tour (training/tour.js), offered once to everyone outside a training programme before their first
+ * recording (GET /me tour: todo), with Skip for those who know the annotation view already; the training path
+ * offers it to trainees as its first stage.
+ */
+function tourCard(app) {
+  if (!app.me || app.me.tour !== 'todo') return null;
+  const msg = h('p.caption.error', { role: 'alert', hidden: true });
+  const skip = h('button.btn.quiet', { type: 'button', 'data-log': 'tour-skip', onclick: async () => {
+    skip.disabled = true;
+    try {
+      const r = await app.backend.trainingStage({ stage: 'tour', action: 'skip' });
+      app.me.tour = (r && r.tour) || 'skipped';
+      app.showHome();
+    } catch (exc) {
+      skip.disabled = false;
+      msg.hidden = false;
+      msg.textContent = `The tour could not be skipped just now: ${exc.message}`;
+    }
+  } }, 'Skip the tour');
+  return h('section.card.tour-offer', { 'data-part': 'tour-offer' },
+    h('h2', {}, 'Before your first recording: a short tour'),
+    h('p', {}, 'Five minutes on a practice recording: moving through the EEG, marking an artifact, choosing channels, '
+      + 'undoing a change, rating your confidence, how a selected annotation takes your changes, and saving. Nothing you mark is kept.'),
+    h('div.btn-row', {}, h('button.btn.primary', { type: 'button', 'data-log': 'tour-take', onclick: () => takeTour(app) }, 'Take the tour'), skip),
+    h('p.caption', {}, 'Skip it if you know the annotation view already. You can take it later from this page.'), msg);
+}
+
+/** After the tour was done or skipped: a way to take it (again). */
+function tourLine(app) {
+  if (!app.me || !['done', 'skipped'].includes(app.me.tour)) return null;
+  return h('p.caption.tour-line', {}, h('button.link', { type: 'button', 'data-log': 'tour-again', onclick: () => takeTour(app) },
+    app.me.tour === 'done' ? 'Take the tour of the annotation view again' : 'Take the tour of the annotation view'), '.');
+}
+
+function takeTour(app) {
+  app._withParts(['tour'], 'annotate', ({ startTour }) => startTour(app));
+}
+
 export function guideLine() {
   return h('p.caption.guide-link', {}, 'How each step works, from opening a recording to saving it, is in the ',
     h('a', { href: docsUrl('using.md'), target: '_blank', rel: 'noopener', 'data-log': 'guide' }, 'annotators\' guide'), ' (it opens in a new tab).');

@@ -129,8 +129,11 @@ Confidence, Add a note…, Apply to whole montage (for a channel-specific annota
 <li><kbd>N</kbd> and <kbd>P</kbd> select the next and previous annotation and bring it into view;
 with nothing selected, <kbd>N</kbd> starts from the first annotation on the screen. After the
 last, they come round to the first.</li>
-<li><b>Drag an edge</b> to resize; <b>Shift+drag</b> the middle to move it. The line at the bottom
-gives the new times. For a precise start or end, select the annotation and press
+<li>A selection lasts while you scroll: a type key, <kbd>Delete</kbd> or a rating still changes the selected
+annotation, and brings it back into view first so that you see the change. Press <kbd>Esc</kbd> (or click
+empty EEG) before you move on if your next key is meant for a new mark.</li>
+<li><b>Drag an edge</b> to resize; <b>Shift+drag</b> the middle to move it (on empty EEG a Shift+drag draws a new mark, as a plain
+drag does). The line at the bottom gives the new times. For a precise start or end, select the annotation and press
 <kbd>${IS_MAC ? 'Option' : 'Alt'}</kbd>+${arrow('left')} / ${arrow('right')} to move its start by 10 ms
 (at least one sample), and <kbd>${IS_MAC ? 'Option' : 'Alt'}</kbd>+<kbd>Shift</kbd>+${arrow('left')} /
 ${arrow('right')} to move its end.</li>
