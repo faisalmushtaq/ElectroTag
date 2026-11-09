@@ -19,6 +19,7 @@ import {
 } from './ui.js';
 import { DEFAULT_DATASET_ID, collisionsOf, datasetBody, prefixed } from './datasets_model.js';
 import { findPositions, positionsText, withElectrodePositions } from './positions.js';
+import { folderLine, recordingsFolder } from '../views/folder.js';
 
 /** The module that reads recordings for the register (js/eeg/register.js); tests may replace it. */
 export async function loadRegisterModule() {
@@ -349,6 +350,24 @@ export class RecordingsSection {
       onchange: () => { const f = [...filesInput.files]; filesInput.value = ''; if (f.length) this.read(f); } });
     this.folderBtn = h('button.btn.primary', { type: 'button', hidden: !CAN_CHOOSE_FOLDER, onclick: () => folderInput.click() }, 'Choose a folder…');
     this.filesBtn = h(`button.btn${CAN_CHOOSE_FOLDER ? '' : '.primary'}`, { type: 'button', onclick: () => filesInput.click() }, 'Choose files…');
+    // the administrator's recordings folder (js/views/folder.js), when they have one: read as if chosen
+    this.myFolderBtn = h('button.btn', { type: 'button', hidden: true, 'data-log': 'register-my-folder', onclick: async () => {
+      const f = recordingsFolder(this.area.app);
+      const files = f ? await f.allFiles().catch(() => null) : null;
+      if (!files) { this.addMsg.show('error', 'Your recordings folder could not be read. Choose the folder instead.'); return; }
+      if (!files.length) { this.addMsg.show('error', 'There is no EEG recording in your recordings folder.'); return; }
+      this.read(files);
+    } }, 'Use my recordings folder');
+    const mine = recordingsFolder(this.area.app);
+    const showMine = () => {
+      if (!mine || !mine.available) return;
+      mine.state().then((st) => {
+        this.myFolderBtn.hidden = !st;
+        if (st) this.myFolderBtn.textContent = `Use my recordings folder (${st.name})`;
+      }).catch(() => {});
+    };
+    showMine();
+    this.folderLine = folderLine(this.area.app, { compact: true, onChange: showMine });
     this.progress = progressLine();
     this.review = h('div.admin-review');
     this.addCard = card('Add recordings from this computer',
@@ -359,13 +378,13 @@ export class RecordingsSection {
         this.datasetField),
       this.newDatasetHost,
       this.replace,
-      h('div.btn-row', {}, this.folderBtn, this.filesBtn), folderInput, filesInput,
+      h('div.btn-row', {}, this.folderBtn, this.myFolderBtn, this.filesBtn), folderInput, filesInput, this.folderLine,
       this.progress, this.addMsg, this.review);
   }
 
   _setJob(job) {
     this.job = job;
-    for (const b of [this.folderBtn, this.filesBtn]) b.disabled = Boolean(job);
+    for (const b of [this.folderBtn, this.myFolderBtn, this.filesBtn]) b.disabled = Boolean(job);
     this.addScope.disabled = job === 'registering';
     this.addDataset.disabled = job === 'registering';
     // when nothing runs, Add counts what it would add again (and stays off with nothing to add)
