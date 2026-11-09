@@ -480,9 +480,26 @@ and the second row reads "View only" until you press it again. The second choose
 types after "Draw as", then Whole montage or Selected channels with Channels… and Clear channel
 selection, Overlay, and the scales: Time, the seconds on the screen, and Amplitude, the height of a
 row of EEG, each with − and + beside it. Each type button shows its number and a short name (1
-Blink, 2 HEM, 3 EMG and so on); when the window is too narrow for one line, the toolbar continues on
-a second. On the right, above the tabs, the topographic map (below) shows how the channels' values
-spread over the head. The Annotations tab
+Blink, 2 HEM, 3 EMG and so on). On a wide screen the toolbar keeps to one line: below 1,700 pixels
+across, the scales leave out their captions (their tips still name them), and with Whole montage
+chosen the words "all channels" are left out, since the pressed button says so. When the window is
+too narrow even then, as on most laptops, the toolbar continues on a second line. On the right, above
+the tabs, the topographic map (below) shows how the channels' values spread over the head.
+
+The side panel can be made wider or hidden. Its edge, the line between the EEG and the panel, is
+dragged to the left to widen the panel or to the right to narrow it; with the keyboard, Tab to the
+edge and use the left and right arrow keys (Home makes it as narrow as it goes, End as wide), and a
+double click on the edge puts it back to its usual width. The EEG always keeps at least 480 pixels.
+Once the panel is 600 pixels wide or more, the topographic map and any coaching or review panel move
+to its left, and the tabs to its right, where they take the panel's whole height, so that more of the
+Annotations list is seen at once. The small arrow at the top of the edge hides the panel and gives
+the EEG the whole width of the window; pressed again, it brings the panel back, as Help (?) and the
+artifact reference guide also do, and so do the coach's instructions and a review pass, which are
+read in the panel. ElectroTag remembers the width and whether the panel is hidden in this browser,
+for each person. On an iPad held upright, and in a narrow window, the panel sits below the EEG and
+has no edge to drag.
+
+The Annotations tab
 lists everything you have marked, the Recording tab shows the time you have worked, how much of the
 recording you have viewed, the viewing options, your comfort choices and details of the recording,
 the Guide tab holds the artifact reference guide (below), and the Help tab lists every key. The line at the bottom reminds you of the main keys and shows what
