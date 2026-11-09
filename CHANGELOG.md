@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Assignments, Hand-outs and Tasks are now the tabs of one page in the admin area, Giving out work, with a fourth
+tab, Everything given out, that lists every recording each person has and how it reached them: assigned by itself,
+by a hand-out, by a task or in the training programme. Recordings assigned one by one, which the lists of
+hand-outs and tasks leave out, are found there with the rest. The admin interface's `assignments_list` gives each
+item's `source`, `task_id` and `handout_id` for it (docs/admin_area.md, "Giving out work").
+
 Where more than two marks overlap in time, their labels above the EEG no longer cover one another: they are cut
 to their types' numbers (1 to 9, 0 for Uncertain) and set side by side, each still selecting its mark, with its type
 named in full under the pointer (docs/using.md, "The annotation view").

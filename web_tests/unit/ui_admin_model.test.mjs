@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import * as m from '../../electrotag/web/static/js/admin/model.js';
+import { menuKey } from '../../electrotag/web/static/js/admin/work.js';
 
 test('the sections have plain hashes', () => {
   assert.equal(m.isAdminRoute('admin'), true);
@@ -21,7 +22,15 @@ test('the sections have plain hashes', () => {
   assert.deepEqual(m.sectionsOf('data').map((s) => s.key), ['datasets', 'recordings', 'problems']);
   const people = m.sectionsOf('people').map((s) => s.key);
   assert.ok(people.indexOf('groups') === people.indexOf('annotators') + 1, people.join(' '));
-  assert.ok(people.indexOf('handouts') > people.indexOf('assignments') && people.indexOf('handouts') < people.indexOf('tasks'), people.join(' '));
+  // Assignments, Hand-outs and Tasks are the tabs of Giving out work, reached through its entry in the menu
+  assert.deepEqual(people, ['annotators', 'groups', 'work', 'training', 'questionnaire']);
+  for (const k of ['assignments', 'handouts', 'tasks']) {
+    assert.equal(menuKey(k), 'work');
+    assert.equal(m.groupOf(k), 'people');
+    assert.equal(m.sectionForRoute(m.routeForSection(k)), k, 'its own address still opens it');
+  }
+  assert.equal(menuKey('work'), 'work');
+  assert.equal(menuKey('progress'), 'progress');
 });
 
 test('numbers and identifiers are checked in plain words', () => {

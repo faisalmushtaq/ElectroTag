@@ -226,6 +226,13 @@ table.admin-info th { width: 1%; }
 .set-item[aria-current="true"] { border-left-color: var(--ink); background: var(--band); }
 .set-name { font-weight: 600; }
 .admin-tabs { padding: 0; margin-bottom: 0; flex-wrap: wrap; }
+/* Giving out work (js/admin/work.js): its tabs are links, one page each, under the page's heading. */
+.work-tabs { margin-top: 16px; }
+.work-tabs a.tab { text-decoration: none; }
+.work-tabs a.tab[aria-current="page"] { color: var(--ink); border-bottom-color: var(--ink); }
+.work-ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px 24px; }
+.work-way h3 { margin: 0 0 4px; font: var(--t-16); font-weight: 600; }
+.work-way p { margin: 0; color: var(--text-secondary); font: var(--t-14); }
 
 /* ------------------------------------------------------------ actions on many */
 /* Tables whose rows can be chosen: a column of checkboxes, the rows chosen in the band colour,

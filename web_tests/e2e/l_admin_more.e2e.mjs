@@ -11,7 +11,12 @@ import { answerQuestionnaire, signIn, waitForRoute } from './helpers.mjs';
 const PASSWORD = 'electrotag';
 
 async function goSection(page, title, route) {
-  await page.locator('.admin-nav a', { hasText: title }).click();
+  if (['Assignments', 'Hand-outs', 'Tasks'].includes(title)) {
+    // the tabs of Giving out work (js/admin/work.js)
+    await page.locator('.admin-nav a', { hasText: 'Giving out work' }).click();
+    await waitForRoute(page, 'admin-work');
+    await page.locator('.work-tabs a', { hasText: title }).click();
+  } else await page.locator('.admin-nav a', { hasText: title }).click();
   await waitForRoute(page, route);
   await page.waitForFunction((r) => document.querySelector(`.admin-section[data-section="${r}"]`), route.replace(/^admin-?/, '') || 'overview');
 }
@@ -68,7 +73,7 @@ export const tests = [
       await page.focus('.admin-group-toggle[data-group="people"]');
       await page.keyboard.press('Enter');
       assert.equal(await page.getAttribute('.admin-group-toggle[data-group="people"]', 'aria-expanded'), 'false');
-      assert.equal(await page.isVisible('.admin-nav a[data-section="assignments"]'), false);
+      assert.equal(await page.isVisible('.admin-nav a[data-section="work"]'), false);
       await page.reload();
       await page.waitForSelector('.admin-group-toggle[data-group="people"]');
       assert.equal(await page.getAttribute('.admin-group-toggle[data-group="people"]', 'aria-expanded'), 'false');
@@ -80,9 +85,9 @@ export const tests = [
       await page.waitForSelector('.admin-section[data-section="annotators"] h2.person-title');
       assert.match(await page.innerText('h2.person-title'), /A01/);
       assert.equal(await page.isVisible('.admin-nav a[data-section="annotators"]'), true);
-      assert.equal(await page.isVisible('.admin-nav a[data-section="assignments"]'), false);
+      assert.equal(await page.isVisible('.admin-nav a[data-section="work"]'), false);
       await page.click('.admin-group-toggle[data-group="people"]');
-      assert.equal(await page.isVisible('.admin-nav a[data-section="assignments"]'), true);
+      assert.equal(await page.isVisible('.admin-nav a[data-section="work"]'), true);
       await page.goBack();
       await waitForRoute(page, 'admin');
 

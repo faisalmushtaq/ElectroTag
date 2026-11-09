@@ -429,6 +429,26 @@ def test_a_k_hand_out_is_a_tasks_share_out(app: Any, admin: Api) -> None:
     assert out["removed"] == 6 and admin.admin_ok("tasks_list")["tasks"] == []
 
 
+def test_every_assignment_says_how_it_was_given(app: Any, admin: Api) -> None:
+    """assignments_list's source, task_id and handout_id: what Giving out work's list of everything shows."""
+    extra = copies(app, 4)
+    admin.admin_ok("assign", {"annotator_ids": ["A03"], "recording_ids": [extra[0]]})
+    c = admin.admin_ok("collection_create", {"request_id": rq(3), "name": "Okapi",
+                                              "recording_ids": extra[1:3]})["collection"]
+    h_all = admin.admin_ok("handout_create", {"request_id": rq(4), "people": ["A03"], "mode": "all",
+                                              "target": {"kind": "collection", "id": c["collection_id"]}})["handout"]
+    c2 = admin.admin_ok("collection_create", {"request_id": rq(5), "name": "Quokka",
+                                               "recording_ids": [extra[3]]})["collection"]
+    h_k = admin.admin_ok("handout_create", {"request_id": rq(6), "people": ["A03", "A04"], "mode": "k", "k": 2,
+                                            "target": {"kind": "collection", "id": c2["collection_id"]}})["handout"]
+    task = next(t for t in admin.admin_ok("tasks_list")["tasks"] if t["recording_id"] == extra[3])
+    items = {i["recording_id"]: i for i in admin.admin_ok("assignments_list", {"annotator_id": "A03"})["items"]}
+    by = {r: (items[r]["source"], items[r]["task_id"], items[r]["handout_id"]) for r in extra}
+    assert by == {extra[0]: ("assignment", None, None), extra[1]: ("assignment", None, h_all["handout_id"]),
+                  extra[2]: ("assignment", None, h_all["handout_id"]),
+                  extra[3]: ("assignment", task["task_id"], h_k["handout_id"])}
+
+
 # ------------------------------------------------------------------ following groups
 def test_people_who_join_a_group_get_what_it_follows(app: Any, admin: Api) -> None:
     extra = copies(app, 2, dataset_id="ds")
