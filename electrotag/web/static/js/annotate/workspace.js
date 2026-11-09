@@ -43,6 +43,7 @@ import { timeScaleChoices, timeScaleText, nudgeSamples } from '../viewer/scales.
 import { mapLayout, projectPositions } from '../viewer/head_map.js';
 import { topoPositions } from '../viewer/topo.js';
 import { mountTopomap } from './topomap.js';
+import { mountSideEdge } from './side_panel.js';
 import { readElectrodes, sidecarsOf } from '../eeg/electrodes.js';
 import { centredStart, clampTime, parseTimeText } from './goto.js';
 import { forgetOpen, noteOpen } from './reopen.js';
@@ -171,6 +172,9 @@ export class Workspace {
       this.main = h('div.ws-main', {}, this.eegHost = h('div.ws-eeg'), this.side = h('aside.ws-side', { 'aria-label': 'Annotations and help' })),
       this._statusBar());
     this._sidePanel();
+    // the panel's edge: dragged to widen it, with a button that hides it (js/annotate/side_panel.js)
+    this.sideEdge = mountSideEdge(this);
+    this.onDestroy(() => this.sideEdge.destroy());
     if (this.timed) this.main.append(this._pausePanel());
     const display = study.display || {};
     const view = s.view || { duration_s: display.duration_s || 10, n_channels: display.n_channels || 32 };
@@ -481,10 +485,14 @@ export class Workspace {
     if (key === 'guide' && !this.guideView && !this._guideLoad) void this.showGuide();
   }
 
-  showHelp() { this.showTab('help'); this.tabPanels.help.scrollTop = 0; }
+  showHelp() { this._showSide(); this.showTab('help'); this.tabPanels.help.scrollTop = 0; }
+
+  /** A side panel hidden with its edge's button comes back for what is asked to be shown in it. */
+  _showSide() { if (this.sideEdge && this.el.classList.contains('side-hidden')) this.sideEdge.setHidden(false); }
 
   /** The Guide tab, at a type if given; the guide loads with its first showing (a failed load is tried again next time). */
   async showGuide(label = null) {
+    this._showSide();
     if (!this.guideView && !this._guideLoad) {
       this._guideLoad = loadPart('guide').then(({ mountGuidePanel }) => {
         if (this._destroyed || this.guideView) return;
@@ -1316,7 +1324,8 @@ export class Workspace {
       this.scopeSome.setAttribute('aria-pressed', String(this.scope === 'channels'));
       const ch = this.selectedChannels;
       this.chanSummary.className = 'ws-chansummary';
-      if (this.scope === 'whole') { this.chanSummary.textContent = 'all channels'; this.chanSummary.title = 'Annotations apply to the whole montage'; }
+      // (on the whole montage, Whole montage pressed says it: the summary steps out, leaving the toolbar room for one line)
+      if (this.scope === 'whole') { this.chanSummary.textContent = 'all channels'; this.chanSummary.title = 'Annotations apply to the whole montage'; this.chanSummary.classList.add('all'); }
       else if (!ch.length) { this.chanSummary.textContent = 'none selected'; this.chanSummary.title = 'Click channel names, or use Channels…'; this.chanSummary.classList.add('warning'); }
       else {
         this.chanSummary.textContent = ch.slice(0, 3).join(', ') + (ch.length > 3 ? ` (+${ch.length - 3})` : '');
@@ -1808,6 +1817,7 @@ export class Workspace {
     this.selectedChannels = g.names;
     v.setSelectedChannels(g.names, true);
     this.chanSummary.textContent = `${g.names.length} channels`;
+    this.chanSummary.classList.remove('all');
   }
 
   /** The end of a press on the channel names: a drag chooses its range, a click works as before (or Shift+click a range). */
