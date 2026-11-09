@@ -1554,7 +1554,7 @@ def test_the_questionnaire_and_contacts_on_firestore(template: Path, tmp_path: P
     assert ok(service, "questionnaire", q01, body)["changed"] is False  # sent twice, kept once
     second = ok(service, "questionnaire", q01, {**body, "answers": {**QUESTIONNAIRE, "datasets_analysed": "1–2"}})
     assert second["n_versions"] == 2
-    assert err(service, "training_stage", q01, {"stage": "tour", "action": "skip"}).code == "no_programme"
+    assert err(service, "training_stage", q01, {"stage": "snippets", "action": "skip"}).code == "no_programme"
     got = service.admin("questionnaire_get", ADMIN, {"annotator_id": "Q01"})
     assert [h["answers"]["datasets_analysed"] for h in got["history"]] == ["1–2", "0"]
     assert got["contacts"]["full_name"] == "Cerys Jones"
@@ -1592,7 +1592,7 @@ def test_the_questionnaire_through_the_functions(template: Path) -> None:
     assert body["result"]["n_answered"] == len(QUESTIONNAIRE)
     _, body = callable_("et_me", {"study": sid}, token)
     assert body["result"]["questionnaire"]["answered"] is True
-    _, body = callable_("et_training_stage", {"study": sid, "stage": "tour", "action": "skip"}, token)
+    _, body = callable_("et_training_stage", {"study": sid, "stage": "snippets", "action": "skip"}, token)
     assert body["error"]["details"]["error"] == "no_programme"
 
 
