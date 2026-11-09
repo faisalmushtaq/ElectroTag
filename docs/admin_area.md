@@ -43,6 +43,7 @@ another way, for example on an encrypted drive, and open them in their own brows
   - [Artifact type descriptions](#artifact-type-descriptions)
   - [The example training set](#the-example-training-set)
 - [Analyses](#analyses)
+  - [Deciding an assessment](#deciding-an-assessment)
 - [Results](#results)
   - [One person's saved work](#one-persons-saved-work)
 - [Reviewing saved work](#reviewing-saved-work)
@@ -135,6 +136,12 @@ and so on.
 While hand-outs are open, a line under the figures says how many people have overdue work and across
 how many open hand-outs, with a warning chip when anyone is late, and See the hand-outs opens the
 Hand-outs section. Hand out recordings, among the buttons, opens it too.
+
+When a trainee has finished the competency assessment and its criteria did not pass it (no criteria
+are set, some could not be judged, or they were not met) and nobody has decided it yet, a card at the
+top says that an assessment waits for your decision, with See the competency report beside each
+trainee, which writes the report in Analyses with the decision under it ("Deciding an assessment"
+under Analyses).
 
 ## Progress
 
@@ -303,7 +310,16 @@ enrols them in another reference set with assessment recordings. Each learning s
 as it was in the earlier set, done there or skipped there ("Skipped in Pilot training set"), so a
 skip is never turned into a completed stage, and the earlier set's skips are listed under What
 happened to the stages and in the new competency report. Each asks first, and both are written to
-the audit log. Either way the round that ended stays listed under Earlier rounds of the assessment,
+the audit log.
+
+A trainee in a programme is locked out of study work until they pass its assessment, whatever they have
+been given: their study recordings stay off their home page, which says how many wait. When their
+training set has no assessment recordings, the lock lifts once they have finished the training path.
+Let through without passing, on this card, opens their study recordings at once, for a trainee who
+needs no training or whom you have assessed another way; Lock their study work again undoes it. Both
+ask first and are written to the audit log, and the card says who let them through and when. Someone
+outside a training programme is never locked, and enrolling them in one locks their study work from
+then on. Either way the round that ended stays listed under Earlier rounds of the assessment,
 with its result and its competency report (See the report, and Download the report), as it was when
 the round ended.
 
@@ -938,6 +954,23 @@ references and criteria, once every assessment recording is saved, and shows whe
 are met; download it as HTML, and its data as JSON. The trainee list offers first the people whose
 training programme is the set chosen. When the report cannot be made yet, the message says what is
 missing and where to look.
+
+### Deciding an assessment
+
+Under a trainee's competency report, when the reference set is their training programme, Decide
+T03's assessment says what its criteria concluded and whether anyone has decided it, with Pass and
+Fail. Your decision counts whatever the criteria said: Pass opens their study recordings and Fail
+keeps them locked, and the criteria's own result is kept with the decision and in the audit log. Before
+deciding, Look at it in the viewer beside each assessment recording opens the recording from this
+computer, as a review does, and shows the trainee's marks beside the reference, labelled with their
+ID and Experts, with what they missed, what they marked that the experts did not and where the type
+differs, as the practice review shows a trainee; N and P step through them and Back returns to the
+report. After Fail, ElectroTag asks you to go through the areas of weakness with the trainee, so that
+they know what to work on before they try again, and lists them: the criteria not met and the artifact
+types with the lowest scores. Then reopen their training or give them a new assessment on their page.
+A decision can be changed (a pass to a fail, or back) until the training is reopened or a new
+assessment given, which starts a new round without one. Experts see none of this; it is for
+administrators.
 
 **Probability maps** downloads, for every recording with at least the number of raters chosen (two or
 more), the weighted share of its raters who marked each sample as an artifact: one TSV a recording, with

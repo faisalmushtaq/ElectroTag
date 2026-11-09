@@ -190,7 +190,8 @@ test('the sandbox: skipping, finishing and resuming are kept as events, sent twi
   assert.deepEqual(done.stages.map((s) => s.status), ['skipped', 'completed', 'available', 'locked', 'not_used']);
   assert.equal(done.next.recording_id, TRAINING_SET.guided[0].rid);
   assert.deepEqual(b.state.progress.T01.events.map((e) => [e.event, e.stage]), [['stage_skipped', 'tour'], ['stage_completed', 'snippets']]);
-  assert.deepEqual((await b.me()).training_gate, { open: true, reason: '', message: '', result: '' }); // the sandbox's set has no assessment
+  // the sandbox's set has no assessment: study work waits for the rest of the training path
+  assert.deepEqual((await b.me()).training_gate, { open: false, reason: 'training_required', message: 'Your study recordings open once you have finished your training path.', result: '' });
   // the study asks for the recognition check before the snippets count as done
   const admin = new DemoBackend({ storage: memory(), tokens: memory() });
   await admin.login('ADMIN', 'demo');

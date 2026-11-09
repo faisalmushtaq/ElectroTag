@@ -13,6 +13,17 @@ import { ApiError } from './http.js';
 import { CATALOGUE } from './demo_catalogue.js';
 import { DONE_IN_BROWSER, STAGES, STAGE_TITLES, maySkip, stageMarks } from '../training/stages.js';
 import { nowLocalIso } from '../util.js';
+import { rolesOf } from '../admin/model.js';
+
+/** training_path.py GATE_TEXT["path"]: the words of a gate that waits for the training path (a set without an assessment). */
+const GATE_PATH_TEXT = 'Your study recordings open once you have finished your training path.';
+
+/** training_path.py let_through: the latest of gate_opened and gate_closed, as {by, at}, or null. */
+function letThrough(events) {
+  let out = null;
+  for (const e of events || []) if (e && (e.event === 'gate_opened' || e.event === 'gate_closed')) out = e.event === 'gate_opened' ? { by: e.by, at: e.at } : null;
+  return out;
+}
 
 /** artifact_texts.py TEXT_FIELDS, and those of the guide (with the look-alikes). */
 const TEXT_NAMES = ['description', 'where', 'frequency', 'shape', 'duration'];
@@ -37,8 +48,25 @@ export class DemoTrainingStages {
     admin.op_training_gate_get = (body) => this.gateGet(body);
     admin.op_training_reopen = (body) => this.reopen(body);
     admin.op_training_assessment_set = (body) => this.assessmentSet(body);
+    admin.op_assessment_decide = (body) => this.decide(body);
+    admin.op_training_let_through = (body) => this.letThrough(body);
+    admin.op_assessments_waiting_list = () => ({ assessments: [] }); // the sandbox's set has no assessment
+    admin.op_assessment_review_get = (body) => this.review(body);
     admin.op_artifact_texts_list = () => this.textsList();
     admin.op_artifact_text_set = (body) => this.textSet(body);
+  }
+
+  // ------------------------------------------------------------ the gate of study work
+  /** GET /me training_gate (training_path.py gate): the sandbox's set has no assessment, so study work waits for the path. */
+  gate(aid) {
+    const open = { open: true, reason: '', message: '', result: '' };
+    const u = this.b._admin.user(aid);
+    const roles = u ? rolesOf(u) : [];
+    const policy = ((this.b._admin.s.settings || {}).training || {}).gate || 'met';
+    if (policy === 'off' || roles.includes('expert') || roles.includes('admin') || !this.b._inProgramme(aid)) return open;
+    if (letThrough(this.b._progress(aid).events)) return open;
+    if (!this.b._nextStep(aid).stage) return open;
+    return { open: false, reason: 'training_required', message: GATE_PATH_TEXT, result: '' };
   }
 
   // ------------------------------------------------------------ the study's own words for its artifact types
@@ -312,12 +340,13 @@ export class DemoTrainingStages {
   /** training_gate_get (training_path.py admin_gate_get). */
   gateGet(body) {
     const aid = this._who(body);
-    const out = { annotator_id: aid, training_gate: this.b._gate(), programme: null, events: [], skipped: [], rounds: [], can_reopen: false,
-      can_assign_set: false, assessment_sets: [] };
+    const out = { annotator_id: aid, training_gate: this.gate(aid), programme: null, events: [], skipped: [], rounds: [], can_reopen: false,
+      can_assign_set: false, assessment_sets: [], decision: null, criteria: '', can_decide: false, let_through: null, attempts: [] };
     if (!this.b._inProgramme(aid)) return out;
     const events = this.b._progress(aid).events;
     out.programme = this.b._trainingView(aid);
-    out.events = events.map((e) => Object.fromEntries(['event', 'stage', 'at', 'by', 'from', 'from_set', 'set_name'].filter((k) => k in e).map((k) => [k, e[k]])));
+    out.let_through = letThrough(events);
+    out.events = events.map((e) => Object.fromEntries(['event', 'stage', 'at', 'by', 'from', 'from_set', 'set_name', 'result'].filter((k) => k in e).map((k) => [k, e[k]])));
     out.skipped = stageMarks(events).skipped;
     return out;
   }
@@ -337,6 +366,35 @@ export class DemoTrainingStages {
     const aid = this._trainee(body);
     if (!REOPEN_FROM.includes(body.from || 'practice')) throw bad('from must be practice or guided: the stage the trainee starts again from');
     throw this._notFinished(aid);
+  }
+
+  /** assessment_decide: refused, as before any assessment is finished (the sandbox's set has none). */
+  decide(body) {
+    const aid = this._trainee(body);
+    if (!['met', 'not_met'].includes(body.result)) throw bad('result must be met (passed) or not_met (not passed)');
+    throw new ApiError(409, 'not_finished', `${aid} has not finished the competency assessment of ${this.set.set_id} yet, so there is nothing to decide.`);
+  }
+
+  /** training_let_through: the study team opens a trainee's study work without a passed assessment, or locks it again. */
+  letThrough(body) {
+    const aid = this._trainee(body);
+    if (typeof body.open !== 'boolean') throw bad('open must be true (let them through without passing) or false (lock their study work again)');
+    const events = this.b._progress(aid).events;
+    if (Boolean(letThrough(events)) !== body.open) {
+      events.push({ event: body.open ? 'gate_opened' : 'gate_closed', at: nowLocalIso(), by: this.b.annotatorId });
+      this.b._save();
+      this.b._admin._audit('training_let_through', body.open ? `Let ${aid} through to their study recordings without passing the assessment`
+        : `Locked ${aid}'s study recordings again until they pass the assessment`, { annotator_id: aid, set_id: this.set.set_id, open: body.open });
+    }
+    return this.gateGet({ annotator_id: aid });
+  }
+
+  /** assessment_review_get: the sandbox's set has no assessment recordings. */
+  review(body) {
+    this._trainee(body);
+    const rid = typeof body.recording_id === 'string' ? body.recording_id : '';
+    if (!rid) throw bad('recording_id is missing');
+    throw new ApiError(404, 'not_assessment', `${rid} is not an assessment recording of ${this.set.set_id}`);
   }
 
   /** training_assessment_set: the sandbox has no other set, and its own has no assessment. */

@@ -855,7 +855,11 @@ skip (the platform tour, the artifact snippets, learning with the experts and
 practice on their own); the blind competency assessment can never be skipped,
 and a setting that names it is refused. `gate` says what real study work waits
 for: a passed assessment (`met`), a finished one (`completed`), or nothing
-(`off`); experts and administrators never wait. `tour` begins the path with the
+(`off`); experts and administrators never wait. A trainee whose set has no
+assessment recordings waits for the rest of their training path instead, an
+administrator's decision on an assessment counts over its criteria (a fail keeps
+study work locked under `completed` too), and an administrator can let one
+trainee through without any of it. `tour` begins the path with the
 platform tour, and offers the same tour once on the home page to everyone outside a training programme, and `snippets_quiz_required` counts the snippets stage as done
 only once its recognition check is finished. A change applies at once: a
 stage skipped while the policy allowed it stays skipped, and a gate switched

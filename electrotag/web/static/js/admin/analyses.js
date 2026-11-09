@@ -13,6 +13,7 @@ import {
   card, checkbox, checkList, dataTable, docsLink, downloadBase64, downloadText, elapsedTimer, field, infoTable, messageArea, numberInput, progressLine, reportFrame, sectionHead, select,
   textInput,
 } from './ui.js';
+import { decisionBlock } from './assessment_decision.js';
 import { UNIT_CHOICES, VERSION_CHOICES, VERSION_WORDS, compareKeyResults, comparisonTsv, numberText, versionHint, versionSummaryRows } from './versions_model.js';
 
 /** A link to a part of the reliability guide (docs/reliability_guide.md), for the settings of the analysis. */
@@ -102,7 +103,7 @@ export class AnalysesSection {
       this._probabilityForm();
     }
     // From a trainee's page in People ("Write T03's competency report"): their set and their name chosen.
-    if (params && params.competency && this.competencyChoice) this.competencyChoice(params.competency, params.annotator);
+    if (params && params.competency && this.competencyChoice) this.competencyChoice(params.competency, params.annotator, Boolean(params.decide));
   }
 
   /** Run one analysis: the button cannot be pressed again until the answer arrives. */
@@ -304,10 +305,12 @@ export class AnalysesSection {
     };
     set.addEventListener('change', fillWho);
     fillWho();
-    this.competencyChoice = (setId, aid) => {
+    this.competencyChoice = (setId, aid, decide = false) => {
       if ([...set.options].some((o) => o.value === setId)) { set.value = setId; fillWho(); }
       if (aid && [...who.options].some((o) => o.value === aid)) who.value = aid;
       requestAnimationFrame(() => this.competencyHost.scrollIntoView({ block: 'start' }));
+      // from the Overview's alert or the viewer: the report is written at once, with the decision under it
+      if (decide && set.value === setId && who.value === aid) { this._decideNext = true; run.click(); }
     };
     const msg = messageArea();
     const progress = progressLine();
@@ -324,6 +327,14 @@ export class AnalysesSection {
         report.status_text ? h('p', {}, h('b', {}, report.status_text)) : null,
         downloads(base, r.html, {}, [h('button.btn.small', { type: 'button', onclick: () => downloadText(`${base}.json`, JSON.stringify(report, null, 2), 'application/json') }, 'The report data (JSON)')]),
         r.html ? reportFrame(r.html, 'Competency report') : null));
+      // the study team's decision, under the report, when the set is the trainee's programme (assessment_decision.js)
+      const person = this.users.find((u) => u.annotator_id === who.value);
+      if (person && person.programme === set.value) {
+        const aid = who.value;
+        const g = await this.area.read('training_gate_get', { annotator_id: aid });
+        result.append(decisionBlock(this.area, aid, g, report));
+        if (this._decideNext) { this._decideNext = false; requestAnimationFrame(() => result.lastChild.scrollIntoView({ block: 'nearest' })); }
+      }
     }));
     this.competencyHost.append(card('Competency reports',
       h('p.caption', {}, 'A trainee\'s results on a reference set\'s assessment recordings against its competency criteria, once every assessment recording is saved.'),

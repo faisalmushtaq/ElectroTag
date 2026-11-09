@@ -532,6 +532,14 @@ async function script(call) {
   await call('admin training_reopen (before an assessment)', (s) => s.b.admin('training_reopen', { annotator_id: 'T01' }));
   await call('admin training_reopen (not a trainee)', (s) => s.b.admin('training_reopen', { annotator_id: 'A01' }));
   await call('admin training_assessment_set (the same set)', (s) => s.b.admin('training_assessment_set', { annotator_id: 'T01', set_id: QUIZ.set_id }));
+  await call('admin assessment_decide (before an assessment)', (s) => s.b.admin('assessment_decide', { annotator_id: 'T01', result: 'met' }));
+  await call('admin assessment_decide (no such result)', (s) => s.b.admin('assessment_decide', { annotator_id: 'T01', result: 'maybe' }));
+  await call('admin assessments_waiting_list', (s) => s.b.admin('assessments_waiting_list', {}));
+  await call('admin assessment_review_get (not an assessment recording)', (s) => s.b.admin('assessment_review_get', { annotator_id: 'T01', recording_id: 'nothing/here.edf' }));
+  await call('admin training_let_through (not true or false)', (s) => s.b.admin('training_let_through', { annotator_id: 'T01', open: 'yes' }));
+  await call('admin training_let_through', (s) => s.b.admin('training_let_through', { annotator_id: 'T01', open: true }));
+  await call('admin training_let_through (again)', (s) => s.b.admin('training_let_through', { annotator_id: 'T01', open: true }));
+  await call('admin training_let_through (locked again)', (s) => s.b.admin('training_let_through', { annotator_id: 'T01', open: false }));
   await call('admin artifact_texts_list', (s) => s.b.admin('artifact_texts_list', {}));
   await call('admin artifact_text_set', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { description: ' A blink, in our words. ', shape: 'A quick dip.', apart: [['EMG-artifact', 'is fast.']] } }));
   await call('admin artifact_text_set (the same again)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { shape: 'A quick dip.' } }));

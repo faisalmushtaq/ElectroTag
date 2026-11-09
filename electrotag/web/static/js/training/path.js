@@ -12,6 +12,7 @@
 // and WATCH_EXPERT take functions (app, stage, data) => a node, a line of text or null, drawn on
 // the stage's card (WATCH_EXPERT on "Learn with the experts", for watching an expert's session).
 
+import { extraTraining } from './extra.js';
 import { noteForGuideTab } from '../guide/artifacts.js';
 import { h } from '../ui/dom.js';
 import { ask } from '../ui/dialog.js';
@@ -266,5 +267,7 @@ export function trainingPath(data, { app = null, annotatorId, message = '', onCo
       h('a', { href: './#guide', target: '_blank', rel: 'noopener', 'data-log': 'training-guide',
         onclick: () => noteForGuideTab(app && app.catalogue && app.me && app.me.study ? app.catalogue.quickLabels((app.me.study.annotation || {}).quick_labels) : null) },
       'artifact reference guide'), ' (it opens in a new tab).'),
+    extraTraining(app, data),
     quizzes && quizzes.length && onQuiz ? quizCard({ me: { quizzes } }, { onOpen: onQuiz }) : null);
 }
+

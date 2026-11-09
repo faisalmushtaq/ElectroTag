@@ -12,6 +12,17 @@ a recording that a hand-out shared out as tasks is now listed as given by that h
 and Task is kept for share-outs made in Tasks itself (docs/admin_area.md, "Quiz", "Snippets" and "Giving out
 work").
 
+A trainee in a training programme can no longer open study work before passing its assessment, even when their
+training set has no assessment (they then wait for the end of the training path); their study recordings are kept
+off their home page until then, which says how many wait, and training recordings given in Assignments are listed
+on the training path instead of among the study recordings. An administrator can let a trainee through without
+passing, and lock them again, on their page. Finished assessments that their criteria did not pass are listed on
+the Overview for a decision; under the competency report, Pass and Fail decide it whatever the criteria said (after
+Fail, ElectroTag lists the areas of weakness to go through with the trainee), and each assessment recording can be
+looked at in the viewer beside the reference first. New admin operations: `assessment_decide`,
+`training_let_through`, `assessments_waiting_list` and `assessment_review_get` (docs/admin_area.md, "Deciding an
+assessment").
+
 Experts and administrators can put any artifact type's description, and the words of its entry in the artifact
 reference guide (where, frequency, shape, duration and how to tell it from its look-alikes), in the study's own
 words, under Training (and Training sets in the expert area), or take them back to the original; annotators and

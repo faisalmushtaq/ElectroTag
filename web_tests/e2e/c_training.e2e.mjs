@@ -513,13 +513,9 @@ export const tests = [
       // the home page: the study recording is locked, and says why
       await page.click('[data-log="training-back"]');
       await waitForRoute(page, 'home');
-      // a locked recording is not one to do yet: it waits under Locked (To do holds the assessment recording)
-      assert.match(await page.textContent('.rec-tabs [data-tab="todo"]'), /To do\s*1/);
-      await page.click('.rec-tabs [data-tab="locked"]');
-      const row = page.locator('.recordings-card tr', { hasText: 'sub-001_task-rest_eeg.vhdr' });
-      assert.match(await row.textContent(), /Locked/);
-      assert.match(await row.textContent(), /Opens once you pass the competency assessment\./);
-      assert.equal(await row.locator('button', { hasText: /^Open/ }).count(), 0);
+      // a locked study recording stays off the list until it opens; the line says how many wait, and why
+      assert.match(await page.textContent('.next-card'), /1 study recording is waiting for you\. Your study recordings open once you pass the competency assessment/);
+      assert.equal(await page.locator('.recordings-card tr', { hasText: 'sub-001_task-rest_eeg.vhdr' }).count(), 0);
       await t.screenshot(page, 'training_gate_home');
       // opened from the computer all the same, it is refused with the reason and the way on
       await page.click('.recordings-card button:has-text("Open a recording from your computer")');
@@ -614,7 +610,8 @@ export const tests = [
       await waitForRoute(page, 'home');
       assert.equal(await page.textContent('.next-card h2'), 'Assessment not met: waiting for your study team');
       assert.equal(await page.locator('.training-done').count(), 0, 'not "Training complete"');
-      assert.match(await page.locator('.recordings-card tr', { hasText: 'sub-002_task-rest_eeg.vhdr' }).textContent(), /Assessment not met: waiting for your study team\./);
+      assert.equal(await page.locator('.recordings-card tr', { hasText: 'sub-002_task-rest_eeg.vhdr' }).count(), 0, 'still off the list');
+      assert.match(await page.textContent('.next-card'), /1 study recording is waiting for you\./);
       await t.screenshot(page, 'training_not_met_home');
       await page.click('[data-log="sign-out"]');
       // the study team reopens the training on T07's page; the round that ended stays, with its report
@@ -652,8 +649,16 @@ export const tests = [
       await page.evaluate(() => globalThis.ElectroTag.showAdmin('admin-annotators', { annotator: 'T01' }));
       await page.waitForSelector('.gate-stages');
       const card = await page.locator('.admin-card', { hasText: 'Training path' }).textContent();
-      assert.match(card, /Study recordings open/);
+      // the sandbox's set has no assessment: study work waits for the training path, unless the study team lets them through
+      assert.match(card, /Study recordings locked/);
+      assert.match(card, /T01's training set has no assessment, so their study recordings stay locked until they finish their training path/);
       assert.match(card, /Find your way around: skipped/);
+      await page.click('[data-log="gate-let-through"]');
+      await page.locator('.admin-card', { hasText: 'Training path' }).locator('button', { hasText: 'Let them through' }).click();
+      await page.waitForFunction(() => /Study recordings open/.test(document.querySelector('.gate-stages').closest('.admin-card').textContent));
+      assert.match(await page.locator('.admin-card', { hasText: 'Training path' }).textContent(), /T01 was let through without passing by ADMIN/);
+      const audit = await page.evaluate(() => globalThis.ElectroTag.backend.admin('audit', { limit: 5 }));
+      assert.ok(audit.entries.some((e) => e.op === 'training_let_through'), 'audited');
       await page.click('.admin-card summary:has-text("What happened to the stages")');
       assert.match(await page.textContent('.gate-events'), /Find your way around skipped, /);
       await t.screenshot(page, 'admin_trainee_path');
