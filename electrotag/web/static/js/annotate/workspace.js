@@ -182,6 +182,9 @@ export class Workspace {
       recording: s.recording, channels: s.channels, scalings: s.scalings, events: s.events, gaps: s.gaps,
       catalogue: this.cat, filters: s.filters, view,
     });
+    // the types' numbers, which tags show where more overlap than the band above the traces has rows for
+    this.viewer.setTagKeys(Object.fromEntries([...this.quick.map((n, i) => [n, String(i + 1)]),
+      ...(this.cat.uncertain ? [[this.cat.uncertain.label, '0']] : [])]));
     if (this.bounds) this._applyBounds();
     if (s.view) {
       this.viewer.setView({ startS: s.view.start_s || 0, durationS: s.view.duration_s || 10, firstChannel: s.view.first_channel || 0,
@@ -2443,11 +2446,11 @@ export class Workspace {
     return out;
   }
 
-  /** On the EEG, the note of the annotation under the pointer as a tooltip. */
+  /** On the EEG, the note of the annotation under the pointer as a tooltip, after its type for a tag cut to its number. */
   _noteTooltip(info) {
     const c = this.viewer.over;
     const id = info && info.annotation;
-    const note = id && this.store.has(id) ? this.store.get(id).note || '' : '';
+    const note = [this.viewer.cutTagText(info), id && this.store.has(id) ? this.store.get(id).note || '' : ''].filter(Boolean).join('\n');
     if ((c.title || '') !== note) { if (note) c.title = note; else c.removeAttribute('title'); }
   }
 

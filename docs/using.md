@@ -462,7 +462,10 @@ above.
 
 The EEG fills most of the window, one channel per row with its name on the left, the time along the
 bottom and a scale bar for each type of channel on the right. Above the traces is a band for the
-labels of your annotations. Dashed teal lines are the original events of the experiment, which
+labels of your annotations. It has two rows, so two marks over the same moment both show their
+whole names; where more overlap than that, their labels are cut to their types' numbers (1 to 9, 0
+for Uncertain, or the short name of a type from the menu) and set side by side, in time order, so
+that every one can be read and clicked. The pointer over a cut label names its type in full. Dashed teal lines are the original events of the experiment, which
 cannot be changed. Hatched grey stretches mark where the display filters may distort the signal (at
 the start and end of the recording and around interruptions) and where the recording has no data.
 Below the EEG, the overview bar shows the whole recording with your annotations and the part on
