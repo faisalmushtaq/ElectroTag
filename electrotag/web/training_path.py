@@ -24,6 +24,7 @@ The stages themselves are worked out by :mod:`electrotag.training.programme`; th
 
 from __future__ import annotations
 
+import json
 import math
 import re
 from typing import TYPE_CHECKING, Any
@@ -69,7 +70,15 @@ GATE_TEXT = {
                "Your study team can reopen your training for more practice or give you a new assessment.",
     "not_determined": "Your assessment is finished and your study team is looking at the result. Your study "
                       "recordings open once they confirm that you passed.",
+    "path": "Your study recordings open once you have finished your training path.",
 }
+#: The result of an assessment as the study team decided it (``assessment_decide``), in the trainee's words.
+DECIDED_TEXT = {
+    "met": "Your study team has passed your competency assessment.",
+    "not_met": "Your study team has not passed your competency assessment yet.",
+}
+#: The events that start a new round of the assessment: a decision before one of them belongs to an earlier round.
+ROUND_EVENTS = ("training_reopened", "assessment_set_assigned")
 #: ``result`` of a closed gate: "" while the assessment is still to do, "not_met" or "not_determined" once it is
 #: finished and the study team has to act (the browser says "Assessment not met: waiting for your study team").
 OPEN_GATE: dict[str, Any] = {"open": True, "reason": "", "message": "", "result": ""}
@@ -214,15 +223,21 @@ class TrainingPath:
             rs = self.store.reference_set(set_id)
         except ReferenceSetError:
             return dict(OPEN_GATE)  # a missing set is the study team's to put right; nobody waits for it
-        if not rs.assessment_recordings:
+        events = self.store.progress(rs, user.annotator_id).events
+        if self.let_through(events) is not None:  # let through without passing (training_let_through)
             return dict(OPEN_GATE)
+        if not rs.assessment_recordings:  # nothing to pass: study work waits for the rest of the training path
+            if self.coach.programme_complete(user, rs):
+                return dict(OPEN_GATE)
+            return {"open": False, "reason": "training_required", "message": GATE_TEXT["path"], "result": ""}
         states = {s.key: s for s in self.coach._states(rs, user.annotator_id)[0]}
         a = states["assessment"]
         result = ""
         if a.status == "completed":
-            if policy == "completed":
+            decided = self.decision(events)
+            if policy == "completed" and not (decided and decided["result"] == "not_met"):
                 return dict(OPEN_GATE)
-            status = self.store.report_status(rs.set_id, user.annotator_id)
+            status = self.result_of(rs, user.annotator_id, events)["status"]
             if status == "met":
                 return dict(OPEN_GATE)
             result = "not_met" if status == "not_met" else "not_determined"
@@ -230,6 +245,39 @@ class TrainingPath:
         else:
             text = GATE_TEXT["completed" if policy == "completed" else "met"]
         return {"open": False, "reason": "training_required", "message": text, "result": result}
+
+    # ------------------------------------------------- the study team's decisions
+    @staticmethod
+    def decision(events: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """The study team's decision on the assessment of this round (``assessment_decided``: ``{result, by, at,
+        criteria}``), or None; a reopening or a new assessment set starts a round without one."""
+        out = None
+        for e in events:
+            if not isinstance(e, dict):
+                continue
+            if e.get("event") in ROUND_EVENTS:
+                out = None
+            elif e.get("event") == "assessment_decided" and e.get("result") in DECIDED_TEXT:
+                out = {k: e.get(k) for k in ("result", "by", "at", "criteria")}
+        return out
+
+    @staticmethod
+    def let_through(events: list[dict[str, Any]]) -> dict[str, Any] | None:
+        """Whether the study team let the trainee's study work open without a passed assessment (``gate_opened``,
+        undone by ``gate_closed``): ``{by, at}`` or None."""
+        out = None
+        for e in events:
+            if isinstance(e, dict) and e.get("event") in ("gate_opened", "gate_closed"):
+                out = {"by": e.get("by"), "at": e.get("at")} if e["event"] == "gate_opened" else None
+        return out
+
+    def result_of(self, rs: ReferenceSet, aid: str, events: list[dict[str, Any]] | None = None) -> dict[str, str]:
+        """The result of the trainee's assessment: the study team's decision when there is one, otherwise the
+        competency report's (``{"status", "status_text"}``, {} without either)."""
+        decided = self.decision(events if events is not None else self.store.progress(rs, aid).events)
+        if decided is not None:
+            return {"status": decided["result"], "status_text": DECIDED_TEXT[decided["result"]]}
+        return self.store.report_result(rs.set_id, aid)
 
     @staticmethod
     def gated(item: WorkItem) -> bool:
@@ -487,7 +535,7 @@ class TrainingPath:
     def _after(self, aid: str, rs: ReferenceSet) -> tuple[str, str]:
         """(the assessment's state, its result): what the study team may do now."""
         a = next(s for s in self.coach._states(rs, aid)[0] if s.key == "assessment")
-        return a.status, (self.store.report_status(rs.set_id, aid) if a.status == "completed" else "")
+        return a.status, (str(self.result_of(rs, aid).get("status") or "") if a.status == "completed" else "")
 
     def admin_gate_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         """``training_gate_get {annotator_id}`` → the trainee's training path (as ``GET /training``), the gate, the
@@ -504,7 +552,8 @@ class TrainingPath:
         set_id = self.store.programme(aid)
         out: dict[str, Any] = {"annotator_id": aid, "training_gate": self.gate(person), "programme": None,
                                "events": [], "skipped": [], "rounds": [], "can_reopen": False,
-                               "can_assign_set": False, "assessment_sets": []}
+                               "can_assign_set": False, "assessment_sets": [], "decision": None, "criteria": "",
+                               "can_decide": False, "let_through": None, "attempts": []}
         if not set_id:
             return out
         try:
@@ -513,7 +562,9 @@ class TrainingPath:
             return out
         prog = self.store.progress(rs, aid)
         out["programme"] = self.coach.programme_view(person)
-        keys = ("event", "stage", "at", "by", "from", "from_set", "set_name")
+        out["decision"] = self.decision(prog.events)
+        out["let_through"] = self.let_through(prog.events)
+        keys = ("event", "stage", "at", "by", "from", "from_set", "set_name", "result")
         events: list[dict[str, Any]] = []
         for e in prog.events:
             if not isinstance(e, dict):
@@ -539,6 +590,9 @@ class TrainingPath:
         open_ = status == "completed" and result != "met"
         out["can_reopen"] = open_
         out["can_assign_set"] = open_
+        out["can_decide"] = status == "completed"
+        out["criteria"] = self.store.report_status(rs.set_id, aid) if status == "completed" else ""
+        out["attempts"] = self._attempts(aid, rs)
         from electrotag.web.quiz import allowed
 
         out["assessment_sets"] = [{"set_id": s.set_id, "name": s.name or s.set_id,
@@ -620,6 +674,118 @@ class TrainingPath:
                      f"{aid} takes the assessment of {new.set_id} after {old.set_id}",
                      {"annotator_id": aid, "set_id": new.set_id, "from_set": old.set_id})
         return self.admin_gate_get(user, {"annotator_id": aid})
+
+
+    # ======================================== deciding the assessment, and letting through
+    def _attempts(self, aid: str, rs: ReferenceSet) -> list[dict[str, Any]]:
+        """The assessment recordings the trainee has saved in this set, to look at beside the reference."""
+        out = []
+        for rid in rs.assessment_recordings:
+            if self.store.saved_document(aid, rid, "assessment", rs.set_id) is None:
+                continue
+            m = self.store.manifest(self._scope(rs), rid) or {}
+            out.append({"recording_id": rid, "file_name": m.get("file_name") or rid.split("/")[-1]})
+        return out
+
+    def admin_decide(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """``assessment_decide {annotator_id, result: "met" | "not_met"}``: the study team passes or fails the
+        trainee's finished assessment, whatever its competency criteria said (the criteria's own result is kept with
+        the decision). Passed, their study recordings open; failed, they stay locked until the training is reopened
+        or a new assessment given. The same decision again changes nothing. Audited."""
+        aid, rs = self._trainee(body)
+        result = body.get("result")
+        if result not in DECIDED_TEXT:
+            raise _bad("result must be met (passed) or not_met (not passed)")
+        status, _ = self._after(aid, rs)
+        if status != "completed":
+            raise ApiError(409, "not_finished", f"{aid} has not finished the competency assessment of {rs.set_id} "
+                           "yet, so there is nothing to decide.")
+        prog = self.store.progress(rs, aid)
+        before = self.decision(prog.events)
+        if before is not None and before["result"] == result:
+            return self.admin_gate_get(user, {"annotator_id": aid})
+        criteria = self.store.report_status(rs.set_id, aid)
+        prog.note("assessment_decided", result=result, by=user.annotator_id, criteria=criteria)
+        audit.record(self.store, user.annotator_id, "assessment_decide",
+                     f"{'Passed' if result == 'met' else 'Did not pass'} {aid}'s competency assessment of {rs.set_id}"
+                     f"{f' (its criteria said {criteria.replace(chr(95), chr(32))})' if criteria else ''}",
+                     {"annotator_id": aid, "set_id": rs.set_id, "result": result, "criteria": criteria})
+        return self.admin_gate_get(user, {"annotator_id": aid})
+
+    def admin_let_through(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """``training_let_through {annotator_id, open: bool}``: the study team opens a trainee's study recordings
+        without a passed assessment (``open: true``), or locks them again (``false``). Asking for what is already so
+        changes nothing. Audited."""
+        aid, rs = self._trainee(body)
+        want = body.get("open")
+        if not isinstance(want, bool):
+            raise _bad("open must be true (let them through without passing) or false (lock their study work again)")
+        prog = self.store.progress(rs, aid)
+        if (self.let_through(prog.events) is not None) == want:
+            return self.admin_gate_get(user, {"annotator_id": aid})
+        prog.note("gate_opened" if want else "gate_closed", by=user.annotator_id)
+        audit.record(self.store, user.annotator_id, "training_let_through",
+                     f"Let {aid} through to their study recordings without passing the assessment" if want
+                     else f"Locked {aid}'s study recordings again until they pass the assessment",
+                     {"annotator_id": aid, "set_id": rs.set_id, "open": want})
+        return self.admin_gate_get(user, {"annotator_id": aid})
+
+    def assessments_waiting(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """``assessments_waiting_list`` → ``{"assessments": [{annotator_id, set_id, set_name, criteria}]}``: the
+        trainees whose finished assessment waits for the study team, because its criteria did not pass it (no
+        criteria decided, or not met) and nobody has decided it yet, for the Overview's alert."""
+        out = []
+        for rec in self.store.user_records():
+            aid = str(rec.get("annotator_id") or "")
+            set_id = self.store.programme(aid) if aid else None
+            if not set_id:
+                continue
+            try:
+                rs = self.store.reference_set(set_id)
+            except ReferenceSetError:
+                continue
+            if not rs.assessment_recordings:
+                continue
+            events = self.store.progress(rs, aid).events
+            if self.decision(events) is not None:
+                continue
+            a = next(st for st in self.coach._states(rs, aid)[0] if st.key == "assessment")
+            if a.status != "completed":
+                continue
+            criteria = self.store.report_status(rs.set_id, aid) or "not_determined"
+            if criteria == "met":
+                continue
+            out.append({"annotator_id": aid, "set_id": rs.set_id, "set_name": rs.name or rs.set_id,
+                        "criteria": criteria})
+        return {"assessments": sorted(out, key=lambda x: x["annotator_id"])}
+
+    def assessment_review(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """``assessment_review_get {annotator_id, recording_id}`` → the trainee's saved assessment recording beside the
+        reference, as a practice review shows it (``flags``, ``reference``, ``score``, ``summary``, ``counts``), with
+        their ``annotations``, the ``manifest`` and ``file_name``, for the study team to look at in the viewer before
+        deciding."""
+        from electrotag.app.io.canonical import document_from_dict
+        from electrotag.web.admin import _rid
+
+        aid, rs = self._trainee(body)
+        rid = _rid(body.get("recording_id"))
+        if rid not in rs.assessment_recordings:
+            raise ApiError(404, "not_assessment", f"{rid} is not an assessment recording of {rs.set_id}")
+        raw = self.store.saved_document(aid, rid, "assessment", rs.set_id)
+        m = self.store.manifest(self._scope(rs), rid)
+        if raw is None or m is None:
+            raise ApiError(404, "no_saved_annotations", f"{aid} has not saved {rid}, so there is nothing to look at.")
+        try:
+            mine = document_from_dict(json.loads(raw), validate=False)
+        except (ValueError, KeyError, TypeError) as exc:
+            raise ApiError(422, "unreadable", f"{aid}'s saved annotations of {rid} cannot be read.") from exc
+        sfreq = float(m["timing"]["sfreq"])
+        fb = self.coach.compare(rs, rid, mine, sfreq)
+        keys = ("annotation_id", "label", "onset_sample", "duration_samples", "channels", "confidence", "note")
+        annotations = [{k: a.get(k, [] if k == "channels" else None) for k in keys}
+                       for a in json.loads(raw).get("annotations", []) if isinstance(a, dict)]
+        return {**fb, "annotator_id": aid, "recording_id": rid, "file_name": m.get("file_name") or rid,
+                "set_id": rs.set_id, "manifest": self.service.public_manifest(m), "annotations": annotations}
 
 
 __all__ = ["GATE_TEXT", "LEARNING_STAGES", "TrainingPath"]

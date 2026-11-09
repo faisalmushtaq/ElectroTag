@@ -10,17 +10,20 @@ import { h, clear } from '../ui/dom.js';
 import { actionButton, card, chip, confirmInline, downloadText, loading, messageArea, reportFrame, select } from './ui.js';
 import { whenText } from './model.js';
 import { STAGE_TITLES } from '../training/stages.js';
+import { decisionText } from './assessment_decision.js';
 
 const STATUS_WORDS = { locked: 'locked', available: 'ready', in_progress: 'in progress', completed: 'completed', skipped: 'skipped', not_used: 'not included' };
 const EVENT_WORDS = {
   stage_skipped: 'skipped', stage_resumed: 'took up again', stage_completed: 'finished',
   training_reopened: 'training reopened', assessment_set_assigned: 'new assessment set',
+  assessment_decided: 'assessment decided', gate_opened: 'let through to study work without passing', gate_closed: 'study work locked again',
 };
 
 /** One line of a stage event, for the study team: "Find your way around skipped, 30 October at 10:15". */
 export function eventText(e) {
   const what = e.stage ? `${STAGE_TITLES[e.stage] || e.stage} ${EVENT_WORDS[e.event] || e.event}` : (EVENT_WORDS[e.event] || e.event);
-  const extra = e.event === 'training_reopened' && e.from ? ` (from ${STAGE_TITLES[e.from] || e.from})`
+  const extra = e.event === 'assessment_decided' && e.result ? ` (${e.result === 'met' ? 'passed' : 'not passed'})`
+    : e.event === 'training_reopened' && e.from ? ` (from ${STAGE_TITLES[e.from] || e.from})`
     : e.event === 'assessment_set_assigned' && e.from_set ? ` (after ${e.from_set})`
       : e.set_name ? ` in ${e.set_name}` : '';
   const by = e.by ? ` by ${e.by}` : '';
@@ -64,6 +67,7 @@ export function gateText(aid, gate, prog, policy = 'met') {
     return `${aid} has finished the competency assessment, and its result is not settled yet: their study recordings stay locked `
       + 'until it meets the criteria. The competency report shows where it stands.';
   }
+  if (a.status === 'not_used') return `${aid}'s training set has no assessment, so their study recordings stay locked until they finish their training path, or until you let them through.`;
   return `${aid}'s study recordings stay locked until they ${policy === 'completed' ? 'finish' : 'pass'} the competency assessment `
     + 'at the end of their training path.';
 }
@@ -102,8 +106,25 @@ function content(area, u, g, reload, policy) {
   const assessment = prog && prog.stages ? prog.stages.find((s) => s.key === 'assessment') : null;
   if (assessment && assessment.status === 'completed') {
     const setId = (prog && prog.set_id) || u.programme;
+    if (g.decision) out.push(h('p', {}, h('b', {}, decisionText(g))));
     out.push(h('div.btn-row', {}, h('button.btn.small', { type: 'button', 'data-log': 'gate-competency-report',
-      onclick: () => area.go('analyses', { competency: setId, annotator: u.annotator_id }) }, `Write ${u.annotator_id}'s competency report`)));
+      onclick: () => area.go('analyses', { competency: setId, annotator: u.annotator_id, decide: true }) },
+    g.decision ? `See ${u.annotator_id}'s competency report` : `See ${u.annotator_id}'s competency report and decide`)));
+  }
+  // Let through without passing (or lock again): the study team's choice for one trainee (training_let_through).
+  if (g.let_through || !gate.open) {
+    const host = h('div.btn-row');
+    const open = !g.let_through;
+    host.append(actionButton(open ? 'Let through without passing' : 'Lock their study work again', { working: 'Saving…', msg, log: open ? 'gate-let-through' : 'gate-lock-again',
+      onClick: async () => {
+        const text = open ? `Open ${u.annotator_id}'s study recordings now, without a passed assessment?`
+          : `Lock ${u.annotator_id}'s study recordings again until they pass the assessment?`;
+        if (!(await confirmInline(host, { text, yes: open ? 'Let them through' : 'Lock them', destructive: false }))) return;
+        await area.write('training_let_through', { annotator_id: u.annotator_id, open });
+        await reload(['success', open ? `${u.annotator_id}'s study recordings are open.` : `${u.annotator_id}'s study recordings are locked again.`]);
+      } }));
+    if (g.let_through) out.push(h('p.caption', {}, `${u.annotator_id} was let through without passing by ${g.let_through.by || 'the study team'}, ${whenText(g.let_through.at)}.`));
+    out.push(host);
   }
   const events = g.events || [];
   if (events.length) {

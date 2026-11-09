@@ -10,6 +10,7 @@ import { formatHms, local } from '../util.js';
 import { quizCard } from '../training/quiz_card.js';
 import { deviceHomeLine } from './device.js';
 import { folderLine } from './folder.js';
+import { extraTraining } from '../training/extra.js';
 import { recordingsCard } from './home_list.js';
 import { loadPart, partNow } from '../lazy.js';
 import { localDraft } from '../annotate/local_drafts.js';
@@ -77,14 +78,17 @@ function progressCard(p) {
 export function homeView(app) {
   const allItems = (app.assignments && app.assignments.items) || [];
   const programme = app.me && app.me.programme;
-  // A trainee's training recordings are counted on the training path; home counts the study's own.
-  const items = programme ? allItems.filter((i) => i.context_id !== programme.set_id) : allItems;
+  // Home lists the study's own recordings: training recordings are on the training path (path.js), and study
+  // recordings waiting for the competency assessment are hidden until it is passed (the gate's line says why).
+  const study = allItems.filter((i) => (i.mode || 'standard') === 'standard');
+  const items = study.filter((i) => i.status !== 'locked');
   const nextId = app.assignments && app.assignments.next;
   const next = items.find((i) => i.recording_id === nextId) || null;
   const training = programme && !programme.complete;
   // Real study work waits for the competency assessment (GET /me training_gate): the list shows those recordings locked.
   const gate = app.me && app.me.training_gate;
-  const waiting = Boolean(gate && gate.open === false && items.some((i) => i.status === 'locked'));
+  const nLocked = study.filter((i) => i.status === 'locked').length;
+  const waiting = Boolean(gate && gate.open === false && nLocked);
   const b = app.backend;
   const p = annotatorProgress(app, items, next);
   const cont = p.continue;
@@ -92,10 +96,10 @@ export function homeView(app) {
   const nextCard = h('section.card.next-card', {},
     training
       ? [h('h2', {}, 'Training programme'), h('p.subtitle', {}, `${programme.name}. Your training path shows each stage and what to do next.`),
-        waiting ? gateLine(gate) : null,
+        waiting ? gateLine(gate, nLocked) : null,
         h('div.btn-row', {}, h('button.btn.primary', { type: 'button', onclick: () => app.go('training') }, 'Go to my training path'))]
       : waiting && !cont && !next
-        ? [h('h2', {}, gateHeading(gate)), gateLine(gate),
+        ? [h('h2', {}, gateHeading(gate)), gateLine(gate, nLocked),
           h('div.btn-row', {}, h('button.btn.primary', { type: 'button', 'data-log': 'training-path', onclick: () => app.go('training') }, 'See my training path'))]
       : cont
         ? continueContent(app, cont)
@@ -147,7 +151,7 @@ export function homeView(app) {
       questionnaireLine(app),
       h('div.home-grid', {},
         h('div.col', {}, nextCard, dueHost(app), outcomesHost(app), expertCard(app), !training && items.length ? progressCard(p) : null, programme && !training && !waiting ? trainingDoneCard(app) : null,
-          list, quizCard(app)),
+          list, programme ? null : extraTraining(app), quizCard(app)),
         sideColumn([...games(app), demo]))));
 }
 
@@ -263,8 +267,10 @@ export function gateHeading(gate) {
 }
 
 /** Why the study recordings are locked (the gate's message, in the study's words), with the lock drawn beside it. */
-function gateLine(gate) {
-  return h('p.caption.gate-line', { 'data-log': 'training-gate' }, icon('lock'), h('span', {}, gate.message || 'Your study recordings open once you pass the competency assessment.'));
+function gateLine(gate, n = 0) {
+  // the recordings themselves stay out of the list until they open: the line says how many wait
+  const many = n ? `${n} study recording${n === 1 ? ' is' : 's are'} waiting for you. ` : '';
+  return h('p.caption.gate-line', { 'data-log': 'training-gate' }, icon('lock'), h('span', {}, many + (gate.message || 'Your study recordings open once you pass the competency assessment.')));
 }
 
 /** The decisions on the annotator's disagreements (js/expert/outcomes.js), filled in once they are read. */

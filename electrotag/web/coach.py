@@ -120,7 +120,8 @@ class Coach:
     def _states(self, rs: ReferenceSet, aid: str, prog: Progress | None = None) -> tuple[list[StageState], Progress]:
         prog = prog if prog is not None else self.store.progress(rs, aid)
         states = programme_state(None, rs, aid, prog, completed=self.store.completed,
-                                 report=lambda: self.store.report_result(rs.set_id, aid), policy=self.policy(),
+                                 report=lambda: self.service.training_path.result_of(rs, aid, prog.events),
+                                 policy=self.policy(),
                                  saves=self.saves(aid), quiz=self.service.training_path.quiz_offered(rs))
         return states, prog
 
@@ -564,6 +565,39 @@ class Coach:
                    if s["steps"] else "Recording saved.")
         return {"summary": s, "message": message}
 
+    # ------------------------------------------------------------ comparing with the reference
+    def compare(self, rs: ReferenceSet, rid: str, mine: Any, sfreq: float) -> dict[str, Any]:
+        """Someone's annotations of a recording of the set beside its reference, as the practice review shows them
+        (``flags``, ``reference``, ``score``, ``counts``, ``summary``, ``metrics``, ``per_category``): for the study
+        team looking at an assessment recording (training_path.py assessment_review), whatever the set's
+        ``practice_review``."""
+        from electrotag.training.assessment import practice_feedback
+        from electrotag.web.service import annotation_dict, clean_json
+
+        ref = rs.reference_document(rid)
+        fb = practice_feedback(mine, ref, rs)
+        verdict = PassRule.from_dict(rs.practice_pass).evaluate(fb)
+        mine_by_id = {a.annotation_id: a for a in mine.annotations}
+        ref_by_id = {a.annotation_id: a for a in ref.annotations}
+        flags = []
+        for f in review_flags(fb, list(mine.annotations), list(ref.annotations), sfreq):
+            source, _, aid = f["region"].partition("-")
+            a = (ref_by_id if source == "ref" else mine_by_id).get(aid)
+            if a is None:
+                continue
+            flags.append({
+                "kind": f["kind"], "label": f.get("should_be", a.label),
+                "your_label": None if source == "ref" else a.label,
+                "onset_sample": a.onset_sample, "duration_samples": a.duration_samples, "channels": list(a.channels),
+                "annotation_id": a.annotation_id, "source": "reference" if source == "ref" else "yours",
+                "onset_s": f["onset_s"], "offset_s": f["offset_s"], "text": flag_text(f),
+            })
+        counts = {k: int(verdict[k]) for k in ("reference_events", "your_events", "found", "extra", "other_type")}
+        return clean_json({"score": {"event_f1": verdict["event_f1"], "label_accuracy": verdict["label_accuracy"]},
+                           "counts": counts, "summary": score_sentence(counts), "metrics": dict(fb.get("overall", {})),
+                           "per_category": list(fb.get("per_category", [])), "review": True, "flags": flags,
+                           "reference": [annotation_dict(a) for a in ref.annotations]})
+
     # ------------------------------------------------------------ practice
     def practice_result(self, user: User, rs: ReferenceSet, rid: str, mine: Any, elapsed_s: float,
                         sfreq: float) -> dict[str, Any]:
@@ -623,8 +657,10 @@ class Coach:
             return {"complete": False, "done": len(done), "total": len(total),
                     "message": "Your annotations for this assessment recording were saved."}
         rep = self.store.competency(rs, user.annotator_id)
-        return {"complete": True, "done": len(done), "total": len(total), "status": rep.get("status"),
-                "status_text": rep.get("status_text", ""),
+        decided = self.service.training_path.result_of(rs, user.annotator_id)  # the study team's decision, if any
+        return {"complete": True, "done": len(done), "total": len(total),
+                "status": decided.get("status") or rep.get("status"),
+                "status_text": decided.get("status_text") or rep.get("status_text", ""),
                 "summary_html": (f"<p>You have completed all assessment recordings in <b>"
                                  f"{html.escape(rs.name or rs.set_id)}</b>.</p>" + competency_summary_html(rep)),
                 "message": "You have completed all assessment recordings."}

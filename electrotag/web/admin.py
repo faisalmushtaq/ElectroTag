@@ -84,9 +84,12 @@ OPERATIONS = READ_ONLY + (
     "set_planted_make", "set_planted_from", "set_planted_remove")
 # The training path (electrotag/web/training_path.py): the snippets of a set, a trainee's path and the gate, and
 # what the study team does after an assessment that did not meet the criteria.
-READ_ONLY += ("snippets_list", "training_gate_get")
+# The study team also passes or fails a finished assessment, lets a trainee through without passing, finds the
+# assessments waiting for their decision and looks at an assessment recording beside its reference.
+READ_ONLY += ("snippets_list", "training_gate_get", "assessments_waiting_list", "assessment_review_get")
 OPERATIONS += ("snippets_list", "training_gate_get", "snippet_add", "snippet_remove", "training_reopen",
-               "training_assessment_set")
+               "training_assessment_set", "assessment_decide", "training_let_through", "assessments_waiting_list",
+               "assessment_review_get")
 # Datasets, collections, groups and hand-outs (electrotag/web/datasets.py), and the tracking of who has rated what
 # with the notices that would be sent about it (electrotag/web/tracking.py).
 DATASET_READS = ("datasets_list", "dataset_get", "collections_list", "collection_get", "groups_list",
@@ -1773,6 +1776,18 @@ class Admin:
 
     def op_training_assessment_set(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.training_path.admin_assessment_set(user, body)
+
+    def op_assessment_decide(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.training_path.admin_decide(user, body)
+
+    def op_training_let_through(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.training_path.admin_let_through(user, body)
+
+    def op_assessments_waiting_list(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.training_path.assessments_waiting(user, body)
+
+    def op_assessment_review_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.training_path.assessment_review(user, body)
 
     # ------------------------------------------------- correct the marks (H6: electrotag/web/correct_marks.py)
     def op_set_planted_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:

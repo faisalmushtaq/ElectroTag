@@ -5,9 +5,8 @@
 // programme, ADMIN runs the study in the admin area; password "demo"), three built-in example
 // recordings with simulated artifacts (synthetic.js), drafts and results kept in this browser (and
 // downloadable), the guided training rules (training/rules.js) and the practice scoring
-// (training/scoring.js). Its answers follow docs/api.md as the server gives them, which
-// web_tests/unit/api_contract_parity.test.mjs checks call by call against the real service; the
-// few places where they differ for good reason are listed there. The admin area's operations are in
+// (training/scoring.js). Its answers follow docs/api.md, which api_contract_parity.test.mjs checks
+// call by call against the real service, listing the few differences. The admin area's operations are in
 // demo_admin.js, problem reports and reviews in demo_feedback.js.
 
 import {
@@ -40,7 +39,8 @@ const STATE_KEY = 'electrotag.demo.v2';
 const QUESTIONNAIRE_GATED = ['match', 'putDraft', 'submit', 'training', 'guided', 'guidedCheck', 'guidedContinue', 'guidedShowMe',
   'trainingStage', 'trainingSnippets', 'quiz', 'expert'];
 const QUESTIONNAIRE_ADMIN_OPS = ['questionnaire_get', 'questionnaire_summary', 'contacts_download', 'users_list'];
-const TRAINING_ADMIN_OPS = ['snippets_list', 'snippet_add', 'snippet_remove', 'training_gate_get', 'training_reopen', 'training_assessment_set'];
+const TRAINING_ADMIN_OPS = ['snippets_list', 'snippet_add', 'snippet_remove', 'training_gate_get', 'training_reopen', 'training_assessment_set',
+  'assessment_decide', 'training_let_through', 'assessments_waiting_list', 'assessment_review_get'];
 const TOKEN_KEY = 'electrotag.demo.token';
 export const DEMO_PASSWORD = 'demo';
 const FIND_WINDOW_S = 10;
@@ -100,7 +100,7 @@ export const QUIZ = Object.freeze({
   })),
 });
 
-/** The items in the annotator's own order, the same at every visit (shuffled the sandbox's way; the server uses Python's random). */
+/** The items in the annotator's own order, the same at every visit (shuffled the sandbox's way). */
 export function quizOrder(items, annotatorId, setId) {
   const order = [...items].sort((a, b) => (a.item_id < b.item_id ? -1 : a.item_id > b.item_id ? 1 : 0));
   const hex = sha256Hex(new TextEncoder().encode(`${setId}:${annotatorId}`));
@@ -303,7 +303,7 @@ export class DemoBackend {
       study: this._admin.studyBlock(),
       catalogue: CATALOGUE,
       programme: this._inProgramme(aid) ? { set_id: TRAINING_SET.set_id, name: this._exampleSet().name, complete: !this._nextStep(aid).stage } : null,
-      training_gate: this._gate(),
+      training_gate: (await this._trainingPart()).gate(aid),
       questionnaire: (await this._questionnairePart()).status(aid),
       quizzes: this._quizAllowed(aid) ? [{ set_id: QUIZ.set_id, name: this._exampleSet().name, n_items: QUIZ.items.length,
         n_answered: Object.keys(quiz.answers).length, finished: Boolean(quiz.finished), feedback: QUIZ.feedback }] : [],
@@ -462,6 +462,7 @@ export class DemoBackend {
       }
     }
     this._admin.standardAssignments(aid).forEach((a, i) => add(a.rid, a.mode, a.context_id, i + 1, 'assignment'));
+    if (!this._gate(aid).open) for (const i of items) if (i.source === 'assignment' && i.mode === 'standard' && !['done', 'unusable'].includes(i.status)) i.status = 'locked';
     return items;
   }
 
@@ -474,7 +475,7 @@ export class DemoBackend {
       const hit = nxt.stage ? mine.find((i) => i.rid === nxt.recording_id) : null;
       if (hit) return hit;
     }
-    const open = items.filter((i) => !['done', 'unusable'].includes(i.status) && i.source === 'assignment');
+    const open = items.filter((i) => !['done', 'unusable', 'locked'].includes(i.status) && i.source === 'assignment');
     return open.find((i) => i.status === 'in_progress') || open.sort((a, b) => a.position - b.position)[0] || null;
   }
 
@@ -739,7 +740,7 @@ export class DemoBackend {
     return info.ch_names.filter((c) => list.includes(c));
   }
 
-  /** As service.py confidence_and_note: a confidence is a whole number from 1 to 5 or none, and a note one line of at most 200 characters. */
+  /** As service.py confidence_and_note: a confidence of 1 to 5 or none, a note of one line of at most 200 characters. */
   _checkConfidenceAndNote(a, where, code) {
     if (a.confidence !== undefined && a.confidence !== null && !isConfidence(a.confidence)) {
       throw new ApiError(422, code, `${where}: confidence must be a whole number from 1 to 5, or none`);
@@ -906,7 +907,7 @@ export class DemoBackend {
       save_times: [...mine.values()].flat().map((s) => s.saved_at).sort(),
       viewed_in_full: withCoverage.length ? withCoverage.filter((c) => c.viewed_fraction >= VIEWED_IN_FULL).length : null,
       goal: { per_week: record.goal_per_week ?? null },
-      // Left out when exactly one other person has recordings: the team's figures less one's own would be theirs (games.py).
+      // Left out when one other person has recordings: the team's less one's own would be theirs (games.py).
       team: team.people - (team.withWork.has(aid) ? 1 : 0) === 1 ? { done: null, assigned: null, people: team.people } : { done: team.done, assigned: team.assigned, people: team.people },
       leaderboard: g.leaderboard !== false
         ? leaderboardOf(aid, team, { hiddenMe: record.leaderboard_hidden === true, byFull: g.leaderboard_viewed_only === true }) : null,
@@ -1067,12 +1068,8 @@ export class DemoBackend {
     return { stage: null, recording_id: null, repeat: false, label: 'Training complete', text: 'You have completed every stage of this training programme.' };
   }
 
-  /**
-   * The competency gate of real study work (training_path.py gate). The sandbox's training set has no
-   * assessment recordings (they need the competency report, which needs ElectroTag's Python code), so study
-   * work is always open here; a study server or Firebase locks it until the assessment is passed.
-   */
-  _gate() { return { open: true, reason: '', message: '', result: '' }; }
+  /** The gate of study work (training_path.py gate), from the training path's part. */
+  _gate(aid = this._aid()) { return this.trainingStages ? this.trainingStages.gate(aid) : { open: true, reason: '', message: '', result: '' }; }
 
   async training() {
     return this._trainingView(this._aid());
@@ -1095,7 +1092,7 @@ export class DemoBackend {
         context_id: TRAINING_SET.set_id, file_name: item ? item.info.file_name : null, repeat: nxt.repeat } : null,
       complete: !nxt.stage,
       message: nxt.text,
-      gate: this._gate(),
+      gate: this._gate(aid),
       rounds: stageMarks(this._progress(aid).events).rounds.map(({ round, set_id, set_name, status, status_text, at }) => ({ round, set_id, set_name, status, status_text, at })),
     };
   }
@@ -1297,7 +1294,7 @@ export class DemoBackend {
     };
   }
 
-  /** Save and Finish of a guided recording (coach.py verify_for_saving): every step must still match and nothing extra be marked. */
+  /** Save and Finish of a guided recording (coach.py verify_for_saving): every step matched, nothing extra. */
   _verifyGuided(aid, rid, anns) {
     const g = this._guided(aid, rid);
     const st = this._guidedState(aid, rid);
@@ -1486,7 +1483,7 @@ export class DemoBackend {
       adjudications: { shown: shown.adjudications, items: await items('adjudications') } };
   }
 
-  /** The training path's stages and snippets (training_path.py), loaded at their first use: demo_training_stages.js. */
+  /** The training path's stages, snippets and gate (training_path.py): demo_training_stages.js. */
   async _trainingPart() {
     if (!this.trainingStages) {
       const { DemoTrainingStages } = await loadPart('demoTraining');

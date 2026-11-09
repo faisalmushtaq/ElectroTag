@@ -1079,7 +1079,7 @@ export class DemoLibrary {
 
   _standing(aid) {
     const u = this.a.user(aid);
-    return { annotates: Boolean(u && rolesOf(u).includes('annotator')), study_locked: !this.b._gate().open };
+    return { annotates: Boolean(u && rolesOf(u).includes('annotator')), study_locked: !this.b._gate(aid).open };
   }
 
   static tasksWarnings(per) {
@@ -1553,7 +1553,7 @@ class TrackingIndex {
     });
     this.drafts = new Set();
     for (const person of this.people) for (const rid of this.heads.keys()) if (b.state.drafts[b._key(person.annotator_id, rid, 'standard', '')]) this.drafts.add(`${person.annotator_id}|${rid}`);
-    this.locked = new Set(b._gate().open ? [] : this.people.map((x) => x.annotator_id).filter((x) => held[x]));
+    this.locked = new Set(this.people.map((x) => x.annotator_id).filter((x) => held[x] && !b._gate(x).open));
     this.datasets = lib.allDatasets();
     this.collections = lib._records('collections').filter((c) => c.collection_id).sort((x, y) => byText(String(x.name || '').toLowerCase(), String(y.name || '').toLowerCase()));
     this.handouts = Object.values(lib.lib.handouts).filter((h) => h.handout_id).sort((x, y) => byText(String(y.handed_out_at || ''), String(x.handed_out_at || '')));

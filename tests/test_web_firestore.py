@@ -49,6 +49,8 @@ from tests.web_helpers import (  # noqa: E402
     submission,
 )
 
+GATE_PATH = "Your study recordings open once you have finished your training path."
+
 PROJECT = os.environ.get("GCLOUD_PROJECT") or "demo-electrotag"
 AUTH = os.environ.get("FIREBASE_AUTH_EMULATOR_HOST")
 FUNCTIONS = os.environ.get("ELECTROTAG_FUNCTIONS_URL")
@@ -872,7 +874,9 @@ def test_callables_end_to_end(study: str, recordings: Path) -> None:
     _, body = callable_("et_training_stage", {"study": study, "stage": "snippets", "action": "done"}, trainee)
     assert body["result"]["next"]["recording_id"] == GUIDED1
     _, body = callable_("et_me", {"study": study}, trainee)
-    assert body["result"]["training_gate"]["open"] is True  # the example set has no assessment
+    # the example set has no assessment: study work waits for the rest of the training path
+    assert body["result"]["training_gate"]["open"] is False
+    assert body["result"]["training_gate"]["message"] == GATE_PATH
     _, body = callable_("et_guided_get", {"study": study, "recording_id": GUIDED1}, trainee)
     assert body["result"]["current"]["step"] == 1
     _, body = callable_("et_guided_check", {"study": study, "recording_id": GUIDED1, "step": 1, "annotations": []},

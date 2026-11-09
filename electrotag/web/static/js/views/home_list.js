@@ -254,7 +254,9 @@ function listState(app) {
 
 /** The "Your recordings" card. */
 export function recordingsCard(app) {
-  const items = (app.assignments && app.assignments.items) || [];
+  // the study's own recordings that can be opened: training recordings are on the training path, and recordings
+  // waiting for the competency assessment stay hidden until it is passed (home.js says why)
+  const items = ((app.assignments && app.assignments.items) || []).filter((i) => (i.mode || 'standard') === 'standard' && i.status !== 'locked');
   const st = listState(app);
   const count = (k) => visibleItems(items, { tab: k }).length;
   const tabs0 = tabsFor(items);

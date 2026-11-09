@@ -34,6 +34,7 @@ from tests.web_helpers import (  # noqa: E402
 )
 
 GATE_TEXT = "Your study recordings open once you pass the competency assessment"
+GATE_PATH = "Your study recordings open once you have finished your training path."
 
 
 @pytest.fixture(scope="module")
@@ -113,7 +114,8 @@ def test_skip_done_and_resume_are_idempotent_and_kept_with_the_progress(client: 
     assert [s["key"] for s in tr["stages"]] == ["tour", "snippets", "guided", "practice", "assessment"]
     assert tr["next"]["stage"] == "tour" and tr["next"]["recording_id"] is None
     assert stage(tr, "tour")["can_skip"] and not stage(tr, "snippets")["can_skip"]
-    assert tr["gate"] == {"open": True, "reason": "", "message": "", "result": ""}  # the example set has no assessment
+    # the example set has no assessment: study work waits for the rest of the training path
+    assert tr["gate"] == {"open": False, "reason": "training_required", "message": GATE_PATH, "result": ""}
     once = t01.ok("post", "/training/stage", {"stage": "tour", "action": "done"})
     twice = t01.ok("post", "/training/stage", {"stage": "tour", "action": "done"})
     assert once == twice and stage(once, "tour")["status"] == "completed" and once["next"]["stage"] == "snippets"
@@ -322,6 +324,79 @@ def test_after_an_assessment_not_met_the_study_team_reopens_the_training(gated, 
     assert r["attempt"] == 2 and r["assessment"]["status"] == "met"
     assert t01.ok("get", "/me")["training_gate"]["open"] is True
     admin.admin_error("training_reopen", {"annotator_id": "T01"}, 409, "already_met")
+
+
+def test_a_set_without_an_assessment_locks_study_work_until_the_path_is_done_or_the_team_lets_through(
+        client: TestClient, recordings: Path) -> None:
+    """Enrolled in a set with no assessment recordings, a trainee's study recordings wait for the rest of the training
+    path; the study team can let them through without it, and lock them again (training_let_through, audited); a
+    trainee enrolled later is locked from then on."""
+    admin = Api(client, "ADMIN")
+    admin.admin_ok("assign", {"annotator_ids": ["T01", "A01"], "recording_ids": [SUB1]})
+    t01 = Api(client, "T01")
+    assert t01.ok("get", "/me")["training_gate"]["message"] == GATE_PATH
+    assert {i["status"] for i in t01.ok("get", "/assignments")["items"] if i["recording_id"] == SUB1} == {"locked"}
+    err(t01.post("/match", match_body(recordings, SUB1)), 403, "training_required")
+    admin.admin_error("training_let_through", {"annotator_id": "T01", "open": "yes"}, 400, "bad_request")
+    g = admin.admin_ok("training_let_through", {"annotator_id": "T01", "open": True})
+    assert g["training_gate"]["open"] is True and g["let_through"]["by"] == "ADMIN"
+    assert admin.admin_ok("training_let_through", {"annotator_id": "T01", "open": True}) == g, "the same again"
+    assert t01.ok("post", "/match", match_body(recordings, SUB1))["status"] == "matched"
+    assert [e["op"] for e in admin_audit(admin)][:1] == ["training_let_through"]
+    g = admin.admin_ok("training_let_through", {"annotator_id": "T01", "open": False})
+    assert g["training_gate"]["open"] is False and g["let_through"] is None
+    assert g["events"][-1]["event"] == "gate_closed"
+    admin.admin_error("training_let_through", {"annotator_id": "A01", "open": True}, 404, "no_programme")
+    # someone enrolled later is locked from then on
+    a01 = Api(client, "A01")
+    assert a01.ok("get", "/me")["training_gate"]["open"] is True
+    admin.admin_ok("programme_set", {"annotator_id": "A01", "set_id": "example"})
+    assert a01.ok("get", "/me")["training_gate"]["open"] is False
+    assert {i["status"] for i in a01.ok("get", "/assignments")["items"] if i["mode"] == "standard"
+            and i["recording_id"] == SUB1} == {"locked"}
+
+
+def test_the_study_team_decides_an_assessment_and_finds_those_waiting(gated, recordings: Path) -> None:
+    """assessment_decide passes or fails a finished assessment whatever its criteria said (audited, kept with the
+    criteria's result); assessments_waiting_list finds those still to decide; assessment_review_get shows a saved
+    assessment recording beside its reference."""
+    client, ref = gated
+    admin = Api(client, "ADMIN")
+    t01 = Api(client, "T01")
+    admin.admin_error("assessment_decide", {"annotator_id": "T01", "result": "met"}, 409, "not_finished")
+    assert admin.admin_ok("assessments_waiting_list")["assessments"] == []
+    for s in ("tour", "snippets", "guided"):
+        t01.ok("post", "/training/stage", {"stage": s, "action": "skip"})
+    r = t01.ok("post", "/submissions", submission(recordings, PRACTICE1, [as_wire(ref[0], "1" * 32)], "assessment",
+                                                  "example"))
+    assert r["assessment"]["status"] == "not_met"
+    waiting = admin.admin_ok("assessments_waiting_list")["assessments"]
+    assert waiting == [{"annotator_id": "T01", "set_id": "example", "set_name": waiting[0]["set_name"],
+                        "criteria": "not_met"}]
+    g = admin.admin_ok("training_gate_get", {"annotator_id": "T01"})
+    assert g["can_decide"] and g["criteria"] == "not_met" and g["decision"] is None
+    assert g["attempts"] == [{"recording_id": PRACTICE1, "file_name": g["attempts"][0]["file_name"]}]
+    rv = admin.admin_ok("assessment_review_get", {"annotator_id": "T01", "recording_id": PRACTICE1})
+    assert len(rv["annotations"]) == 1 and len(rv["reference"]) == len(ref) and rv["counts"]["found"] == 1
+    assert {f["kind"] for f in rv["flags"]} >= {"MISSED"} and rv["manifest"]["recording_id"] == PRACTICE1
+    admin.admin_error("assessment_review_get", {"annotator_id": "T01", "recording_id": SUB1}, 404, "not_assessment")
+    admin.admin_error("assessment_decide", {"annotator_id": "T01", "result": "maybe"}, 400, "bad_request")
+    # passed by the study team although its criteria were not met: study work opens
+    g = admin.admin_ok("assessment_decide", {"annotator_id": "T01", "result": "met"})
+    assert g["decision"]["result"] == "met" and g["decision"]["criteria"] == "not_met"
+    assert g["training_gate"]["open"] is True and g["can_reopen"] is False
+    assert t01.ok("get", "/me")["training_gate"]["open"] is True
+    assert stage(t01.ok("get", "/training"), "assessment")["result"] == "met"
+    assert admin.admin_ok("assessments_waiting_list")["assessments"] == []
+    entry = admin_audit(admin)[0]
+    assert entry["op"] == "assessment_decide" and entry["details"]["criteria"] == "not_met"
+    assert admin.admin_ok("assessment_decide", {"annotator_id": "T01", "result": "met"})["decision"] == g["decision"]
+    # then failed: locked again, and the study team may reopen the training
+    g = admin.admin_ok("assessment_decide", {"annotator_id": "T01", "result": "not_met"})
+    assert g["training_gate"]["open"] is False and g["can_reopen"] is True
+    # a reopening starts a round without a decision
+    g = admin.admin_ok("training_reopen", {"annotator_id": "T01"})
+    assert g["decision"] is None
 
 
 def test_after_an_assessment_not_met_the_study_team_gives_a_new_assessment_set(gated, recordings: Path) -> None:

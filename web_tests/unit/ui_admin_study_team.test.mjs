@@ -73,7 +73,8 @@ test("a trainee's training path is described to the study team, never as \"your\
   assert.match(gateText('T03', closed, prog('completed', 'not_met')),
     /^T03's assessment did not meet the competency criteria, so their study recordings stay locked until the study team reopens the training/);
   assert.match(gateText('T03', closed, prog('completed', 'not_determined')), /^T03 has finished the competency assessment, and its result is not settled yet/);
-  for (const s of [prog('locked'), prog('completed', 'not_met'), prog('completed', 'not_determined')]) {
+  assert.match(gateText('T03', closed, prog('not_used')), /^T03's training set has no assessment, so their study recordings stay locked until they finish their training path/);
+  for (const s of [prog('locked'), prog('completed', 'not_met'), prog('completed', 'not_determined'), prog('not_used')]) {
     assert.doesNotMatch(gateText('T03', closed, s), /\b[Yy]our\b/);
   }
 });

@@ -635,8 +635,16 @@ export const tests = [
       await page.evaluate(() => globalThis.ElectroTag.showAdmin('admin-annotators', { annotator: 'T01' }));
       await page.waitForSelector('.gate-stages');
       const card = await page.locator('.admin-card', { hasText: 'Training path' }).textContent();
-      assert.match(card, /Study recordings open/);
+      // the sandbox's set has no assessment: study work waits for the training path, unless the study team lets them through
+      assert.match(card, /Study recordings locked/);
+      assert.match(card, /T01's training set has no assessment, so their study recordings stay locked until they finish their training path/);
       assert.match(card, /Find your way around: skipped/);
+      await page.click('[data-log="gate-let-through"]');
+      await page.locator('.admin-card', { hasText: 'Training path' }).locator('button', { hasText: 'Let them through' }).click();
+      await page.waitForFunction(() => /Study recordings open/.test(document.querySelector('.gate-stages').closest('.admin-card').textContent));
+      assert.match(await page.locator('.admin-card', { hasText: 'Training path' }).textContent(), /T01 was let through without passing by ADMIN/);
+      const audit = await page.evaluate(() => globalThis.ElectroTag.backend.admin('audit', { limit: 5 }));
+      assert.ok(audit.entries.some((e) => e.op === 'training_let_through'), 'audited');
       await page.click('.admin-card summary:has-text("What happened to the stages")');
       assert.match(await page.textContent('.gate-events'), /Find your way around skipped, /);
       await t.screenshot(page, 'admin_trainee_path');
