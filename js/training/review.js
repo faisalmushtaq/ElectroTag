@@ -50,8 +50,11 @@ export function reviewFlags(feedback, mine, sfreq) {
 }
 
 export class PracticeReview {
-  constructor(ws, { feedback, mine, backend, inProgramme = true }) {
+  /** `who`: the trainee's ID when the study team looks at their assessment recording (no verdict, their ID on the EEG). */
+  constructor(ws, { feedback, mine, backend, inProgramme = true, who = null }) {
     this.ws = ws;
+    this.who = who;
+    this.youPrefix = who ? `${who}: ` : YOU_PREFIX;
     this.feedback = feedback;
     this.flags = reviewFlags(feedback, mine, ws.sf);
     this.backend = backend;
@@ -59,7 +62,7 @@ export class PracticeReview {
     this.row = -1;
     const prefix = {};
     const colours = {};
-    for (const a of ws.store.annotations()) prefix[a.annotation_id] = a.annotation_id.startsWith('ref-') ? REF_PREFIX : YOU_PREFIX;
+    for (const a of ws.store.annotations()) prefix[a.annotation_id] = a.annotation_id.startsWith('ref-') ? REF_PREFIX : this.youPrefix;
     for (const f of this.flags) { prefix[f.region] = f.prefix; colours[f.region] = FLAG_COLOURS[f.kind]; }
     ws.prefix = prefix;
     ws.labelColours = colours;
@@ -78,7 +81,7 @@ export class PracticeReview {
     const verdict = h(`p.verdict.${fb.passed ? 'passed' : 'not-yet'}`, {}, h('b', {}, rest.length ? `${head}:` : head), rest.length ? ` ${rest.join(': ')}` : '');
     const score = fb.score || {};
     const summary = h('div.summary', {},
-      h('p.review-score', {}, h('b', {}, `Your score: ${percent(score.event_f1 || 0)}.`), fb.summary ? ` ${fb.summary}` : ''),
+      h('p.review-score', {}, h('b', {}, `${this.who ? `${this.who}'s` : 'Your'} score: ${percent(score.event_f1 || 0)}.`), fb.summary ? ` ${fb.summary}` : ''),
       h('p.caption', {}, SCORE_EXPLAINED));
     this.items = [];
     let list;
@@ -91,11 +94,12 @@ export class PracticeReview {
         list.appendChild(li);
       });
     }
-    this.el = h('section.review.card', { 'aria-label': 'Practice result' },
-      h('h2', {}, 'Practice result'), verdict, summary,
+    const title = this.who ? `${this.who}'s assessment recording` : 'Practice result';
+    this.el = h('section.review.card', { 'aria-label': title },
+      h('h2', {}, title), this.who ? null : verdict, summary,
       this.flags.length ? [h('h3', {}, `What to look at (${this.flags.length})`), h('p.caption', {}, 'Click an item, or press N and P, to go to it.'), list]
         : fb.review === false ? null : h('p.success', {}, 'Nothing missed, nothing extra and every type matches the experts.'),
-      h('p.caption', {}, `On the EEG your annotations are labelled ${YOU_PREFIX.replace(/:\s*$/, '')} and the experts' annotations ${REF_PREFIX.replace(/:\s*$/, '')}.`),
+      h('p.caption', {}, `On the EEG ${this.who ? `${this.who}'s` : 'your'} annotations are labelled ${this.youPrefix.replace(/:\s*$/, '')} and the experts' annotations ${REF_PREFIX.replace(/:\s*$/, '')}.`),
       this._details(),
       this.backend.isDemo ? h('p.caption.demo-note', {}, DEMO_NOTICE) : null);
     this.ws.reviewHost.appendChild(this.el);

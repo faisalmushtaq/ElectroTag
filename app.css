@@ -581,6 +581,9 @@ ol.stages.path .stage {
 .locked-why { display: block; }
 .gate-line { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 8px; }
 .gate-line .ico { width: 16px; height: 16px; flex: none; margin-top: 4px; }
+/* Training recordings given in Assignments beyond the programme (js/training/extra.js): never among the study's own. */
+.extra-training ul { list-style: none; margin: 8px 0 0; padding: 0; }
+.extra-training li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--hairline); }
 
 /* ------------------------------------------------------------ annotation view */
 /* The view fills the window. The EEG and the side panel keep a minimum height (--main-min): in a
