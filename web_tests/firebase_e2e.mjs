@@ -207,12 +207,24 @@ async function main() {
     }],
     ['a trainee is guided by the functions and a practice recording is scored', async () => {
       const page = await newPage();
+      // The training page asks the expert functions whether there are experts' sessions to watch. The
+      // functions emulator can mix up two calls that run at once, giving the coach's first call the expert
+      // function's answer (seen on 6 November 2026), so each recording is opened once those calls are done.
+      const expertCalls = new Set();
+      page.on('request', (r) => { if (/\/et_expert\b/.test(r.url())) expertCalls.add(r); });
+      for (const ev of ['requestfinished', 'requestfailed']) page.on(ev, (r) => expertCalls.delete(r));
+      const expertCallsDone = async () => {
+        await page.waitForTimeout(300); // the page's own calls start as it is drawn
+        for (let i = 0; i < 300 && expertCalls.size; i++) await page.waitForTimeout(100);
+      };
       await signIn(page, 't01@example.org', PASSWORD);
       await answerQuestionnaire(page, { name: 'Trainee one', email: 't01@example.org' });
       await waitForRoute(page, 'training', 30000);
       // the tour and the snippets skipped, each sent once to the functions (et_training_stage)
       await skipFirstStages(page, 60000);
       const startNext = async () => {
+        await page.locator('main.training .btn.primary').first().waitFor();
+        await expertCallsDone();
         await page.locator('main.training .btn.primary').first().click();
         await openFile(page, (await page.textContent('main h1')).replace(/^Open\s+/, '').trim());
         await waitForRoute(page, 'annotate', 60000);
