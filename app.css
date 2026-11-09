@@ -670,12 +670,43 @@ ol.stages.path .stage {
 @media (pointer: coarse) { .ws-scales select.field.scale-select { height: 40px; font: var(--t-16); } }
 .ws-chansummary { color: var(--text-secondary); font: var(--t-14); overflow: hidden; text-overflow: ellipsis; min-width: 96px; max-width: 180px; }
 .ws-chansummary.warning { color: var(--destructive); font-weight: 600; }
+.ws-chansummary.all { display: none; }
+/* Below 1700 pixels the scales go without their captions (their menus and buttons are named for screen
+   readers and in their tips), so that the toolbar keeps to one line on more screens. */
+@media (max-width: 1700px) { .ws-toolbar .ws-scales .scale-caption { display: none; } .ws-toolbar .ws-scales .btn.icon.small:first-of-type { margin-left: 2px; } }
 .ws-chansummary.selected { color: var(--selection-channel); font-weight: 600; }
 .ws-main { position: relative; display: flex; min-height: 0; min-width: 0; }
 .ws-eeg { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 8px 0 8px 8px; }
+/* The side panel takes --side-w (its usual width, or the one its edge was dragged to: js/annotate/side_panel.js),
+   leaving the EEG at least 480 pixels however narrow the window becomes. */
 .ws-side {
-  width: var(--side-w, 400px); flex: none; display: flex; flex-direction: column; gap: 8px; padding: 8px; overflow: hidden; min-height: 0;
+  width: clamp(280px, var(--side-w, 400px), calc(100% - 496px)); flex: none; display: flex; flex-direction: column; gap: 8px;
+  padding: 8px 8px 8px 0; overflow: hidden; min-height: 0;
 }
+/* Its edge, between the EEG and the panel: a button at the top hides the panel (or brings it back), and
+   the line below it is dragged to widen or narrow the panel. */
+.ws-side-edge { flex: none; width: 16px; display: flex; flex-direction: column; align-items: center; padding: 8px 0; gap: 4px; }
+.ws-side-edge .btn.icon.small.ws-side-toggle { width: 16px; height: 32px; min-width: 0; padding: 0; color: var(--text-secondary); }
+.ws-side-grip { position: relative; flex: 1; width: 100%; cursor: col-resize; touch-action: none; outline: none; }
+.ws-side-grip::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; transform: translateX(-50%); background: var(--hairline);
+  transition: background-color var(--fast) var(--ease), width var(--fast) var(--ease);
+}
+@media (hover: hover) { .ws-side-grip:hover::before { width: 3px; background: var(--accent); } }
+.ws-side-grip:focus-visible::before, .side-resizing .ws-side-grip::before { width: 3px; background: var(--accent); }
+.view.annotate.side-resizing { cursor: col-resize; user-select: none; -webkit-user-select: none; }
+.view.annotate.side-hidden .ws-side { display: none; }
+.view.annotate.side-hidden .break-reminder { width: min(400px, calc(100% - 32px)); }
+/* Wide enough (side_panel.js WIDE_AT), with the map, the coach or a review pass to show, the panel sets them
+   on the left and the tabs on the right, with the panel's whole height for the list of annotations. */
+.ws-side.wide:has(> .coach-host:not(:empty), > .review-host:not(:empty), > .topo-host .topo:not(.folded)) {
+  display: grid; grid-template-columns: minmax(260px, 40%) minmax(0, 1fr);
+  grid-template-rows: fit-content(50%) fit-content(60%) minmax(0, 1fr); gap: 0 8px;
+}
+.ws-side.wide:has(> .coach-host:not(:empty), > .review-host:not(:empty), > .topo-host .topo:not(.folded)) > .coach-host { grid-column: 1; grid-row: 1; max-height: none; margin-bottom: 8px; }
+.ws-side.wide:has(> .coach-host:not(:empty), > .review-host:not(:empty), > .topo-host .topo:not(.folded)) > .review-host { grid-column: 1; grid-row: 2; max-height: none; margin-bottom: 8px; }
+.ws-side.wide:has(> .coach-host:not(:empty), > .review-host:not(:empty), > .topo-host .topo:not(.folded)) > .topo-host { grid-column: 1; grid-row: 3; max-height: 100%; align-self: start; }
+.ws-side.wide:has(> .coach-host:not(:empty), > .review-host:not(:empty), > .topo-host .topo:not(.folded)) > .side-tabs { grid-column: 2; grid-row: 1 / -1; min-height: 0; }
 .coach-host, .review-host { display: flex; flex-direction: column; min-height: 0; flex: 0 1 auto; max-height: 60%; }
 .coach-host:empty, .review-host:empty { display: none; }
 /* The topographic map (js/annotate/topomap.js): a section above the tabs, folded with its heading. The
@@ -759,7 +790,7 @@ ol.stages.path .stage {
 .view.annotate.paused .ws-toolbar { opacity: 0.4; }
 /* The break reminder sits at the foot of the side panel, so that it never hides the EEG. */
 .break-reminder {
-  position: absolute; bottom: 8px; right: 8px; z-index: 10; width: calc(var(--side-w, 400px) - 16px); margin: 0; font: var(--t-14);
+  position: absolute; bottom: 8px; right: 8px; z-index: 10; width: calc(min(var(--side-w, 400px), 400px) - 16px); margin: 0; font: var(--t-14);
 }
 .break-reminder p { margin: 0; }
 .break-reminder .btn-row { margin-top: 12px; }
@@ -1038,6 +1069,9 @@ a.btn { text-decoration: none; }
   .view.annotate .ws-main { flex-direction: column; }
   .view.annotate .ws-eeg { flex: 1 1 auto; min-height: 320px; padding: 8px 8px 0; }
   .view.annotate .ws-side { width: auto; height: 38%; min-height: 240px; flex: none; flex-direction: row; padding: 8px; }
+  /* (the panel is below the EEG, across the window: it has no edge to drag and is never hidden) */
+  .view.annotate .ws-side-edge { display: none; }
+  .view.annotate.side-hidden .ws-side { display: flex; }
   .view.annotate .ws-side > .coach-host, .view.annotate .ws-side > .review-host { flex: 1 1 0; max-height: none; min-width: 0; }
   .view.annotate .ws-side > .topo-host { flex: none; max-height: none; width: 248px; }
   /* folded, the map is a slim strip with its button, and the panels beside it keep their width */
