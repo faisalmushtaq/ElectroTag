@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Assignments, Hand-outs and Tasks are now the tabs of one page in the admin area, Giving out work, with a fourth
+tab, Everything given out, that lists every recording each person has and how it reached them: assigned by itself,
+by a hand-out, by a task or in the training programme. Recordings assigned one by one, which the lists of
+hand-outs and tasks leave out, are found there with the rest. The admin interface's `assignments_list` gives each
+item's `source`, `task_id` and `handout_id` for it (docs/admin_area.md, "Giving out work").
+
 In Training, a competency criterion's threshold can be set straight away, which ticks the criterion; it used to
 stay greyed out until the criterion was ticked. A quiz item and a snippet are now chosen from the artifacts the
 experts marked on the recording, listed with their type, times and channels: choosing one fills in the form, and

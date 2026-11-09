@@ -76,7 +76,12 @@ async function noSideways(page) {
 }
 
 async function goSection(page, title, route) {
-  await page.locator('.admin-nav a', { hasText: title }).click();
+  if (['Assignments', 'Hand-outs', 'Tasks'].includes(title)) {
+    // the tabs of Giving out work (js/admin/work.js)
+    await page.locator('.admin-nav a', { hasText: 'Giving out work' }).click();
+    await waitForRoute(page, 'admin-work');
+    await page.locator('.work-tabs a', { hasText: title }).click();
+  } else await page.locator('.admin-nav a', { hasText: title }).click();
   await waitForRoute(page, route);
   await page.waitForFunction((r) => document.querySelector(`.admin-section[data-section="${r}"]`), route.replace(/^admin-?/, '') || 'overview');
 }

@@ -19,9 +19,10 @@ export const SECTIONS = Object.freeze([
   { key: 'records', route: 'admin-records', title: 'Records', group: 'study' },
   { key: 'annotators', route: 'admin-annotators', title: 'Annotators', group: 'people' },
   { key: 'groups', route: 'admin-groups', title: 'Groups', group: 'people' },
-  { key: 'assignments', route: 'admin-assignments', title: 'Assignments', group: 'people' },
-  { key: 'handouts', route: 'admin-handouts', title: 'Hand-outs', group: 'people' },
-  { key: 'tasks', route: 'admin-tasks', title: 'Tasks', group: 'people' },
+  { key: 'work', route: 'admin-work', title: 'Giving out work', group: 'people' },
+  { key: 'assignments', route: 'admin-assignments', title: 'Assignments', group: 'people', within: 'work' },
+  { key: 'handouts', route: 'admin-handouts', title: 'Hand-outs', group: 'people', within: 'work' },
+  { key: 'tasks', route: 'admin-tasks', title: 'Tasks', group: 'people', within: 'work' },
   { key: 'training', route: 'admin-training', title: 'Training', group: 'people' },
   { key: 'questionnaire', route: 'admin-questionnaire', title: 'Questionnaire', group: 'people' },
   { key: 'datasets', route: 'admin-datasets', title: 'Datasets', group: 'data' },
@@ -36,7 +37,7 @@ export const EXPERT_LINKS = Object.freeze([
 ]);
 
 export function sectionsOf(group) {
-  return SECTIONS.filter((s) => s.group === group);
+  return SECTIONS.filter((s) => s.group === group && !s.within);
 }
 
 export function groupOf(sectionKey) {

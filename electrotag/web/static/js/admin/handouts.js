@@ -11,8 +11,9 @@ import { newId } from '../util.js';
 import { plural, whenText } from './model.js';
 import {
   actionButton, card, checkbox, checkList, chip, confirmInline, copyButton, dataTable, field, infoTable, messageArea, put, radios, recordingName,
-  sectionHead, select, shareBar, textArea, textInput,
+  select, shareBar, textArea, textInput,
 } from './ui.js';
+import { workHead } from './work.js';
 import { K_MAX, K_MIN, personNote } from './tasks_model.js';
 import { showTasksPreview } from './tasks.js';
 import { inUse, personText, peopleById } from './datasets_model.js';
@@ -43,7 +44,7 @@ export class HandoutsSection {
     this.formCard = card('Hand out recordings', this.formHost);
     this.formCard.setAttribute('data-card', 'handout-form');
     this.el = h('section.admin-section', { 'data-section': 'handouts' },
-      sectionHead('Hand-outs', 'Give a dataset or a collection to people and groups: all of it to everyone, or each recording to a few people. '
+      workHead('handouts', 'Give a dataset or a collection to people and groups: all of it to everyone, or each recording to a few people. '
         + 'A due date marks work still open after it as overdue, here and on the annotator\'s home page; annotators see only the hand-out\'s title.'),
       this.msg, this.detailHost, this.formCard, this.listCard, card('What would be notified', this.noticesHost));
   }

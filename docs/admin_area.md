@@ -30,10 +30,10 @@ another way, for example on an encrypted drive, and open them in their own brows
 - [Recordings](#recordings)
   - [Adding recordings from this computer](#adding-recordings-from-this-computer)
   - [Notes, retiring and removing](#notes-retiring-and-removing)
-- [Assignments](#assignments)
-- [Hand-outs](#hand-outs)
-  - [What would be notified](#what-would-be-notified)
-- [Tasks](#tasks)
+- [Giving out work](#giving-out-work)
+  - [Assignments](#assignments)
+  - [Hand-outs](#hand-outs)
+  - [Tasks](#tasks)
 - [Training](#training)
   - [Recordings and references](#recordings-and-references)
   - [Settings](#settings)
@@ -518,7 +518,29 @@ one recording at a time with a line that shows how far it has got, and a table t
 happened to each. As for people, the bar of actions stays at the foot of the window while the list is in view, one action runs at a time and closing the page meanwhile asks first. Removing keeps every recording with saved results or a place in a reference set,
 says which were kept and why, and offers to retire them instead.
 
-## Assignments
+## Giving out work
+
+Recordings reach people in three ways, which share one page under People, Giving out work, with a tab
+for each and a fourth that lists everything given out. Assignments gives chosen recordings to chosen
+people one by one, for the study's own work or for training. Hand-outs give a whole dataset or
+collection to people and groups, with a due date and the title annotators see. Tasks share recordings
+out so that several people annotate each one independently, which is what agreement and adjudication
+need. A hand-out can also share its recordings out as tasks, and an assignment made with a due date
+becomes a hand-out of its own, so the three overlap; each tab lists only what was made in its own
+way, while Everything given out lists all of it. The old addresses of the three (#admin-assignments,
+#admin-handouts and #admin-tasks) open their tabs.
+
+**Everything given out** lists every recording each person has: the annotator, the recording, how it
+was given, the mode, its status and the last activity. Given through says Assigned by itself, Hand-out
+(with the hand-out's name, or the title annotators see and "given in Assignments" for one made with a
+due date there), Task (with the share-out's name, or the hand-out that shared it out) or Training
+programme for the recordings of a trainee's programme. A hand-out's name opens it, and a task's opens
+the Tasks tab at that recording. Filter the list by person, by how the recordings were given or by
+status, or search the recordings and the names of hand-outs and share-outs; the line above the list
+counts what is shown, how much is done and how it was given. Taking a recording away is done where it
+was given: Unassign in Assignments, Withdraw for a hand-out, and Change people or Remove for a task.
+
+### Assignments
 
 Assign recordings chooses one or more annotators (All ticks the active annotators; switched-off
 accounts and administrators are ticked one by one), one or more recordings (or every recording of the
@@ -546,14 +568,14 @@ be annotated has See the report instead, since it is settled through the problem
 returned to their list, or given to someone else. Trainees'
 recordings come from their training programme, which you change on their page in Annotators.
 
-## Hand-outs
+### Hand-outs
 
-A hand-out gives a dataset or a collection to people and groups. The section is under People. The
+A hand-out gives a dataset or a collection to people and groups. It is a tab of Giving out work. The
 form has four steps. What: the dataset or collection, listed with its recordings in use. Who: people,
 ticked one by one (All leaves out the same accounts as in Tasks), and groups, with Also give it to
 people who join these groups later. How: Everyone gets all of it, where each person is given every
 recording in use, or Shared out, where each recording goes to a number of the people chosen as
-independent tasks, through the Tasks section's own share-out. When and what annotators see: an
+independent tasks, through the Tasks tab's own share-out. When and what annotators see: an
 optional due date, the title annotators see, a name for the study team and a note for the study team.
 
 **What annotators see.** Annotators see a hand-out by its title alone: their home page groups their
@@ -593,7 +615,7 @@ it); Who has rated what, which opens it in Tracking; and Withdraw…, which take
 nobody has started. Saved work, drafts and recordings set aside stay with the people who have them,
 and the hand-out stays on record as withdrawn.
 
-### What would be notified
+#### What would be notified
 
 ElectroTag sends no email yet. At the foot of the section, What would be notified lists what a notice
 would say if it did, worked out from the study as it is now: datasets and collections newly fully
@@ -603,13 +625,13 @@ page is sent. Sending notices by email waits for the study to choose an email se
 that its ethics approval and data protection arrangements allow reminders to annotators and summaries
 that name them.
 
-## Tasks
+### Tasks
 
 Tasks share recordings out so that several people annotate each one independently, as in the
 dual screening of a systematic review: each recording, or each part of one, goes to k annotators
 (2 to 10), who meet it as one more recording in their own list. Once all of them have saved it, the
 differences between their versions are the task's conflicts, which experts adjudicate. Known-answer
-recordings can be mixed in to measure each person's accuracy. The section is under People.
+recordings can be mixed in to measure each person's accuracy. It is a tab of Giving out work.
 
 **Sharing out.** Choose the annotators to share among. All ticks the active accounts with the
 annotator role whose study work is open. It leaves out switched-off accounts, accounts without the

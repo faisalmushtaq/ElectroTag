@@ -488,7 +488,9 @@ class Admin:
                         "context_id": i.context_id, "status": i.status, "attempts": len(mine),
                         "last_activity": last or None, "elapsed_s": elapsed,
                         "n_annotations": int(n_ann) if n_ann is not None else None,
-                        "saved_at": (latest.get("completed_at") or None) if latest else None})
+                        "saved_at": (latest.get("completed_at") or None) if latest else None,
+                        # how it was given: a training programme, or an assignment (made by a task, a hand-out or alone)
+                        "source": i.source, "task_id": i.task_id or None, "handout_id": i.handout_id or None})
         return out
 
     def _counts(self) -> tuple[dict[tuple[str, str], int], dict[tuple[str, str], int]]:

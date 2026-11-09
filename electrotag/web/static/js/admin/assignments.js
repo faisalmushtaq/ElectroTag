@@ -5,8 +5,9 @@ import { h, clear } from '../ui/dom.js';
 import { newId } from '../util.js';
 import { MODES, STATUS, dateText, fileParts, plural, rolesOf, setLabel, unassignQuestion, whenText } from './model.js';
 import {
-  actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, messageArea, recordingName, sectionHead, select, textInput,
+  actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, messageArea, recordingName, select, textInput,
 } from './ui.js';
+import { workHead } from './work.js';
 
 /**
  * In place of Unassign for a recording its annotator set aside as one that cannot be annotated: that
@@ -29,7 +30,7 @@ export class AssignmentsSection {
     this.assignHost = h('div.admin-stack');
     this._buildTable();
     this.el = h('section.admin-section', { 'data-section': 'assignments' },
-      sectionHead('Assignments', 'Which recordings each annotator works on, in which mode. Annotators open their next recording from their own list.'),
+      workHead('assignments', 'Which recordings each annotator works on, in which mode. Annotators open their next recording from their own list.'),
       this.msg,
       card('Assign recordings', this.assignHost), this.tableCard);
   }

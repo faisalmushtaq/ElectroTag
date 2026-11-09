@@ -477,7 +477,9 @@ export class DemoAdmin {
         const elapsed = latest ? (times.length ? times.reduce((x, y) => x + y, 0) : null) : draft ? secondsOf(draft.elapsed_s) : null;
         out.push({ annotator_id: u.annotator_id, recording_id: i.rid, mode: i.mode, context_id: i.context_id,
           status: i.status, attempts: subs.length, last_activity: last, elapsed_s: elapsed,
-          n_annotations: latest ? (latest.annotations || []).length : null, saved_at: latest ? latest.saved_at : null });
+          n_annotations: latest ? (latest.annotations || []).length : null, saved_at: latest ? latest.saved_at : null,
+          source: i.source, task_id: null, handout_id: (i.source === 'assignment' && (this.s.assignments.find((a) => a.annotator_id === u.annotator_id
+            && a.recording_id === i.rid && a.mode === i.mode) || {}).handout_id) || null });
       }
     }
     return out;
