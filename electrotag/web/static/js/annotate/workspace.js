@@ -1293,6 +1293,33 @@ export class Workspace {
 
   targetIds() { return this.selection.filter((i) => this.store.has(i)); }
 
+  /**
+   * Before a change to the selected annotations (a type, a deletion, a rating, a note, their times), the
+   * view goes back to them when none of them is on screen, centred on the first, with its channels in view:
+   * a person who scrolled on with an annotation still selected sees what they are changing. True when the
+   * view moved.
+   */
+  _showTargets(ids) {
+    const v = this.viewer;
+    const anns = (ids || []).filter((i) => this.store.has(i)).map((i) => this.store.get(i));
+    if (!v || !anns.length) return false;
+    const s0 = v.view.startS;
+    const s1 = s0 + v.view.durationS;
+    const rows = (a) => a.channels.map((c) => this.s.channels.findIndex((x) => x.name === c)).filter((i) => i >= 0);
+    const shown = (a) => a.onset_sample / this.sf < s1 && endSample(a) / this.sf > s0
+      && (!a.channels.length || rows(a).some((i) => i >= v.view.firstChannel && i < v.view.firstChannel + v.view.nChannels));
+    if (anns.some(shown)) return false;
+    const a = anns[0];
+    const want = { startS: centredStart((a.onset_sample + endSample(a)) / 2 / this.sf, v.view.durationS) };
+    const r = rows(a);
+    if (r.length && !r.some((i) => i >= v.view.firstChannel && i < v.view.firstChannel + v.view.nChannels)) {
+      want.firstChannel = Math.max(0, Math.min(r[0], this.s.channels.length - v.view.nChannels));
+    }
+    v.setView(want, 'selection');
+    this.broughtBack = (this.broughtBack || 0) + 1; // (the tour's step on selected annotations watches for it)
+    return true;
+  }
+
   _refreshState() {
     if (this.toolbar) {
       const ids = this.targetIds();
@@ -1370,6 +1397,7 @@ export class Workspace {
       this.selectHint.hidden = Boolean(anns.length) || !this.store.size;
     }
     if (this.saveBtn && this.coach) this.coach.syncSaveButton(this.saveBtn);
+    if (this.coach && this.kind === 'tour') this.coach.scheduleCheck(); // a selection made or ended: the tour looks again
     this._refreshOverlayState();
   }
 
@@ -1533,12 +1561,13 @@ export class Workspace {
     const ids = this.targetIds();
     if (ids.length && !this.readOnly) {
       if (!this._checkEditable()) { this._refreshState(); return; }
+      const back = this._showTargets(ids) ? ', brought back into view' : '';
       if (ids.every((i) => this.store.get(i).label === name)) {
-        this.say(`Already ${name}`);
+        this.say(`Already ${name}${back}`);
       } else {
         this.store.setLabelMany(ids, name);
         const what = ids.length === 1 ? 'the selected annotation' : `${ids.length} annotations`;
-        this.say(`Changed ${what} to ${name} (${undoHint()}). Esc or a click on empty EEG ends the selection.`);
+        this.say(`Changed ${what} to ${name}${back} (${undoHint()}). Esc or a click on empty EEG ends the selection.`);
       }
     } else {
       this.setCurrentLabel(name);
@@ -1650,12 +1679,14 @@ export class Workspace {
     const ids = this.targetIds();
     if (ids.length > 1) { this.deleteSelectedRows(); return; }
     if (!ids.length) { this.say(`Nothing is selected: click an annotation (or press N) to select it${touchFirst() ? '' : `, or press ${CTRL}+Z to undo the last change`}.`); return; }
+    this._showTargets(ids);
     this.deleteOne(ids[0]);
   }
 
   deleteSelectedRows() {
     const ids = this.targetIds();
     if (!ids.length || !this._checkEditable()) return;
+    this._showTargets(ids);
     this.store.deleteMany(ids);
     this.select(null);
     this.say(`Deleted ${plural(ids.length, 'annotation')} (${undoHint()})`);
@@ -1676,6 +1707,7 @@ export class Workspace {
   mergeSelected() {
     const ids = this.targetIds();
     if (!this._checkEditable()) return;
+    this._showTargets(ids);
     try {
       const merged = this.store.merge(ids);
       this.select([merged.annotation_id]);
@@ -1688,6 +1720,7 @@ export class Workspace {
   async relabelSelected() {
     const ids = this.targetIds();
     if (!ids.length || !this._checkEditable()) return;
+    this._showTargets(ids);
     const current = this.store.get(ids[0]).label;
     const label = await pickType({ title: ids.length === 1 ? 'Change type' : `Change the type of ${ids.length} annotations`, catalogue: this.cat, current, quick: this.quick, about: (l) => this.showGuide(l) });
     if (!label || (label === current && ids.length === 1)) return;
@@ -1698,6 +1731,7 @@ export class Workspace {
   async editTimesOfSelected() {
     const ids = this.targetIds();
     if (ids.length !== 1 || !this._checkEditable()) return;
+    this._showTargets(ids);
     const a = this.store.get(ids[0]);
     const v = await editTimes({ start: a.onset_sample / this.sf, end: endSample(a) / this.sf, sfreq: this.sf, duration: this.s.recording.durationS, note: a.note || '' });
     if (!v) return;
@@ -2156,6 +2190,7 @@ export class Workspace {
     const ids = this.targetIds();
     if (ids.length !== 1) { this.say('Select one annotation first (click it, or press N), then Alt with the arrow keys moves its start, and Alt+Shift its end.'); return; }
     if (!this._checkEditable()) return;
+    this._showTargets(ids);
     const a = this.store.get(ids[0]);
     const step = nudgeSamples(this.sf);
     const min = this.s.minDuration || 1;
@@ -2358,6 +2393,7 @@ export class Workspace {
     if (!this._checkEditable()) return;
     const live = ids.filter((i) => this.store.has(i));
     if (!live.length) return;
+    if (live.every((i) => this.selection.includes(i))) this._showTargets(live);
     this.store.setConfidenceMany(live, level);
     const what = live.length === 1 ? this.store.get(live[0]).label : `${live.length} annotations`;
     this.say(level ? `Confidence of ${what}: ${level}/5, ${CONFIDENCE_ANCHORS[level].toLowerCase()} (${undoHint()})` : `Confidence of ${what} cleared (${undoHint()})`);
@@ -2390,6 +2426,7 @@ export class Workspace {
 
   async editNoteOf(id) {
     if (!id || !this.store.has(id) || !this._checkEditable()) return;
+    if (this.selection.includes(id)) this._showTargets([id]);
     const a = this.store.get(id);
     const note = await editNote({ title: `Note on this ${a.label}`, note: a.note || '' });
     if (note === null || !this.store.has(id)) return;

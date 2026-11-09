@@ -249,14 +249,43 @@ class TrainingPath:
         if not g["open"]:
             raise self.refusal(g)
 
+    # ============================================== the tour for everyone else
+    def welcome_tour(self, user: User) -> str | None:
+        """``tour`` of ``GET /me``: the platform tour for someone outside a training programme (whose path has the
+        tour as its first stage), offered once before their first recording: ``todo``, ``done`` or ``skipped``, or
+        None when it is not offered (in a training programme, or the study has the tour off)."""
+        if not self.service.settings.training.tour or self.store.programme(user.annotator_id):
+            return None
+        rec = self.store.annotator_record(user.annotator_id).get("tour")
+        state = rec.get("state") if isinstance(rec, dict) else None
+        return state if state in ("done", "skipped") else "todo"
+
+    def _tour_action(self, user: User, action: str) -> dict[str, Any]:
+        """The tour done or skipped by someone outside a training programme (kept with their record, so that it is
+        offered once whatever the computer); ``resume`` offers it again. Answers ``{"tour"}``."""
+        state = {"done": "done", "skip": "skipped", "resume": "todo"}[action]
+        now = now_local_iso()
+
+        def change(old: dict[str, Any]) -> dict[str, Any] | None:
+            before = old.get("tour") if isinstance(old.get("tour"), dict) else {}
+            if before.get("state", "todo") == state or (before.get("state") == "done" and state == "skipped"):
+                return None  # the same again, or a skip arriving after the tour was done
+            return {**old, "tour": {"state": state, "at": now}}
+
+        self.store.update_annotator_record(user.annotator_id, change)
+        return {"tour": self.welcome_tour(user)}
+
     # ========================================================= stage actions
     def stage_action(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         """``POST /training/stage {stage, action}``. Asking for what is already so changes nothing and answers the
-        training path as it is (the request may reach the study twice)."""
+        training path as it is (the request may reach the study twice). Outside a training programme only the tour
+        has a stage, and the answer is ``{"tour"}``."""
         stage, action = body.get("stage"), body.get("action")
         if stage not in STAGES or action not in ACTIONS:
             raise _bad("stage must be one of tour, snippets, guided, practice or assessment, and action one of skip, "
                        "done or resume")
+        if stage == "tour" and not self.store.programme(user.annotator_id):
+            return self._tour_action(user, action)
         if stage == "assessment" and action == "skip":
             raise ApiError(409, "cannot_skip", "The competency assessment cannot be skipped: it is passed before "
                            "real study work begins.")

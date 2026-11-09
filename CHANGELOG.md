@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+A change to a selected annotation that is no longer on the screen (a type key, Delete, a rating, a note or its times)
+first brings it back into view, centred with its channels, and the line at the bottom says so. Everyone outside a
+training programme is now offered the platform tour once on their home page, with Skip the tour, kept for their
+account, and can take it later from a line under the greeting; the tour has a new step on how a selected annotation
+takes your changes (docs/using.md, "Before your first recording" and "Changing annotations").
+
 Assignments, Hand-outs and Tasks are now the tabs of one page in the admin area, Giving out work, with a fourth
 tab, Everything given out, that lists every recording each person has and how it reached them: assigned by itself,
 by a hand-out, by a task or in the training programme. Recordings assigned one by one, which the lists of

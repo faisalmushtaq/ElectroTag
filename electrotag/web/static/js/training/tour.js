@@ -92,6 +92,23 @@ export function tourSteps({ quickKeys = {}, sfreq = TOUR_SPEC.sfreq } = {}) {
         '2. Under the list of annotations, tap a number for **Confidence**, from **1** (not at all sure) to **5** (completely sure). ' +
         'Pressing and holding the mark offers the same in its menu.',
       done: (o) => o.annotations.some((a) => a.confidence !== null && a.confidence !== undefined) },
+    { key: 'selected', title: 'A selected annotation takes your changes',
+      body: 'While an annotation is selected, a type key, **Delete** and a rating change it, even after you have scrolled on. '
+        + 'ElectroTag then brings it back into view, so that you see what you are changing.\n'
+        + `1. Click your ${blink.label} on the EEG to select it.\n`
+        + '2. Press the **right arrow** key to scroll on, away from it.\n'
+        + `3. ${quickKeys[muscle.label] ? `Press **${quickKeys[muscle.label]}** (${muscle.label})` : `Choose **${muscle.label}** from the menu of types`}: `
+        + `the view comes back and your ${blink.label} becomes ${muscle.label}.\n`
+        + '4. Press **Ctrl+Z** (**⌘Z** on a Mac) to take that back, then **Esc**, or click empty EEG, to end the selection. '
+        + 'With nothing selected, your next type key chooses the type of a new mark instead.',
+      touch: 'While an annotation is selected, a type button, **Delete** and a rating change it, even after you have scrolled on. '
+        + 'ElectroTag then brings it back into view, so that you see what you are changing.\n'
+        + `1. Tap your ${blink.label} on the EEG to select it.\n`
+        + '2. Under the EEG, beside **Time**, tap the last arrow (**Forward a screen**) to move away from it.\n'
+        + `3. Tap the type button **${muscle.label}** at the top: the view comes back and your ${blink.label} becomes ${muscle.label}.\n`
+        + '4. Tap **Undo** to take that back, then tap empty EEG to end the selection. '
+        + 'With nothing selected, a type button chooses the type of a new mark instead.',
+      done: (o) => o.broughtBack && o.nothingSelected },
     { key: 'save', title: 'Save and finish',
       body: 'When a recording is done, press **Save and Finish** at the top right. In a study it checks your work, ' +
         'saves it and marks the recording complete. Here it ends the tour, and nothing you marked is kept.',
@@ -126,7 +143,8 @@ export class TourCoach {
     this.quickKeys = Object.fromEntries(ws.quick.map((n, i) => [n, i + 1]));
     this.steps = tourSteps({ quickKeys: this.quickKeys, sfreq: ws.sf });
     this.index = 0;
-    this.obs = { annotations: [], startS: 0, maxStartS: 0, undone: false, redone: false, saved: false };
+    this.obs = { annotations: [], startS: 0, maxStartS: 0, undone: false, redone: false, saved: false, broughtBack: false, nothingSelected: true };
+    this._broughtFrom = 0;
     this.sending = false;
     this.finished = false;
     this.t0 = performance.now();
@@ -180,6 +198,7 @@ export class TourCoach {
     v.setGhost(step.ghost ? { ...step.ghost } : null);
     if (step.ghost) v.showInterval(step.ghost.onset_sample, step.ghost.duration_samples, step.ghost.channels);
     if (step.key === 'undo') { this.obs.undone = false; this.obs.redone = false; } // only an undo and redo made at this step count
+    this._broughtFrom = this.ws.broughtBack || 0; // and only a selected annotation brought back at this step
     this.check();
   }
 
@@ -197,6 +216,8 @@ export class TourCoach {
     this.obs.annotations = this.ws.store.annotations();
     this.obs.startS = this.ws.viewer.view.startS;
     this.obs.maxStartS = Math.max(this.obs.maxStartS, this.obs.startS);
+    this.obs.broughtBack = (this.ws.broughtBack || 0) > this._broughtFrom;
+    this.obs.nothingSelected = !this.ws.targetIds().length;
     const done = stepDone(this.step, this.obs);
     if (done && this.nextBtn.disabled) {
       this.nextBtn.disabled = false;
@@ -266,7 +287,8 @@ export class TourCoach {
   /** Close during the tour: it can be taken again from the training path. */
   async beforeClose() {
     if (this.finished) return true;
-    const leave = await ask('Leave the tour?', 'You can take the tour again from your training path, or skip it there.',
+    const where = this.app.me && this.app.me.programme ? 'your training path' : 'your home page';
+    const leave = await ask('Leave the tour?', `You can take the tour again from ${where}, or skip it there.`,
       { yes: 'Leave the tour', no: 'Stay', defaultYes: false });
     if (leave) logger.event('tour_left', { step: this.step ? this.step.key : null, index: this.index + 1 });
     return leave;
@@ -305,7 +327,8 @@ export async function startTour(app) {
   const coach = new TourCoach(ws, {
     app,
     onFinished: () => {
-      app.pathMessage = 'Tour finished. Your training path goes on with the next stage.';
+      if (app.me && app.me.programme) app.pathMessage = 'Tour finished. Your training path goes on with the next stage.';
+      else if (app.me) app.me.tour = 'done'; // outside a training programme the tour is offered from the home page
       app.leaveRecording(ws, 'tour_finished');
     },
   });

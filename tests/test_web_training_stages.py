@@ -134,6 +134,24 @@ def test_skip_done_and_resume_are_idempotent_and_kept_with_the_progress(client: 
     err(t01.post("/training/stage", {"stage": "assessment", "action": "skip"}), 409, "cannot_skip")
 
 
+def test_the_tour_is_offered_once_to_everyone_outside_a_programme(client: TestClient) -> None:
+    """GET /me tour (docs/api.md): todo until it is done or skipped, kept for the account; never for a trainee in a
+    programme, whose path has it, nor when the study has the tour off."""
+    a01 = Api(client, "A01")
+    assert a01.ok("get", "/me")["tour"] == "todo"
+    assert Api(client, "T01").ok("get", "/me")["tour"] is None, "a trainee meets it on the training path"
+    assert a01.ok("post", "/training/stage", {"stage": "tour", "action": "skip"}) == {"tour": "skipped"}
+    assert a01.ok("get", "/me")["tour"] == "skipped"
+    assert a01.ok("post", "/training/stage", {"stage": "tour", "action": "done"}) == {"tour": "done"}
+    assert a01.ok("post", "/training/stage", {"stage": "tour", "action": "skip"}) == {"tour": "done"}, \
+        "a skip arriving after the tour was done changes nothing"
+    assert a01.ok("post", "/training/stage", {"stage": "tour", "action": "resume"}) == {"tour": "todo"}
+    err(a01.post("/training/stage", {"stage": "snippets", "action": "skip"}), 404, "no_programme")
+    admin = Api(client, "ADMIN")
+    admin.admin_ok("settings_update", {"settings": {"training": {"tour": False}}})
+    assert a01.ok("get", "/me")["tour"] is None
+
+
 def test_the_study_decides_what_may_be_skipped(client: TestClient) -> None:
     admin = Api(client, "ADMIN")
     admin.admin_ok("settings_update", {"settings": {"training": {"skippable": ["snippets"], "tour": True}}})
