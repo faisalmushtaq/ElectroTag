@@ -195,7 +195,6 @@ export class Workspace {
       this._placeConfidenceBar();
       if (this.timed && !this._overviewView) this._noteViewDwell();
       if (cause !== 'restore') this._afterViewChange();
-      if (this.topo) this.topo.update();
     };
     this.viewer.onCursor = () => { if (this.topo) this.topo.follow('cursor'); };
     this.viewer.onPointer = (type, info, e) => this._pointer(type, info, e);

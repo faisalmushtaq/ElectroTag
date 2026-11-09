@@ -57,6 +57,16 @@ export const tests = [
       assert.ok(Number.isFinite(m.cz) && Number.isFinite(m.fp1), 'the channels have values');
       await t.screenshot(page, 'topomap_moment');
 
+      // Scrolling the EEG afterwards leaves the map where it was clicked, with the same values.
+      const values = () => page.evaluate(() => [...globalThis.ElectroTag.ws.topo.values.values()]);
+      const atClick = await values();
+      for (const key of ['ArrowRight', 'ArrowRight', 'PageDown']) { await page.keyboard.press(key); await page.waitForTimeout(250); }
+      assert.ok(await page.evaluate(() => globalThis.ElectroTag.ws.viewer.view.startS > 0), 'the EEG has scrolled');
+      await page.waitForTimeout(300);
+      assert.match((await topo(page)).caption, /^At 3\.2/);
+      assert.deepEqual(await values(), atClick);
+      await page.evaluate(() => globalThis.ElectroTag.ws.viewer.setView({ startS: 0 }));
+
       // Pointing at an electrode names it.
       const fp1 = await electrode(page, 'Fp1');
       await page.mouse.move(fp1.x, fp1.y);
