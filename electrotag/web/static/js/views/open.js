@@ -8,6 +8,7 @@ import { appHeader, icon } from './common.js';
 import { CAN_CHOOSE_FOLDER, acceptFiles } from '../util.js';
 import { linkPanel } from './links_panel.js';
 import { deviceRow, keepLinkCheck, keptCopy } from './device.js';
+import { folderLine, openFromFolder } from './folder.js';
 
 const FORMAT_HINT = {
   edf: 'Choose the .edf file.',
@@ -83,6 +84,8 @@ export class OpenView {
       if (files.length) this.handle(files);
     });
     this.device = deviceRow(app);
+    // the recordings folder (js/views/folder.js): the expected recording opens from it by itself
+    this.folder = folderLine(app, { compact: true, onChange: () => { if (this.expected) void this.openFromFolder(); } });
     this.links = this.linkSection();
     this.steps = h('ol.steps', { hidden: true, 'aria-live': 'polite' });
     this.result = h('div.result');
@@ -108,7 +111,7 @@ export class OpenView {
         trainingNote(expected),
         h('p.subtitle', {}, 'The recording is read here, in your browser, and is never uploaded. Only its fingerprint (a checksum of the file) is sent to the study, to recognise it.'),
         h('p', {}, FORMAT_HINT[format] || 'Choose an EDF or BDF file, or the .vhdr, .vmrk and .eeg files of a BrainVision recording (or their folder).'),
-        h('section.card', {}, this.drop, this.device.el, this.steps, this.result, this.links.el),
+        h('section.card', {}, this.drop, this.device.el, this.folder, this.steps, this.result, this.links.el),
         example));
     if (expected) this.openKeptCopy(expected.recording_id);
   }
@@ -131,9 +134,16 @@ export class OpenView {
   /** A copy of the expected recording kept on this device (js/views/device.js) opens by itself. */
   async openKeptCopy(recordingId) {
     const got = await keptCopy(this.app, recordingId);
-    if (!got || this.app.openView !== this || this.app.route !== this.route) return;
+    if (this.app.openView !== this || this.app.route !== this.route) return;
+    if (!got) { await this.openFromFolder(); return; } // not kept here: from the recordings folder, if it is there
     if (got.problem) { this.showMessage(got.problem, [this.chooseAgainButton()]); return; }
     this.handle(got.files, false, { kind: 'device', keep: false, sha256: got.meta.sha256 });
+  }
+
+  /** The expected recording from the person's recordings folder (js/views/folder.js), when they have one. */
+  async openFromFolder() {
+    if (!this.expected || this.app.openView !== this || this.app.route !== this.route) return false;
+    return openFromFolder(this.app, this, this.expected.file_name, { keep: Boolean(this.device.box && this.device.box.checked) });
   }
 
   /** The view is no longer shown: a download from a link still running is stopped. */
