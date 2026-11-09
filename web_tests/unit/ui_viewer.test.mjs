@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { axisFormat, axisTitle, columnMinMax, decimateColumns, layoutTags, niceStep, stepOption, tickLabel, voltsText, DURATIONS, CHANNEL_COUNTS } from '../../electrotag/web/static/js/viewer/geometry.js';
+import { axisFormat, axisTitle, columnMinMax, decimateColumns, fitTags, layoutTags, niceStep, stepOption, tickLabel, voltsText, DURATIONS, CHANNEL_COUNTS } from '../../electrotag/web/static/js/viewer/geometry.js';
 import { filesForRecording } from '../../electrotag/web/static/js/views/open.js';
 
 test('min and max per pixel column', () => {
@@ -67,4 +67,21 @@ test('the time axis: one format per screen, named by its title, with the decimal
   assert.equal(tickLabel(59.96, 0.1, 'clock'), '1:00.0', 'never 0:60.0');
   assert.equal(tickLabel(3725.5, 0.5, 'clock'), '1:02:05.5');
   assert.equal(tickLabel(12.5, 0.5, 's'), '12.5');
+});
+
+test('tags: whole where they fit in two rows, cut to their numbers and set side by side where more overlap', () => {
+  const tag = (x, w = 120) => ({ x, w, wShort: 24 });
+  // two overlapping and one apart: all whole, in two rows
+  assert.deepEqual(fitTags([tag(100), tag(150), tag(400)]), [{ row: 0, x: 100, short: false }, { row: 1, x: 150, short: false }, { row: 0, x: 400, short: false }]);
+  // three in the same stretch of time: cut to numbers, side by side in time order, centred on them; the one apart stays whole
+  const three = fitTags([tag(210), tag(200), tag(205), tag(700)], 2, { x0: 0, x1: 1000 });
+  assert.deepEqual(three.map((p) => [p.row, p.short]), [[0, true], [0, true], [0, true], [0, false]]);
+  assert.deepEqual([three[1].x, three[2].x, three[0].x], [177, 205, 233], 'in time order, 4 pixels apart, centred on the group');
+  // near the left edge: kept on screen
+  const edge = fitTags([tag(5), tag(6), tag(7)], 2, { x0: 0, x1: 1000 });
+  assert.equal(Math.min(...edge.map((p) => p.x - 12)), 0);
+  // too many for one row of a narrow plot: they continue on the second
+  const many = fitTags(Array.from({ length: 6 }, () => tag(50)), 2, { x0: 0, x1: 100 });
+  assert.deepEqual(many.map((p) => p.row), [0, 0, 0, 1, 1, 1]);
+  assert.ok(many.every((p) => p.short));
 });

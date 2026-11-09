@@ -135,6 +135,63 @@ export function layoutTags(tags, rows = 2, gap = 4) {
   return out;
 }
 
+/**
+ * Places the tags above the traces (docs/using.md, "The annotation view"). Each tag {x, w, wShort} (its
+ * centre, its width, and its width cut to its type's number) keeps its whole text where the tags around it
+ * fit in the `rows`; a group of tags that overlap one another and would not fit is cut to their numbers and
+ * set side by side, in time order, centred on the group and kept between x0 and x1 (continuing on the next
+ * row when one is too narrow). Returns, for each tag, {row, x, short}.
+ */
+export function fitTags(tags, rows = 2, { gap = 4, x0 = -Infinity, x1 = Infinity } = {}) {
+  const out = tags.map((t) => ({ row: 0, x: t.x, short: false }));
+  const order = tags.map((t, i) => i).sort((a, b) => tags[a].x - tags[b].x);
+  // groups of tags whose whole widths overlap, one after another
+  const groups = [];
+  let reach = -Infinity;
+  for (const i of order) {
+    const t = tags[i];
+    if (t.x - t.w / 2 >= reach + gap) { groups.push([i]); reach = t.x + t.w / 2; } else {
+      groups[groups.length - 1].push(i);
+      reach = Math.max(reach, t.x + t.w / 2);
+    }
+  }
+  for (const g of groups) {
+    const right = new Array(rows).fill(-Infinity);
+    let fits = true;
+    for (const i of g) {
+      const t = tags[i];
+      const row = right.findIndex((r) => t.x - t.w / 2 >= r + gap);
+      if (row < 0) { fits = false; break; }
+      right[row] = t.x + t.w / 2;
+      out[i].row = row;
+    }
+    if (fits) continue;
+    // cut to their numbers, side by side
+    const left = Math.min(...g.map((i) => tags[i].x - tags[i].w / 2));
+    const rightmost = Math.max(...g.map((i) => tags[i].x + tags[i].w / 2));
+    const room = Number.isFinite(x1 - x0) ? x1 - x0 : Infinity;
+    const lines = [[]];
+    let used = 0;
+    for (const i of g) {
+      const w = tags[i].wShort;
+      if (lines[lines.length - 1].length && used + gap + w > room && lines.length < rows) { lines.push([]); used = 0; }
+      used += (lines[lines.length - 1].length ? gap : 0) + w;
+      lines[lines.length - 1].push(i);
+    }
+    lines.forEach((line, row) => {
+      const width = line.reduce((n, i) => n + tags[i].wShort, 0) + gap * (line.length - 1);
+      let start = (left + rightmost) / 2 - width / 2;
+      if (start + width > x1) start = x1 - width;
+      if (start < x0) start = x0;
+      for (const i of line) {
+        out[i] = { row, x: start + tags[i].wShort / 2, short: true };
+        start += tags[i].wShort + gap;
+      }
+    });
+  }
+  return out;
+}
+
 /** Display options for seconds and channels shown (Home/End and Page Up/Page Down step through them). */
 export const DURATIONS = [1, 2, 5, 10, 20, 30, 60, 120]; // the toolbar's time scales (scales.js TIME_SCALES), then two minutes
 export const CHANNEL_COUNTS = [1, 2, 4, 8, 12, 16, 20, 24, 32, 48, 64, 96, 128, 192, 256];

@@ -11,6 +11,10 @@ by a hand-out, by a task or in the training programme. Recordings assigned one b
 hand-outs and tasks leave out, are found there with the rest. The admin interface's `assignments_list` gives each
 item's `source`, `task_id` and `handout_id` for it (docs/admin_area.md, "Giving out work").
 
+Where more than two marks overlap in time, their labels above the EEG no longer cover one another: they are cut
+to their types' numbers (1 to 9, 0 for Uncertain) and set side by side, each still selecting its mark, with its type
+named in full under the pointer (docs/using.md, "The annotation view").
+
 The annotation view makes better use of a laptop screen. The side panel's edge can be dragged (or moved with
 the arrow keys) to widen or narrow it, and a double click puts it back; once it is 600 pixels wide, the
 topographic map and any coaching or review panel sit on its left and the tabs on its right with the panel's whole
