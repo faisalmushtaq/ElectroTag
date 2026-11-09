@@ -40,7 +40,7 @@ const QUESTIONNAIRE_GATED = ['match', 'putDraft', 'submit', 'training', 'guided'
   'trainingStage', 'trainingSnippets', 'quiz', 'expert'];
 const QUESTIONNAIRE_ADMIN_OPS = ['questionnaire_get', 'questionnaire_summary', 'contacts_download', 'users_list'];
 const TRAINING_ADMIN_OPS = ['snippets_list', 'snippet_add', 'snippet_remove', 'training_gate_get', 'training_reopen', 'training_assessment_set',
-  'assessment_decide', 'training_let_through', 'assessments_waiting_list', 'assessment_review_get'];
+  'assessment_decide', 'training_let_through', 'assessments_waiting_list', 'assessment_review_get', 'artifact_texts_list', 'artifact_text_set'];
 const TOKEN_KEY = 'electrotag.demo.token';
 export const DEMO_PASSWORD = 'demo';
 const FIND_WINDOW_S = 10;
@@ -76,7 +76,7 @@ export const TRAINING_SET = Object.freeze({
 /** The answer for a segment without an artifact (electrotag.training.reference.NONE_OPTION). */
 export const QUIZ_NONE_OPTION = 'No artifact / none of these';
 
-/** The sandbox's short-segment quiz, on the training set: segments of the first two examples, with feedback after each answer. */
+/** The sandbox's short-segment quiz on the training set, with feedback after each answer. */
 export const QUIZ = Object.freeze({
   set_id: TRAINING_SET.set_id,
   feedback: 'immediate',
@@ -301,9 +301,9 @@ export class DemoBackend {
     return {
       annotator_id: aid, display_name: acc.display_name, role: primaryRole(rolesOf(acc)), roles: rolesOf(acc),
       study: this._admin.studyBlock(),
-      catalogue: CATALOGUE,
+      catalogue: (await this._trainingPart()).catalogue(),
       programme: this._inProgramme(aid) ? { set_id: TRAINING_SET.set_id, name: this._exampleSet().name, complete: !this._nextStep(aid).stage } : null,
-      training_gate: (await this._trainingPart()).gate(aid),
+      training_gate: this.trainingStages.gate(aid),
       tour: this.trainingStages.tourOf(aid),
       questionnaire: (await this._questionnairePart()).status(aid),
       quizzes: this._quizAllowed(aid) ? [{ set_id: QUIZ.set_id, name: this._exampleSet().name, n_items: QUIZ.items.length,
@@ -997,7 +997,7 @@ export class DemoBackend {
 
   _tolerance() { return { ...rules.DEFAULT_TOLERANCE, ...(this._exampleSet().guided_tolerance || {}) }; }
 
-  /** A trainee's progress (training/programme.py Progress): the guided summaries, the practice attempts and the stage events. */
+  /** A trainee's progress (programme.py Progress): guided summaries, practice attempts, stage events. */
   _progress(aid) {
     if (!this.state.progress[aid]) this.state.progress[aid] = { guided: {}, practice: {}, events: [] };
     const p = this.state.progress[aid];
