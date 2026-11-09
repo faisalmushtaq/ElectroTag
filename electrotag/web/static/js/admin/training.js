@@ -286,11 +286,27 @@ export class TrainingSection {
   _addReferenceCard(s) {
     const msg = messageArea();
     const out = h('div.admin-result');
-    const recs = this.recordings.filter((r) => r.scope === 'study' || r.scope === `set:${s.set_id}`);
-    const recording = select([
-      { group: 'This set', options: recs.filter((r) => r.scope !== 'study').map((r) => [`${r.scope}|${r.recording_id}`, r.recording_id]) },
-      { group: 'The study', options: recs.filter((r) => r.scope === 'study').map((r) => [`study|${r.recording_id}`, r.recording_id]) },
-    ].filter((g) => g.options.length));
+    // The recordings offered: those someone has saved annotations of (in the study or in this set), and those
+    // that already hold a reference in a set, which a reference can be made from; for an annotation file,
+    // which brings its own, every recording.
+    const recs = this.recordings.filter((r) => (r.scope === 'study' || r.scope === `set:${s.set_id}`) && !r.retired);
+    const referenced = new Set(this.sets.flatMap((x) => (x.recordings || []).filter((e) => e.n_reference_events > 0).map((e) => `${x.scope}|${e.recording_id}`)));
+    const annotated = (r) => (r.done || 0) > 0 || referenced.has(`${r.scope}|${r.recording_id}`);
+    const recording = select([]);
+    const recordingNote = h('p.caption', { role: 'status' });
+    const fillRecordings = (all) => {
+      const was = recording.value;
+      const shown = all ? recs : recs.filter(annotated);
+      const groups = [
+        { group: 'This set', options: shown.filter((r) => r.scope !== 'study').map((r) => [`${r.scope}|${r.recording_id}`, r.recording_id]) },
+        { group: 'The study', options: shown.filter((r) => r.scope === 'study').map((r) => [`study|${r.recording_id}`, r.recording_id]) },
+      ].filter((g) => g.options.length);
+      recording.replaceChildren(...(groups.length ? select(groups).children : [h('option', { value: '' }, 'No recording has been annotated yet')]));
+      if ([...recording.options].some((o) => o.value === was)) recording.value = was;
+      const hidden = recs.length - shown.length;
+      recordingNote.textContent = all ? 'Every registered recording, since the file brings its own annotations.'
+        : hidden ? `Only recordings with annotations (someone's saved work, or a reference already); ${plural(hidden, 'recording')} with none ${hidden === 1 ? 'is' : 'are'} left out.` : '';
+    };
     const use = radios(`new-use-${s.set_id}`, Object.entries(USES).map(([v, t]) => [v, t]), '');
     const kinds = [
       ['annotator', 'Someone\'s saved annotations', 'An expert annotates the recording in this study (in Annotation mode), and their saved work becomes the reference.'],
@@ -360,7 +376,11 @@ export class TrainingSection {
     unit.addEventListener('change', syncUnit);
     const adjudicationPart = h('div.source-part', {}, field('Adjudication', unit, { hint: 'Only adjudications of a whole recording can be references; the recording chosen above is replaced by the adjudication\'s own.' }), unitInfo);
     const parts = { annotator: annotatorPart, document: documentPart, consensus: consensusPart, adjudication: adjudicationPart, adjudicated: adjudicatedPart };
-    const sync = () => { for (const [k, el] of Object.entries(parts)) el.hidden = kind.value() !== k; if (kind.value() === 'adjudication') loadUnits(); };
+    const sync = () => {
+      for (const [k, el] of Object.entries(parts)) el.hidden = kind.value() !== k;
+      if (kind.value() === 'adjudication') loadUnits();
+      fillRecordings(kind.value() === 'document');
+    };
     kind.addEventListener('change', sync);
     sync();
     const notes = textArea({ rows: 2, placeholder: 'optional: who the experts are, how they worked' });
@@ -370,7 +390,8 @@ export class TrainingSection {
       const k = kind.value();
       const chosenUnit = k === 'adjudication' ? (units || []).find((x) => x.unit_id === unit.value) : null;
       if (k === 'adjudication' && !chosenUnit) throw new Error('Choose a finished adjudication.');
-      if (!chosenUnit && !recording.value) throw new Error('Choose the recording first (add it on the Recordings page if it is not listed).');
+      if (!chosenUnit && !recording.value) throw new Error(this.area.forExperts ? 'Choose the recording first: it is listed once someone has saved annotations of it.'
+        : 'Choose the recording first: it is listed once it is registered (Recordings page) and someone has saved annotations of it.');
       if (!use.value()) throw new Error('Choose how the recording is used: guided, practice or assessment.');
       const [scope, rid] = chosenUnit ? ['study', chosenUnit.recording_id]
         : [recording.value.slice(0, recording.value.indexOf('|')), recording.value.slice(recording.value.indexOf('|') + 1)];
@@ -399,8 +420,8 @@ export class TrainingSection {
       if (rows) this._showDisagreements(rows, rid);
     } });
     return card('Add a recording with its reference',
-      h('p.caption', {}, 'The recording must be registered first (Recordings page). A study recording is copied into the set, so it is never offered for study annotation through the set.'),
-      field('Recording', recording),
+      h('p.caption', {}, `${this.area.forExperts ? 'The recording must be registered by an administrator first.' : 'The recording must be registered first (Recordings page).'} A study recording is copied into the set, so it is never offered for study annotation through the set.`),
+      field('Recording', recording), recordingNote,
       h('fieldset.admin-fieldset', {}, h('legend', {}, 'Used for'), use),
       h('fieldset.admin-fieldset', {}, h('legend', {}, 'The reference comes from'), kind),
       annotatorPart, documentPart, consensusPart, adjudicationPart, adjudicatedPart,

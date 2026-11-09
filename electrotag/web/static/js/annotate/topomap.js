@@ -232,12 +232,21 @@ export class TopoMap {
     const n = ws.s.recording.nSamples;
     const v = ws.viewer.view;
     const centre = target.what === 'moment' ? target.at : Math.round((target.w0 + target.w1) / 2);
-    // Each channel is centred on its mean over the screen, as the viewer centres its trace, when the screen
-    // holds what is mapped and is not too long; otherwise over the stretch of that length around it.
-    const most = Math.round(MAX_BASELINE_S * sf);
-    let b0 = Math.floor(v.startS * sf);
-    let b1 = Math.ceil((v.startS + v.durationS) * sf);
-    if (b1 - b0 > most || centre < b0 || centre >= b1) { b0 = centre - Math.floor(most / 2); b1 = b0 + most; }
+    // Each channel is centred on its mean over the screen as it was when the moment was clicked or the mark
+    // chosen, as the viewer centres its trace, when the screen held what is mapped and was not too long;
+    // otherwise over the stretch of that length around it. The stretch stays with what is mapped, so that
+    // scrolling the EEG afterwards leaves the map as it is.
+    const where = target.what === 'moment' ? `at ${target.at}` : `${target.w0}-${target.w1}`;
+    let b0;
+    let b1;
+    if (this._base && this._base.where === where) ({ b0, b1 } = this._base);
+    else {
+      const most = Math.round(MAX_BASELINE_S * sf);
+      b0 = Math.floor(v.startS * sf);
+      b1 = Math.ceil((v.startS + v.durationS) * sf);
+      if (b1 - b0 > most || centre < b0 || centre >= b1) { b0 = centre - Math.floor(most / 2); b1 = b0 + most; }
+      this._base = { where, b0, b1 };
+    }
     b0 = clamp(b0, 0, n - 1); b1 = clamp(b1, b0 + 1, n);
     const r0 = Math.min(b0, target.what === 'moment' ? target.at : target.w0);
     const r1 = Math.max(b1, target.what === 'moment' ? target.at + 1 : target.w1);

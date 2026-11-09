@@ -81,6 +81,7 @@ const INVITE_PROBLEMS = {
   expired: [409, 'This invitation link has expired. To get a new link, contact the study team who invited you, for example by replying to the email that brought you this one.'],
 };
 /** Why an administrator's account is not given an invitation link (electrotag/web/admin.py, ADMIN_NOT_INVITED). */
+const EXPERT_OPS = /^(sets_list|recordings_list|users_list|set_(create|example_create|recording_update|remove_recording|guided_notes?|add_reference|update|delete)|quiz_items|quiz_item_(add|remove)|snippets_list|snippet_(add|remove))$/;
 const ADMIN_NOT_INVITED = 'Invitation links are for annotators: a link sent by email must not open the admin area. Give an administrator a password instead (a temporary one, or one you choose).';
 const inviteProblem = (reason) => new ApiError(INVITE_PROBLEMS[reason][0], `invite_${reason}`, INVITE_PROBLEMS[reason][1]);
 /** The roles that can be given, those kept for later, and the IDs that are never accounts (electrotag/web/store.py). */
@@ -422,12 +423,17 @@ export class DemoAdmin {
   }
 
   // ----------------------------------------------------------------- helpers
-  _actor() {
+  _actor(op) {
     const aid = this.b._aid();
     const u = this.user(aid);
-    if (!u || !rolesOf(u).includes('admin') || u.status !== 'active') throw new ApiError(403, 'forbidden', 'Only study administrators can use the admin area');
+    const r = u ? rolesOf(u) : [];
+    // experts set up reference sets too (admin.py EXPERT_OPERATIONS)
+    const ok = r.includes('admin') || (r.includes('expert') && EXPERT_OPS.test(op || ''));
+    if (!u || !ok || u.status !== 'active') throw new ApiError(403, 'forbidden', 'Only study administrators can use the admin area');
     return aid;
   }
+
+  _isAdmin() { return rolesOf(this.user(this.b._aid()) || {}).includes('admin'); }
 
   _audit(op, summary, details = {}) {
     this.s.audit.push({ at: nowLocalIso(), by: this.b.annotatorId || 'unknown', op, summary, details });
@@ -604,7 +610,7 @@ export class DemoAdmin {
 
   // ------------------------------------------------------------------ dispatch
   async run(op, body = {}) {
-    this._actor();
+    this._actor(op);
     const b = body && typeof body === 'object' ? body : {};
     if (SERVER_ONLY[op]) throw needsServer(SERVER_ONLY[op]);
     const fn = this[`op_${op}`];
@@ -692,6 +698,7 @@ export class DemoAdmin {
 
   // ------------------------------------------------------------------ accounts
   op_users_list() {
+    if (!this._isAdmin()) return { users: this._accounts.map((u) => ({ annotator_id: u.annotator_id, roles: rolesOf(u) })) };
     const items = this._items();
     return { users: this._accounts.map((u) => this._userRecord(u, items)) };
   }

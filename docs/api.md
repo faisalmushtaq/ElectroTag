@@ -860,6 +860,15 @@ change the study (`"by": "command"`). `GET /admin/progress` and
 study afresh, so a change made through one Firebase instance is seen by the
 next call whichever instance answers it.
 
+Experts (role `expert`) may use the operations that set up reference sets, so that they can do it
+from the expert area's Training sets: `sets_list`, `recordings_list`, `users_list` (for an expert,
+each account's `annotator_id` and `roles` only), `set_create`, `set_example_create`,
+`set_recording_update`, `set_remove_recording`, `set_guided_notes`, `set_guided_note`,
+`set_add_reference`, `set_update`, `set_delete`, `quiz_items`, `quiz_item_add`, `quiz_item_remove`,
+`snippets_list`, `snippet_add` and `snippet_remove` (`EXPERT_OPERATIONS` in
+`electrotag/web/admin.py`). Their changes are audited under their own ID, and every other
+administrative operation answers them 403 `forbidden`.
+
 The EEG never reaches the study: an administrator adds recordings by choosing
 them on their own computer, the browser reads them and builds each
 recording's manifest (`js/eeg/register.js`), and only the manifests are sent
