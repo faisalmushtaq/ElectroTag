@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Everyone can choose a recordings folder once, from the home page, the page that opens recordings or the admin
+area's Add recordings from this computer: ElectroTag then finds each recording they open there (in the folders
+inside it too), with its BrainVision files and electrodes.tsv, and opens it without asking for the file, saying
+so by name when it is not there. Chrome and Edge keep the folder between visits, asking once on a later visit
+whether ElectroTag may read it again; Safari and Firefox keep it for the visit. Files are read where they are and
+never copied. Administrators can add the recordings of their folder with Use my recordings folder.
+
 The topographic map no longer changes as the EEG is scrolled: each channel is centred on its mean over the
 seconds that were on the screen when the moment was clicked or the mark chosen, and the map stays as it is
 until another moment or mark is chosen.

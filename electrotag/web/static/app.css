@@ -483,6 +483,12 @@ ul.examples b { font-weight: 400; color: var(--ink); }
 .device-row label.check { margin: 0; }
 .link-panel label.check { margin: 12px 0 0; }
 .device-line { margin: 12px 0 0; }
+/* The recordings folder (js/views/folder.js): where ElectroTag finds each recording, with its buttons. */
+.folder-line { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+.folder-line p { margin: 0 0 8px; color: var(--text-secondary); font: var(--t-14); }
+.folder-line p b { color: var(--text); font-weight: 600; }
+.folder-line .folder-name { color: var(--text); overflow-wrap: anywhere; }
+.folder-line .btn-row { margin: 0; }
 .device-panel table.list { margin: 12px 0; }
 .device-panel .device-confirm { flex-basis: 100%; margin: 0; }
 .device-panel label.check { margin-top: 16px; }

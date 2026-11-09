@@ -351,6 +351,11 @@ coordsystem.json (empty when there is none). It names neither the file nor where
 a recording is kept on the device, `device_kept` says with `electrodes` (true or false) whether its
 electrode files were kept with it.
 
+**The recordings folder.** `recordings_folder` records, by `action`, a folder `chosen` or
+`forgotten`, a recording `found` in it or `missing` from it, the browser's answer when asked again
+(`allowed` or `refused`) and a folder that has `gone`, with `mode` (`kept` between visits or
+`visit`); never the folder's or the files' names.
+
 **The topographic map.** Once per recording opened, `topomap_available` says whether the map is
 shown (`shown`), where its electrode positions come from (`source`: `file`, `standard` or `none`),
 whether they were given when the recording was added to the study (`registered`) and how many

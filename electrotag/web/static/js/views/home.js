@@ -9,6 +9,7 @@ import { ask } from '../ui/dialog.js';
 import { formatHms, local } from '../util.js';
 import { quizCard } from '../training/quiz_card.js';
 import { deviceHomeLine } from './device.js';
+import { folderLine } from './folder.js';
 import { recordingsCard } from './home_list.js';
 import { loadPart, partNow } from '../lazy.js';
 import { localDraft } from '../annotate/local_drafts.js';
@@ -112,6 +113,8 @@ export function homeView(app) {
   // recordings kept on this device under it (device.js).
   const list = recordingsCard(app);
   list.append(deviceHomeLine(app));
+  const folder = folderLine(app); // where ElectroTag finds the recordings (folder.js)
+  if (folder) list.append(folder);
 
   let demo = null;
   if (b && b.isDemo) {
