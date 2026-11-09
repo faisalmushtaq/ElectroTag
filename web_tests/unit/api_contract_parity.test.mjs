@@ -379,6 +379,10 @@ async function script(call) {
   await call('expert overlay_get (too many lanes)', (s) => s.b.expert('overlay_get', { recording_id: r1, detail: ['A01', 'A02', 'A03', 'A04', 'A05', 'A06', 'A07', 'A08', 'A09'] }));
   await call('expert overlay_teaching_list', (s) => s.b.expert('overlay_teaching_list', {}));
   await call('admin as an expert', (s) => s.b.admin('overview', {}));
+  // experts set up reference sets as administrators do (admin.py EXPERT_OPERATIONS), and see accounts by ID only
+  await call('admin sets_list as an expert', (s) => s.b.admin('sets_list', {}));
+  await call('admin users_list as an expert', (s) => s.b.admin('users_list', {}));
+  await call('admin user_add as an expert', (s) => s.b.admin('user_add', { annotator_id: 'X99', roles: ['annotator'] }));
   await call('logout', (s) => s.b.logout());
   await call('login', (s) => s.b.login('A01', s.password));
   await call('my feedback (one correction)', (s) => s.b.myFeedback());

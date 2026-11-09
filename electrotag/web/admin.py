@@ -113,6 +113,13 @@ from electrotag.web.probability import READS as PROBABILITY_READS  # noqa: E402
 
 READ_ONLY += PROBABILITY_READS
 OPERATIONS += PROBABILITY_READS
+#: The operations of the Training section that the study's experts may use too, to set up reference sets as
+#: administrators do (the expert area's Training sets; docs/admin_area.md, "The expert area"). Their changes are audited
+#: under the expert's ID. users_list gives an expert the accounts' IDs and roles only.
+EXPERT_OPERATIONS = ("sets_list", "recordings_list", "users_list", "set_create", "set_example_create",
+                     "set_recording_update", "set_remove_recording", "set_guided_notes", "set_guided_note",
+                     "set_add_reference", "set_update", "set_delete", "quiz_items", "quiz_item_add",
+                     "quiz_item_remove", "snippets_list", "snippet_add", "snippet_remove")
 
 
 # ------------------------------------------------------------------ checking input
@@ -374,7 +381,7 @@ class Admin:
         return self.service.store
 
     def run(self, op: Any, user: User, body: dict[str, Any]) -> dict[str, Any]:
-        if not user.is_admin:
+        if not user.is_admin and not (user.is_expert and isinstance(op, str) and op in EXPERT_OPERATIONS):
             raise ApiError(403, "forbidden", "Only study administrators can use the admin area")
         if not isinstance(op, str) or op not in OPERATIONS:
             raise ApiError(404, "not_found", f"This server does not offer the administrative operation {op!r}")
@@ -688,6 +695,9 @@ class Admin:
 
     # --------------------------------------------------------------- users
     def op_users_list(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        if not user.is_admin:  # an expert setting up a reference set: whose work there is, and nothing else
+            return {"users": [{"annotator_id": r["annotator_id"], "roles": list(_rec_roles(r))}
+                              for r in self.store.user_records()]}
         invitations = self.store.invitations()
         users = [self.user_out(r, invitations) for r in self.store.user_records()]
         self.service.questionnaire.add_to_users(users)  # full_name and questionnaire, for the study team only

@@ -680,13 +680,18 @@ trainees see a reference only where the programme shows it to them (the guided s
 after a practice recording when the set allows it).
 
 Choose a set on the left, or create one with New reference set (an identifier such as `pilot`, which
-cannot be changed, a name and a description). Its page has four tabs.
+cannot be changed, a name and a description). Its page has four tabs. The study's experts set up
+reference sets in the same way, from Training sets in the expert area ("The expert area" below).
 
 ### Recordings and references
 
 The first tab lists the set's recordings, what each is used for (guided learning, practice or
 assessment), where its reference came from and how many annotations it holds. To add a recording,
-choose it (it must be registered first, in the study or in this set), choose how it is used, with
+choose it (it must be registered first, in the study or in this set; the list offers only the
+recordings with annotations to make a reference from, those that someone has saved annotations of
+or that already hold a reference in a set, and every registered recording when the reference is an
+annotation file, since the file brings its own),
+choose how it is used, with
 no default, because a recording used by mistake for assessment after practice would no longer be
 blinded, and choose where its reference comes from. There are four sources.
 
@@ -731,7 +736,15 @@ of where the reference came from.
 
 Manage changes what a recording is used for and, for a guided recording, how much help it gives:
 by its place in the set (the first guided recording shows each artifact, the second names it,
-later ones only say an artifact follows), or one of these levels chosen for it. When a recording
+later ones only say an artifact follows), or one of these levels chosen for it, and the line under
+the choice says what the level chosen does. Show each artifact outlines each of the experts'
+artifacts on the screen, with its type and channels, for the trainee to mark over; Name each
+artifact tells the trainee its type and shows a screen that holds it, and they find where it is;
+Only say an artifact follows leaves them to find it, choose its type and mark it; and Correct the
+marks gives them a copy of the experts' marks with deliberate mistakes to put right. Correct the
+marks is offered only for a recording whose exercise has been made from its reference as it is now
+("Correct the marks" below); until then a note under the choice says to make it first, and it
+appears as soon as it is made. When a recording
 that trainees have already annotated in training becomes an assessment recording, the page warns
 that the assessment is no longer blinded for them. Edit the guided notes writes the note shown with
 each of the experts' annotations while a trainee is guided through the recording. Remove from the
@@ -1176,6 +1189,13 @@ recordings of a training set with its own recordings), never a study recording, 
 watches an expert mark a recording they hold, or may later be given, as study work; "Replaying a
 session" below says how to give them sessions to watch.
 
+**Training sets.** Experts set up the reference sets behind the training programme, the competency
+assessment and the quiz as administrators do, in the expert area's Training sets: the admin area's
+Training section ("Training" above), with its four tabs and its Snippets. Their changes are written to
+the study's audit log under their own ID. Registering recordings stays with the administrators, so a
+recording appears there once an administrator has added it and it has annotations;
+and where the admin area lists people with their names, an expert sees their IDs only.
+
 ### Saved work
 
 Saved work lists every saved study recording, the latest version of each person's work, newest
@@ -1491,9 +1511,11 @@ would be told, and **Show the experts' marks** to see the reference as dashed ou
 exercise** gives the recording back to the step-by-step coach.
 
 To give the exercise to trainees, choose **Correct the marks** under "How much help the guided
-recording gives" in the recording's Manage; the study refuses that until the recording has an
-exercise. When a recording's reference is replaced, its exercise no longer fits it and trainees are
-not given it until it is made again. Trainees who did the recording before keep their results. In the
+recording gives" in the recording's Manage (Training in the admin area, or Training sets in the
+expert area). It is offered there only once the recording has an exercise made from its reference
+as it is now, and appears as soon as one is made; the exercise's page says so too. When a
+recording's reference is replaced, its exercise no longer fits it: trainees are not given it, and
+Correct the marks is not offered for the recording, until it is made again. Trainees who did the recording before keep their results. In the
 sandbox, the first guided recording of the demonstration set has a ready-made exercise to try; making
 exercises needs a study server or Firebase.
 

@@ -97,7 +97,11 @@ export function plantedPanel({ api, setId, recordingId, onTry, onMake = null, on
     } });
     append(body, [ // append() leaves out the parts this state has not got (body.append would write "null")
       h('p', {}, madeText(p)),
-      p && p.stale ? h('div.banner', {}, 'The reference of this recording was replaced after the exercise was made, so trainees are not given it. Make it again.') : null,
+      p && p.stale ? h('div.banner', {}, 'The reference of this recording was replaced after the exercise was made, so trainees are not given it, '
+        + 'and Correct the marks is not offered for it under How much help the guided recording gives. Make it again.') : null,
+      p && p.stale ? null : h('p.caption', { 'data-log': 'planted-give' }, !p
+        ? 'Correct the marks is offered for this recording, under How much help the guided recording gives in its Manage, once the exercise is made.'
+        : 'To give it to trainees, choose Correct the marks under How much help the guided recording gives in this recording\'s Manage (Training, or Training sets in the expert area).'),
       ...(p && p.capped ? (p.notes || []).map((n) => h('p.caption', {}, n)) : []),
       errorsTable,
       p ? h('div.btn-row', {}, tryBtn) : null,
