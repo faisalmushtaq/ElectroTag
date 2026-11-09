@@ -21,6 +21,23 @@ export function noteForGuideTab(keys, focus = null) {
   if (focus) local.set(GUIDE_FOCUS, focus); else local.remove(GUIDE_FOCUS);
 }
 
+/**
+ * A type's entry with the study's own words (GET /me catalogue labels' `guide`, from
+ * electrotag/web/artifact_texts.py) in place of these where it has changed them; `own` maps label -> those words.
+ */
+export function guideOf(label, own = null) {
+  const base = GUIDE[label] || { where: '', frequency: '', shape: '', duration: '', apart: [], example: null };
+  const mine = own && own[label];
+  return mine ? { ...base, ...mine, example: base.example } : base;
+}
+
+/** The study's own words for the guide, by label, from GET /me's catalogue (empty without any). */
+export function ownGuide(me) {
+  const out = {};
+  for (const l of (me && me.catalogue && me.catalogue.labels) || []) if (l && l.guide) out[l.label] = l.guide;
+  return out;
+}
+
 /** The channels of every example: the 10-20 positions most artifacts show on, the EOG and the ECG. */
 export const GUIDE_CHANNELS = Object.freeze(['Fp1', 'Fp2', 'F7', 'F3', 'Fz', 'F4', 'F8', 'T7', 'C3', 'Cz', 'C4', 'T8', 'P3', 'P4', 'O1', 'O2',
   'HEOG', 'VEOG', 'ECG']);
@@ -310,8 +327,8 @@ export function exampleSpec(label, value = 0) {
 }
 
 /** True when the words typed are all in what the guide says of a type (its names, codes and text). */
-export function guideMatches(l, text) {
-  const g = GUIDE[l.label] || {};
+export function guideMatches(l, text, own = null) {
+  const g = guideOf(l.label, own);
   const hay = [l.label, l.short_code, l.value, l.section, l.description, g.where, g.frequency, g.shape, g.duration,
     ...(g.apart || []).flat()].join(' ').toLowerCase().replace(/-/g, ' ');
   return String(text || '').toLowerCase().replace(/-/g, ' ').split(/\s+/).filter(Boolean).every((w) => hay.includes(w));

@@ -82,6 +82,9 @@ OPERATIONS = READ_ONLY + (
     "problem_reassign", "review_save",
     "tasks_create", "task_update", "task_remove",
     "set_planted_make", "set_planted_from", "set_planted_remove")
+# The study's own words for its artifact types (electrotag/web/artifact_texts.py), for experts as well.
+READ_ONLY += ("artifact_texts_list",)
+OPERATIONS += ("artifact_texts_list", "artifact_text_set")
 # The training path (electrotag/web/training_path.py): the snippets of a set, a trainee's path and the gate, and
 # what the study team does after an assessment that did not meet the criteria.
 READ_ONLY += ("snippets_list", "training_gate_get")
@@ -119,7 +122,8 @@ OPERATIONS += PROBABILITY_READS
 EXPERT_OPERATIONS = ("sets_list", "recordings_list", "users_list", "set_create", "set_example_create",
                      "set_recording_update", "set_remove_recording", "set_guided_notes", "set_guided_note",
                      "set_add_reference", "set_update", "set_delete", "quiz_items", "quiz_item_add",
-                     "quiz_item_remove", "snippets_list", "snippet_add", "snippet_remove")
+                     "quiz_item_remove", "snippets_list", "snippet_add", "snippet_remove",
+                     "artifact_texts_list", "artifact_text_set")
 
 
 # ------------------------------------------------------------------ checking input
@@ -1764,6 +1768,12 @@ class Admin:
 
     def op_snippet_remove(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.training_path.snippet_remove(user, body)
+
+    def op_artifact_texts_list(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.artifact_texts.list(user, body)
+
+    def op_artifact_text_set(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.artifact_texts.set(user, body)
 
     def op_training_gate_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.training_path.admin_gate_get(user, body)

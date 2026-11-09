@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Experts and administrators can put any artifact type's description, and the words of its entry in the artifact
+reference guide (where, frequency, shape, duration and how to tell it from its look-alikes), in the study's own
+words, under Training (and Training sets in the expert area), or take them back to the original; annotators and
+trainees see them on the type buttons, in the type picker, in training and in the guide. Each change is audited
+(docs/admin_area.md, "Artifact type descriptions").
+
 A change to a selected annotation that is no longer on the screen (a type key, Delete, a rating, a note or its times)
 first brings it back into view, centred with its channels, and the line at the bottom says so. Everyone outside a
 training programme is now offered the platform tour once on their home page, with Skip the tour, kept for their
