@@ -46,7 +46,7 @@ export class DemoQuestionnaire {
     admin.op_questionnaire_summary = () => this.summary();
     admin.op_contacts_download = () => this.contactsList();
     const users = admin.op_users_list.bind(admin);
-    admin.op_users_list = (body) => { const out = users(body); this.addToUsers(out.users); return out; };
+    admin.op_users_list = (body) => { const out = users(body); if (admin._isAdmin()) this.addToUsers(out.users); return out; }; // an expert's list has IDs only
   }
 
   get block() { return (this.b._admin.s.settings || {}).questionnaire || DEFAULT_SETTINGS.questionnaire; }

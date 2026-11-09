@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Experts can set up training sets as administrators do, from Training sets in the expert area: the admin
+area's Training section with its recordings and references, settings, competency criteria, quiz and
+snippets, audited under the expert's ID (registering recordings stays with the administrators). When a
+recording is added to a set, the list offers only the recordings with annotations (someone's saved work, or a
+reference already in a set), or every registered recording when the reference is an annotation file.
+
 The topographic map no longer changes as the EEG is scrolled: each channel is centred on its mean over the
 seconds that were on the screen when the moment was clicked or the mark chosen, and the map stays as it is
 until another moment or mark is chosen.

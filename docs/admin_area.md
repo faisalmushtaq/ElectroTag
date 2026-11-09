@@ -680,13 +680,18 @@ trainees see a reference only where the programme shows it to them (the guided s
 after a practice recording when the set allows it).
 
 Choose a set on the left, or create one with New reference set (an identifier such as `pilot`, which
-cannot be changed, a name and a description). Its page has four tabs.
+cannot be changed, a name and a description). Its page has four tabs. The study's experts set up
+reference sets in the same way, from Training sets in the expert area ("The expert area" below).
 
 ### Recordings and references
 
 The first tab lists the set's recordings, what each is used for (guided learning, practice or
 assessment), where its reference came from and how many annotations it holds. To add a recording,
-choose it (it must be registered first, in the study or in this set), choose how it is used, with
+choose it (it must be registered first, in the study or in this set; the list offers only the
+recordings with annotations to make a reference from, those that someone has saved annotations of
+or that already hold a reference in a set, and every registered recording when the reference is an
+annotation file, since the file brings its own),
+choose how it is used, with
 no default, because a recording used by mistake for assessment after practice would no longer be
 blinded, and choose where its reference comes from. There are four sources.
 
@@ -1175,6 +1180,13 @@ shown only an expert's sessions on the training recordings for learning with the
 recordings of a training set with its own recordings), never a study recording, so that nobody
 watches an expert mark a recording they hold, or may later be given, as study work; "Replaying a
 session" below says how to give them sessions to watch.
+
+**Training sets.** Experts set up the reference sets behind the training programme, the competency
+assessment and the quiz as administrators do, in the expert area's Training sets: the admin area's
+Training section ("Training" above), with its four tabs and its Snippets. Their changes are written to
+the study's audit log under their own ID. Registering recordings stays with the administrators, so a
+recording appears there once an administrator has added it and it has annotations;
+and where the admin area lists people with their names, an expert sees their IDs only.
 
 ### Saved work
 
