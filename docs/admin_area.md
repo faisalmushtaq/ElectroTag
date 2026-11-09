@@ -736,7 +736,15 @@ of where the reference came from.
 
 Manage changes what a recording is used for and, for a guided recording, how much help it gives:
 by its place in the set (the first guided recording shows each artifact, the second names it,
-later ones only say an artifact follows), or one of these levels chosen for it. When a recording
+later ones only say an artifact follows), or one of these levels chosen for it, and the line under
+the choice says what the level chosen does. Show each artifact outlines each of the experts'
+artifacts on the screen, with its type and channels, for the trainee to mark over; Name each
+artifact tells the trainee its type and shows a screen that holds it, and they find where it is;
+Only say an artifact follows leaves them to find it, choose its type and mark it; and Correct the
+marks gives them a copy of the experts' marks with deliberate mistakes to put right. Correct the
+marks is offered only for a recording whose exercise has been made from its reference as it is now
+("Correct the marks" below); until then a note under the choice says to make it first, and it
+appears as soon as it is made. When a recording
 that trainees have already annotated in training becomes an assessment recording, the page warns
 that the assessment is no longer blinded for them. Edit the guided notes writes the note shown with
 each of the experts' annotations while a trainee is guided through the recording. Remove from the
@@ -1503,9 +1511,11 @@ would be told, and **Show the experts' marks** to see the reference as dashed ou
 exercise** gives the recording back to the step-by-step coach.
 
 To give the exercise to trainees, choose **Correct the marks** under "How much help the guided
-recording gives" in the recording's Manage; the study refuses that until the recording has an
-exercise. When a recording's reference is replaced, its exercise no longer fits it and trainees are
-not given it until it is made again. Trainees who did the recording before keep their results. In the
+recording gives" in the recording's Manage (Training in the admin area, or Training sets in the
+expert area). It is offered there only once the recording has an exercise made from its reference
+as it is now, and appears as soon as one is made; the exercise's page says so too. When a
+recording's reference is replaced, its exercise no longer fits it: trainees are not given it, and
+Correct the marks is not offered for the recording, until it is made again. Trainees who did the recording before keep their results. In the
 sandbox, the first guided recording of the demonstration set has a ready-made exercise to try; making
 exercises needs a study server or Firebase.
 

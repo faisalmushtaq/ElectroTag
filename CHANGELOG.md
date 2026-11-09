@@ -5,6 +5,11 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+When a guided recording of a reference set is managed, the line under How much help the guided recording
+gives now describes the level chosen; it used to describe By its place in the set whatever was chosen. Correct
+the marks is offered there only for a recording whose exercise, the copy with deliberate mistakes, has been
+made.
+
 Experts can set up training sets as administrators do, from Training sets in the expert area: the admin
 area's Training section with its recordings and references, settings, competency criteria, quiz and
 snippets, audited under the expert's ID (registering recordings stays with the administrators). When a

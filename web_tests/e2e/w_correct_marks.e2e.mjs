@@ -26,6 +26,9 @@ export const tests = [
       await page.waitForSelector('.planted-admin table');
       assert.equal(await page.locator('.planted-admin tbody tr').count(), 4);
       assert.match(await page.textContent('.planted-admin'), /4 deliberate mistakes, made from seed 2026/);
+      // how it reaches trainees, now that Correct the marks is offered only with an exercise
+      assert.match(await page.textContent('[data-log="planted-give"]'), /choose Correct the marks under How much help the guided recording gives/);
+      assert.match(await page.locator('section[data-section="planted"]').textContent(), /A recording without an exercise is not offered it/);
       await t.screenshot(page, 'planted_expert_section');
       // making another needs a study server, said in plain words
       await page.locator('.planted-admin summary', { hasText: 'Make it again' }).click();

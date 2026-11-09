@@ -15,8 +15,9 @@ export class PlantedSection {
     this.detail = h('div.admin-stack');
     this.el = h('section.admin-section', { 'data-section': 'planted' },
       sectionHead('Correct the marks', 'An exercise for trainees in Learn with the experts: a copy of the experts\' marks for a guided recording, with '
-        + 'deliberate mistakes to put right. Make one for a recording, try it as a trainee would, then give it to trainees in Training '
-        + '(How much help the guided recording gives: Correct the marks).'),
+        + 'deliberate mistakes to put right. Make one for a recording and try it as a trainee would. Once it is made, Correct the marks '
+        + 'is one of the choices under How much help the guided recording gives, in the recording\'s Manage (Training sets in this area, '
+        + 'or Training in the admin area); choosing it gives the exercise to trainees. A recording without an exercise is not offered it.'),
       this.msg, this.body, this.detail);
   }
 
