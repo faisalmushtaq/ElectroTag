@@ -16,7 +16,7 @@ import { Catalogue, displayCode } from '../catalogue.js';
 import { CATALOGUE, DEFAULT_QUICK_LABELS, DEFAULT_SCALINGS } from '../api/demo_catalogue.js';
 import { local } from '../util.js';
 import { logger } from '../log/logger.js';
-import { GUIDE, GUIDE_FOCUS as FOCUS, GUIDE_KEYS as KEYS, exampleSpec, guideMatches, noteForGuideTab } from './artifacts.js';
+import { GUIDE_FOCUS as FOCUS, GUIDE_KEYS as KEYS, exampleSpec, guideMatches, guideOf, noteForGuideTab, ownGuide } from './artifacts.js';
 
 /** A link that opens the guide in a new tab, noting the study's keys (and a type to show first) as it is followed. */
 export function guideTabLink(app, text, { focus = null, className = '' } = {}) {
@@ -67,8 +67,8 @@ export function drawExample(host, l, catalogue, { channels: only = null } = {}) 
 }
 
 /** One type's entry. `example(host)` draws its example into the host given (lazily, when it is on the screen). */
-function typeCard(l, keys, { compact = false } = {}) {
-  const g = GUIDE[l.label] || { where: '', frequency: '', shape: '', duration: '', apart: [], example: null };
+function typeCard(l, keys, { compact = false, own = null } = {}) {
+  const g = guideOf(l.label, own); // with the study's own words where it has changed them
   const looks = [['Where', g.where], ['Frequency', g.frequency], ['Shape', g.shape], ['Duration', g.duration]].filter(([, v]) => v);
   const host = g.example ? h('div.guide-eeg', { 'aria-label': `A simulated example of ${l.label}` }) : null;
   const card = h(`article.guide-type${l.is_group ? '.group' : ''}`, { id: `type-${l.value}`, 'data-label': l.label, tabindex: '-1' },
@@ -98,6 +98,7 @@ export class GuideView {
     this.panel = panel;
     this.catalogue = catalogueOf(app);
     this.keys = guideKeys(app);
+    this.own = ownGuide(app && app.me);
     this.viewers = [];
     this.search = h('input.field.guide-search', { type: 'search', placeholder: 'Search, for example blink, frontal or 50 Hz', 'aria-label': 'Search the artifact types',
       autocomplete: 'off', spellcheck: 'false', 'data-log': 'guide-search', oninput: () => this._filter() });
@@ -105,7 +106,7 @@ export class GuideView {
     this.list = h('div.guide-list');
     this.cards = [];
     for (const s of this.catalogue.sections()) {
-      const cards = s.labels.map((l) => typeCard(l, this.keys, { compact: panel }));
+      const cards = s.labels.map((l) => typeCard(l, this.keys, { compact: panel, own: this.own }));
       this.cards.push(...cards);
       this.list.append(h('section.guide-family', { 'data-section': s.section }, h('h2', {}, s.section), ...cards));
     }
@@ -146,7 +147,7 @@ export class GuideView {
     const text = this.search.value.trim();
     let n = 0;
     for (const card of this.cards) {
-      const ok = !text || guideMatches(this.catalogue.get(card.dataset.label), text);
+      const ok = !text || guideMatches(this.catalogue.get(card.dataset.label), text, this.own);
       card.hidden = !ok;
       if (ok) n += 1;
     }

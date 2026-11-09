@@ -14,6 +14,10 @@ import { CATALOGUE } from './demo_catalogue.js';
 import { DONE_IN_BROWSER, STAGES, STAGE_TITLES, maySkip, stageMarks } from '../training/stages.js';
 import { nowLocalIso } from '../util.js';
 
+/** artifact_texts.py TEXT_FIELDS, and those of the guide (with the look-alikes). */
+const TEXT_NAMES = ['description', 'where', 'frequency', 'shape', 'duration'];
+const GUIDE_TEXT_FIELDS = ['where', 'frequency', 'shape', 'duration', 'apart'];
+
 const SNIPPET_MAX_S = 60;
 const SNIPPET_MAX_CONTEXT_S = 10;
 const MAX_EXPLANATION = 1000;
@@ -33,6 +37,79 @@ export class DemoTrainingStages {
     admin.op_training_gate_get = (body) => this.gateGet(body);
     admin.op_training_reopen = (body) => this.reopen(body);
     admin.op_training_assessment_set = (body) => this.assessmentSet(body);
+    admin.op_artifact_texts_list = () => this.textsList();
+    admin.op_artifact_text_set = (body) => this.textSet(body);
+  }
+
+  // ------------------------------------------------------------ the study's own words for its artifact types
+  /** The kept changes (artifact_texts.py): label -> {label, fields, changed_at, changed_by}, kept with the admin area's state. */
+  get _texts() { return this.b._admin.s.artifact_texts || (this.b._admin.s.artifact_texts = {}); }
+
+  /** GET /me's catalogue with the study's words (artifact_texts.py apply). */
+  catalogue() {
+    const texts = this._texts;
+    return { labels: CATALOGUE.labels.map((l) => {
+      const f = (texts[l.label] || {}).fields;
+      if (!f || !Object.keys(f).length) return l;
+      const guide = Object.fromEntries(GUIDE_TEXT_FIELDS.filter((k) => k in f).map((k) => [k, f[k]]));
+      return { ...l, ...(typeof f.description === 'string' ? { description: f.description } : {}), ...(Object.keys(guide).length ? { guide } : {}) };
+    }) };
+  }
+
+  /** artifact_texts_list. */
+  textsList() {
+    const texts = {};
+    for (const [label, r] of Object.entries(this._texts)) {
+      if (r.fields && Object.keys(r.fields).length) texts[label] = { fields: r.fields, changed_at: r.changed_at || null, changed_by: r.changed_by || null };
+    }
+    return { texts, original: Object.fromEntries(CATALOGUE.labels.map((l) => [l.label, l.description])) };
+  }
+
+  /** artifact_text_set (artifact_texts.py set). */
+  textSet(body) {
+    const known = (x) => typeof x === 'string' && CATALOGUE.labels.some((l) => l.label === x);
+    const { label, fields } = body || {};
+    if (!known(label)) throw bad("label must be one of the study's artifact types");
+    if (!fields || typeof fields !== 'object' || Array.isArray(fields) || !Object.keys(fields).length) {
+      throw bad('fields must name at least one of description, where, frequency, shape, duration or apart');
+    }
+    const clean = {};
+    for (const [name, value] of Object.entries(fields)) {
+      if (TEXT_NAMES.includes(name)) {
+        if (value !== null && (typeof value !== 'string' || value.length > 2000)) throw bad(`${name} must be text of at most 2000 characters, or null for the original`);
+        clean[name] = typeof value === 'string' ? value.trim() : null;
+        if (name === 'description' && clean[name] === '') throw bad("The description cannot be empty: write the study's own words, or set it back to the original");
+      } else if (name === 'apart') {
+        let v = value;
+        if (v !== null) {
+          if (!Array.isArray(v) || v.length > 12) throw bad('apart must be a list of at most 12 look-alikes, or null for the original');
+          v = v.map((row) => {
+            if (!Array.isArray(row) || row.length !== 2 || !known(row[0]) || typeof row[1] !== 'string' || !row[1].trim() || row[1].length > 2000) {
+              throw bad('each look-alike is [an artifact type of the study, how to tell them apart]');
+            }
+            return [row[0], row[1].trim()];
+          });
+        }
+        clean[name] = v;
+      } else {
+        throw bad(`${name} is not a text of an artifact type: description, where, frequency, shape, duration or apart`);
+      }
+    }
+    const kept = { ...((this._texts[label] || {}).fields || {}) };
+    const changed = [];
+    for (const [name, value] of Object.entries(clean)) {
+      if (value === null) { if (name in kept) { delete kept[name]; changed.push(name); } } else if (JSON.stringify(kept[name]) !== JSON.stringify(value)) { kept[name] = value; changed.push(name); }
+    }
+    if (changed.length) {
+      this._texts[label] = { label, fields: kept, changed_at: nowLocalIso(), changed_by: this.b.annotatorId };
+      this.b._save();
+      const back = changed.filter((n) => clean[n] === null);
+      const words = changed.filter((n) => !back.includes(n));
+      this.b._admin._audit('artifact_text_set', `Changed the texts of ${label}: ${[words.length ? `${words.join(', ')} in the study's own words` : '', back.length ? `${back.join(', ')} back to the original` : ''].filter(Boolean).join(', ')}`,
+        { label, changed, original: back, fields: Object.fromEntries(words.map((n) => [n, clean[n]])) });
+    }
+    const r = this._texts[label];
+    return { label, text: r && Object.keys(r.fields || {}).length ? { fields: r.fields, changed_at: r.changed_at, changed_by: r.changed_by } : null };
   }
 
   get set() { return this.b._exampleSet(); }

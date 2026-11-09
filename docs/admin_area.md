@@ -40,6 +40,7 @@ another way, for example on an encrypted drive, and open them in their own brows
   - [Competency criteria](#competency-criteria)
   - [Quiz](#quiz)
   - [Snippets](#snippets)
+  - [Artifact type descriptions](#artifact-type-descriptions)
   - [The example training set](#the-example-training-set)
 - [Analyses](#analyses)
 - [Results](#results)
@@ -853,6 +854,19 @@ are left out of the gallery. Remove takes
 a snippet out after asking. Experts add and remove snippets with the same operations in the expert
 channel (`snippet_add` and `snippet_remove` in [the API](api.md), "Training stages").
 
+### Artifact type descriptions
+
+Under the reference sets, Artifact type descriptions puts any artifact type in the study's own words.
+Choose a type: its description (the definition from the catalogue, shown on the type buttons, in the
+type picker, in training and at the top of its entry in the artifact reference guide) and the words of
+its guide entry (where it shows, its frequency, its shape, its duration, and how to tell it from each
+look-alike, with Add a look-alike and Remove) are shown as they stand, each marked as the original or
+the study's own words. Change any of them and press Save; annotators and trainees see the new words
+the next time a page opens, and your own pages at once. Use the original beside a field takes that
+field back. The example pictures of the guide stay as they are, and a description cannot be left empty.
+Each change is written to the audit log with the words saved, under the name of whoever made it.
+Experts can do the same from the expert area's Training sets.
+
 ### The example training set
 
 Create the example training set makes ElectroTag's simulated set (two recordings to learn with the
@@ -1231,7 +1245,7 @@ session" below says how to give them sessions to watch.
 
 **Training sets.** Experts set up the reference sets behind the training programme, the competency
 assessment and the quiz as administrators do, in the expert area's Training sets: the admin area's
-Training section ("Training" above), with its four tabs and its Snippets. Their changes are written to
+Training section ("Training" above), with its four tabs, its Snippets and the artifact type descriptions. Their changes are written to
 the study's audit log under their own ID. Registering recordings stays with the administrators, so a
 recording appears there once an administrator has added it and it has annotations;
 and where the admin area lists people with their names, an expert sees their IDs only.

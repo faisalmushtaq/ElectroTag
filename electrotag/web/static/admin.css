@@ -226,6 +226,11 @@ table.admin-info th { width: 1%; }
 .set-item[aria-current="true"] { border-left-color: var(--ink); background: var(--band); }
 .set-name { font-weight: 600; }
 .admin-tabs { padding: 0; margin-bottom: 0; flex-wrap: wrap; }
+/* Artifact type descriptions (js/admin/artifact_texts.js): each field with whose words it shows, and the look-alikes. */
+.artifact-texts > summary { font: var(--t-16); font-weight: 600; cursor: pointer; }
+.artifact-text-field { display: flex; flex-direction: column; gap: 4px; }
+.artifact-apart { display: flex; flex-direction: column; gap: 8px; }
+.artifact-apart-row { display: grid; grid-template-columns: minmax(160px, 240px) minmax(0, 1fr) auto; gap: 8px; align-items: start; }
 /* Giving out work (js/admin/work.js): its tabs are links, one page each, under the page's heading. */
 .work-tabs { margin-top: 16px; }
 .work-tabs a.tab { text-decoration: none; }
