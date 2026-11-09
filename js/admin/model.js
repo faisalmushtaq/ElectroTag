@@ -85,6 +85,14 @@ export const GUIDANCE = Object.freeze({
   find_unnamed: 'Only say an artifact follows',
   correct: 'Correct the marks (an exercise made first)',
 });
+/** What each level of help does, shown under How much help the guided recording gives (js/admin/training.js). */
+export const GUIDANCE_HINTS = Object.freeze({
+  auto: 'By its place in the set: the first guided recording shows each artifact, the second names it, later ones only say one follows.',
+  show: 'Each of the experts\' artifacts is outlined on the screen, with its type and channels, and the trainee marks over the outline.',
+  find: 'The trainee is told the type of each artifact and shown a screen that holds it, and finds where it is.',
+  find_unnamed: 'The trainee is only told that another artifact follows: they find it, choose its type and mark it themselves.',
+  correct: 'The trainee is given a copy of the experts\' marks with deliberate mistakes to put right. Make the exercise first, with Correct the marks below.',
+});
 export const SELECTION = Object.freeze({
   random: 'Random order',
   seeded: 'Reproducible order (with a seed)',
