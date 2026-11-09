@@ -731,7 +731,13 @@ of where the reference came from.
 
 Manage changes what a recording is used for and, for a guided recording, how much help it gives:
 by its place in the set (the first guided recording shows each artifact, the second names it,
-later ones only say an artifact follows), or one of these levels chosen for it. When a recording
+later ones only say an artifact follows), or one of these levels chosen for it, and the line under
+the choice says what the level chosen does. Show each artifact outlines each of the experts'
+artifacts on the screen, with its type and channels, for the trainee to mark over; Name each
+artifact tells the trainee its type and shows a screen that holds it, and they find where it is;
+Only say an artifact follows leaves them to find it, choose its type and mark it; and Correct the
+marks gives them a copy of the experts' marks with deliberate mistakes to put right, once the
+exercise has been made ("Correct the marks" below). When a recording
 that trainees have already annotated in training becomes an assessment recording, the page warns
 that the assessment is no longer blinded for them. Edit the guided notes writes the note shown with
 each of the experts' annotations while a trainee is guided through the recording. Remove from the

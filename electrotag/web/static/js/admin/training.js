@@ -7,7 +7,7 @@
 
 import { h, clear } from '../ui/dom.js';
 import {
-  GUIDANCE, MATCH_CRITERIA, METRICS, USES, USE_SHORT, checkSetId, criteriaFromRows, criteriaRows, describeProvenance, parseNumber, plural,
+  GUIDANCE, GUIDANCE_HINTS, MATCH_CRITERIA, METRICS, USES, USE_SHORT, checkSetId, criteriaFromRows, criteriaRows, describeProvenance, parseNumber, plural,
   SLIVER_S, readAnnotationDocument, scopeText, splitSlivers, tsvText,
 } from './model.js';
 import {
@@ -188,9 +188,16 @@ export class TrainingSection {
       await this.reload(warnings.length ? ['banner', `Saved, with a warning: ${warnings.join(' ')}`]
         : ['success', `Saved: ${r.recording_id} is used for ${(USE_SHORT[body.use || r.use] || '').toLowerCase()}.`]);
     } });
-    const guidanceField = field('How much help the guided recording gives', guidance, { hint: 'By its place: the first guided recording shows each artifact, the second names it, later ones only say one follows.' });
-    const syncGuidance = () => { guidanceField.hidden = (use.value() || r.use) !== 'guided'; };
+    const guidanceField = field('How much help the guided recording gives', guidance, { hint: GUIDANCE_HINTS.auto });
+    // the line under the choice says what the level chosen does
+    const guidanceHint = guidanceField.querySelector('p.caption');
+    guidanceHint.dataset.log = 'guidance-hint';
+    const syncGuidance = () => {
+      guidanceField.hidden = (use.value() || r.use) !== 'guided';
+      guidanceHint.textContent = GUIDANCE_HINTS[guidance.value] || '';
+    };
     use.addEventListener('change', syncGuidance);
+    guidance.addEventListener('change', syncGuidance);
     syncGuidance();
     const notesHost = h('div.admin-stack');
     const notesBtn = actionButton('Edit the guided notes', { working: 'Loading…', msg, onClick: () => this._guidedNotes(notesHost, s, r) });
