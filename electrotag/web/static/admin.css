@@ -497,10 +497,16 @@ pre.ho-notice-text {
 .artifact-filter { max-width: 320px; }
 .artifact-list { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow: auto; border: 1px solid var(--hairline); }
 .artifact-list li + li { border-top: 1px solid var(--hairline); }
+/* a box to tick beside each artifact, to add several at once; one already in the set is marked Added */
+.artifact-list li { display: flex; align-items: center; gap: 4px; }
+.artifact-list li .artifact-tick { flex: none; margin: 0 0 0 8px; }
+.artifact-list li .artifact-pick { flex: 1; min-width: 0; }
+.artifact-list li.added .artifact-pick { color: var(--text-secondary); cursor: default; }
+.artifact-added { flex: none; padding: 0 8px; }
 .artifact-pick {
   display: block; width: 100%; padding: 8px 12px; border: none; background: var(--surface); color: var(--text);
   font: var(--t-14); font-variant-numeric: tabular-nums lining-nums; text-align: left; cursor: pointer;
 }
 .artifact-pick[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-@media (hover: hover) { .artifact-pick:hover { background: var(--page); } }
+@media (hover: hover) { .artifact-pick:hover:not(:disabled) { background: var(--page); } }
 @media (pointer: coarse) { .artifact-pick { padding: 12px; font: var(--t-16); } }

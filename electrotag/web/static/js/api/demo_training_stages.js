@@ -190,6 +190,9 @@ export class DemoTrainingStages {
       throw bad('snippet_id is 1 to 64 letters, digits, dots, hyphens or underscores (not starting with g-)');
     }
     const kept = set.snippets || (set.snippets = []);
+    // the same artifact twice would show trainees the same example twice (training_path.py snippet_add)
+    const twin = kept.find((x) => x.snippet_id !== sid && x.recording_id === rid && Math.abs(x.start_s - start) < 0.0015 && Math.abs(x.end_s - end) < 0.0015 && x.label === body.label);
+    if (twin) throw new ApiError(409, 'duplicate', `The set already has this snippet (${twin.snippet_id}: ${body.label}, ${start.toFixed(2)}–${end.toFixed(2)} s of ${rid}).`);
     let id = sid;
     if (!id) {
       let n = 1;

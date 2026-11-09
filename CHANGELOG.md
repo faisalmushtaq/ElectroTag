@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+In Training, the Quiz and Snippets forms can add several of the experts' marked artifacts at once: tick them, or
+Select all, then Add the chosen. An artifact already in the quiz or the snippets is marked Added and cannot be
+chosen again, and the study refuses the same quiz segment or snippet twice (409 `duplicate`). In Giving out work,
+a recording that a hand-out shared out as tasks is now listed as given by that hand-out ("shared out as tasks"),
+and Task is kept for share-outs made in Tasks itself (docs/admin_area.md, "Quiz", "Snippets" and "Giving out
+work").
+
 A change to a selected annotation that is no longer on the screen (a type key, Delete, a rating, a note or its times)
 first brings it back into view, centred with its channels, and the line at the bottom says so. Everyone outside a
 training programme is now offered the platform tour once on their home page, with Skip the tour, kept for their

@@ -219,6 +219,17 @@ def test_the_study_team_adds_and_removes_snippets(client: TestClient) -> None:
     admin.admin_error("snippet_add", {**body, "label": "Banana"}, 400, "bad_request")
     admin.admin_error("snippet_add", {**body, "channels": ["Nope"]}, 400, "bad_request")
     admin.admin_error("snippet_remove", {"set_id": "example", "snippet_id": "g-x"}, 409, "guided_snippet")
+    # the same artifact under another ID would show trainees the same example twice
+    body_err = admin.admin_error("snippet_add", {**body, "snippet_id": "chew2"}, 409, "duplicate")
+    assert "chew" in body_err["message"]
+    # a quiz item likewise
+    item = {"set_id": "example", "recording_id": GUIDED2, "start_s": 14.0, "end_s": 17.0,
+            "correct_label": "Chewing-artifact"}
+    first = admin.admin_ok("quiz_item_add", item)["item"]["item_id"]
+    admin.admin_error("quiz_item_add", item, 409, "duplicate")
+    again = admin.admin_ok("quiz_item_add", {**item, "item_id": first})
+    assert again["item"]["item_id"] == first, "the same ID replaces it"
+    admin.admin_ok("quiz_item_remove", {"set_id": "example", "item_id": first})
     # an expert supplies training material too, through the expert channel
     e01 = Api(client, "E01")
     r = e01.post("/expert/snippet_add", {**body, "snippet_id": None, "label": "EMG-artifact"})

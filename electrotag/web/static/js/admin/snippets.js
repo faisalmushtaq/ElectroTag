@@ -158,7 +158,25 @@ function addCard(area, s, data, reload) {
     el.addEventListener('change', sync);
   }
   // the experts' marks of the recording to choose from (artifact_picker.js): type, times and channels fill in
-  const picker = artifactPicker(area, s.set_id, { what: 'snippet', onPick: (a) => {
+  const picker = artifactPicker(area, s.set_id, { what: 'snippet', many: 'snippets', existing: () => data.snippets || [],
+    // several at once: each its own snippet with the artifact's type, times and channels and the experts' note
+    onAddMany: async (picked, rid) => {
+      const have = [...(data.snippets || [])];
+      let n = 0;
+      try {
+        for (const a of picked) {
+          const id = nextSnippetId(have);
+          await area.write('snippet_add', { set_id: s.set_id, snippet_id: id, recording_id: rid, start_s: Math.round(a.onset_s * 1000) / 1000,
+            end_s: Math.round(a.offset_s * 1000) / 1000, label: a.label, channels: a.channels || [], context_s: Number(context.value || 2),
+            explanation: (a.note || '').slice(0, 1000) });
+          have.push({ snippet_id: id });
+          n += 1;
+        }
+      } finally {
+        if (n) await reload(['success', `Added ${n} snippet${n === 1 ? '' : 's'}. Trainees see them in Meet the artifacts.`]);
+      }
+    },
+    onPick: (a) => {
     label.value = a.label;
     start.value = String(Math.round(a.onset_s * 1000) / 1000);
     end.value = String(Math.round(a.offset_s * 1000) / 1000);

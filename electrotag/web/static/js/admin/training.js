@@ -580,9 +580,12 @@ export class TrainingSection {
     ], [], { empty: 'No quiz items yet.', pageSize: 20, caption: 'Quiz items' });
     const note = loading();
     const withheldHost = h('div.quiz-withheld');
+    let items = [];
     this.area.read('quiz_items', { set_id: s.set_id }).then((r) => {
       note.remove();
-      table.update(r.items || []);
+      items = r.items || [];
+      table.update(items);
+      picker.refresh(); // what is in the quiz already is marked Added
       withheldHost.replaceChildren(...quizWithheldNote(r.withheld || []));
     }).catch((exc) => { note.remove(); msg.problem(exc); });
     // a new item
@@ -619,11 +622,27 @@ export class TrainingSection {
     // the segment from the experts' marks of the recording (artifact_picker.js), shown on the EEG as the quiz shows it
     const preview = snippetPreview(this.area, recs, () => ({ recordingId: recording.value, start: start.value, end: end.value, context: context.value,
       label: correct.value, channels: '' }));
-    const picker = artifactPicker(this.area, s.set_id, { what: 'segment', onPick: (a) => {
+    const picker = artifactPicker(this.area, s.set_id, { what: 'segment', many: 'quiz items', existing: () => items, onPick: (a) => {
       start.value = String(Math.round(a.onset_s * 1000) / 1000);
       end.value = String(Math.round(a.offset_s * 1000) / 1000);
       if ([...correct.options].some((o) => o.value === a.label)) { correct.value = a.label; syncGroup(); }
       preview.redraw();
+    },
+    // several at once: each its own item, its type the correct answer (with its group term when ticked below), the
+    // experts' note as its explanation, and the context shown below
+    onAddMany: async (picked, rid) => {
+      const ctx = parseNumber(context.value || '2', 'Context shown', { min: 0, max: 60 });
+      let n = 0;
+      try {
+        for (const a of picked) {
+          const p = acceptGroup.input.checked ? parentOf(a.label) : null;
+          await this.area.write('quiz_item_add', { set_id: s.set_id, recording_id: rid, start_s: Math.round(a.onset_s * 1000) / 1000,
+            end_s: Math.round(a.offset_s * 1000) / 1000, correct_label: a.label, accepted_labels: p ? [p] : [], explanation: (a.note || '').slice(0, 2000), context_s: ctx });
+          n += 1;
+        }
+      } finally {
+        if (n) { this.tab = 'quiz'; await this.reload(['success', `Added ${n} quiz item${n === 1 ? '' : 's'}.`]); }
+      }
     } });
     for (const el of [start, end, context, correct]) { el.addEventListener('input', () => preview.redraw()); el.addEventListener('change', () => preview.redraw()); }
     recording.addEventListener('change', () => { picker.show(recording.value); preview.redraw(); });

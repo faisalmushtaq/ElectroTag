@@ -122,6 +122,11 @@ EXPERT_OPERATIONS = ("sets_list", "recordings_list", "users_list", "set_create",
                      "quiz_item_remove", "snippets_list", "snippet_add", "snippet_remove")
 
 
+
+def same_segment(a0: float, a1: float, b0: float, b1: float) -> bool:
+    """Whether two stretches of a recording are the same, to the millisecond (a quiz item or snippet added twice)."""
+    return abs(float(a0) - float(b0)) < 0.0015 and abs(float(a1) - float(b1)) < 0.0015
+
 # ------------------------------------------------------------------ checking input
 def _bad(message: str, code: str = "bad_request") -> ApiError:
     return ApiError(400, code, message)
@@ -1543,6 +1548,12 @@ class Admin:
             raise _bad("item_id must be 1 to 64 letters, digits, dots, hyphens or underscores")
         item = QuizItem(item_id, rid, start, end, label, list(dict.fromkeys(accepted)), explanation, context)
         replacing = any(it.item_id == item_id for it in rs0.quiz_items)
+        # the same segment twice would ask the same question twice (another ID replaces nothing)
+        twin = next((it for it in rs0.quiz_items if it.item_id != item_id and it.recording_id == rid
+                     and same_segment(it.start_s, it.end_s, start, end) and it.correct_label == label), None)
+        if twin is not None:
+            raise ApiError(409, "duplicate", f"The quiz already has this segment ({twin.item_id}: {label}, "
+                           f"{start:.2f}–{end:.2f} s of {rid}).")
         with self._editing(rs0.set_id) as rs:
             try:
                 rs.add_quiz_item(item, cat.label_names)

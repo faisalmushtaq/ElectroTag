@@ -35,10 +35,14 @@ export function givenThrough(item, { handouts = new Map(), tasks = new Map() } =
   const ho = item.handout_id ? handouts.get(item.handout_id) : null;
   const hoName = ho ? (ho.name || ho.title || '') : '';
   if (item.source === 'programme') return { kind: 'programme', text: 'Training programme', detail: '', handoutId: null, taskId: null };
-  if (item.task_id) {
+  // A hand-out first, whether it gave the recording to everyone or shared it out as tasks: it is how the study team
+  // gave it. Only a share-out made in Tasks itself counts as a task.
+  if (item.task_id && !item.handout_id) {
     const t = tasks.get(item.task_id);
-    const detail = hoName ? `Shared out by the hand-out ${hoName}` : t && t.batch ? `Share-out: ${t.batch}` : '';
-    return { kind: 'task', text: 'Task', detail, handoutId: item.handout_id || null, taskId: item.task_id };
+    return { kind: 'task', text: 'Task', detail: t && t.batch ? `Share-out: ${t.batch}` : '', handoutId: null, taskId: item.task_id };
+  }
+  if (item.handout_id && item.task_id) {
+    return { kind: 'handout', text: 'Hand-out', detail: hoName ? `${hoName} (shared out as tasks)` : 'Shared out as tasks', handoutId: item.handout_id, taskId: item.task_id };
   }
   if (item.handout_id) {
     const fromAssignments = ho && ho.target && ho.target.kind === 'recordings';

@@ -464,6 +464,13 @@ class TrainingPath:
         source = {**{k: v for k, v in source.items() if isinstance(v, (str, int, float, bool))},
                   "by": user.annotator_id}
         cat_labels = tuple(lab.label for lab in self.store.catalogue.labels)
+        from electrotag.web.admin import same_segment
+
+        twin = next((x for x in rs0.own_snippets if x.snippet_id != sid and x.recording_id == rid
+                     and same_segment(x.start_s, x.end_s, start, end) and x.label == label), None)
+        if twin is not None:  # the same artifact twice would show trainees the same example twice
+            raise ApiError(409, "duplicate", f"The set already has this snippet ({twin.snippet_id}: {label}, "
+                           f"{start:.2f}–{end:.2f} s of {rid}).")
         with self.service.administration._editing(rs0.set_id) as rs:
             snippet = Snippet(snippet_id=sid or rs.next_snippet_id(), recording_id=rid, start_s=start, end_s=end,
                               label=label, explanation=explanation.strip(), context_s=context,
