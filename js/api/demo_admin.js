@@ -1041,7 +1041,7 @@ export class DemoAdmin {
     return {
       notes: this.b._truthOf(r.recording_id).map((a) => ({
         annotation_id: a.annotation_id, label: a.label, onset_s: a.onset_sample / sf, offset_s: (a.onset_sample + a.duration_samples) / sf,
-        note: (set.guided_notes || {})[a.annotation_id] ?? this.b._exampleNoteOf(r.recording_id, a),
+        channels: [...(a.channels || [])], note: (set.guided_notes || {})[a.annotation_id] ?? this.b._exampleNoteOf(r.recording_id, a),
       })),
     };
   }

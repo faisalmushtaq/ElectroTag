@@ -8,6 +8,7 @@
 // the stretch can be looked at on the EEG from the team's own copy of the recording (read in the
 // browser, never uploaded), with the artifact outlined as trainees see it.
 
+import { artifactPicker } from './artifact_picker.js';
 import { h, clear } from '../ui/dom.js';
 import { clockText } from '../viewer/bounds.js';
 import { loadPart } from '../lazy.js';
@@ -129,10 +130,12 @@ function removeButton(area, s, x, msg, reload) {
 
 function addCard(area, s, data, reload) {
   const msg = messageArea();
-  const recs = data.recordings || [];
+  // only recordings whose reference marks artifacts: a snippet shows one of them
+  const marked = new Set((s.recordings || []).filter((e) => e.n_reference_events > 0).map((e) => e.recording_id));
+  const recs = (data.recordings || []).filter((r) => marked.has(r.recording_id));
   if (!recs.length) {
-    return card('Add a snippet', h('p.caption', {}, 'Add a guided recording to the set first: snippets come from the set\'s own recordings, '
-      + 'other than its practice and assessment recordings.'));
+    return card('Add a snippet', h('p.caption', {}, 'Add a guided recording with its reference to the set first: snippets come from the set\'s own '
+      + 'recordings whose reference marks artifacts, other than its practice and assessment recordings.'));
   }
   const recording = select(recs.map((r) => [r.recording_id, `${r.file_name} (${r.use})`]));
   const labels = (area.labels || []).map((l) => [l.label, l.label]);
@@ -154,6 +157,17 @@ function addCard(area, s, data, reload) {
     el.addEventListener('input', sync);
     el.addEventListener('change', sync);
   }
+  // the experts' marks of the recording to choose from (artifact_picker.js): type, times and channels fill in
+  const picker = artifactPicker(area, s.set_id, { what: 'snippet', onPick: (a) => {
+    label.value = a.label;
+    start.value = String(Math.round(a.onset_s * 1000) / 1000);
+    end.value = String(Math.round(a.offset_s * 1000) / 1000);
+    channels.value = (a.channels || []).join(', ');
+    if (!explanation.value.trim() && a.note) explanation.value = a.note;
+    sync();
+  } });
+  recording.addEventListener('change', () => picker.show(recording.value));
+  picker.show(recording.value);
   // The ID is chosen here, so that a snippet sent twice (a slow answer, a second press) is kept once.
   let pending = nextSnippetId(data.snippets);
   const add = actionButton('Add the snippet', { kind: 'primary', working: 'Adding…', msg, log: 'snippet-add', onClick: async () => {
@@ -173,9 +187,10 @@ function addCard(area, s, data, reload) {
     await reload(['success', `Added the snippet ${added}. Trainees see it in Meet the artifacts.`]);
   } });
   const box = card('Add a snippet',
-    h('p.caption', {}, 'Choose a stretch of a recording that shows one artifact clearly, as the experts would mark it.'),
+    h('p.caption', {}, 'Choose an artifact that shows clearly, from those the experts marked on the recording, or give the stretch yourself.'),
     h('form.admin-form', { onsubmit: (e) => { e.preventDefault(); add.click(); } },
       field('Recording', recording),
+      h('fieldset.admin-fieldset', {}, h('legend', {}, 'The artifact'), picker.el),
       h('div.row.wrap', {}, field('Type', label), field('Starts at (s)', start), field('Ends at (s)', end),
         field('EEG on each side (s)', context, { hint: 'From 0 to 10.' })),
       span,
@@ -192,7 +207,7 @@ function addCard(area, s, data, reload) {
  * the browser, never uploaded; the sandbox offers its built-in copy), and the snippet is drawn as trainees
  * will see it, the artifact outlined on its channels, and drawn again as the times change.
  */
-function snippetPreview(area, recs, current) {
+export function snippetPreview(area, recs, current) {
   const opened = new Map(); // recording ID -> { recording, channels }
   const status = h('p.caption.snippet-preview-status', { 'aria-live': 'polite' });
   const host = h('div.quiz-eeg.snippet-eeg.admin-snippet-eeg', { hidden: true });
