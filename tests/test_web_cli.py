@@ -58,7 +58,8 @@ def test_a_study_folder_from_scratch(template: Path, tmp_path: Path, capsys: pyt
     assert cli(["progress", "--study-dir", str(study)]) == 0
     out = capsys.readouterr().out
     assert "A01 (Ann): 0 of 3 done; last seen never" in out  # 3 recordings; the guided ones come after the tour
-    assert f"to do        {SUB1}" in out
+    # in a training programme (whose set has no assessment), study work waits for the training path
+    assert f"locked       {SUB1}" in out
     assert "training: Find your way around: available\n" in out
     assert "training: Learn with the experts: locked, 0 of 2" in out
     assert cli(["progress", "--study-dir", str(study), "--json"]) == 0

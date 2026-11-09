@@ -11,7 +11,7 @@
 // expert work adds its purpose here with one line, loading its own module when it is used.
 
 import { h } from '../ui/dom.js';
-import { showDialog } from '../ui/dialog.js';
+import { inform, showDialog } from '../ui/dialog.js';
 
 /**
  * The file is the study's copy of the target's recording (its fingerprint), or one the person confirms is
@@ -72,6 +72,50 @@ async function openReview(app, { recording, fp, view, target }) {
 }
 
 /**
+ * The study team looks at a trainee's assessment recording beside its reference before deciding the assessment
+ * (docs/admin_area.md, "Deciding an assessment"): the file is opened from this computer and checked against the
+ * study's copy, then shown as a practice review shows it, read only. `back`: the admin area's section to return to.
+ */
+export async function startAssessmentReview(app, { annotator_id: aid, recording_id: rid, back }) {
+  let target;
+  try {
+    target = await app.backend.admin('assessment_review_get', { annotator_id: aid, recording_id: rid });
+  } catch (exc) {
+    if (exc.status !== 401) await inform('The assessment cannot be shown', exc.message);
+    return;
+  }
+  const m = target.manifest || {};
+  await app.openFromComputer({ recording_id: rid, file_name: target.file_name, format: m.format }, { purpose: { kind: 'assessment', route: 'admin-review', target, back,
+    onBack: () => app.showAdmin(back.route, back.params), title: `${aid}'s assessment: ${target.file_name}`,
+    note: `Open the recording from this computer: its fingerprint is checked against the study's copy, then ${aid}'s marks are shown beside the reference, read only.` } });
+}
+
+/** A trainee's assessment recording beside its reference, as a practice review shows it, read only (startAssessmentReview). */
+async function openAssessment(app, { recording, fp, view, target }) {
+  const t = target;
+  const parts = await app._openingParts(['session', 'workspace', 'practice'], () => openAssessment(app, { recording, fp, view, target }));
+  if (!parts || !app._stillOpen(view)) return;
+  const [{ AnnotationSession }, { Workspace }, { PracticeReview, reviewAnnotations }] = parts;
+  let session;
+  try {
+    session = new AnnotationSession({ backend: app.backend, recording, manifest: t.manifest, recordingId: t.recording_id, mode: 'review', contextId: t.set_id,
+      me: app.me, catalogue: app.catalogue, sha256: fp.hex, readOnly: true });
+    session.store.reset(reviewAnnotations(t.annotations || [], t.reference || []).filter((a) => app.catalogue.has(a.label)));
+  } catch (exc) {
+    view.showProblem(exc.message, [view.chooseAgainButton()]);
+    return;
+  }
+  if (app.ws) app.ws.destroy();
+  const ws = new Workspace(app, session, { kind: 'reviewing' });
+  ws.reviewBack = view.purpose.back;
+  app.ws = ws;
+  app._render(ws.el, 'admin-review');
+  ws.mount(app.content);
+  new PracticeReview(ws, { feedback: t, mine: t.annotations || [], backend: app.backend, who: t.annotator_id }); // eslint-disable-line no-new
+  ws.logOpened({ recording_id: t.recording_id, segment: 'assessment_review' });
+}
+
+/**
  * A purpose whose view is in a part of its own (js/lazy.js): the file is checked against the study's copy,
  * then the part's `open` function takes it (corrections and replays: js/expert/, js/replay/).
  */
@@ -94,6 +138,10 @@ export const PURPOSES = {
   adjudicate: async (app, o) => (await import('../expert/adjudicate.js')).openAdjudication(app, o), // the adjudication pass
   library: async (app, o) => (await import('../expert/adjudicate.js')).openAdjudication(app, o), // a library entry, read only
   overlay: fromPart('overlay', 'openOverlay', 'Open', 'overlay'), // everyone's marks on one recording (js/expert/overlay.js)
+  assessment: async (app, o) => { // the study team looking at a trainee's assessment recording beside its reference
+    if (!(await checkStudyCopy(app, o.recording, o.fp, o.view, o.target, { verb: 'Open', kind: 'assessment' }))) return;
+    await openAssessment(app, o);
+  },
   planted: async (app, o) => { // an expert trying a correct-the-marks exercise (js/training/correct.js)
     if (!(await checkStudyCopy(app, o.recording, o.fp, o.view, o.target, { verb: 'Try', kind: 'planted' }))) return;
     await (await import('../training/correct.js')).openPlantedTry(app, o);

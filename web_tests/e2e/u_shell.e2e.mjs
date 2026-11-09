@@ -265,6 +265,8 @@ export const tests = [
       const { assert } = t;
       await adminCall(t, 'user_add', { annotator_id: 'U31', display_name: 'Una', role: 'annotator', password: 'una chooses this' });
       await adminCall(t, 'programme_set', { annotator_id: 'U31', set_id: 'example' });
+      // let through, so that their study recordings are open during the training (otherwise locked until it is done)
+      await adminCall(t, 'training_let_through', { annotator_id: 'U31', open: true });
       await adminCall(t, 'assign', { annotator_ids: ['U31'], all: true });
       const page = await t.newPage({ url: t.study.base, width: 1280, height: 720 });
       await signIn(page, 'U31', 'una chooses this');

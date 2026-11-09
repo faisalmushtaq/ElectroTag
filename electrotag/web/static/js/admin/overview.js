@@ -5,6 +5,7 @@ import { h, clear } from '../ui/dom.js';
 import { MODES, routeForSection, whenText } from './model.js';
 import { auditSummary, opText } from './audit_words.js';
 import { card, chip, dataTable, loading, messageArea, recordingName, sectionHead } from './ui.js';
+import { waitingCard } from './assessment_decision.js';
 
 export class OverviewSection {
   constructor(area) {
@@ -12,6 +13,7 @@ export class OverviewSection {
     this.msg = messageArea();
     this.tiles = h('div.stat-tiles');
     this.due = h('div.overview-due');
+    this.waiting = h('div.overview-waiting'); // finished assessments waiting for the study team's decision
     this.recent = dataTable([
       { title: 'When', render: (e) => whenText(e.at) },
       { title: 'Who', render: (e) => e.by },
@@ -26,7 +28,7 @@ export class OverviewSection {
     const go = (key, text) => h('button.btn', { type: 'button', onclick: () => area.go(key) }, text);
     this.el = h('section.admin-section', { 'data-section': 'overview' },
       sectionHead('Overview', 'The study at a glance. Choose a section to change something.'),
-      this.msg, this.tiles, this.due,
+      this.msg, this.waiting, this.tiles, this.due,
       h('div.btn-row.quick-links', {}, go('recordings', 'Add recordings'), go('annotators', 'Add an annotator'),
         go('assignments', 'Assign recordings'), go('handouts', 'Hand out recordings'), go('progress', 'See progress')),
       h('div.admin-grid', {},
@@ -67,6 +69,12 @@ export class OverviewSection {
         h('span', {}, c.overdue ? chip('Overdue', 'warning') : null, ` ${late}, across ${c.handouts_open} open hand-out${c.handouts_open === 1 ? '' : 's'}. `),
         h('a', { href: `#${routeForSection('handouts')}`, 'data-to': 'handouts' }, 'See the hand-outs')));
     }
+    clear(this.waiting);
+    this.area.read('assessments_waiting_list').then((w) => {
+      clear(this.waiting);
+      const c2 = waitingCard(this.area, w);
+      if (c2) this.waiting.append(c2);
+    }, () => {}); // (without it the Overview is as it was: the trainee's page still shows the assessment)
     this.recentEntries = o.recent || [];
     this.recent.update(this.recentEntries);
     this.saved.update(o.last_saved || []);

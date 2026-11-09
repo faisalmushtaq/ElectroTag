@@ -1115,10 +1115,11 @@ again), or Result to come, when the study team has to judge it. When you pass, t
 stages says "You passed: your study recordings are now open." with Open next recording beside it.
 A stage that your programme does not use is marked Not included.
 
-Most studies keep their own recordings locked until you pass the assessment. Until then your
-recordings are listed on your home page under Locked, with "Opens once you pass the competency
-assessment" under the file name, and a line with a lock on your training path and your home page
-says why; they open by themselves once you pass. If your assessment did not meet the criteria, your
+Most studies keep their own recordings locked until you pass the assessment, or, when your training
+set has no assessment, until you have finished your training path. Until then your study recordings
+are kept off your home page, even when your study team has already given them to you, and a line
+with a lock on your training path and your home page says how many are waiting and why; they appear
+by themselves once you pass. Your study team can also let you through before then. If your assessment did not meet the criteria, your
 training path, your home page and those recordings say "Assessment not met: waiting for your study
 team". Your study team goes through the results with you, then either reopens your training or gives
 you a new assessment. After a reopening your path shows the stages to do again, which cannot be
@@ -1126,6 +1127,11 @@ skipped this time; what you save from then on counts, what you saved before is k
 assessment's card lists the earlier round with its result. With a new assessment, the stages you
 did or skipped before are shown as they were ("Skipped in Pilot training set"), and the new
 competency report lists those skips too. Experts and administrators never wait.
+
+Training recordings your study team gives you beyond your programme (in a guided, practice or
+assessment mode) are listed on your training path, under More training recordings, and never among
+your study recordings, since nothing you mark in them is study work. Someone outside a training
+programme finds them on their home page under Training recordings.
 
 Once every stage is done, ElectroTag opens on your home page when you sign in, with Open next
 recording for the study's own work and a line that takes you back to your training path. The
