@@ -326,7 +326,11 @@ showing one channel alone is a `state` event with `isolated_channel` (its name, 
 channels are shown again) and `via` (`key`, `button`, or `view` when moving the channels on screen
 took the channel shown alone with it). The value under the pointer is a `state` event with
 `value_readout` (true or false) and `via`; the values it shows are not logged, since the `pointer`
-events already say where the pointer was. `go_to_time` records each use of Go to time: `valid`
+events already say where the pointer was. Widening, narrowing or hiding the side panel (since 9 November
+2026) is a `state` event with `side_panel`, holding `width_px`, the panel's width in pixels, and
+`hidden` (true or false), and `via` (`drag` for its edge dragged, `key` for the arrow keys on the
+edge, `reset` for a double click back to the usual width, `button` for the button that hides or shows
+it). `go_to_time` records each use of Go to time: `valid`
 (false when what was typed could not be read as a time), and for a jump `t_s`, the time the view
 went to, in seconds, `clamped`, true when the time typed lay outside the recording and the start or
 end was used instead, and `via` (`key` for G, `button` for the touch button). `show_all` records
