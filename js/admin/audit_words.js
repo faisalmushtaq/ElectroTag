@@ -45,6 +45,7 @@ export const AUDIT_OPS = Object.freeze({
   snippet_add: 'Snippet added',
   snippet_remove: 'Snippet removed',
   training_reopen: 'Training reopened',
+  artifact_text_set: 'Artifact type description changed',
   training_assessment_set: 'New assessment set given',
   set_planted_make: 'Correct-the-marks exercise made',
   set_planted_from: 'Correct-the-marks exercise made from an expert\'s version',

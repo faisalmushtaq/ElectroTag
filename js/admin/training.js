@@ -5,6 +5,7 @@
 // criteria (electrotag.training.assessment.CompetencyCriteria) and its quiz items. Also the
 // example training set, whose simulated recordings stand in until real expert files exist.
 
+import { artifactTextsCard } from './artifact_texts.js';
 import { h, clear } from '../ui/dom.js';
 import {
   GUIDANCE, GUIDANCE_HINTS, MATCH_CRITERIA, METRICS, USES, USE_SHORT, checkSetId, criteriaFromRows, criteriaRows, describeProvenance, parseNumber, plural,
@@ -56,7 +57,8 @@ export class TrainingSection {
       this.msg,
       h('div.admin-grid.side-first', {},
         h('div.admin-stack', {}, card('Reference sets', this.setList), this._newSetCard(), this._exampleCard()),
-        this.detail));
+        this.detail),
+      artifactTextsCard(area)); // the study's own words for the artifact types (artifact_texts.js)
   }
 
   async show(params) {
