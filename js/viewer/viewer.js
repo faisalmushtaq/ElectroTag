@@ -16,7 +16,7 @@
 import { h } from '../ui/dom.js';
 import { clamp, hexToRgb, legibleOnWhite, rgba } from '../util.js';
 import { COLOURS, FONT } from '../ui/theme.js';
-import { CHANNEL_COUNTS, DURATIONS, OVERLAY_SPAN, axisFormat, axisTitle, decimateColumns, layoutTags, meanOf, niceStep, overlayAlpha, overlayGain, stepOption, tickLabel, voltsText } from './geometry.js';
+import { CHANNEL_COUNTS, DURATIONS, OVERLAY_SPAN, axisFormat, axisTitle, decimateColumns, fitTags, meanOf, niceStep, overlayAlpha, overlayGain, stepOption, tickLabel, voltsText } from './geometry.js';
 import { LONG_PRESS_MS, TAP_SLOP_PX, edgePx, isDoubleTap, pinchView, twoFingers } from './touch.js';
 import { complement, mergeIntervals } from './coverage.js';
 import { clampView, outsideStretches, viewSpan } from './bounds.js';
@@ -24,7 +24,7 @@ import { nameEvery, namePx, traceWidths } from '../ui/comfort.js';
 import { icon } from '../views/common.js';
 import { confidenceFill, confidenceTagText } from '../annotate/confidence.js';
 import { layerMarks, normaliseLayers, pointerSpot } from './layers.js';
-import { UNCERTAIN_LABEL } from '../catalogue.js';
+import { UNCERTAIN_LABEL, displayCode } from '../catalogue.js';
 import { edgeAt, wheelAction, zoomAround } from './scales.js';
 
 const GUTTER = 92;
@@ -130,6 +130,7 @@ export class EegViewer {
     this.channelsActive = false;
     this.markedBad = new Set(); // channels the annotator marked bad for the whole recording (setMarkedBad)
     this.prefix = {};
+    this.tagKeys = {}; // a type's number on the keyboard, for a tag cut to it where tags crowd (setTagKeys)
     this.labelColours = {};
     this.labelDashes = {}; // a tag's outline pattern, beside its colour: a person's second cue in adjudication
     this.cursorT = null;
@@ -382,6 +383,26 @@ export class EegViewer {
     if (this.onCursor) this.onCursor(t); // the topographic map follows the time cursor
   }
   setPrefix(map) { this.prefix = map || {}; this.invalidate(['over']); }
+
+  /** The numbers of the types (label -> '1'…'9', '0'), which a tag shows where more overlap than the band has rows for. */
+  setTagKeys(map) { this.tagKeys = map || {}; this.invalidate(['over']); }
+
+  /** The whole text of a tag cut to its number, under the pointer (`info`, from hit), or '' (the workspace's tooltip). */
+  cutTagText(info) {
+    const tg = info && info.tag ? this._tags.find((x) => x.id === info.tag && x.short) : null;
+    return tg ? tg.full : '';
+  }
+
+  /** A tag's text cut to its type's number (or short code, for a type without one). */
+  _shortTag(a) {
+    let key = this.tagKeys[a.label];
+    if (!key) {
+      let code = '';
+      try { code = this.catalogue.get(a.label).short_code; } catch { /* an unknown type */ }
+      key = a.label === UNCERTAIN_LABEL ? '0' : displayCode(code) || '?';
+    }
+    return `${this.prefix[a.annotation_id] || ''}${key}`;
+  }
   setLabelColours(map) { this.labelColours = map || {}; this.invalidate(['over']); }
   /** Tags whose outline is dashed (id -> canvas line dashes), as each person's second cue beside their colour. */
   setLabelDashes(map) { this.labelDashes = map || {}; this.invalidate(['over']); }
@@ -1101,16 +1122,21 @@ export class EegViewer {
       // a mark of the uncertain type reads "Uncertain" (Data-artifact, for an expert to review)
       const text = `${this.prefix[a.annotation_id] || ''}${a.label === UNCERTAIN_LABEL ? 'Uncertain' : a.label}${a.channels.length ? ' [ch]' : ''}${confidenceTagText(a)}`;
       const w = ctx.measureText(text).width + 12 + (a.note ? NOTE_W : 0);
+      const short = this._shortTag(a);
+      const wShort = Math.max(20, ctx.measureText(short).width + 10) + (a.note ? NOTE_W : 0);
       const xa = clamp(this.sampleToX(a.onset_sample), x0, x1);
       const xb = clamp(this.sampleToX(end(a)), x0, x1);
       let x = (xa + xb) / 2;
       if (x1 - x0 > w) x = clamp(x, x0 + w / 2, x1 - w / 2);
-      return { a, text, w, x };
+      return { a, text, full: text, short, w, wShort, x };
     });
-    const rows = layoutTags(tags, TAG_ROWS);
+    // more tags overlapping than the band has rows: those are cut to their types' numbers, side by side (geometry.js fitTags)
+    const placed = fitTags(tags, TAG_ROWS, { x0, x1 });
     this._tags = [];
     tags.forEach((tg, i) => {
-      const y = 3 + rows[i] * TAG_ROW_H;
+      const p = placed[i];
+      if (p.short) { tg.text = tg.short; tg.w = tg.wShort; tg.x = p.x; }
+      const y = 3 + p.row * TAG_ROW_H;
       const colour = this.labelColours[tg.a.annotation_id] || this.catalogue.colourFor(tg.a.label);
       const sel = this.selected.has(tg.a.annotation_id);
       roundRect(ctx, tg.x - tg.w / 2, y, tg.w, TAG_ROW_H - 3, 4);
@@ -1126,7 +1152,7 @@ export class EegViewer {
       ctx.textAlign = 'center';
       ctx.fillText(tg.text, tg.x - (tg.a.note ? NOTE_W / 2 : 0), y + 13);
       if (tg.a.note) drawNoteGlyph(ctx, tg.x + tg.w / 2 - NOTE_W - 2, y + 4, legibleOnWhite(colour));
-      this._tags.push({ id: tg.a.annotation_id, x: tg.x - tg.w / 2, y, w: tg.w, h: TAG_ROW_H - 3 });
+      this._tags.push({ id: tg.a.annotation_id, x: tg.x - tg.w / 2, y, w: tg.w, h: TAG_ROW_H - 3, short: p.short, full: tg.full });
     });
     this._drawMarkers(ctx, x0, x1, y0, y1);
     if (this.crowd) {
