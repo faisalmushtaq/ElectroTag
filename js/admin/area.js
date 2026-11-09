@@ -30,6 +30,7 @@ import { QuestionnaireSection } from './questionnaire.js';
 import { DatasetsSection } from './datasets.js';
 import { GroupsSection } from './groups.js';
 import { HandoutsSection } from './handouts.js';
+import { WorkSection, menuKey } from './work.js';
 
 const KINDS = {
   overview: OverviewSection, progress: ProgressSection, annotators: AnnotatorsSection, recordings: RecordingsSection,
@@ -37,6 +38,7 @@ const KINDS = {
   records: RecordsSection, settings: SettingsSection, problems: ProblemsSection, tasks: TasksSection,
   questionnaire: QuestionnaireSection, // the sign-up questionnaire's answers and the contacts list
   datasets: DatasetsSection, groups: GroupsSection, handouts: HandoutsSection, // datasets, groups and hand-outs
+  work: WorkSection, // Giving out work: everything given out, with Assignments, Hand-outs and Tasks as its tabs
 };
 
 const CSS_HREF = new URL('../../admin.css', import.meta.url).href;
@@ -115,7 +117,7 @@ export class AdminArea {
       const toggle = h('button.admin-group-toggle', { type: 'button', 'aria-controls': listId, 'data-group': g.key,
         onclick: () => this.fold(g.key, !this.folds[g.key]) }, icon('chevron-down'), h('span', {}, g.title));
       const list = h('ul', { id: listId }, sectionsOf(g.key).map((s) => h('li', {},
-        h('a.admin-nav-link', { href: `#${s.route}`, 'data-section': s.key, 'data-n': String(SECTIONS.indexOf(s) + 1).padStart(2, '0') }, s.title))));
+        h('a.admin-nav-link', { href: `#${s.route}`, 'data-section': s.key, 'data-n': String(SECTIONS.filter((x) => !x.within).indexOf(s) + 1).padStart(2, '0') }, s.title))));
       // the expert area's parts that administrators run too (they open in the expert area)
       for (const x of EXPERT_LINKS.filter((l) => l.group === g.key)) list.append(h('li', {}, h('a.admin-nav-link.to-expert', { href: `#${x.route}`, 'data-expert': x.route, title: 'Opens in the expert area' }, x.title, icon('arrow-up-right'))));
       const el = h('div.admin-group', { 'data-group': g.key }, toggle, list);
@@ -140,7 +142,7 @@ export class AdminArea {
       toggle.setAttribute('aria-expanded', String(!folded));
       el.classList.toggle('folded', folded);
       // The section shown stays in view even inside a folded group.
-      for (const li of list.children) li.hidden = folded && !(key === open && li.querySelector(`[data-section="${this.current}"]`));
+      for (const li of list.children) li.hidden = folded && !(key === open && li.querySelector(`[data-section="${menuKey(this.current)}"]`));
     }
   }
 
@@ -235,7 +237,7 @@ export class AdminArea {
       this.sections.set(k, section);
     }
     for (const a of this.nav.querySelectorAll('a')) {
-      if (a.dataset.section === k) a.setAttribute('aria-current', 'page');
+      if (a.dataset.section === menuKey(k)) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     }
     const changed = this.current !== k;

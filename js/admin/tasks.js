@@ -9,8 +9,9 @@ import { h, clear } from '../ui/dom.js';
 import { newId } from '../util.js';
 import { plural, setLabel } from './model.js';
 import {
-  actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, messageArea, numberInput, recordingName, sectionHead, select, textInput,
+  actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, messageArea, numberInput, recordingName, select, textInput,
 } from './ui.js';
+import { workHead } from './work.js';
 import {
   K_MAX, K_MIN, PARTS, PERSON, SKIPPED, STATUS, changeChoices, filterTasks, partText, percent, personNote, poolEntry, previewSummary, requestBody,
   savedText, skippedPart, statusKind, statusText,
@@ -66,14 +67,16 @@ export class TasksSection {
     this.qualityHost = h('div');
     this._buildTable();
     this.el = h('section.admin-section', { 'data-section': 'tasks' },
-      sectionHead('Tasks', 'Share recordings out so that each one, or each part of one, is annotated independently by several people. ' +
+      workHead('tasks', 'Share recordings out so that each one, or each part of one, is annotated independently by several people. ' +
         'Their disagreements then go to the experts for adjudication, and known-answer recordings measure each person\'s accuracy.'),
       this.msg,
       card('Share out recordings', this.formHost), this.tableCard, card('Accuracy on known answers', this.qualityHost));
   }
 
-  async show() {
+  async show(params = {}) {
     this.msg.clear();
+    // from Giving out work's list of everything: the tasks of one recording
+    if (params.search) this.filters.search.value = String(params.search);
     await this.reload();
   }
 
