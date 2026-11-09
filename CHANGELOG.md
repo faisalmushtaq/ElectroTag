@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+In Training, the Quiz and Snippets forms can add several of the experts' marked artifacts at once: tick them, or
+Select all, then Add the chosen. An artifact already in the quiz or the snippets is marked Added and cannot be
+chosen again, and the study refuses the same quiz segment or snippet twice (409 `duplicate`). In Giving out work,
+a recording that a hand-out shared out as tasks is now listed as given by that hand-out ("shared out as tasks"),
+and Task is kept for share-outs made in Tasks itself (docs/admin_area.md, "Quiz", "Snippets" and "Giving out
+work").
+
 A trainee in a training programme can no longer open study work before passing its assessment, even when their
 training set has no assessment (they then wait for the end of the training path); their study recordings are kept
 off their home page until then, which says how many wait, and training recordings given in Assignments are listed

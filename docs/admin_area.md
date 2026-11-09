@@ -550,8 +550,9 @@ way, while Everything given out lists all of it. The old addresses of the three 
 **Everything given out** lists every recording each person has: the annotator, the recording, how it
 was given, the mode, its status and the last activity. Given through says Assigned by itself, Hand-out
 (with the hand-out's name, or the title annotators see and "given in Assignments" for one made with a
-due date there), Task (with the share-out's name, or the hand-out that shared it out) or Training
-programme for the recordings of a trainee's programme. A hand-out's name opens it, and a task's opens
+due date there, and "shared out as tasks" for a hand-out that shared its recordings out), Task (for a
+share-out made in Tasks itself, with its name) or Training programme for the recordings of a trainee's
+programme. A hand-out's name opens it, and a task's opens
 the Tasks tab at that recording. Filter the list by person, by how the recordings were given or by
 status, or search the recordings and the names of hand-outs and share-outs; the line above the list
 counts what is shown, how much is done and how it was given. Taking a recording away is done where it
@@ -830,7 +831,12 @@ the chosen recording, in time order with their type, times and channels, and a l
 of the types narrows it; choosing one fills in the start, the end and the correct answer. Look at it
 on the EEG, under the times, opens your copy of the recording (read in your browser and never
 uploaded) and shows the segment as the quiz will, drawn again as the times change. The times can
-still be changed by hand.
+still be changed by hand. To add several at once, tick their boxes in the list, or press Select all
+(which ticks every artifact listed under the type chosen), then Add the chosen quiz items: each
+becomes an item of its own, its type the correct answer (with its group term when Also accept its
+group term is ticked), the experts' note as its explanation and the context shown in the form. An
+artifact already in the quiz is marked Added and cannot be chosen again, and the study refuses the
+same segment with the same answer twice.
 Annotators allowed to use the set are offered its quiz, and trainees take it as the recognition check of Meet the artifacts. A segment never comes
 from a practice or assessment recording, of this set or of another set that holds the same file:
 the experts' annotations of those are the answers trainees are scored against, so such an item is
@@ -847,7 +853,10 @@ one for each of the experts' annotations there, with its guided note as the expl
 notes with Edit the guided notes under Recordings and references). Add a snippet takes one of the
 set's recordings whose reference marks artifacts and lists those artifacts, as the quiz's form does: choosing one
 fills in its type, where it starts and ends and the channels it is on (and its guided note as the
-explanation, when the explanation is still empty). It takes the type, where the artifact starts and ends, how much EEG to show on each side (2 s
+explanation, when the explanation is still empty). Several can be ticked, or all of them with Select
+all, and added at once with Add the chosen snippets, each with its type, times, channels and the
+experts' note; an artifact the set already has as a snippet is marked Added and cannot be chosen
+again, and the study refuses the same snippet twice. It takes the type, where the artifact starts and ends, how much EEG to show on each side (2 s
 unless you choose up to 10 s), the channels it is on (none for the whole montage) and an
 explanation of up to 1000 characters. A snippet is at most 60 s long. As you type the times, a line
 under them says how long the recording is, how long the snippet lasts and which stretch trainees see

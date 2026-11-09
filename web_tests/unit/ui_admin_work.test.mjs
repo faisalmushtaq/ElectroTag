@@ -20,8 +20,9 @@ test('each recording says how it was given', () => {
   assert.equal(g({ handout_id: 'h-2' }).detail, 'Recordings due 1 December (given in Assignments)', 'a due date given in Assignments');
   assert.equal(g({ task_id: 't-1' }).detail, 'Share-out: Second round');
   assert.equal(g({ task_id: 't-2' }).detail, '');
+  // a hand-out that shared its recordings out as tasks counts as the hand-out it is
   const fromHandout = g({ task_id: 't-1', handout_id: 'h-1' });
-  assert.deepEqual([fromHandout.kind, fromHandout.detail, fromHandout.handoutId], ['task', 'Shared out by the hand-out Pilot round', 'h-1']);
+  assert.deepEqual([fromHandout.kind, fromHandout.detail, fromHandout.handoutId], ['handout', 'Pilot round (shared out as tasks)', 'h-1']);
   // names not known (tasks need a study server or Firebase): the way is still said
   assert.deepEqual([givenThrough(item({ task_id: 't-9' })).kind, givenThrough(item({ handout_id: 'h-9' })).detail], ['task', '']);
   assert.deepEqual(Object.keys(THROUGH).sort(), ['assignment', 'handout', 'programme', 'task']);

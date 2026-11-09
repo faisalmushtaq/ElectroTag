@@ -51,12 +51,20 @@ export const tests = [
         .filter((e) => e.use === 'guided' && e.n_reference_events > 0).map((e) => e.recording_id));
       assert.deepEqual(offered.sort(), expected.sort());
       const sorted = [...notes].sort((a, b) => a.onset_s - b.onset_s);
-      await picks.nth(1).click();
-      assert.equal(await picks.nth(1).getAttribute('aria-pressed'), 'true');
+      // an artifact already in the quiz is marked Added and cannot be chosen: the first that is not
+      const quizItems = await page.evaluate(async () => {
+        const set = (await globalThis.ElectroTag.backend.admin('sets_list', {})).sets[0];
+        return (await globalThis.ElectroTag.backend.admin('quiz_items', { set_id: set.set_id })).items;
+      });
+      await page.waitForFunction((k) => document.querySelectorAll('.card .artifact-list li.added').length >= k, quizItems.length ? 1 : 0);
+      const k = await picks.evaluateAll((bs) => bs.findIndex((b) => !b.disabled));
+      assert.ok(k >= 0, 'something left to choose');
+      await picks.nth(k).click();
+      assert.equal(await picks.nth(k).getAttribute('aria-pressed'), 'true');
       const field = (card, label) => card.locator('.admin-field', { has: page.locator(`label:text-is("${label}")`) }).locator('input, select').first();
-      assert.equal(Number(await field(quiz, 'Start (s)').inputValue()), Math.round(sorted[1].onset_s * 1000) / 1000);
-      assert.equal(Number(await field(quiz, 'End (s)').inputValue()), Math.round(sorted[1].offset_s * 1000) / 1000);
-      assert.equal(await field(quiz, 'Correct answer').inputValue(), sorted[1].label);
+      assert.equal(Number(await field(quiz, 'Start (s)').inputValue()), Math.round(sorted[k].onset_s * 1000) / 1000);
+      assert.equal(Number(await field(quiz, 'End (s)').inputValue()), Math.round(sorted[k].offset_s * 1000) / 1000);
+      assert.equal(await field(quiz, 'Correct answer').inputValue(), sorted[k].label);
       // narrowed to one type
       const filter = quiz.locator('[data-log="artifact-filter"]');
       if (await filter.isVisible()) {
@@ -80,6 +88,27 @@ export const tests = [
       assert.equal(await field(snip, 'Type').inputValue(), label);
       assert.equal(await field(snip, 'Channels').inputValue(), chans === 'whole montage' ? '' : chans);
       assert.ok(Number(await field(snip, 'Ends at (s)').inputValue()) > Number(await field(snip, 'Starts at (s)').inputValue()));
+
+      // several at once: Select all, then Add the chosen; what is added is marked Added and cannot be chosen again
+      const n = await spicks.count();
+      await snip.locator('[data-log="artifact-select-all"]').click();
+      assert.equal(await snip.locator('[data-log="artifact-add-chosen"]').textContent(), `Add the ${n} chosen ${n === 1 ? 'snippet' : 'snippets'}`);
+      await snip.locator('[data-log="artifact-add-chosen"]').click();
+      await page.waitForFunction((k) => new RegExp(`Added ${k} snippet`).test(document.querySelector('.admin-section[data-section="training"]').textContent), n, { timeout: 20000 });
+      section = await trainingTab(page, 'Snippets');
+      const again = section.locator('.card', { hasText: 'Add a snippet' });
+      await again.locator('[data-log="artifact-pick"]').first().waitFor();
+      assert.equal(await again.locator('.artifact-list li.added').count(), n, 'every one marked Added');
+      assert.equal(await again.locator('[data-log="artifact-pick"]:not([disabled])').count(), 0);
+      assert.equal(await again.locator('[data-log="artifact-select-all"]').isDisabled(), true);
+      // and the study refuses the same artifact twice
+      const err = await page.evaluate(async () => {
+        const b = globalThis.ElectroTag.backend;
+        const set = (await b.admin('sets_list', {})).sets[0].set_id;
+        const sn = (await b.admin('snippets_list', { set_id: set })).snippets.slice(-1)[0];
+        try { await b.admin('snippet_add', { ...sn, set_id: set, snippet_id: 'again' }); return null; } catch (e) { return e.code; }
+      });
+      assert.equal(err, 'duplicate');
     },
   },
 ];

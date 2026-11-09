@@ -243,3 +243,14 @@ test('demonstration: stats counts the work done, its time and annotations, by pe
   const work = (await b.admin('assignments_list', { annotator_id: 'A01' })).items;
   assert.deepEqual(work.map((i) => [i.elapsed_s, i.n_annotations]), [[600, 3], [1200, 1], [300, null]]);
 });
+
+test('an artifact already in the quiz or the snippets is known as added, to the millisecond, by its recording and type', async () => {
+  const { alreadyAdded } = await import('../../electrotag/web/static/js/admin/artifact_picker.js');
+  const a = { onset_s: 3.1, offset_s: 3.52, label: 'Eye-blink-artifact' };
+  assert.equal(alreadyAdded(a, 'r1', [{ recording_id: 'r1', start_s: 3.1004, end_s: 3.52, label: 'Eye-blink-artifact' }]), true);
+  assert.equal(alreadyAdded(a, 'r1', [{ recording_id: 'r1', start_s: 3.1, end_s: 3.52, correct_label: 'Eye-blink-artifact' }]), true, 'a quiz item');
+  assert.equal(alreadyAdded(a, 'r2', [{ recording_id: 'r1', start_s: 3.1, end_s: 3.52, label: 'Eye-blink-artifact' }]), false);
+  assert.equal(alreadyAdded(a, 'r1', [{ recording_id: 'r1', start_s: 3.11, end_s: 3.52, label: 'Eye-blink-artifact' }]), false);
+  assert.equal(alreadyAdded(a, 'r1', [{ recording_id: 'r1', start_s: 3.1, end_s: 3.52, label: 'EMG-artifact' }]), false);
+  assert.equal(alreadyAdded(a, 'r1', []), false);
+});

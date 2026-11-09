@@ -556,6 +556,7 @@ async function script(call) {
   await call('admin snippet_add (a practice recording)', (s) => s.b.admin('snippet_add', { ...snippet, recording_id: RIDS[2] }));
   await call('admin snippet_add (backwards)', (s) => s.b.admin('snippet_add', { ...snippet, end_s: 13 }));
   await call('admin snippet_add (no ID)', (s) => s.b.admin('snippet_add', { ...snippet, snippet_id: null, label: 'EMG-artifact', channels: [] }));
+  await call('admin snippet_add (the same artifact under another ID)', (s) => s.b.admin('snippet_add', { ...snippet, snippet_id: 'chew2' }));
   await call('admin snippets_list (after)', (s) => s.b.admin('snippets_list', { set_id: QUIZ.set_id }));
   await call('admin snippet_remove', (s) => s.b.admin('snippet_remove', { set_id: QUIZ.set_id, snippet_id: 's01' }));
   await call('admin snippet_remove (gone)', (s) => s.b.admin('snippet_remove', { set_id: QUIZ.set_id, snippet_id: 's01' }));
