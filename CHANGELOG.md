@@ -11,6 +11,13 @@ experts marked on the recording, listed with their type, times and channels: cho
 the quiz's form shows the segment on the EEG as the snippet's does. Both offer only recordings whose reference
 marks artifacts (for the quiz, the set's guided recordings). Times can still be adjusted by hand.
 
+Everyone can choose a recordings folder once, from the home page, the page that opens recordings or the admin
+area's Add recordings from this computer: ElectroTag then finds each recording they open there (in the folders
+inside it too), with its BrainVision files and electrodes.tsv, and opens it without asking for the file, saying
+so by name when it is not there. Chrome and Edge keep the folder between visits, asking once on a later visit
+whether ElectroTag may read it again; Safari and Firefox keep it for the visit. Files are read where they are and
+never copied. Administrators can add the recordings of their folder with Use my recordings folder.
+
 When a guided recording of a reference set is managed, the line under How much help the guided recording
 gives now describes the level chosen; it used to describe By its place in the set whatever was chosen. Correct
 the marks is offered there only for a recording whose exercise, the copy with deliberate mistakes, has been

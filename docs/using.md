@@ -25,6 +25,7 @@ at the end of the Help tab of the annotation view; each link opens the guide in 
 - [Progress and milestones](#progress-and-milestones)
 - [Opening a recording](#opening-a-recording)
 - [Opening a recording from a link](#opening-a-recording-from-a-link)
+- [Your recordings folder](#your-recordings-folder)
 - [Recordings kept on this device](#recordings-kept-on-this-device)
 - [The annotation view](#the-annotation-view)
   - [The artifact reference guide](#the-artifact-reference-guide)
@@ -395,6 +396,30 @@ cannot reach your Downloads folder, so delete the downloaded file there yourself
 finished with it: in the Files app on an iPad, press and hold the file and choose Delete; on a
 Mac, drag it from Downloads in the Finder to the Bin; in Windows, select it in File Explorer and
 press Delete.
+
+## Your recordings folder
+
+Rather than choosing each recording's file every time, you can tell ElectroTag once where you keep
+your recordings. The home page, the page that opens recordings and the admin area's Add recordings
+from this computer each have a line, Your recordings folder, with Choose the folder…; once it is
+chosen, the line names the folder and has Change… and Forget. From then on, Open next recording, a
+stage of your training path and the other ways in that know which recording you are opening look for
+its file in that folder and the folders inside it (a BIDS dataset's `sub-01/ses-1/eeg`, for
+example), with its BrainVision files and its electrodes.tsv beside it, and open it without asking.
+The file is read where it is, in your browser, and its fingerprint is checked as it is for a file you
+choose; nothing is copied or uploaded. When the recording is not in the folder, the page says so,
+naming the file, and you choose it in the usual way.
+
+In Chrome and Edge on a computer, ElectroTag keeps the folder between visits. On your next visit the
+browser asks once whether ElectroTag may read it again, with Open it from my recordings folder;
+choose Allow on every visit and it asks no more. If the folder has been moved or renamed, the page
+says so and offers to choose it again. Safari and Firefox do not let a page keep a folder, so there
+the folder is kept for this visit only, until the page is closed or reloaded, and you choose it
+again on your next visit. An iPad has no folder chooser; keeping recordings on the device (below)
+does the same job there. The folder is remembered for your sign-in in this study, so people who
+share a computer each have their own. For an administrator, Use my recordings folder in Add
+recordings from this computer reads the whole folder as if it had been chosen, so it should be the
+dataset folder whose paths become the recordings' IDs.
 
 ## Recordings kept on this device
 
