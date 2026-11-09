@@ -222,14 +222,6 @@ def test_the_study_team_adds_and_removes_snippets(client: TestClient) -> None:
     # the same artifact under another ID would show trainees the same example twice
     body_err = admin.admin_error("snippet_add", {**body, "snippet_id": "chew2"}, 409, "duplicate")
     assert "chew" in body_err["message"]
-    # a quiz item likewise
-    item = {"set_id": "example", "recording_id": GUIDED2, "start_s": 14.0, "end_s": 17.0,
-            "correct_label": "Chewing-artifact"}
-    first = admin.admin_ok("quiz_item_add", item)["item"]["item_id"]
-    admin.admin_error("quiz_item_add", item, 409, "duplicate")
-    again = admin.admin_ok("quiz_item_add", {**item, "item_id": first})
-    assert again["item"]["item_id"] == first, "the same ID replaces it"
-    admin.admin_ok("quiz_item_remove", {"set_id": "example", "item_id": first})
     # an expert supplies training material too, through the expert channel
     e01 = Api(client, "E01")
     r = e01.post("/expert/snippet_add", {**body, "snippet_id": None, "label": "EMG-artifact"})
@@ -239,6 +231,14 @@ def test_the_study_team_adds_and_removes_snippets(client: TestClient) -> None:
     err(Api(client, "A01").post("/expert/snippets_list", {"set_id": "example"}), 403, "forbidden")
     ops = [e["op"] for e in admin_audit(admin)]
     assert ops[:3] == ["snippet_remove", "snippet_add", "snippet_add"] and ops.count("snippet_add") == 3
+    # a quiz item likewise: the same segment and answer twice is refused
+    item = {"set_id": "example", "recording_id": GUIDED2, "start_s": 14.0, "end_s": 17.0,
+            "correct_label": "Chewing-artifact"}
+    first = admin.admin_ok("quiz_item_add", item)["item"]["item_id"]
+    admin.admin_error("quiz_item_add", item, 409, "duplicate")
+    again = admin.admin_ok("quiz_item_add", {**item, "item_id": first})
+    assert again["item"]["item_id"] == first, "the same ID replaces it"
+    admin.admin_ok("quiz_item_remove", {"set_id": "example", "item_id": first})
 
 
 # ---------------------------------------------------------------------- the gate
