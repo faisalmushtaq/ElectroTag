@@ -5,6 +5,10 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Where more than two marks overlap in time, their labels above the EEG no longer cover one another: they are cut
+to their types' numbers (1 to 9, 0 for Uncertain) and set side by side, each still selecting its mark, with its type
+named in full under the pointer (docs/using.md, "The annotation view").
+
 In Training, a competency criterion's threshold can be set straight away, which ticks the criterion; it used to
 stay greyed out until the criterion was ticked. A quiz item and a snippet are now chosen from the artifacts the
 experts marked on the recording, listed with their type, times and channels: choosing one fills in the form, and
