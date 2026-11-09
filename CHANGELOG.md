@@ -11,6 +11,15 @@ by a hand-out, by a task or in the training programme. Recordings assigned one b
 hand-outs and tasks leave out, are found there with the rest. The admin interface's `assignments_list` gives each
 item's `source`, `task_id` and `handout_id` for it (docs/admin_area.md, "Giving out work").
 
+The annotation view makes better use of a laptop screen. The side panel's edge can be dragged (or moved with
+the arrow keys) to widen or narrow it, and a double click puts it back; once it is 600 pixels wide, the
+topographic map and any coaching or review panel sit on its left and the tabs on its right with the panel's whole
+height. The arrow at the top of the edge hides the panel for an EEG across the window, and Help, the guide, the
+coach and a review pass bring it back. The width and whether the panel is hidden are remembered in the browser for
+each person, and logged as `state` events with `side_panel`. The toolbar keeps to one line on a wide screen: below
+1,700 pixels the scales leave out their captions, and "all channels" is no longer written beside a pressed Whole
+montage (docs/using.md, "The annotation view").
+
 In Training, a competency criterion's threshold can be set straight away, which ticks the criterion; it used to
 stay greyed out until the criterion was ticked. A quiz item and a snippet are now chosen from the artifacts the
 experts marked on the recording, listed with their type, times and channels: choosing one fills in the form, and
