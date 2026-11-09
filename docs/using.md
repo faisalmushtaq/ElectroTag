@@ -510,8 +510,9 @@ for yourself: Filters as in the viewer or None, and Reference as recorded or the
 channels (the average reference, which takes away at each moment the mean of the channels not marked
 bad). Your choice is kept in this browser for your next recordings, and the line under it says
 whether it is the study's or your own. As the viewer does with its traces, each channel is centred
-on its mean over the seconds on the screen (up to 20 seconds around what is mapped), so that a
-channel's steady offset does not colour the map. The map is drawn with spherical splines (Perrin, Pernier, Bertrand and
+on its mean over the seconds that were on the screen when you clicked the moment or chose the mark
+(up to 20 seconds around it), so that a channel's steady offset does not colour the map. Scrolling
+the EEG afterwards leaves the map as it is, until you click another moment or choose another mark. The map is drawn with spherical splines (Perrin, Pernier, Bertrand and
 Echallier, 1989; [references](references.md)): the values at the electrodes are spread smoothly over a sphere, the head, and the
 sphere is drawn flat as the channel chooser's map draws it, so that the ring at the edge of the head
 runs through Fpz, T7, Oz and T8 and electrodes below it lie just outside.

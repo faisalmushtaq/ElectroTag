@@ -11,6 +11,10 @@ snippets, audited under the expert's ID (registering recordings stays with the a
 recording is added to a set, the list offers only the recordings with annotations (someone's saved work, or a
 reference already in a set), or every registered recording when the reference is an annotation file.
 
+The topographic map no longer changes as the EEG is scrolled: each channel is centred on its mean over the
+seconds that were on the screen when the moment was clicked or the mark chosen, and the map stays as it is
+until another moment or mark is chosen.
+
 The annotation view has a topographic map at the top of its side panel: the channels' values spread over a
 drawing of the head with spherical splines, from blue through white to red on a scale that stays the same for
 the whole recording. A click on the EEG shows the map at that moment; with a mark selected or just drawn it

@@ -153,8 +153,17 @@ export const tests = [
 
       // A reference set whose practice reference is the consensus of A01 and A02, with its disagreements.
       await goSection(page, 'Training', 'admin-training');
-      await page.locator('summary', { hasText: 'New reference set' }).click();
-      const form = page.locator('details.admin-details[open] form');
+      // Opened once the list of sets has loaded, which moves the card down the page: a click while it moves
+      // can miss it in WebKit (seen on 6 November 2026), so the card is opened again if the click did not open it.
+      const training = page.locator('.admin-section[data-section="training"]');
+      await training.locator('.set-list .set-item, .set-list p.caption:not(.admin-loading)').first().waitFor({ timeout: 30000 });
+      const newSet = training.locator('details.admin-details', { has: page.locator('summary', { hasText: 'New reference set' }) });
+      for (let i = 0; i < 3 && !(await newSet.evaluate((d) => d.open)); i++) {
+        await newSet.locator('summary').click();
+        await page.waitForTimeout(200);
+      }
+      assert.equal(await newSet.evaluate((d) => d.open), true, 'the New reference set card opens');
+      const form = newSet.locator('form');
       await form.locator('input').first().fill('pilot');
       await form.locator('input').nth(1).fill('Pilot set');
       await page.click('[data-log="set-create"]');
