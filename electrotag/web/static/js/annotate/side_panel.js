@@ -123,11 +123,17 @@ export function mountSideEdge(ws) {
   });
 
   // wide enough: the parts side by side
+  // (in the next frame, not inside the observer: a change of layout there makes the browser report a loop of resizes)
+  let frame = 0;
   const ro = new ResizeObserver(() => {
-    // (below the EEG, on an iPad held upright, the panel already sets its parts side by side)
-    const below = getComputedStyle(ws.side).flexDirection === 'row';
-    ws.side.classList.toggle('wide', !below && !view.classList.contains('side-hidden') && ws.side.getBoundingClientRect().width >= WIDE_AT);
-    sayWidth();
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      // (below the EEG, on an iPad held upright, the panel already sets its parts side by side)
+      const below = getComputedStyle(ws.side).flexDirection === 'row';
+      const wide = !below && !view.classList.contains('side-hidden') && ws.side.getBoundingClientRect().width >= WIDE_AT;
+      if (ws.side.classList.contains('wide') !== wide) ws.side.classList.toggle('wide', wide);
+      sayWidth();
+    });
   });
   ro.observe(ws.side);
 
@@ -140,7 +146,7 @@ export function mountSideEdge(ws) {
   const kept = Number(local.get(widthKey, null));
   if (kept > 0) apply(kept);
   setHidden(local.get(hiddenKey, false) === true && !needed());
-  return { edge, destroy: () => { ro.disconnect(); mo.disconnect(); }, setHidden };
+  return { edge, destroy: () => { cancelAnimationFrame(frame); ro.disconnect(); mo.disconnect(); }, setHidden };
 }
 
 function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
