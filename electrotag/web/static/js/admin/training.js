@@ -259,7 +259,8 @@ export class TrainingSection {
       h('div.btn-row', {}, notesBtn), notesHost,
       r.use === 'guided' ? h('h3', {}, 'Correct the marks') : null,
       r.use === 'guided' ? h('p.caption', {}, 'An exercise instead of the step-by-step coach: a copy of the experts\' marks with deliberate mistakes, '
-        + 'which trainees put right. Make it here, then choose Correct the marks under How much help the guided recording gives.') : null,
+        + 'which trainees put right. Make it here; once it is made, Correct the marks is offered under How much help the guided recording gives above, '
+        + 'and choosing it gives the exercise to trainees.') : null,
       r.use === 'guided' ? h('div.btn-row', {}, plantedBtn) : null, plantedHost,
       h('h3', {}, 'Remove'), removeHost));
     host.querySelector('h3').tabIndex = -1;

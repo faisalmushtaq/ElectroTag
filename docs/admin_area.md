@@ -1499,9 +1499,11 @@ would be told, and **Show the experts' marks** to see the reference as dashed ou
 exercise** gives the recording back to the step-by-step coach.
 
 To give the exercise to trainees, choose **Correct the marks** under "How much help the guided
-recording gives" in the recording's Manage; the study refuses that until the recording has an
-exercise. When a recording's reference is replaced, its exercise no longer fits it and trainees are
-not given it until it is made again. Trainees who did the recording before keep their results. In the
+recording gives" in the recording's Manage (Training in the admin area, or Training sets in the
+expert area). It is offered there only once the recording has an exercise made from its reference
+as it is now, and appears as soon as one is made; the exercise's page says so too. When a
+recording's reference is replaced, its exercise no longer fits it: trainees are not given it, and
+Correct the marks is not offered for the recording, until it is made again. Trainees who did the recording before keep their results. In the
 sandbox, the first guided recording of the demonstration set has a ready-made exercise to try; making
 exercises needs a study server or Firebase.
 
