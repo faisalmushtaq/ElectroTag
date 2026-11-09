@@ -67,6 +67,12 @@ export class DemoTrainingStages {
 
   // ------------------------------------------------------------ stage actions
   /** POST /training/stage (training_path.py stage_action): the same request twice changes nothing more. */
+  /** GET /me's tour (training_path.py welcome_tour): offered once to someone outside the programme, unless the study has it off. */
+  tourOf(aid) {
+    if (this.b._inProgramme(aid) || !this.b._policy().tour) return null;
+    return (this.b.state.tours || {})[aid] || 'todo';
+  }
+
   stageAction(body) {
     const aid = this.b._aid();
     const { stage, action } = body || {};
@@ -76,7 +82,15 @@ export class DemoTrainingStages {
     if (stage === 'assessment' && action === 'skip') {
       throw new ApiError(409, 'cannot_skip', 'The competency assessment cannot be skipped: it is passed before real study work begins.');
     }
-    if (!this.b._inProgramme(aid)) throw new ApiError(404, 'no_programme', 'You are not taking part in a training programme');
+    if (!this.b._inProgramme(aid)) {
+      // outside a programme only the tour has a stage (training_path.py _tour_action): kept for the account
+      if (stage !== 'tour') throw new ApiError(404, 'no_programme', 'You are not taking part in a training programme');
+      const tours = this.b.state.tours || (this.b.state.tours = {});
+      const want = { done: 'done', skip: 'skipped', resume: 'todo' }[action];
+      if (!(tours[aid] === 'done' && want === 'skipped')) tours[aid] = want;
+      this.b._save();
+      return { tour: this.tourOf(aid) };
+    }
     const policy = this.b._policy();
     const st = this.b._stages(aid).find((s) => s.key === stage);
     const title = STAGE_TITLES[stage];

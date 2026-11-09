@@ -490,7 +490,8 @@ skip, taking up again and finished tour or snippets in the trainee's progress
 file, with its time. The platform tour, which opens a practice recording made in
 the browser (its `recording_opened` has `segment` `tour`), records
 `tour_started` (`n_steps`), `tour_step` for each step (`step`: `move`, `mark`,
-`channels`, `undo`, `confidence` or `save`; `index`; `completed_by`: `action`
+`channels`, `undo`, `confidence`, `selected` (since 9 November 2026: a selected annotation brought back into
+view by a change) or `save`; `index`; `completed_by`: `action`
 when the tour saw it done, `next` when it was skipped; and `seconds` on it),
 `tour_finished` and `tour_left` (closed during the tour, with the step reached);
 its marks are logged as in any annotation view. The snippets of *Meet the

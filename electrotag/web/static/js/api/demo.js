@@ -304,6 +304,7 @@ export class DemoBackend {
       catalogue: CATALOGUE,
       programme: this._inProgramme(aid) ? { set_id: TRAINING_SET.set_id, name: this._exampleSet().name, complete: !this._nextStep(aid).stage } : null,
       training_gate: (await this._trainingPart()).gate(aid),
+      tour: this.trainingStages.tourOf(aid),
       questionnaire: (await this._questionnairePart()).status(aid),
       quizzes: this._quizAllowed(aid) ? [{ set_id: QUIZ.set_id, name: this._exampleSet().name, n_items: QUIZ.items.length,
         n_answered: Object.keys(quiz.answers).length, finished: Boolean(quiz.finished), feedback: QUIZ.feedback }] : [],

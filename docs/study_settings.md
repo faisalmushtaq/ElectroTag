@@ -860,7 +860,7 @@ assessment recordings waits for the rest of their training path instead, an
 administrator's decision on an assessment counts over its criteria (a fail keeps
 study work locked under `completed` too), and an administrator can let one
 trainee through without any of it. `tour` begins the path with the
-platform tour, and `snippets_quiz_required` counts the snippets stage as done
+platform tour, and offers the same tour once on the home page to everyone outside a training programme, and `snippets_quiz_required` counts the snippets stage as done
 only once its recognition check is finished. A change applies at once: a
 stage skipped while the policy allowed it stays skipped, and a gate switched
 off opens every trainee's study recordings. The admin area shows these under

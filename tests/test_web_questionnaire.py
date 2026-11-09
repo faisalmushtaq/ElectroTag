@@ -120,7 +120,7 @@ def test_administrators_who_do_not_annotate_are_not_asked(client: TestClient) ->
     admin.admin_ok("settings_update", {"settings": {"questionnaire": {"enabled": False}}})
     a04 = newcomer(client, "A04")
     assert a04.ok("get", "/me")["questionnaire"]["asked"] is False
-    assert a04.post("/training/stage", {"stage": "tour", "action": "skip"}).json()["error"] != "questionnaire_required"
+    assert a04.post("/training/stage", {"stage": "snippets", "action": "skip"}).json()["error"] != "questionnaire_required"
     r = a04.post("/me/questionnaire", {"answers": ANSWERS, "contacts": CONTACTS})
     assert (r.status_code, r.json()["error"]) == (409, "questionnaire_off")
 

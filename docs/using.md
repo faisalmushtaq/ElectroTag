@@ -110,6 +110,15 @@ answers, or Back to my recordings to leave them as they were. The study keeps ea
 answers with its date, so that the analyses use what was true when you did each piece of work. If
 the study team adds a question later, the same line offers Answer the new questions.
 
+Before your first recording, your home page also offers a short tour of the annotation view, the same
+tour that begins the training path for trainees. It takes about five minutes on a practice recording
+made in your browser: moving through the EEG, marking an artifact with a key and a drag, marking
+channels, undoing a change, rating your confidence, how a selected annotation takes your changes, and
+saving. Each step is done for real and ticked when ElectroTag sees it, or skipped with Skip this step,
+and nothing you mark is kept. If you know the annotation view already, Skip the tour. Either way the
+offer goes, for your account rather than this browser, and a line under the greeting takes you through
+the tour (again) whenever you like. A study can turn the tour off.
+
 ## Your recordings
 
 The first page has one black button, Open next recording, for the recording to do next. When you
@@ -664,13 +673,19 @@ in seconds; hold the pointer over a row for the type's code and description. Cli
 select it, or pick it in the Annotations list. While annotations are
 selected the second row reads "Change to", and a number key, a type button or the menu changes their
 type. Esc, a click on empty EEG, a click on the empty space of the Annotations panel around the list,
-or a new drag ends the selection, and the row reads "Draw as" again.
+or a new drag ends the selection, and the row reads "Draw as" again. A selection lasts while you
+scroll, so a type key, Delete, a rating, a note or a change of times still applies to the annotation
+you selected even when it is no longer on the screen. So that you always see what you are changing,
+ElectroTag then brings that annotation back into view first, centred on the screen with its channels,
+and the line at the bottom says so ("brought back into view"). End the selection before you move on
+if your next key is meant for a new mark.
 N and P select the next and previous annotation and bring it into view. With nothing selected, N
 starts from the first annotation that reaches into the screen; after the last annotation N comes
 round to the first, and P after the first to the last.
 
 Drag an edge of an annotation to make it longer or shorter, and hold Shift while dragging its middle
-to move it; the line at the bottom gives its new times. To grab an edge, point at its line: a drag
+to move it; the line at the bottom gives its new times. Shift matters only when the drag starts inside
+an annotation: on empty EEG a Shift+drag draws a new mark, as a plain drag does. To grab an edge, point at its line: a drag
 that starts just outside an annotation draws a new annotation instead, so that a second occurrence
 just after the first is marked on its own. For a precise start or end, select the annotation and
 press Alt (Option on a Mac) with ← or → to move its start 10 milliseconds earlier or later (at

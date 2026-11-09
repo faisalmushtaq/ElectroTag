@@ -186,6 +186,7 @@ password.
                              "colour": "#0067A5", "section": "Eye", "is_group": false,
                              "parent": "Eye-artifact" | null, "description": "…"}]},
   "programme": null | {"set_id": "example", "name": "…", "complete": false},  // in a training programme; complete when every stage is done
+  "tour": null | "todo" | "done" | "skipped",  // the platform tour outside a training programme; see "Training stages"
   "training_gate": {"open": true, "reason": "" | "training_required", "message": "…",
                     "result": "" | "not_met" | "not_determined"},  // see "Training stages"
   "quizzes": [{"set_id": "example", "name": "…", "n_items": 4, "n_answered": 0, "finished": false, "feedback": "immediate"}],
@@ -745,8 +746,13 @@ again (the stages after it that were not completed wait for it once more);
 other stages finish by what is saved). Each is kept, with its time, as an event
 of the trainee's progress (`stage_skipped`, with the policy of the moment,
 `stage_resumed` and `stage_completed`), and the competency report lists the
-stages skipped (`stages_skipped`). Errors: 400 `bad_request` for an unknown stage
-or action; 404 `no_programme` outside a programme; 409 `cannot_skip` for the
+stages skipped (`stages_skipped`). Outside a training programme the tour is the
+one stage: the home page offers it once to everyone else (`GET /me` `tour`,
+`todo` until it is `done` or `skipped`, null in a programme or when the study's
+`training.tour` is off), and `{"stage": "tour"}` with `done` or `skip` keeps the
+choice with the person's record, `resume` offers it again, and the answer is
+`{"tour"}`; a skip after the tour was done changes nothing. Errors: 400 `bad_request` for an unknown stage
+or action; 404 `no_programme` for another stage outside a programme; 409 `cannot_skip` for the
 assessment, which is never skipped, and for a stage the study does not let
 trainees skip; 409 `reopened` for skipping a stage the study team reopened, which
 is done again before the assessment is retaken; 409 `locked` for a stage not open yet; 409 `finished` for a stage

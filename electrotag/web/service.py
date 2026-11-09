@@ -383,6 +383,7 @@ class StudyService:
         return {"annotator_id": user.annotator_id, "display_name": user.display_name, "role": user.role,
                 "roles": list(user.roles), "study": self.study_info(), "catalogue": self.catalogue_info(),
                 "programme": prog, "training_gate": self.training_path.gate(user),
+                "tour": self.training_path.welcome_tour(user),
                 "quizzes": self.quizzes.available(user), "questionnaire": self.questionnaire.status(user)}
 
     # ---------------------------------------------------------- what to do

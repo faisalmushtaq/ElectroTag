@@ -231,7 +231,8 @@ def test_feedback_training_stages_and_snippets(client: TestClient, admin: Api) -
     r = t01.post("/training/stage", {"stage": "lunch", "action": "skip"})
     assert (r.status_code, r.json()["error"]) == (400, "bad_request")
     assert t01.ok("post", "/training/stage", {"stage": "tour", "action": "done"})["stages"][0]["status"] == "completed"
-    r = a01.post("/training/stage", {"stage": "tour", "action": "skip"})
+    # outside a programme the tour is the one stage (tests/test_web_training_stages.py); the others are refused
+    r = a01.post("/training/stage", {"stage": "snippets", "action": "skip"})
     assert (r.status_code, r.json()["error"]) == (404, "no_programme")
     assert t01.ok("get", "/training/snippets")["set_id"] == "example"  # tests/test_web_training_stages.py has more
 

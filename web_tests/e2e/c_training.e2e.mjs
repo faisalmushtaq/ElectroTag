@@ -304,7 +304,7 @@ export const tests = [
       await page.waitForSelector('.coach.tour');
       const tourText = () => page.textContent('.coach.tour');
       const waitDone = async () => page.waitForFunction(() => !document.querySelector('.coach.tour [data-log="tour-next"]').disabled, null, { timeout: 10000 });
-      assert.match(await tourText(), /Tour +· +Step 1 of 6/);
+      assert.match(await tourText(), /Tour +· +Step 1 of 7/);
       assert.match(await page.textContent('.ws-banner'), /nothing you mark is kept/);
       await t.screenshot(page, 'tour_start');
       // 1. moving: on and back
@@ -315,7 +315,7 @@ export const tests = [
       await waitDone();
       await page.keyboard.press('Enter');
       // 2. the type with its key, then a drag across the outlined blink
-      await page.waitForFunction(() => /Step 2 of 6/.test(document.querySelector('.coach.tour').textContent));
+      await page.waitForFunction(() => /Step 2 of 7/.test(document.querySelector('.coach.tour').textContent));
       const body2 = await page.evaluate(() => document.querySelector('.coach.tour .coach-body').innerText);
       const key = /^1\. Press (\d) \(or click \1 next to Draw as\) to choose Eye-blink-artifact\.$/m.exec(body2);
       assert.ok(key, body2);
@@ -326,7 +326,7 @@ export const tests = [
       await t.screenshot(page, 'tour_marked');
       await page.keyboard.press('Enter');
       // 3. the channels: Selected channels, the names at the left, then the drag
-      await page.waitForFunction(() => /Step 3 of 6/.test(document.querySelector('.coach.tour').textContent));
+      await page.waitForFunction(() => /Step 3 of 7/.test(document.querySelector('.coach.tour').textContent));
       const body3 = await page.evaluate(() => document.querySelector('.coach.tour .coach-body').innerText);
       assert.match(body3, /click the channel names T7 and T8 at the left of the EEG/);
       const emgKey = /^1\. Press (\d) \(or click \1 next to Draw as\) to choose EMG-artifact\.$/m.exec(body3);
@@ -340,7 +340,7 @@ export const tests = [
       await waitDone();
       await page.keyboard.press('Enter');
       // 4. undo, then redo: the muscle mark goes and comes back
-      await page.waitForFunction(() => /Step 4 of 6/.test(document.querySelector('.coach.tour').textContent));
+      await page.waitForFunction(() => /Step 4 of 7/.test(document.querySelector('.coach.tour').textContent));
       const before = (await annotations(page)).length;
       await page.keyboard.press('Control+z');
       await page.waitForFunction(() => /bring it back with Redo/.test(document.querySelector('.coach.tour').textContent));
@@ -350,7 +350,7 @@ export const tests = [
       assert.equal((await annotations(page)).length, before);
       await page.keyboard.press('Enter');
       // 5. confidence: select the blink, D, a number
-      await page.waitForFunction(() => /Step 5 of 6/.test(document.querySelector('.coach.tour').textContent));
+      await page.waitForFunction(() => /Step 5 of 7/.test(document.querySelector('.coach.tour').textContent));
       await page.keyboard.press('c'); // back to the whole montage
       const mid = await eegPoint(page, 6.7);
       await page.mouse.click(mid.x, mid.y);
@@ -359,8 +359,25 @@ export const tests = [
       await waitDone();
       assert.equal((await annotations(page)).find((a) => a.label === 'Eye-blink-artifact').confidence, 4);
       await page.keyboard.press('Enter');
-      // 6. Save and Finish: here it ends the tour, and the study is told
-      await page.waitForFunction(() => /Step 6 of 6/.test(document.querySelector('.coach.tour').textContent));
+      // 6. a selected annotation takes the changes: scrolled on, a type key brings it back into view
+      await page.waitForFunction(() => /Step 6 of 7/.test(document.querySelector('.coach.tour').textContent));
+      const body6 = await page.evaluate(() => document.querySelector('.coach.tour .coach-body').innerText);
+      const typeKey = /^3\. Press (\d) \(EMG-artifact\)/m.exec(body6);
+      assert.ok(typeKey, body6);
+      const blinkAt = await eegPoint(page, 6.7);
+      await page.mouse.click(blinkAt.x, blinkAt.y);
+      await page.keyboard.press('Shift+ArrowRight'); // a whole screen on: the blink is off it
+      await page.waitForFunction(() => globalThis.ElectroTag.ws.viewer.view.startS > 7);
+      await page.keyboard.press(typeKey[1]);
+      await page.waitForFunction(() => { const v = globalThis.ElectroTag.ws.viewer.view; return v.startS < 6.5 && v.startS + v.durationS > 6.9; });
+      assert.match(await page.textContent('.ws-status'), /brought back into view/);
+      await page.keyboard.press('Control+z');
+      await page.keyboard.press('Escape');
+      await waitDone();
+      assert.ok((await annotations(page)).some((a) => a.label === 'Eye-blink-artifact'), 'taken back');
+      await page.keyboard.press('Enter');
+      // 7. Save and Finish: here it ends the tour, and the study is told
+      await page.waitForFunction(() => /Step 7 of 7/.test(document.querySelector('.coach.tour').textContent));
       await t.screenshot(page, 'tour_save');
       await page.click('[data-log="tour-save"]');
       await waitForRoute(page, 'training');
@@ -371,7 +388,7 @@ export const tests = [
       const events = await page.evaluate(() => globalThis.ElectroTag.backend.resultsDocument().interaction_logs[0].events);
       const steps = events.filter((e) => e.type === 'tour_step');
       assert.deepEqual(steps.map((e) => [e.step, e.completed_by]), [['move', 'action'], ['mark', 'action'], ['channels', 'action'],
-        ['undo', 'action'], ['confidence', 'action'], ['save', 'action']]);
+        ['undo', 'action'], ['confidence', 'action'], ['selected', 'action'], ['save', 'action']]);
       assert.ok(events.some((e) => e.type === 'tour_finished'));
       // nothing of the tour was saved
       assert.equal(await page.evaluate(() => globalThis.ElectroTag.backend.state.submissions.length), 0);
