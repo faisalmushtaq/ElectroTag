@@ -6,7 +6,9 @@ Each section below describes the changes in one version of ElectroTag;
 ## Unreleased
 
 When a guided recording of a reference set is managed, the line under How much help the guided recording
-gives now describes the level chosen; it used to describe By its place in the set whatever was chosen.
+gives now describes the level chosen; it used to describe By its place in the set whatever was chosen. Correct
+the marks is offered there only for a recording whose exercise, the copy with deliberate mistakes, has been
+made.
 
 The annotation view has a topographic map at the top of its side panel: the channels' values spread over a
 drawing of the head with spherical splines, from blue through white to red on a scale that stays the same for

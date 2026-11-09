@@ -736,8 +736,10 @@ the choice says what the level chosen does. Show each artifact outlines each of 
 artifacts on the screen, with its type and channels, for the trainee to mark over; Name each
 artifact tells the trainee its type and shows a screen that holds it, and they find where it is;
 Only say an artifact follows leaves them to find it, choose its type and mark it; and Correct the
-marks gives them a copy of the experts' marks with deliberate mistakes to put right, once the
-exercise has been made ("Correct the marks" below). When a recording
+marks gives them a copy of the experts' marks with deliberate mistakes to put right. Correct the
+marks is offered only for a recording whose exercise has been made from its reference as it is now
+("Correct the marks" below); until then a note under the choice says to make it first, and it
+appears as soon as it is made. When a recording
 that trainees have already annotated in training becomes an assessment recording, the page warns
 that the assessment is no longer blinded for them. Edit the guided notes writes the note shown with
 each of the experts' annotations while a trainee is guided through the recording. Remove from the

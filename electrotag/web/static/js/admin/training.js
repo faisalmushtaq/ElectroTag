@@ -192,13 +192,38 @@ export class TrainingSection {
     // the line under the choice says what the level chosen does
     const guidanceHint = guidanceField.querySelector('p.caption');
     guidanceHint.dataset.log = 'guidance-hint';
+    // Correct the marks is offered only for a recording whose exercise (the copy with deliberate mistakes) is
+    // made from its reference as it is now (correct_marks.py is_current); until the study says so it is left out.
+    const correctOption = [...guidance.options].find((o) => o.value === 'correct');
+    const correctNote = h('p.caption', { 'data-log': 'guidance-correct-note' });
+    guidanceField.append(correctNote);
+    let exerciseReady = false;
+    const syncCorrect = () => {
+      const keep = exerciseReady || guidance.value === 'correct'; // a recording set to it already shows it
+      if (keep && !correctOption.isConnected) guidance.append(correctOption);
+      if (!keep && correctOption.isConnected) correctOption.remove();
+      correctOption.disabled = !exerciseReady;
+      correctNote.textContent = exerciseReady ? ''
+        : guidance.value === 'correct' ? 'This recording has no up-to-date exercise: make it again with Correct the marks… below, or choose another level.'
+          : 'Correct the marks is offered once this recording has its exercise, a copy of the experts\' marks with deliberate mistakes: make it with Correct the marks… below.';
+    };
+    const checkExercise = async () => {
+      try {
+        const got = await this.area.app.backend.expert('planted_list', {});
+        const row = ((got.sets || []).find((x) => x.set_id === s.set_id) || { recordings: [] }).recordings.find((x) => x.recording_id === r.recording_id);
+        exerciseReady = Boolean(row && row.planted && !row.planted.stale);
+      } catch { exerciseReady = false; }
+      syncCorrect();
+    };
     const syncGuidance = () => {
       guidanceField.hidden = (use.value() || r.use) !== 'guided';
       guidanceHint.textContent = GUIDANCE_HINTS[guidance.value] || '';
     };
     use.addEventListener('change', syncGuidance);
-    guidance.addEventListener('change', syncGuidance);
+    guidance.addEventListener('change', () => { syncGuidance(); syncCorrect(); });
     syncGuidance();
+    syncCorrect();
+    void checkExercise();
     const notesHost = h('div.admin-stack');
     const notesBtn = actionButton('Edit the guided notes', { working: 'Loading…', msg, onClick: () => this._guidedNotes(notesHost, s, r) });
     // Correct the marks (js/admin/planted.js): an exercise made from a guided recording's reference
@@ -211,7 +236,7 @@ export class TrainingSection {
       plantedHost.append(plantedPanel({ api, setId: s.set_id, recordingId: r.recording_id,
         onTry: (target) => startPlantedTry(this.area.app, target, { route: 'expert-planted', params: { recording: r.recording_id } }),
         onMake: (target, start) => startPlantedMake(this.area.app, target, start, api, { route: 'expert-planted', params: { recording: r.recording_id } }),
-        onChanged: () => {} }));
+        onChanged: () => { void checkExercise(); } })); // made, replaced or removed: Correct the marks is offered or not
     } });
     const removeHost = h('div.btn-row');
     removeHost.append(h('button.btn.destructive', { type: 'button', onclick: async () => {
