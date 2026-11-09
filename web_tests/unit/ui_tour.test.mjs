@@ -27,10 +27,15 @@ test('the tour\'s recording holds the artifacts its steps point at', () => {
   assert.ok(blink.onset_sample / rec.sfreq >= 6);
 });
 
-test('six steps, each naming the keys and controls to use', () => {
+test('seven steps, each naming the keys and controls to use', () => {
   const steps = tourSteps({ quickKeys: QUICK });
-  assert.deepEqual(steps.map((s) => s.key), ['move', 'mark', 'channels', 'undo', 'confidence', 'save']);
-  const [move, mark, channels, undo, confidence, save] = steps;
+  assert.deepEqual(steps.map((s) => s.key), ['move', 'mark', 'channels', 'undo', 'confidence', 'selected', 'save']);
+  const [move, mark, channels, undo, confidence, selected, save] = steps;
+  // a selected annotation takes the changes, and is brought back into view for them
+  assert.match(selected.body, /brings it back into view/);
+  assert.match(selected.body, /^3\. Press \*\*3\*\* \(EMG-artifact\): the view comes back and your Eye-blink-artifact becomes EMG-artifact\.$/m);
+  assert.match(selected.body, /then \*\*Esc\*\*, or click empty EEG, to end the selection/);
+  assert.match(tourSteps({ quickKeys: {} })[5].body, /Choose \*\*EMG-artifact\*\* from the menu of types/);
   assert.match(move.body, /Press the \*\*right arrow\*\* key/);
   assert.match(mark.body, /^1\. Press \*\*1\*\* \(or click \*\*1\*\* next to Draw as\) to choose Eye-blink-artifact\.$/m);
   assert.match(mark.body, /^2\. Make sure \*\*Whole montage\*\* is chosen in the toolbar/m);
@@ -57,7 +62,8 @@ test('on a touch screen every step is in taps: no keys, no clicks', () => {
     assert.doesNotMatch(words, /\bPress\b|\bpress \*\*|\bkey\b|Ctrl|⌘|\bclick|\bClick/, `${st.key}: ${words}`);
     assert.equal(stepBody(st, false), st.body);
   }
-  const [move, , , undo, confidence, save] = steps;
+  const [move, , , undo, confidence, selected, save] = steps;
+  assert.match(stepBody(selected, true), /tap empty EEG to end the selection/);
   assert.match(stepBody(move, true), /beside \*\*Time\*\*, tap the last arrow \(\*\*Forward a screen\*\*\)/);
   assert.match(stepBody(undo, true), /Tap \*\*Undo\*\* at the top.*\n2\. Tap \*\*Redo\*\*/s);
   assert.match(stepBody(confidence, true), /tap a number for \*\*Confidence\*\*.*Pressing and holding the mark/s);
@@ -65,8 +71,11 @@ test('on a touch screen every step is in taps: no keys, no clicks', () => {
 });
 
 test('a step is done by what the annotation view shows, not by pressing Next', () => {
-  const [move, mark, channels, undo, confidence, save] = tourSteps({ quickKeys: QUICK });
+  const [move, mark, channels, undo, confidence, selected, save] = tourSteps({ quickKeys: QUICK });
   const { blink, muscle } = tourTargets();
+  assert.equal(stepDone(selected, obs({ broughtBack: true, nothingSelected: false })), false, 'brought back, still selected');
+  assert.equal(stepDone(selected, obs({ broughtBack: false, nothingSelected: true })), false);
+  assert.equal(stepDone(selected, obs({ broughtBack: true, nothingSelected: true })), true);
   assert.equal(stepDone(move, obs()), false);
   assert.equal(stepDone(move, obs({ maxStartS: 2.5, startS: 2.5 })), false, 'moved on, not yet back');
   assert.equal(stepDone(move, obs({ maxStartS: 2.5, startS: 0 })), true);
