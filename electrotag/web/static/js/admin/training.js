@@ -586,8 +586,12 @@ export class TrainingSection {
       withheldHost.replaceChildren(...quizWithheldNote(r.withheld || []));
     }).catch((exc) => { note.remove(); msg.problem(exc); });
     // a new item
-    const recs = this.recordings.filter((r) => r.scope === `set:${s.set_id}` || r.scope === 'study');
-    const recording = select(recs.map((r) => [r.recording_id, `${r.recording_id} (${scopeText(r.scope, this.sets)})`]));
+    // The recordings a segment may come from: the set's guided recordings whose reference marks artifacts (practice
+    // and assessment recordings are refused, since their marks are the answers trainees are scored against).
+    const marked = new Set((s.recordings || []).filter((e) => e.use === 'guided' && e.n_reference_events > 0).map((e) => e.recording_id));
+    const recs = this.recordings.filter((r) => r.scope === (s.scope || 'study') && marked.has(r.recording_id));
+    const recording = select(recs.length ? recs.map((r) => [r.recording_id, `${r.recording_id} (${scopeText(r.scope, this.sets)})`])
+      : [['', 'No guided recording with marked artifacts yet']]);
     const itemId = textInput({ placeholder: 'optional, for example q01' });
     const start = numberInput({ min: 0, step: 0.1 });
     const end = numberInput({ min: 0, step: 0.1 });
@@ -641,8 +645,8 @@ export class TrainingSection {
       card('Quiz items', h('p.caption', {}, 'Short segments that annotators allowed to use the set classify: which artifact type is the main one in the shaded segment? '
         + 'Trainees take the quiz as the recognition check of Meet the artifacts.'), withheldHost, note, table, msg),
       card('Add a quiz item',
-        h('p.caption', {}, 'A segment comes from a guided recording, or another recording that no set uses for practice or assessment: '
-          + 'the experts\' annotations of those are the answers trainees are scored against, so a segment of one is refused.'),
+        h('p.caption', {}, 'A segment comes from one of the set\'s guided recordings whose reference marks artifacts. Practice and assessment '
+          + 'recordings are not offered: the experts\' annotations of those are the answers trainees are scored against.'),
         h('div.row.wrap', {}, field('Recording', recording), field('Item ID', itemId)),
         h('fieldset.admin-fieldset', {}, h('legend', {}, 'The segment'), picker.el),
         h('div.row.wrap', {}, field('Start (s)', start), field('End (s)', end), field('Context shown (s)', context, { hint: 'EEG shown before and after the segment.' })),

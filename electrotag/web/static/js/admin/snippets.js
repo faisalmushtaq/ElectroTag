@@ -130,10 +130,12 @@ function removeButton(area, s, x, msg, reload) {
 
 function addCard(area, s, data, reload) {
   const msg = messageArea();
-  const recs = data.recordings || [];
+  // only recordings whose reference marks artifacts: a snippet shows one of them
+  const marked = new Set((s.recordings || []).filter((e) => e.n_reference_events > 0).map((e) => e.recording_id));
+  const recs = (data.recordings || []).filter((r) => marked.has(r.recording_id));
   if (!recs.length) {
-    return card('Add a snippet', h('p.caption', {}, 'Add a guided recording to the set first: snippets come from the set\'s own recordings, '
-      + 'other than its practice and assessment recordings.'));
+    return card('Add a snippet', h('p.caption', {}, 'Add a guided recording with its reference to the set first: snippets come from the set\'s own '
+      + 'recordings whose reference marks artifacts, other than its practice and assessment recordings.'));
   }
   const recording = select(recs.map((r) => [r.recording_id, `${r.file_name} (${r.use})`]));
   const labels = (area.labels || []).map((l) => [l.label, l.label]);

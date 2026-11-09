@@ -785,12 +785,13 @@ The quiz shows short segments of the set's recordings and asks which artifact ty
 Each item names its recording, the start and end of the segment, how much EEG to show around it,
 the correct answer and any other answers to accept (where the study's catalogue gives the type's
 group term, such as Eye-artifact for an eye blink, one tick accepts that too), and an explanation
-shown after each answer when the quiz gives feedback. Under The segment, the form lists the artifacts the
-experts marked on the chosen recording, in time order with their type, times and channels, and a list
+shown after each answer when the quiz gives feedback. The form offers the set's guided recordings
+whose reference marks artifacts, and under The segment it lists the artifacts the experts marked on
+the chosen recording, in time order with their type, times and channels, and a list
 of the types narrows it; choosing one fills in the start, the end and the correct answer. Look at it
 on the EEG, under the times, opens your copy of the recording (read in your browser and never
 uploaded) and shows the segment as the quiz will, drawn again as the times change. The times can
-still be changed by hand, and are given by hand for a recording the set holds no reference for.
+still be changed by hand.
 Annotators allowed to use the set are offered its quiz, and trainees take it as the recognition check of Meet the artifacts. A segment never comes
 from a practice or assessment recording, of this set or of another set that holds the same file:
 the experts' annotations of those are the answers trainees are scored against, so such an item is
@@ -804,8 +805,8 @@ rule.
 Snippets are the short examples trainees look through in the second stage of their training path,
 Meet the artifacts. The tab lists the set's own snippets, then those made from the guided recordings:
 one for each of the experts' annotations there, with its guided note as the explanation (change the
-notes with Edit the guided notes under Recordings and references). Add a snippet takes a recording
-of the set and lists the artifacts the experts marked on it, as the quiz's form does: choosing one
+notes with Edit the guided notes under Recordings and references). Add a snippet takes one of the
+set's recordings whose reference marks artifacts and lists those artifacts, as the quiz's form does: choosing one
 fills in its type, where it starts and ends and the channels it is on (and its guided note as the
 explanation, when the explanation is still empty). It takes the type, where the artifact starts and ends, how much EEG to show on each side (2 s
 unless you choose up to 10 s), the channels it is on (none for the whole montage) and an

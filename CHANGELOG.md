@@ -8,7 +8,8 @@ Each section below describes the changes in one version of ElectroTag;
 In Training, a competency criterion's threshold can be set straight away, which ticks the criterion; it used to
 stay greyed out until the criterion was ticked. A quiz item and a snippet are now chosen from the artifacts the
 experts marked on the recording, listed with their type, times and channels: choosing one fills in the form, and
-the quiz's form shows the segment on the EEG as the snippet's does. Times can still be given by hand.
+the quiz's form shows the segment on the EEG as the snippet's does. Both offer only recordings whose reference
+marks artifacts (for the quiz, the set's guided recordings). Times can still be adjusted by hand.
 
 When a guided recording of a reference set is managed, the line under How much help the guided recording
 gives now describes the level chosen; it used to describe By its place in the set whatever was chosen. Correct

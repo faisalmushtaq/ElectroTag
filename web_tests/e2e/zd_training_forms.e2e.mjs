@@ -45,6 +45,11 @@ export const tests = [
         return (await globalThis.ElectroTag.backend.admin('set_guided_notes', { set_id: set.set_id, recording_id: rid })).notes;
       });
       assert.equal(await picks.count(), Math.min(notes.length, 40));
+      // only the set's guided recordings whose reference marks artifacts are offered
+      const offered = await quiz.locator('.admin-field', { has: page.locator('label:text-is("Recording")') }).locator('option').evaluateAll((os) => os.map((o) => o.value));
+      const expected = await page.evaluate(async () => (await globalThis.ElectroTag.backend.admin('sets_list', {})).sets[0].recordings
+        .filter((e) => e.use === 'guided' && e.n_reference_events > 0).map((e) => e.recording_id));
+      assert.deepEqual(offered.sort(), expected.sort());
       const sorted = [...notes].sort((a, b) => a.onset_s - b.onset_s);
       await picks.nth(1).click();
       assert.equal(await picks.nth(1).getAttribute('aria-pressed'), 'true');
