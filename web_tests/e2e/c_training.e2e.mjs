@@ -645,7 +645,7 @@ export const tests = [
       await page.click('.admin-tabs [data-tab="snippets"]');
       await page.waitForSelector('.admin-card:has-text("Add a snippet") form');
       const form = page.locator('.admin-card', { hasText: 'Add a snippet' });
-      await form.locator('select').nth(1).selectOption('EMG-artifact');
+      await form.locator('.admin-field', { has: page.locator('label:text-is("Type")') }).locator('select').selectOption('EMG-artifact');
       const inputs = form.locator('input.field');
       await inputs.nth(0).fill('9.2');
       await inputs.nth(1).fill('10.8');

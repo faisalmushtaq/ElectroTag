@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+In Training, a competency criterion's threshold can be set straight away, which ticks the criterion; it used to
+stay greyed out until the criterion was ticked. A quiz item and a snippet are now chosen from the artifacts the
+experts marked on the recording, listed with their type, times and channels: choosing one fills in the form, and
+the quiz's form shows the segment on the EEG as the snippet's does. Both offer only recordings whose reference
+marks artifacts (for the quiz, the set's guided recordings). Times can still be adjusted by hand.
+
 Everyone can choose a recordings folder once, from the home page, the page that opens recordings or the admin
 area's Add recordings from this computer: ElectroTag then finds each recording they open there (in the folders
 inside it too), with its BrainVision files and electrodes.tsv, and opens it without asking for the file, saying
