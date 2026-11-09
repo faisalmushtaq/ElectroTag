@@ -520,6 +520,7 @@ def test_reference_sets_from_saved_annotations(client: TestClient, admin: Api, r
     # guided notes
     notes = admin.admin_ok("set_guided_notes", {"set_id": "pilot", "recording_id": SUB2})["notes"]
     assert len(notes) == 1 and notes[0]["label"] == "EMG-artifact" and notes[0]["note"] == ""
+    assert isinstance(notes[0]["channels"], list)  # the channels it is on (empty: the whole montage)
     admin.admin_ok("set_guided_note", {"set_id": "pilot", "annotation_id": notes[0]["annotation_id"],
                                        "text": "Muscle activity over the whole montage."})
     notes = admin.admin_ok("set_guided_notes", {"set_id": "pilot", "recording_id": SUB2})["notes"]

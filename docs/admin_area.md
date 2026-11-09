@@ -774,8 +774,9 @@ The criteria decide whether a trainee's assessment meets the standard. Each meas
 sensitivity, precision, kappa and positive agreement sample by sample, positive agreement sample by
 sample in each channel, the mean overlap of matched events in time and in channels, the share given the same
 label, and extra events per minute) can be ticked with a threshold, overall or in every assessed
-category. A category is assessed only when the reference has at least the given number of events of
-it. Leave every measure unticked to report results without a pass or fail decision. ElectroTag
+category. A threshold can be given straight away, and giving one, or changing where it applies, ticks
+its measure; only the ticked measures count and are saved. A category is assessed only when the
+reference has at least the given number of events of it. Leave every measure unticked to report results without a pass or fail decision. ElectroTag
 suggests no thresholds: they depend on pilot data and on how well the experts agree with each other.
 
 ### Quiz
@@ -784,8 +785,13 @@ The quiz shows short segments of the set's recordings and asks which artifact ty
 Each item names its recording, the start and end of the segment, how much EEG to show around it,
 the correct answer and any other answers to accept (where the study's catalogue gives the type's
 group term, such as Eye-artifact for an eye blink, one tick accepts that too), and an explanation
-shown after each answer when the quiz gives feedback. Annotators allowed to use the set are offered
-its quiz, and trainees take it as the recognition check of Meet the artifacts. A segment never comes
+shown after each answer when the quiz gives feedback. Under The segment, the form lists the artifacts the
+experts marked on the chosen recording, in time order with their type, times and channels, and a list
+of the types narrows it; choosing one fills in the start, the end and the correct answer. Look at it
+on the EEG, under the times, opens your copy of the recording (read in your browser and never
+uploaded) and shows the segment as the quiz will, drawn again as the times change. The times can
+still be changed by hand, and are given by hand for a recording the set holds no reference for.
+Annotators allowed to use the set are offered its quiz, and trainees take it as the recognition check of Meet the artifacts. A segment never comes
 from a practice or assessment recording, of this set or of another set that holds the same file:
 the experts' annotations of those are the answers trainees are scored against, so such an item is
 refused. A quiz with an item of that kind from before (or from a recording given such a use later)
@@ -799,7 +805,9 @@ Snippets are the short examples trainees look through in the second stage of the
 Meet the artifacts. The tab lists the set's own snippets, then those made from the guided recordings:
 one for each of the experts' annotations there, with its guided note as the explanation (change the
 notes with Edit the guided notes under Recordings and references). Add a snippet takes a recording
-of the set, the type, where the artifact starts and ends, how much EEG to show on each side (2 s
+of the set and lists the artifacts the experts marked on it, as the quiz's form does: choosing one
+fills in its type, where it starts and ends and the channels it is on (and its guided note as the
+explanation, when the explanation is still empty). It takes the type, where the artifact starts and ends, how much EEG to show on each side (2 s
 unless you choose up to 10 s), the channels it is on (none for the whole montage) and an
 explanation of up to 1000 characters. A snippet is at most 60 s long. As you type the times, a line
 under them says how long the recording is, how long the snippet lasts and which stretch trainees see

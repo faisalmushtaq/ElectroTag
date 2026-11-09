@@ -14,7 +14,8 @@ import {
   actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, docsLink, downloadBase64, downloadText, field, loading, messageArea,
   numberInput, radios, recordingName, sectionHead, select, tabBar, textArea, textInput,
 } from './ui.js';
-import { snippetsTab } from './snippets.js';
+import { snippetPreview, snippetsTab } from './snippets.js';
+import { artifactPicker } from './artifact_picker.js';
 
 const TABS = [
   { key: 'references', title: 'Recordings and references' },
@@ -532,9 +533,12 @@ export class TrainingSection {
       threshold.setAttribute('aria-label', `Threshold for ${meta.label}`);
       const scope = select(meta.overallOnly ? [['overall', 'overall']] : [['overall', 'overall'], ['each_category', 'in every assessed category']], r.scope);
       scope.setAttribute('aria-label', `Where ${meta.label} applies`);
-      const sync = () => { threshold.disabled = !on.input.checked; scope.disabled = !on.input.checked || meta.overallOnly; };
-      on.input.addEventListener('change', sync);
-      sync();
+      // The threshold and where it applies can be set at any time; setting either ticks the criterion, which
+      // counts (and is saved) only while it is ticked.
+      scope.disabled = Boolean(meta.overallOnly);
+      const tick = () => { if (!on.input.checked) { on.input.checked = true; on.input.dispatchEvent(new Event('change')); } };
+      threshold.addEventListener('input', tick);
+      scope.addEventListener('change', tick);
       return { metric: r.metric, on, threshold, scope, el: h('div.criterion', {}, on, h('div.row', {}, h('span.op', { 'aria-hidden': 'true' }, meta.better === 'lower' ? '≤' : '≥'), threshold, scope), h('p.caption', {}, meta.description)) };
     });
     const minRef = numberInput({ value: (s.criteria && s.criteria.min_reference_events) ?? 3, min: 1, step: 1 });
@@ -547,7 +551,7 @@ export class TrainingSection {
       await this.reload(['success', criteria.criteria.length ? `Saved ${plural(criteria.criteria.length, 'criterion', 'criteria')}.` : 'Saved: results are reported without a pass or fail decision.']);
     } });
     return card('Competency criteria',
-      h('p.caption', {}, 'The research team sets the criteria for each reference set. Leave all unticked to report results without a pass or fail decision. ElectroTag suggests none: suitable thresholds depend on pilot data and on the experts\' own agreement.'),
+      h('p.caption', {}, 'The research team sets the criteria for each reference set. A criterion counts when it is ticked; giving it a threshold ticks it. Leave all unticked to report results without a pass or fail decision. ElectroTag suggests none: suitable thresholds depend on pilot data and on the experts\' own agreement.'),
       h('div.criteria', {}, controls.map((c) => c.el)),
       h('div.row.wrap.sentence', {}, h('span', {}, 'An artifact category is assessed only if the reference has at least'), minRef, h('span', {}, 'events of it.')),
       h('div.btn-row', {}, save), msg);
@@ -608,6 +612,18 @@ export class TrainingSection {
     syncGroup();
     const others = checkList(labels.map((l) => ({ value: l.label, text: l.label })), { legend: 'Other answers to accept', name: 'accepted' });
     const explanation = textArea({ rows: 2, placeholder: 'shown after each answer when the quiz gives feedback' });
+    // the segment from the experts' marks of the recording (artifact_picker.js), shown on the EEG as the quiz shows it
+    const preview = snippetPreview(this.area, recs, () => ({ recordingId: recording.value, start: start.value, end: end.value, context: context.value,
+      label: correct.value, channels: '' }));
+    const picker = artifactPicker(this.area, s.set_id, { what: 'segment', onPick: (a) => {
+      start.value = String(Math.round(a.onset_s * 1000) / 1000);
+      end.value = String(Math.round(a.offset_s * 1000) / 1000);
+      if ([...correct.options].some((o) => o.value === a.label)) { correct.value = a.label; syncGroup(); }
+      preview.redraw();
+    } });
+    for (const el of [start, end, context, correct]) { el.addEventListener('input', () => preview.redraw()); el.addEventListener('change', () => preview.redraw()); }
+    recording.addEventListener('change', () => { picker.show(recording.value); preview.redraw(); });
+    picker.show(recording.value);
     const add = actionButton('Add the item', { kind: 'primary', working: 'Adding…', msg, log: 'quiz-add', onClick: async () => {
       if (!recording.value) throw new Error('Choose the recording the segment comes from.');
       const a = parseNumber(start.value, 'Start', { min: 0 });
@@ -628,7 +644,9 @@ export class TrainingSection {
         h('p.caption', {}, 'A segment comes from a guided recording, or another recording that no set uses for practice or assessment: '
           + 'the experts\' annotations of those are the answers trainees are scored against, so a segment of one is refused.'),
         h('div.row.wrap', {}, field('Recording', recording), field('Item ID', itemId)),
+        h('fieldset.admin-fieldset', {}, h('legend', {}, 'The segment'), picker.el),
         h('div.row.wrap', {}, field('Start (s)', start), field('End (s)', end), field('Context shown (s)', context, { hint: 'EEG shown before and after the segment.' })),
+        preview.el,
         field('Correct answer', correct), acceptGroup, others, field('Explanation', explanation),
         h('div.btn-row', {}, add)));
   }

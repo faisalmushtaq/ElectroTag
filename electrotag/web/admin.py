@@ -1456,7 +1456,8 @@ class Admin:
             raise ApiError(404, "not_in_set", str(exc)) from exc
         t = ref.recording.timing
         return {"notes": [{"annotation_id": a.annotation_id, "label": a.label, "onset_s": a.onset(t),
-                           "offset_s": a.offset(t), "note": rs.guided_note(a.annotation_id)}
+                           "offset_s": a.offset(t), "channels": list(a.channels),
+                           "note": rs.guided_note(a.annotation_id)}
                           for a in ref.sorted_annotations()]}
 
     def op_set_guided_note(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
