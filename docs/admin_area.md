@@ -897,7 +897,9 @@ frame on the page, separated from the rest of the application, and Download the 
 the buttons named after its tables save them. An analysis can take a while on a large study; the
 page shows that it is working, and its button cannot be pressed again until the answer arrives.
 
-The **agreement analysis** compares annotators by category, time and channel. Choose the
+The **agreement analysis** compares annotators by category and time. The channels a mark was on are
+left out, so the same type marked at the same time agrees on whatever channels; Time and channel, under
+Compare in Settings of the analysis, adds the tables that compare the channels too. Choose the
 annotators and the recordings (none ticked means all of them), the kinds of session (usually
 research annotation), and whether everyone is compared with one reference annotator (an expert, for
 example) rather than every pair with each other. Categories chooses the artifact types; ANY-artifact

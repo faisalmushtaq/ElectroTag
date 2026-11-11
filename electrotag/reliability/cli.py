@@ -101,7 +101,7 @@ def build_parser(prog: str = "electrotag-agreement") -> argparse.ArgumentParser:
                     f"0 means any overlap (default: {_D.min_bin_coverage:g})")
     tr.add_argument("--channel-modes", nargs="+", choices=CHANNEL_MODES,
                     help="time_only compares when artifacts were marked; time_and_channel also which channels, "
-                    "counting each channel separately (default: both)")
+                    "counting each channel separately (default: time_only)")
     ev = p.add_argument_group("event matching")
     ev.add_argument("--criterion", choices=MATCH_CRITERIA,
                     help="How two annotations are matched: iou (enough overlap), tolerance (onsets and offsets close "

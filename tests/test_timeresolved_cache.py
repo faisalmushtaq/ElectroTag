@@ -98,7 +98,7 @@ def _dataset(seed: int, config: AnalysisConfig):
 @pytest.mark.parametrize("min_cov", [0.0, 0.5])
 @pytest.mark.parametrize("seed", [1, 2])
 def test_cached_tables_equal_the_channel_by_channel_computation(seed, min_cov):
-    config = AnalysisConfig(resolutions_s=(0.05, 0.25, 1.0), min_bin_coverage=min_cov)
+    config = AnalysisConfig(resolutions_s=(0.05, 0.25, 1.0), min_bin_coverage=min_cov, channel_modes=("time_only", "time_and_channel"))
     config.validate()
     ds = _dataset(seed, config)
     for group in ds.groups.values():
@@ -114,7 +114,7 @@ def test_cached_tables_equal_the_channel_by_channel_computation(seed, min_cov):
 
 
 def test_whole_analysis_is_identical_to_the_channel_by_channel_computation(monkeypatch):
-    config = AnalysisConfig(resolutions_s=(0.1, 1.0))
+    config = AnalysisConfig(resolutions_s=(0.1, 1.0), channel_modes=("time_only", "time_and_channel"))
     config.validate()
     ds = _dataset(7, config)
     fast = tr.time_resolved_agreement(ds, config)

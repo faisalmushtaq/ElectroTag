@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The agreement analysis now compares annotators by times and labels only: the channels a mark was on are left out
+by default, so the same type marked at the same time agrees whichever channels it was on, and the tables no longer
+carry the time-and-channel rows. Comparing the channels is still available when chosen (`channel_modes` in the
+settings, `--channel-modes time_only time_and_channel`, or Time and channel in the admin area). Competency
+assessments of trainees are unchanged (docs/reliability_guide.md, "3. Channels").
+
 The annotation view can show only some channels (Show some channels, in the menu of a channel's name or the
 Recording tab, or Shift+S; S switches back to all of them, or to the ones chosen last). While some are hidden, new
 marks apply to the channels shown, or to those selected among them, and never to the whole montage; Whole montage
