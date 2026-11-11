@@ -135,6 +135,9 @@ export class AnalysesSection {
     const modes = SESSION_MODES.map(([v, t]) => ({ v, box: checkbox(t, v === 'standard') }));
     const reference = select([['', 'Nobody: compare every pair'], ...this.users.map((u) => [u.annotator_id, u.annotator_id])]);
     reference.setAttribute('data-field', 'reference');
+    // Annotators with each other, or each with their own repeat ratings (the study setting repeats)
+    const who = select([['between', 'Annotators with each other'], ['within', 'Each annotator with their own repeat ratings']], 'between');
+    who.setAttribute('data-field', 'comparison');
     const versions = select(VERSION_CHOICES, 'original');
     versions.setAttribute('data-field', 'versions');
     const unit = select(UNIT_CHOICES, 'recording');
@@ -151,6 +154,15 @@ export class AnalysesSection {
       refField.hidden = v === 'adjudicated';
     };
     versions.addEventListener('change', syncVersions);
+    const syncWho = () => {
+      // Each person's own ratings are compared as annotated, by whole recording and without a reference.
+      const within = who.value === 'within';
+      if (within) { versions.value = 'original'; unit.value = 'recording'; reference.value = ''; syncVersions(); }
+      versions.disabled = within;
+      unit.disabled = within;
+      refField.hidden = within || versions.value === 'adjudicated';
+    };
+    who.addEventListener('change', syncWho);
     const refField = field('Reference annotator', reference, { hint: 'When chosen, everyone is compared with this person only, for example an expert.' });
     const labels = this.area.labels;
     const categories = checkList(labels.map((l) => ({ value: l.label, text: l.label })), { selected: labels.map((l) => l.label),
@@ -205,6 +217,7 @@ export class AnalysesSection {
         duplicate_policy: duplicates.value,
         channel_exclude: parseList(exclude.value),
         reference_annotator: reference.value || null,
+        comparison: who.value,
         categories: categories.values().length === categories.total ? null : categories.values(),
       };
       const problems = analysisProblems(cfg);
@@ -238,11 +251,12 @@ export class AnalysesSection {
       if (original) result.prepend(comparisonCard(original, r, body.versions));
     }));
     this.agreementHost.append(card('Agreement between annotators',
-      h('p.caption', {}, 'Compares annotators by category and time: the channels a mark was on are left out unless Time and channel is chosen in the settings. The defaults are starting points: choose and report the settings for each study. ',
+      h('p.caption', {}, 'Compares annotators with each other, or each with their own repeat ratings, by category and time: the channels a mark was on are left out unless Time and channel is chosen in the settings. The defaults are starting points: choose and report the settings for each study. ',
         guide('choosing-settings', 'The reliability guide'), ' explains each measure and how to choose the settings.'),
       h('div.admin-grid', {}, annotators, recordings),
       h('fieldset.admin-fieldset', {}, h('legend', {}, 'Sessions'), h('div.row.wrap', {}, modes.map((m) => m.box))),
       h('div.form-grid', {},
+        field('Who is compared', who, { hint: hintWith('Each annotator with their own repeat ratings measures test-retest (intra-rater) reliability: each first rating against the same person\'s repeats of it, set up in Repeat ratings.', 'repeat-ratings-test-retest') }),
         field('Versions', versions, { hint: [vHint, ' ', guide('versions-of-the-annotations')] }),
         field('Compare', unit, { hint: hintWith("A task's part of a recording (its window) can be compared on its own, so that the rest of the recording does not count.", 'versions-of-the-annotations') })),
       compare,

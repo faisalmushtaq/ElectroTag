@@ -79,9 +79,35 @@ export function topomapProblems(d) {
   return out;
 }
 
+/** The most repeats a rule may ask for, and the longest wait in days (electrotag/config/settings.py). */
+export const MAX_REPEATS = 10;
+export const MAX_REPEAT_DAYS = 365;
+const whole = (v, lo, hi) => Number.isInteger(v) && v >= lo && v <= hi;
+
+/** Problems with the repeats block (repeat ratings for test-retest reliability), in plain words. */
+export function repeatsProblems(rp) {
+  const out = [];
+  if ('enabled' in rp && typeof rp.enabled !== 'boolean') out.push('Repeat ratings are on or off (true or false).');
+  const rules = rp.rules === undefined ? [] : rp.rules;
+  if (!Array.isArray(rules) || rules.length > 50) return [...out, 'The repeat rules are a list of at most 50 rules.'];
+  const ids = new Set();
+  rules.forEach((r, i) => {
+    const which = `Rule ${i + 1}${r && r.name ? ` (${r.name})` : ''}`;
+    if (!r || typeof r !== 'object') { out.push(`${which} is not a rule.`); return; }
+    if (typeof r.id !== 'string' || !/^[A-Za-z0-9_-]{1,40}$/.test(r.id) || ids.has(r.id)) out.push(`${which} needs an ID of its own.`);
+    ids.add(r.id);
+    if (r.name !== undefined && (typeof r.name !== 'string' || r.name.length > 100)) out.push(`${which}: the name is at most 100 characters.`);
+    if (!['all', 'some', undefined].includes(r.recordings)) out.push(`${which} applies to all recordings or to some.`);
+    if (r.recordings === 'some' && !((r.datasets || []).length || (r.recording_ids || []).length)) out.push(`${which} applies to some recordings: choose at least one dataset or recording.`);
+    if (!whole(r.repeats ?? 1, 1, MAX_REPEATS)) out.push(`${which}: the number of repeats is a whole number from 1 to ${MAX_REPEATS}.`);
+    if (!whole(r.interval_days ?? 14, 1, MAX_REPEAT_DAYS)) out.push(`${which}: the days between ratings are a whole number from 1 to ${MAX_REPEAT_DAYS}.`);
+  });
+  return out;
+}
+
 /** Problems with the review, training and replay blocks of a study's settings, and the topographic map's (settingsProblems has the others). */
 export function expertSettingsProblems(s) {
-  return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}), ...topomapProblems(s.display || {}),
+  return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}), ...topomapProblems(s.display || {}), ...repeatsProblems(s.repeats || {}),
     ...questionnaireProblems(s.questionnaire)]; // the sign-up questionnaire (questionnaire_model.js)
 }
 
