@@ -24,6 +24,7 @@ import { AnalysesSection } from './analyses.js';
 import { ResultsSection } from './results.js';
 import { RecordsSection } from './records.js';
 import { SettingsSection } from './settings.js';
+import { RepeatsSection } from './repeats.js';
 import { ProblemsSection } from './problems.js';
 import { TasksSection } from './tasks.js';
 import { QuestionnaireSection } from './questionnaire.js';
@@ -35,7 +36,8 @@ import { WorkSection, menuKey } from './work.js';
 const KINDS = {
   overview: OverviewSection, progress: ProgressSection, annotators: AnnotatorsSection, recordings: RecordingsSection,
   assignments: AssignmentsSection, training: TrainingSection, analyses: AnalysesSection, results: ResultsSection,
-  records: RecordsSection, settings: SettingsSection, problems: ProblemsSection, tasks: TasksSection,
+  records: RecordsSection, settings: SettingsSection, repeats: RepeatsSection, // repeat ratings (test-retest)
+  problems: ProblemsSection, tasks: TasksSection,
   questionnaire: QuestionnaireSection, // the sign-up questionnaire's answers and the contacts list
   datasets: DatasetsSection, groups: GroupsSection, handouts: HandoutsSection, // datasets, groups and hand-outs
   work: WorkSection, // Giving out work: everything given out, with Assignments, Hand-outs and Tasks as its tabs

@@ -119,6 +119,7 @@ def build_dataset(
     catalogue: LabelCatalogue | None = None
     by_key: dict[tuple[str, str], list[tuple[str, AnnotationDocument]]] = {}
     derived: list[tuple[str, AnnotationDocument]] = []
+    documents = _by_comparison(documents, config, warnings)
     for source, doc in documents:
         if doc.mode not in config.modes:
             continue
@@ -127,7 +128,8 @@ def build_dataset(
             if config.versions != "original":
                 derived.append((source, doc))
             continue
-        if config.annotators is not None and doc.annotator_id not in config.annotators:
+        if (config.annotators is not None and config.comparison != "within"
+                and doc.annotator_id not in config.annotators):
             continue
         if catalogue is None:
             catalogue = doc.catalogue
@@ -219,6 +221,55 @@ def build_dataset(
             g.ch_names = tuple(c for c in g.ch_names if c not in excluded)
     return AgreementDataset(groups=groups, catalogue=catalogue, files=files or [], warnings=warnings,
                             selection=selection)
+
+
+def retest_of(doc: AnnotationDocument) -> int:
+    """Which repeat rating a saved document is (``context.retest.number``, the study setting repeats): 0 for a
+    first rating and its revisions."""
+    r = doc.context.get("retest") if isinstance(doc.context, dict) else None
+    n = r.get("number") if isinstance(r, dict) else None
+    return n if isinstance(n, int) and not isinstance(n, bool) and n >= 1 else 0
+
+
+def _by_comparison(documents: Iterable[tuple[str, AnnotationDocument]], config: AnalysisConfig,
+                   warnings: list[str]) -> list[tuple[str, AnnotationDocument]]:
+    """The documents an analysis compares.
+
+    Between annotators, the repeat ratings are left out, so that each annotator's first rating (with its
+    revisions) is what the others are compared with. Within each annotator, each of a person's ratings of a
+    recording becomes a rater of its own ("first rating", "repeat 1", ...), and each person's recording a
+    recording of its own ("<recording> · <annotator>"), so that the pairs compared are always one person's
+    ratings of one recording, and the pooled rows pool those pairs over people and recordings."""
+    from dataclasses import replace
+
+    docs = list(documents)
+    if config.comparison != "within":
+        kept = [(s, d) for s, d in docs if retest_of(d) == 0 or derived_of_doc(d)]
+        left = len(docs) - len(kept)
+        if left:
+            warnings.append(f"{left} repeat rating{'s were' if left != 1 else ' was'} "
+                            "left out: annotators are compared on their first ratings (compare each annotator with "
+                            "their own repeats for test-retest reliability)")
+        return kept
+    from electrotag.reliability.config import FIRST_RATING
+
+    out: list[tuple[str, AnnotationDocument]] = []
+    for source, doc in docs:
+        if derived_of_doc(doc):
+            continue  # corrections and adjudicated versions are not anyone's own rating
+        if config.annotators is not None and doc.annotator_id not in config.annotators:
+            continue
+        n = retest_of(doc)
+        rater = FIRST_RATING if n == 0 else f"repeat {n}"
+        rec = replace(doc.recording, recording_id=f"{doc.recording.recording_id} · {doc.annotator_id}")
+        out.append((source, replace(doc, recording=rec, annotator_id=rater)))
+    return out
+
+
+def derived_of_doc(doc: AnnotationDocument) -> bool:
+    from electrotag.reliability.versions import derived_of
+
+    return derived_of(doc) is not None
 
 
 _ATTEMPT_RE = re.compile(r"_attempt-(\d+)_annotations\.json$")

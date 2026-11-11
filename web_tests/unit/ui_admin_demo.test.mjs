@@ -208,7 +208,7 @@ test('study settings: checked, changed block by block, and used by the demonstra
   // The demonstration's own notice says plainly that typed text is never recorded.
   assert.match(before.logging_notice, /never records what you type/);
   assert.deepEqual(Object.keys(before.settings).sort(), ['annotation', 'channels', 'discovery', 'display', 'filters', 'gamification', 'loading', 'logging', 'questionnaire',
-    'replay', 'review', 'selection', 'training']);
+    'repeats', 'replay', 'review', 'selection', 'training']);
   await assert.rejects(() => b.admin('settings_update', { settings: { filters: { notch_hz: 55 } } }), (e) => e.status === 400 && e.code === 'invalid_settings');
   await assert.rejects(() => b.admin('settings_update', { settings: { output: { directory: '/' } } }), (e) => e.code === 'invalid_settings');
   const quick = ['EMG-artifact', 'Eye-blink-artifact', 'Chewing-artifact'];

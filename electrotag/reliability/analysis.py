@@ -41,6 +41,7 @@ from electrotag.reliability.bad_channels import (
 from electrotag.reliability.config import AnalysisConfig
 from electrotag.reliability.data import AgreementDataset, load_dataset
 from electrotag.reliability.intervals import total_length, union
+from electrotag.reliability.intrarater import INTRARATER_COLUMNS, intrarater_measure
 from electrotag.reliability.matching import event_agreement
 from electrotag.reliability.timeresolved import category_confusion, time_resolved_agreement
 
@@ -60,6 +61,7 @@ TABLE_COLUMNS: dict[str, list[str]] = {
                               "n", "both", "only_1", "only_2", "neither", "prevalence_1", "prevalence_2",
                               "proportion_agreement", "positive_agreement", "negative_agreement", "cohen_kappa",
                               "prevalence_index", "bias_index", "pabak", "note", "n_recordings"],
+    "intrarater_by_annotator": INTRARATER_COLUMNS,
     "timeresolved_multirater": ["recording", "category", "channel_mode", "representation", "unit", "raters",
                                 "raters_per_unit", "n_units", "fleiss_kappa", "fleiss_note", "krippendorff_alpha",
                                 "alpha_note", "mean_pairwise_kappa"],
@@ -155,6 +157,7 @@ register_measure("confusion", _confusion)
 register_measure("confidence", confidence_measure)
 register_measure("bad_channels", bad_channel_measure)
 register_measure("uncertain", uncertain_measure)
+register_measure("intrarater", intrarater_measure)
 
 
 @dataclass
@@ -189,6 +192,15 @@ def comparison_warnings(ds: AgreementDataset, cfg: AnalysisConfig) -> list[str]:
     """Plain statements of what cannot be compared, shown first in every output."""
     comparable = comparable_recordings(ds, cfg)
     n = len(ds.groups)
+    if cfg.comparison == "within":  # each "recording" is one person's ratings of a recording
+        if not comparable:
+            return ["No annotator has rated a recording again yet (repeat ratings, set in the study settings), so "
+                    "there is nothing to compare: the agreement tables are empty and only the descriptive tables "
+                    "are filled."]
+        if len(comparable) < n:
+            return [f"{n - len(comparable)} of {n} people's recordings have no repeat rating yet and add nothing to "
+                    "the agreement measures."]
+        return []
     if not comparable:
         if cfg.reference_annotator:
             return [
@@ -262,10 +274,11 @@ def run_analysis(
     titles = {"descriptives": "Counting the annotations", "timeresolved": "Time-resolved agreement",
               "events": "Matching events", "confusion": "Category disagreements",
               "confidence": "Confidence of the annotations", "bad_channels": "Channels marked bad",
-              "uncertain": "Marks of the uncertain type"}
+              "uncertain": "Marks of the uncertain type", "intrarater": "Each annotator's repeat ratings"}
     tables: dict[str, pd.DataFrame] = {}
     names = ["descriptives", "timeresolved", "events", "confusion", "confidence", "bad_channels", "uncertain",
-             *[m for m in cfg.extra_measures if m not in ("bad_channels", "uncertain")]]
+             "intrarater",  # each annotator's repeat ratings: rows only when comparing within annotators
+             *[m for m in cfg.extra_measures if m not in ("bad_channels", "uncertain", "intrarater")]]
     for name in names:
         if name not in MEASURES:
             raise ValueError(f"Unknown measure {name!r}; registered: {sorted(MEASURES)}")

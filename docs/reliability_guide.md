@@ -17,6 +17,7 @@ training component.
   - [Channels marked bad and uncertain marks](#channels-marked-bad-and-uncertain-marks)
 - [4. Category disagreements](#4-category-disagreements)
 - [5. Confidence of the annotations](#5-confidence-of-the-annotations)
+- [Repeat ratings (test-retest)](#repeat-ratings-test-retest)
 - [Versions of the annotations](#versions-of-the-annotations)
 - [Probability maps](#probability-maps)
 - [Choosing settings](#choosing-settings)
@@ -393,6 +394,39 @@ ratings were volunteered, so the rated marks are a self-selected subset and the
 confidence of an unrated mark is unknown. Every other table uses all marks.
 Annotators' notes are listed with each event in `events_matched.tsv` and
 `events_unmatched.tsv` and take part in no statistic.
+
+## Repeat ratings (test-retest)
+
+A study can ask annotators to rate recordings again after some days (Repeat ratings in the admin
+area, the setting `repeats`), to measure how consistent each person is with themselves. Each repeat is
+saved as the next attempt of the annotator's work, marked as that repeat (`context.retest.number` in
+its `_annotations.json`, `retest` in the completion register).
+
+The setting `comparison` (`--comparison` on the command line, Who is compared in the admin area)
+chooses what is compared. With `between`, the default, annotators are compared with each other, and
+the repeat ratings are left out with a warning that says how many: each person's first rating, with
+its revisions, is what the others are compared with, so a study with repeats gets the same
+between-annotator results as one without. With `within`, each annotator's ratings of a recording are
+compared with each other: the raters are `first rating`, `repeat 1`, `repeat 2` and so on, and each
+person's recording is a recording of its own, named `<recording> · <annotator>`. Every table and the
+report then read as usual, with the pairs being one person's ratings of one recording, and the pooled
+rows (`ALL (pooled)`) pooling those pairs over every person and recording: the row of `first rating`
+against `repeat 1` is the study's test-retest agreement after the first interval, and `repeat 1`
+against `repeat 2` that between two repeats. The table `intrarater_by_annotator.tsv` (empty when
+annotators are compared with each other) gives each
+person's own figures, pooled over the recordings they rated again: Cohen's kappa, positive and overall
+agreement on the exact time marked (time only), and the event F1 at the main threshold, for every type
+they marked and for ANY-artifact. A person's recordings without a repeat yet add nothing, and the
+warnings say how many there are. The comparison within annotators uses the original versions, whole
+recordings and no reference annotator.
+
+```
+electrotag-agreement Annotated_Events --comparison within --out agreement_retest
+```
+
+Test-retest agreement mixes the person's consistency with any change in how they work between the
+ratings (they may have learned more, or remember the recording), so report the interval between
+ratings with it, as the repeat rules set it.
 
 ## Versions of the annotations
 

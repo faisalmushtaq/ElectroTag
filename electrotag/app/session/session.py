@@ -55,6 +55,14 @@ SCHEMA_SESSION = "electrotag.session"
 SESSION_SCHEMA_VERSION = "1.1.0"  # 1.1.0: annotations.confidence and annotations.n_with_note
 
 
+
+def retest_number(context: dict[str, Any] | None) -> str:
+    """The repeat a saved rating is (``context.retest.number``: 1 for the first repeat), as the register keeps it;
+    "" for a first rating and anything else."""
+    r = (context or {}).get("retest") if isinstance(context, dict) else None
+    n = r.get("number") if isinstance(r, dict) else None
+    return str(n) if isinstance(n, int) and not isinstance(n, bool) and n >= 1 else ""
+
 class SessionError(RuntimeError):
     pass
 
@@ -302,6 +310,7 @@ class AnnotationSession:
             "n_annotations": str(len(doc.annotations)),
             "n_needs_review": str(sum(1 for a in doc.annotations if needs_review(a.label))),
             "n_bad_channels": str(len(doc.bad_channels)),
+            "retest": retest_number(self.context),
             "output_dir": final_dir.relative_to(self.layout.root).as_posix(),
             "output_basename": basename,
             "app_version": (meta.get("application") or {}).get("version", ""),
@@ -590,6 +599,7 @@ class AnnotationSession:
                 "n_annotations": str(len(doc.annotations)),
                 "n_needs_review": str(sum(1 for a in doc.annotations if needs_review(a.label))),
                 "n_bad_channels": str(len(doc.bad_channels)),
+                "retest": retest_number(self.context),
                 "output_dir": final_dir.relative_to(self.layout.root).as_posix(),
                 "output_basename": basename,
                 "app_version": __version__,

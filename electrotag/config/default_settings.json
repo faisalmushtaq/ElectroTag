@@ -98,6 +98,10 @@
     "trainees_watch_experts": true,
     "trainees_see_crowd": false
   },
+  "repeats": {
+    "enabled": false,
+    "rules": []
+  },
   "questionnaire": {
     "enabled": true,
     "demographics": true,

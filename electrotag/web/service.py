@@ -17,6 +17,7 @@ import math
 import random
 import re
 from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from electrotag import __version__
@@ -68,6 +69,21 @@ def _int(value: Any, what: str) -> int:
 def _stamp(value: Any) -> str:
     text = str(value or "")
     return text if STAMP_RE.match(text) else ""
+
+
+def _retest_of(row: dict[str, str]) -> int:
+    """Which repeat a register row is (its ``retest`` column): 0 for a first rating or one of its revisions."""
+    v = str(row.get("retest") or "")
+    return int(v) if v.isdigit() else 0
+
+
+def _moment(stamp: Any) -> datetime | None:
+    """A saved time (ISO 8601, with its UTC offset) as an aware moment; None when it cannot be read."""
+    try:
+        t = datetime.fromisoformat(str(stamp or "").replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
 
 
 def _number(value: Any, what: str, *, minimum: float | None = None) -> float:
@@ -236,6 +252,19 @@ class WorkItem:
     revising: bool = False  # done, with a revision under way (its draft is kept)
     task_id: str = ""  # the task the assignment belongs to (electrotag/web/tasks.py), "" for none
     handout_id: str = ""  # the hand-out that gave the assignment or was linked to it (datasets.py), "" for none
+    # A repeat rating that is due (the study setting repeats): the recording stays "done" for the study team's
+    # counts, and the annotator is offered it again as a new recording. retest is the repeat's number (1 for the
+    # first repeat), retest_rule the rule that asked for it, retest_draft whether a draft of it is kept.
+    retest: int = 0
+    retest_rule: str = ""
+    retest_draft: bool = False
+
+    @property
+    def shown_status(self) -> str:
+        """The status the annotator sees: a repeat that is due is new work (or work in progress) again."""
+        if self.retest:
+            return "in_progress" if self.retest_draft else "todo"
+        return self.status
 
     @property
     def key(self) -> str:
@@ -244,13 +273,15 @@ class WorkItem:
     def to_dict(self) -> dict[str, Any]:
         timing = self.manifest["timing"]
         _sha, size = fingerprint_of(self.manifest)
-        done = self.result if self.status == "done" and self.result else None
+        status = self.shown_status  # a repeat that is due looks like any recording not yet started
+        done = self.result if status == "done" and self.result else None
         return {
             "recording_id": self.recording_id, "file_name": self.manifest["file_name"],
             "format": self.manifest["format"], "mode": self.mode, "context_id": self.context_id,
-            "status": self.status, "duration_s": float(timing["n_samples"]) / float(timing["sfreq"]),
-            "locked": "training_required" if self.status == "locked" else None,
-            "n_channels": len(self.manifest["ch_names"]), "size_bytes": size, "repeat": self.repeat,
+            "status": status, "duration_s": float(timing["n_samples"]) / float(timing["sfreq"]),
+            "locked": "training_required" if status == "locked" else None,
+            "n_channels": len(self.manifest["ch_names"]), "size_bytes": size,
+            "repeat": self.repeat and not self.retest,
             # what the completion register says of a finished recording (null otherwise)
             "elapsed_s": _float_or_none(done.get("elapsed_s")) if done else None,
             "n_annotations": _int_or_none(done.get("n_annotations")) if done else None,
@@ -446,6 +477,7 @@ class StudyService:
         for a in self.store.assignments(aid):
             add(a.recording_id, a.mode, a.context_id, a.position, "assignment", task_id=a.task_id,
                 handout_id=a.handout_id)
+        self._schedule_repeats(aid, items, saved, drafts)
         # Real study work waits for the competency assessment (electrotag/web/training_path.py): a study recording
         # not yet saved is "locked" while the gate is closed, so it is never the next one and cannot be opened.
         gated = [i for i in items if self.training_path.gated(i) and i.status in ("todo", "in_progress")]
@@ -454,16 +486,53 @@ class StudyService:
                 i.status = "locked"
         return items
 
+    def _schedule_repeats(self, aid: str, items: list[WorkItem],
+                          saved: dict[tuple[str, str, str], list[dict[str, str]]], drafts: set[str]) -> None:
+        """Offer again the study recordings whose next repeat rating is due (the study setting repeats).
+
+        A recording covered by a rule is rated again up to the rule's number of repeats, each time once the
+        rule's days have passed since the previous rating was first saved. The register's ``retest`` column
+        says which saves were repeats; revisions of a rating do not move the next repeat."""
+        repeats = self.settings.repeats
+        if not repeats.enabled or not repeats.rules:
+            return
+        from electrotag.web.datasets import DEFAULT_DATASET_ID
+
+        now = datetime.now(timezone.utc)
+        for item in items:
+            if item.status != "done" or item.mode != "standard" or item.source != "assignment":
+                continue
+            if item.revising:  # a draft: of a revision (it says what it revises), or of the repeat under way
+                record = self.store.draft(aid, item.key) or {}
+                if record.get("revises") is not None:
+                    continue
+            dataset_id = str((item.manifest.get("registration") or {}).get("dataset_id") or DEFAULT_DATASET_ID)
+            rule = repeats.rule_for(item.recording_id, dataset_id)
+            rows = saved.get((item.recording_id, item.mode, item.context_id), [])
+            if rule is None or not rows:
+                continue
+            done_so_far = max(_retest_of(r) for r in rows)
+            if done_so_far >= rule.repeats:
+                continue
+            firsts = [_moment(r.get("completed_at")) for r in rows if _retest_of(r) == done_so_far]
+            first = min((t for t in firsts if t is not None), default=None)
+            if first is None or now < first + timedelta(days=rule.interval_days):
+                continue
+            item.retest, item.retest_rule = done_so_far + 1, rule.rule_id
+            item.retest_draft = item.key in drafts
+            item.repeat, item.revising = True, False
+
     def _next(self, user: User, items: list[WorkItem]) -> WorkItem | None:
         set_id = self.store.programme(user.annotator_id)
         if set_id:
             nxt = self.coach.next_item(user, set_id, items)
             if nxt is not None:
                 return nxt
-        open_items = [i for i in items if i.status not in ("done", "unusable", "locked") and i.source == "assignment"]
+        open_items = [i for i in items
+                      if i.shown_status not in ("done", "unusable", "locked") and i.source == "assignment"]
         if not open_items:
             return None
-        started = [i for i in open_items if i.status == "in_progress"]
+        started = [i for i in open_items if i.shown_status == "in_progress"]
         if started:
             return started[0]
         s = self.settings
@@ -486,10 +555,11 @@ class StudyService:
         out = []
         for i in items:
             d = i.to_dict()
-            d["draft"] = self._draft_summary(user, i) if i.status == "in_progress" or i.revising else None
+            d["draft"] = self._draft_summary(user, i) if i.shown_status == "in_progress" or i.revising else None
             # what only the history needs: the latest version's number, the first save and the time of all versions
+            # (none for a repeat that is due, which is offered as a new recording)
             d["saved"] = ({k: i.saved[k] for k in ("version", "first_saved_at", "total_elapsed_s")}
-                          if i.saved is not None else None)
+                          if i.saved is not None and not i.retest else None)
             d["revising"] = i.revising
             p = problems.get(i.key)
             d["problem"] = self.feedback.problem_out(p, mine=True) if p is not None else None
@@ -614,7 +684,7 @@ class StudyService:
             return self._answer("not_assigned", f"{rid} is a recording of this study, but it is not one of yours "
                                 "at the moment. Open one of the recordings in your list, or ask your study "
                                 "administrator.", recording_id=rid)
-        open_items = [i for i in mine if i.status not in ("done", "unusable")]
+        open_items = [i for i in mine if i.shown_status not in ("done", "unusable")]
         if not open_items and any(i.status == "unusable" for i in mine):
             i = next(i for i in mine if i.status == "unusable")
             return self._answer("unusable", f"You reported that {rid} cannot be annotated, so it is set aside. If the "
@@ -647,16 +717,19 @@ class StudyService:
         chosen = next((i for i in open_items if nxt is not None and (i.recording_id, i.mode, i.context_id)
                        == (nxt.recording_id, nxt.mode, nxt.context_id)), None)
         if chosen is None:
-            chosen = next((i for i in open_items if i.status == "in_progress"), open_items[0])
+            chosen = next((i for i in open_items if i.shown_status == "in_progress"), open_items[0])
         self.coach.require_unlocked(user, chosen)
         draft = self.store.draft(user.annotator_id, chosen.key)
+        if chosen.retest and draft and draft.get("revises") is not None:
+            draft = None  # a revision's draft of the earlier rating: never brought into the repeat
         message = ("Recording found: " + chosen.recording_id if status == "matched" else
                    "This file has the name, sampling rate, length and channels of " + chosen.recording_id
                    + " but is not byte for byte the study's copy. Continue only if you are sure it is the same "
                    "recording.")
         return self._answer(status, message, recording_id=chosen.recording_id, mode=chosen.mode,
                             context_id=chosen.context_id, manifest=self.public_manifest(chosen.manifest),
-                            draft=(draft or {}).get("draft"), differences=differences, repeat=chosen.repeat,
+                            draft=(draft or {}).get("draft"), differences=differences,
+                            repeat=chosen.repeat and not chosen.retest,
                             task=self.tasks.item_task(chosen))
 
     def public_manifest(self, m: dict[str, Any]) -> dict[str, Any]:
@@ -666,7 +739,7 @@ class StudyService:
     def can_revise(self, item: WorkItem) -> bool:
         """A finished study recording may be opened again, changed and submitted as a new attempt."""
         return (item.status == "done" and item.mode == "standard" and item.saved is not None
-                and bool(self.settings.allow_revisions))
+                and not item.retest and bool(self.settings.allow_revisions))
 
     def saved_annotations(self, user: User, item: WorkItem) -> list[dict[str, Any]]:
         """The annotations of the latest saved attempt, as the browser's annotations."""
@@ -864,6 +937,13 @@ class StudyService:
         context: dict[str, Any] = {}
         if revision is not None:
             context["revision"] = dict(revision)  # in the saved _annotations.json and _session.json
+            earlier = (item.result or {}).get("retest") or ""
+            if str(earlier).isdigit() and int(earlier) >= 1:  # a revision of a repeat rating stays that repeat
+                context["retest"] = {"number": int(earlier)}
+        if item.retest:  # a repeat rating (the study setting repeats), for the intra-rater analysis
+            rule = next((r for r in self.settings.repeats.rules if r.rule_id == item.retest_rule), None)
+            context["retest"] = {"number": item.retest, "rule_id": item.retest_rule,
+                                 "interval_days": rule.interval_days if rule is not None else None}
         rs: ReferenceSet | None = None
         guided_summary = None
         if item.mode != "standard":
@@ -917,7 +997,7 @@ class StudyService:
                 self.games.record_viewed(user, rid, item.mode, item.context_id, viewed)
             except Exception:  # noqa: BLE001 - the results are saved; a lost coverage figure only affects a badge
                 log.exception("The share viewed of %s could not be kept", rid)
-        if item.task_id:
+        if item.task_id and not item.retest:
             try:  # a known-answer task is scored now; quality_list scores any save whose scoring was interrupted
                 self.tasks.after_save(user, item, saved)
             except Exception:  # noqa: BLE001 - the results are saved; the score is made again when asked for

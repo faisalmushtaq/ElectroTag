@@ -41,6 +41,7 @@ nothing after it on the line.
 - [Which recording comes next](#which-recording-comes-next)
   - [Tracking who has rated what](#tracking-who-has-rated-what)
 - [Original event codes and artifact codes](#original-event-codes-and-artifact-codes)
+  - [Repeat ratings](#repeat-ratings)
 - [Saving, and unfinished work](#saving-and-unfinished-work)
 - [Training and competency assessment](#training-and-competency-assessment)
   - [Reference sets](#reference-sets)
@@ -420,6 +421,29 @@ event types, or one type appearing with different codes, is reported in each
 session file for you to review, as are original events that already use
 HED-SCORE artifact names. Older study files that still set
 `events.collision_policy` are accepted; the setting is no longer used.
+
+### Repeat ratings
+
+The block `repeats` asks annotators to rate recordings they have saved again, for intra-rater
+(test-retest) reliability; the admin area's Repeat ratings edits it (see the admin area guide). It is
+off by default:
+
+```json
+{"repeats": {"enabled": true, "rules": [
+  {"id": "pilot", "name": "Pilot recordings", "recordings": "some", "datasets": ["pilot"],
+   "recording_ids": [], "repeats": 2, "interval_days": 7},
+  {"id": "rest", "name": "Everything else", "recordings": "all", "repeats": 1, "interval_days": 30}]}}
+```
+
+Each rule has an `id` (up to 40 letters, digits, hyphens or underscores, used once), an optional
+`name`, `recordings` (`all`, or `some` for the `datasets` and `recording_ids` named, at least one of
+them), `repeats`, how many times a recording is rated again after the first rating (1 to 10, 1 by
+default), and `interval_days`, the days from saving one rating until the recording comes back (1 to
+365, 14 by default). The rules are applied in order, and a recording takes the first rule that covers
+it. A repeat comes back to every annotator who saved the recording, as a new recording with nothing of
+the earlier rating shown. The agreement analysis leaves the repeats out of its comparisons between
+annotators and compares each person with their own repeats when `comparison` is `within` (the
+reliability guide, "Repeat ratings (test-retest)").
 
 ## Saving, and unfinished work
 

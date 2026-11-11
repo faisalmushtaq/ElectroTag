@@ -141,6 +141,10 @@ class Analyses:
             if cfg.versions == "adjudicated":
                 raise ApiError(422, "not_enough", "No adjudication is finished yet for the annotators and recordings "
                                "chosen, so there is no adjudicated version to compare them with.")
+            if cfg.comparison == "within":
+                raise ApiError(422, "not_enough", "No annotator has rated a recording again yet, so there is no "
+                               "test-retest agreement to measure. Repeat ratings are set up in Repeat ratings, and a "
+                               "recording comes back to its annotator once the days chosen have passed.")
             raise ApiError(422, "not_enough", "No recording has been saved by two of the annotators being compared, "
                            "so there is no agreement to measure yet.")
         warnings = list(result.settings_record.get("warnings", []))

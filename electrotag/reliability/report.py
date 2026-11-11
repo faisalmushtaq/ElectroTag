@@ -719,9 +719,17 @@ def build_html_report(result: Any) -> str:
     add = parts.append
     add("<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>")
     add("<meta name='viewport' content='width=device-width, initial-scale=1'>")
-    add(f"<title>Agreement report</title><style>{CSS}</style></head><body>")
+    within = getattr(cfg, "comparison", "between") == "within"
+    add(f"<title>{'Test-retest' if within else 'Agreement'} report</title><style>{CSS}</style></head><body>")
     rec = result.settings_record
-    add("<h1>Inter-rater agreement report</h1>")
+    add("<h1>Intra-rater (test-retest) agreement report</h1>" if within else "<h1>Inter-rater agreement report</h1>")
+    if within:
+        add("<div class='box'><b>Each annotator compared with themselves.</b> This report compares each person's "
+            "first rating of a recording with their own repeat ratings of it (asked for by the study's repeat "
+            "rules). In its tables the raters are <i>first rating</i>, <i>repeat 1</i>, <i>repeat 2</i> and so on, a "
+            "recording is named with its annotator (<i>recording · annotator</i>), and the pooled rows pool every "
+            "person's pairs of ratings together. The table <i>By annotator</i> gives each person's own figures. "
+            "Everything else reads as in a comparison between annotators.</div>")
     add(
         f"<p class='muted'>{html.escape(rec.get('generated_by', ''))} · {len(result.dataset.groups)} recording(s), "
         f"{rec.get('n_comparable_recordings', 0)} with annotators to compare · "
@@ -758,6 +766,13 @@ def build_html_report(result: Any) -> str:
             + _table(key) + "</div>")
     if warnings:
         add("<h2>Warnings</h2><ul>" + "".join(f"<li>{html.escape(w)}</li>" for w in warnings) + "</ul>")
+    by_person = tables.get("intrarater_by_annotator", pd.DataFrame())
+    if within and not by_person.empty:
+        add("<h2>By annotator</h2>")
+        add(_table(by_person, caption="Each annotator's ratings compared with each other, pooled over the recordings "
+                   "they rated again: Cohen's kappa, positive and overall agreement on the exact time marked (time "
+                   "only), and the event F1 at the main threshold. ANY-artifact is artifact against clean time, "
+                   "whatever the type."))
     _versions_section(result, add)
 
     # Overview

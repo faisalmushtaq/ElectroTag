@@ -758,6 +758,19 @@ averages each recording's pairwise kappa and positive agreement by the two annot
 "How many EEG datasets have you analysed?" at the time. A study that wants another breakdown joins
 the tables itself.
 
+**Repeat ratings.** Intra-rater (test-retest) reliability needs each annotator to rate some recordings
+again, blind to their first rating. A repeat is saved as the next attempt of the same work, as a
+revision is, rather than as a new kind of session, so that every saving, export and withdrawal path
+handles it already; it is told apart by `retest` in the completion register and `context.retest` in
+its files. The repeat comes back as a new recording, without the earlier marks or saved history,
+because seeing them would turn a second rating into a revision of the first. The comparisons between
+annotators keep each person's first rating, so that scheduling repeats never changes the
+between-annotator results, and the comparison within annotators reuses every measure of the
+analysis by making each of a person's ratings a rater of its own. The days between ratings count from
+the save of the previous rating rather than from a calendar date, so that each person's interval is the
+one the study chose whatever their pace. Rules are applied in order, first match, so that a study can
+set a default for all recordings and exceptions above it without overlaps to resolve.
+
 ## Decisions still open
 
 1. **Agreement settings to pre-register:** bin widths, the bin coverage rule,
@@ -765,9 +778,12 @@ the tables itself.
    many-to-one matching.
 2. **Competency criteria:** which metrics, thresholds and categories, and the
    minimum number of reference events for a category to be judged.
-3. **Repeat annotation** for intra-rater (test-retest) reliability: the code
-   supports repeats with an `_attempt-NN` suffix, but there is no study setting
-   to schedule them yet.
+3. **Repeat annotation** for intra-rater (test-retest) reliability: the study
+   setting `repeats` and the admin area's Repeat ratings now schedule them (since
+   11 November 2026), and the agreement analysis compares each annotator with
+   their own repeats. What is left to decide is the design: which recordings are
+   rated again, how many times and after how many days, chosen before the study
+   starts and reported with the results.
 4. **Idle time:** should the time measurement exclude periods without any
    interaction?
 5. **Copyright holder** for the licence notice (currently "The ElectroTag
