@@ -575,12 +575,13 @@ export class RecordingsSection {
     }
     const manifests = this.found.manifests.map((m) => ({ ...withElectrodePositions(m, this.found.positions.get(m.recording_id), this.found.withPositions), scope }));
     const groups = chunkManifests(manifests);
+    const batch = newId(); // the parts of one registration, shown as one change in the records
     const results = [];
     let sent = 0;
     try {
       for (const group of groups) {
         this.progress.set(sent / manifests.length, `Adding ${sent + 1}–${sent + group.length} of ${manifests.length}…`);
-        const body = { scope, manifests: group, replace: this.replace.input.checked };
+        const body = { scope, manifests: group, replace: this.replace.input.checked, batch_id: batch };
         if (target && this.datasets.length) body.dataset_id = target.id;
         if (this.allowCopies && this.allowCopies.input.checked) body.allow_duplicates = true;
         results.push(await this.area.write('recordings_register', body));

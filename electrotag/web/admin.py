@@ -300,8 +300,6 @@ def pace_projection(days: list[date], today: date, *, assigned: int,
 
 #: A list of more values than this is described by what was added and taken out rather than in full.
 MAX_LISTED_VALUES = 10
-#: A value's words are cut short after this many characters in the audit log's summary.
-MAX_VALUE_TEXT = 80
 
 
 def _number_text(value: float) -> str:
@@ -320,15 +318,13 @@ def _setting_value(value: Any, unit: str = "") -> str:
     if unit == "uV" and isinstance(value, (int, float)):  # display.scalings, kept in volts, shown in µV
         return f"{_number_text(round(float(value) * 1e6, 6))} µV"
     if isinstance(value, float):
-        text = _number_text(value)
-    elif isinstance(value, list):
-        text = ", ".join(_setting_value(v) for v in value) if not any(isinstance(v, dict) for v in value) \
+        return _number_text(value)
+    if isinstance(value, list):
+        return ", ".join(_setting_value(v) for v in value) if not any(isinstance(v, dict) for v in value) \
             else f"{len(value)} items"
-    elif isinstance(value, dict):
-        text = ", ".join(f"{k} {_setting_value(v)}" for k, v in value.items())
-    else:
-        text = str(value)
-    return text if len(text) <= MAX_VALUE_TEXT else text[:MAX_VALUE_TEXT - 1].rstrip() + "…"
+    if isinstance(value, dict):
+        return ", ".join(f"{k} {_setting_value(v)}" for k, v in value.items())
+    return str(value)
 
 
 def _with_ids(value: Any) -> bool:
@@ -1031,6 +1027,11 @@ class Admin:
             raise ApiError(413, "too_large", f"At most {MAX_MANIFESTS} recordings can be registered at once; send "
                            "the rest in another request")
         replace_ = _bool(body, "replace") or False
+        # The requests of one registration sent in parts (the admin area sends 40 recordings at a time) share an
+        # ID, kept in each part's audit entry, so that the records can show them as one change.
+        batch_id = body.get("batch_id")
+        if batch_id is not None and not (isinstance(batch_id, str) and re.fullmatch(r"[A-Za-z0-9_-]{1,64}", batch_id)):
+            raise _bad("batch_id must be up to 64 letters, digits, hyphens or underscores")
         # The source dataset the recordings go into (datasets.py): its prefix is applied before the check, and an ID
         # that belongs to another dataset's recording is never touched.
         if body.get("dataset_id") not in (None, "") and scope != SCOPE_STUDY:
@@ -1098,7 +1099,7 @@ class Admin:
             self._audit(user, "recordings_register", f"Registered {audit.count(len(added), 'new recording')}"
                         f"{extra} in {scope}" + (f" (dataset {dataset_id})" if scope == SCOPE_STUDY else ""),
                         scope=scope, added=added, replaced=replaced, skipped=[s["recording_id"] for s in skipped],
-                        dataset_id=dataset_id if scope == SCOPE_STUDY else None)
+                        dataset_id=dataset_id if scope == SCOPE_STUDY else None, batch_id=batch_id)
         return {"added": added, "replaced": replaced, "skipped": skipped}
 
     def _manifest(self, body: dict[str, Any]) -> tuple[str, str, dict[str, Any]]:

@@ -1,6 +1,10 @@
 // The audit log in words (the admin area's Records and Overview): a title for every kind of change the
 // study writes to its audit log, and a decision on a conflict told by whose version it kept. Kept apart
 // from model.js, which the sandbox's sign-in page loads, so that it comes with the admin area alone.
+// The parts of one registration (the admin area sends 40 recordings at a time) are shown as one entry,
+// and a long summary shows its first lines with Show all beside it.
+
+import { h } from '../ui/dom.js';
 
 /** What each audited operation did, for the records' filter and table. */
 export const AUDIT_OPS = Object.freeze({
@@ -116,4 +120,51 @@ export function auditSummary(e, entries = []) {
 export function opText(op) {
   const t = AUDIT_OPS[op] || String(op || '').replace(/_/g, ' ');
   return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+const n = (v) => (Array.isArray(v) ? v.length : Number(v) || 0);
+const count = (k, one) => `${k} ${one}${k === 1 ? '' : 's'}`;
+
+/**
+ * The entries (newest first) with the parts of one registration, those of one person with the same
+ * batch_id next to each other, joined into one entry: "Registered 200 new recordings in study",
+ * with the details' lists joined and `parts`, how many requests it took.
+ */
+export function joinRegistrations(entries) {
+  const out = [];
+  for (const e of entries || []) {
+    const id = e && e.op === 'recordings_register' && e.details ? e.details.batch_id : null;
+    const last = out[out.length - 1];
+    if (id && last && last.op === e.op && last.by === e.by && last.details && last.details.batch_id === id) {
+      const d = last.details;
+      const join = (k) => (Array.isArray(d[k]) || Array.isArray(e.details[k]) ? [...(e.details[k] || []), ...(d[k] || [])] : n(d[k]) + n(e.details[k]));
+      const details = { ...d, added: join('added'), replaced: join('replaced'), skipped: join('skipped'), parts: (d.parts || 1) + 1 };
+      out[out.length - 1] = { ...last, at: last.at, details, summary: registrationText(details) };
+    } else {
+      out.push(e);
+    }
+  }
+  return out;
+}
+
+/** The words of a (joined) registration, as electrotag/web/admin.py writes them. */
+function registrationText(d) {
+  const replaced = n(d.replaced) ? `, replaced ${count(n(d.replaced), 'recording')}` : '';
+  const skipped = n(d.skipped) ? `, ${n(d.skipped)} not registered` : '';
+  const where = d.scope ? ` in ${d.scope}${d.dataset_id ? ` (dataset ${d.dataset_id})` : ''}` : '';
+  return `Registered ${count(n(d.added), 'new recording')}${replaced}${skipped}${where}`;
+}
+
+/** A summary as the tables show it: its first lines, and Show all when there is more. */
+export function summaryText(text) {
+  const body = h('span.audit-text.clamped', {}, text);
+  const more = h('button.btn.quiet.small.audit-more', { type: 'button', hidden: true, 'aria-expanded': 'false', 'data-log': 'audit-show-all',
+    onclick: () => {
+      const open = body.classList.toggle('clamped');
+      more.setAttribute('aria-expanded', String(!open));
+      more.textContent = open ? 'Show all' : 'Show less';
+    } }, 'Show all');
+  // Whether the text runs past its lines is known once it is laid out.
+  requestAnimationFrame(() => { if (body.isConnected && body.scrollHeight > body.clientHeight + 1) more.hidden = false; });
+  return h('span.audit-summary', {}, body, more);
 }
