@@ -355,3 +355,21 @@ def test_the_report_has_the_expert_work_and_the_stages_skipped(tmp_path):
     _, paths = write_activity([plain], tmp_path / "out2")
     page = paths["report"].read_text(encoding="utf-8")
     assert 'data-section="expert-work"' not in page and 'data-section="stages-skipped"' not in page
+
+
+def test_channels_seen_count_the_montage_rows_when_only_some_channels_are_shown(tmp_path):
+    """Show some channels: a view's rows are those channels, and montage_rows says which of the montage they are."""
+    b = LogBuilder(tmp_path / "v.jsonl", "A01", T0)
+    b.context = {"recording": "r1", "window_no": 1}
+    b.event(0.0, "recording_opened", duration_s=60, n_channels_shown=22, annotations_restored=0, resumed=False)
+    b.event(0.0, "viewer_ready")
+    b.event(1.0, "view", t_start=0.0, duration=10.0, ch_start=0, n_channels=4, scale_factor=1.0)
+    # four channels shown (montage rows 10, 15, 18 and 20), the first two of them on the screen
+    b.event(2.0, "view", t_start=10.0, duration=10.0, ch_start=0, n_channels=2, scale_factor=1.0,
+            channels_shown=4, montage_rows=[10, 15])
+    b.event(3.0, "view", t_start=20.0, duration=10.0, ch_start=2, n_channels=2, scale_factor=1.0,
+            channels_shown=4, montage_rows=[18, 20])
+    b.event(4.0, "recording_finished", n_annotations=0)
+    b.context = {}
+    (row,) = rows_for(b.write()).recordings
+    assert row["share_channels_seen"] == pytest.approx(8 / 22)

@@ -7,6 +7,7 @@ import {
   MAX_INTERVALS, addInterval, complement, coveredS, fromDraft, mergeIntervals, nextUnviewed, percentText, toDraft, unviewed,
   viewStartFor, viewedFraction,
 } from '../../electrotag/web/static/js/viewer/coverage.js';
+import { intersect, partlyFraction, partlyViewed } from '../../electrotag/web/static/js/viewer/coverage_partly.js';
 
 // --------------------------------------------------------------- the coverage
 
@@ -67,4 +68,31 @@ test('a draft keeps the stretches to a hundredth of a second, and reads anything
   assert.deepEqual(fromDraft([[0, 10], [5, 'x'], [60, 80], [1], null], 70), [[0, 10], [60, 70]]);
   assert.deepEqual(fromDraft(undefined, 70), []);
   assert.deepEqual(fromDraft({ a: 1 }, 70), []);
+});
+
+// ---------------------------------------- the parts seen only while some good channels were hidden
+
+test('the common parts of two lists', () => {
+  assert.deepEqual(intersect([[0, 10], [20, 30]], [[5, 25]]), [[5, 10], [20, 25]]);
+  assert.deepEqual(intersect([[0, 10]], [[10, 20]]), []);
+  assert.deepEqual(intersect([], [[0, 5]]), []);
+  assert.deepEqual(intersect([[0, 2], [3, 4], [5, 6]], [[1, 5.5]]), [[1, 2], [3, 4], [5, 5.5]]);
+});
+
+test('a part seen only with some channels hidden still counts as not viewed, and is listed apart', () => {
+  const full = [[0, 30]]; // on the screen with every good channel
+  const partly = [[20, 50]]; // on the screen while some good channels were hidden
+  // still to view: everything after 30 s; of it, 30 to 50 s was seen with some channels hidden
+  assert.deepEqual(unviewed(full, 100), [[30, 100]]);
+  assert.deepEqual(partlyViewed(full, partly, 100), [[30, 50]]);
+  assert.equal(viewedFraction(full, 100), 0.3, 'the fraction viewed leaves the partly seen part out');
+  assert.ok(Math.abs(partlyFraction(full, partly, 100) - 0.2) < 1e-9);
+  // once that part has been on the screen with all the channels, it is no longer listed
+  const later = addInterval(full, 30, 50, 100);
+  assert.deepEqual(partlyViewed(later, partly, 100), []);
+  assert.equal(partlyFraction(later, partly, 100), 0);
+  // a short sliver is not listed, and stretches without data are not asked for
+  assert.deepEqual(partlyViewed(full, [[29, 30.5]], 100), []);
+  assert.deepEqual(partlyViewed(full, partly, 100, { noData: [[40, 60]] }), [[30, 40]]);
+  assert.deepEqual(partlyViewed(full, [], 100), []);
 });

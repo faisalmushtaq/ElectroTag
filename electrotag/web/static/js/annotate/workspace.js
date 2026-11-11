@@ -37,6 +37,7 @@ import { icon } from '../views/common.js';
 import { CHANNEL_COLOUR_MODES, MODE_TEXT as COLOUR_MODE_TEXT, channelColours, legendOf, normaliseMode } from '../viewer/channel_colours.js';
 import { HIDDEN_PAUSE_MS, SNOOZE_S, breakKey, carriedBreak, idleDue, newestCarry, todayKey } from './clock.js';
 import * as cov from '../viewer/coverage.js';
+import { partlyFraction, partlyViewed } from '../viewer/coverage_partly.js';
 import { NAME_SIZES, PANEL_TEXT, TRACE_WIDTHS, loadComfort, saveComfort } from '../ui/comfort.js';
 import { microvoltText, voltsText } from '../viewer/geometry.js';
 import { timeScaleChoices, timeScaleText, nudgeSamples } from '../viewer/scales.js';
@@ -124,6 +125,7 @@ export class Workspace {
     this.currentLabel = this.quick[0] || this.cat.labelNames[0];
     this.scope = 'whole';
     this.selectedChannels = [];
+    this.lastShownChannels = null; // the channels last chosen with Show some channels (S shows them again)
     this.selection = [];
     this.drawing = !this.readOnly;
     this.markStart = null;
@@ -211,7 +213,7 @@ export class Workspace {
       : 'EEG. The arrow keys move through the recording; M, [ and ] mark at the pointer or the time cursor, which G and the , and . keys move.');
     this.viewer.setComfort(this.comfort);
     if (this.timed) {
-      this.viewer.setCoverage(s.viewed);
+      this.viewer.setCoverage(s.viewed, s.viewedSome);
       this.viewer.onNextUnviewed = (via) => { logger.noteInput(`button:Next part not yet viewed`); this.nextUnviewed(via); };
     }
     this.viewer.nextUnviewedGroup.hidden = !this.timed; // only where what has been viewed is kept track of
@@ -381,7 +383,7 @@ export class Workspace {
       this.typeCaption, h('div.chips', {}, this.chips), this.typeMenuBtn, h('span.sep'),
       // (the scope, its channels and their Clear stay together when the toolbar wraps)
       h('span.ws-scope', {}, h('div.segmented', { role: 'group', 'aria-label': 'Applies to' }, this.scopeWhole, this.scopeSome), this.chooseBtn, this.chanSummary, this.clearChBtn),
-      h('span.ws-overlay-tool', {}, h('span.sep'), this._overlayButton()), h('span.sep'), this._scaleTools());
+      h('span.ws-overlay-tool', {}, h('span.sep'), this._overlayButton(), this._shownChannelsTools()), h('span.sep'), this._scaleTools());
     // Every type button shows its number and code; the toolbar wraps onto a second line when it needs one (app.css).
     return this.toolbar;
   }
@@ -566,7 +568,7 @@ export class Workspace {
     const table = h('table.info', {}, rows.map(([k, v]) => h('tr', {}, h('th', {}, k), h('td', {}, v))), h('tr', {}, h('th', {}, 'Filter edge zones'), this.edgeRow));
     p.append(this.clockLabel);
     if (this.timed) p.append(h('p.caption.clock-note', {}, 'Time while you are paused is not counted.'), this._coverageBlock());
-    p.append(h('label.check', {}, zones, ' Show filter edge zones'), this._viewToolsRow(), opts, this._comfortOptions(), table);
+    p.append(h('label.check', {}, zones, ' Show filter edge zones'), this._viewToolsRow(), this._shownChannelsRow(), opts, this._comfortOptions(), table);
     if (s.warnings.length) p.append(h('h4', {}, 'Checks and warnings'), h('ul.warnings', {}, s.warnings.map((w) => h('li', {}, w))));
     p.append(h('p.caption', {}, 'Filters change only what you see. The recording files are never modified. Zero-phase filters can make sharp transients appear to start slightly earlier; mark the artifact where the underlying event begins.'));
     this._updateEdgeText();
@@ -655,7 +657,9 @@ export class Workspace {
     return h('div.coverage-block', {},
       this.coverageText,
       h('div.progress', { role: 'presentation' }, this.coverageBar),
-      h('p.caption', {}, 'On the overview bar under the EEG, the parts not yet on the screen are white with a thin grey line above them.'),
+      this.coverageSomeNote = h('p.caption.coverage-some', { hidden: true }),
+      h('p.caption', {}, 'On the overview bar under the EEG, the parts not yet on the screen are white with a thin grey line above them; '
+        + 'the line is dotted over parts seen only with some channels hidden.'),
       h('div.btn-row', {}, this.nextUnviewedBtn));
   }
 
@@ -777,7 +781,7 @@ export class Workspace {
     const r = this.s.bringBackDiscarded();
     this._hideDiscarded();
     if (!r) return;
-    if (this.timed) { this.viewer.setCoverage(this.s.viewed); this._refreshCoverage(); }
+    if (this.timed) { this.viewer.setCoverage(this.s.viewed, this.s.viewedSome); this._refreshCoverage(); }
     logger.event('discarded_work_restored', { n_annotations: r.n, elapsed_s: Math.round(r.elapsedS * 10) / 10, replaced: n });
     this.say(`Brought back ${plural(r.n, 'annotation')} and ${friendlyDuration(r.elapsedS)} of work (${undoHint()}).`);
   }
@@ -1066,6 +1070,12 @@ export class Workspace {
 
   _unviewed() { return cov.unviewed(this.s.viewed, this.s.recording.durationS, { noData: this._noData() }); }
 
+  /** The parts still to view that were on screen only while some good channels were hidden. */
+  _partlyViewed() { return partlyViewed(this.s.viewed, this.s.viewedSome, this.s.recording.durationS, { noData: this._noData() }); }
+
+  /** Whether a stretch still to view ([a, b]) was on screen only while some good channels were hidden. */
+  _isPartly(gap) { return this._partlyViewed().some(([a, b]) => a < gap[1] - 1e-6 && b > gap[0] + 1e-6); }
+
   /** A view that has stayed on screen for a moment counts as seen (not while paused or out of sight). */
   _noteViewDwell = debounce(() => this._recordViewed(), cov.DWELL_MS);
 
@@ -1074,21 +1084,34 @@ export class Workspace {
     if (this._overviewView) return; // Show all is a look at the whole recording, not viewing it
     if (!this.viewer._covers()) { this._noteViewDwell(); return; } // still reading the EEG
     const v = this.viewer.view;
-    const before = this.s.viewed;
+    // With some good channels hidden (Show some channels), the part is kept apart: it counts as viewed
+    // only once it has been on the screen with all of them.
+    const full = this._showsEveryGoodChannel();
+    const before = full ? this.s.viewed : this.s.viewedSome;
     const next = cov.addInterval(before, v.startS, v.startS + v.durationS, this.s.recording.durationS);
     if (next === before || cov.coveredS(next) - cov.coveredS(before) < 1e-6) return;
-    this.s.noteViewed(next);
-    this.viewer.setCoverage(next);
+    if (full) this.s.noteViewed(next); else this.s.noteViewedSome(next);
+    this.viewer.setCoverage(this.s.viewed, this.s.viewedSome);
     this._refreshCoverage();
   }
 
   _refreshCoverage() {
     if (!this.timed) return;
     const f = cov.viewedFraction(this.s.viewed, this.s.recording.durationS, this._noData());
+    const some = partlyFraction(this.s.viewed, this.s.viewedSome, this.s.recording.durationS, this._noData());
     const text = `Viewed ${cov.percentText(f)}`;
-    this.viewedEl.textContent = text;
+    const someText = some >= 0.01 ? `${cov.percentText(some)} with some channels hidden` : '';
+    this.viewedEl.textContent = someText ? `${text} (+${someText})` : text;
+    this.viewedEl.title = someText ? `How much of the recording has been on the screen with every good channel; ${someText} still needs a look with all of them`
+      : 'How much of the recording has been on the screen';
     this.coverageText.textContent = `${text} of the recording`;
     this.coverageBar.style.width = `${Math.floor(f * 100)}%`;
+    if (this.coverageSomeNote) {
+      const parts = some > 0 ? this._partlyViewed().length : 0;
+      this.coverageSomeNote.hidden = !parts;
+      this.coverageSomeNote.textContent = parts ? `${parts === 1 ? 'One part was' : `${parts} parts were`} on the screen only while some good channels were hidden`
+        + `${some >= 0.01 ? ` (${cov.percentText(some)} of the recording)` : ''}. Look at ${parts === 1 ? 'it' : 'them'} again with all the channels shown for ${parts === 1 ? 'it' : 'them'} to count as viewed.` : '';
+    }
   }
 
   /** Show the next stretch that has not been on screen (U, or the button). */
@@ -1104,8 +1127,11 @@ export class Workspace {
     const startS = cov.viewStartFor([from, g[1]], v.durationS);
     this.viewer.setView({ startS }, 'unviewed');
     const left = gaps.length;
-    this.say(`Not yet viewed: ${clockText(from)} to ${clockText(g[1])}. ${left === 1 ? 'This is the last such part.' : `${left} parts are left to look at.`}`);
-    logger.event('next_unviewed', { from_s: Math.round(from * 1000) / 1000, to_s: Math.round(g[1] * 1000) / 1000, n_unviewed: left, via });
+    const partly = this._isPartly([from, g[1]]);
+    const hidden = partly && !this._showsEveryGoodChannel()
+      ? ` It was on the screen only with some channels hidden: ${touchFirst() ? 'Show all channels' : 'S (or Show all channels)'} shows them, so that it counts as viewed.` : '';
+    this.say(`${partly ? 'Seen only with some channels hidden' : 'Not yet viewed'}: ${clockText(from)} to ${clockText(g[1])}. ${left === 1 ? 'This is the last such part.' : `${left} parts are left to look at.`}${hidden}`);
+    logger.event('next_unviewed', { from_s: Math.round(from * 1000) / 1000, to_s: Math.round(g[1] * 1000) / 1000, n_unviewed: left, partly_viewed: partly, via });
   }
 
   // ===================================================== a task's part of the recording
@@ -1242,7 +1268,9 @@ export class Workspace {
 
   setSelectedChannels(names) {
     const chosen = new Set(names);
-    this.selectedChannels = this.s.channels.map((c) => c.name).filter((n) => chosen.has(n));
+    // with only some channels shown, only those can be selected
+    const pool = (this.viewer && this.viewer.shownSubset) ? this.viewer.channels : this.s.channels;
+    this.selectedChannels = pool.map((c) => c.name).filter((n) => chosen.has(n));
     this._logState({ selected_channels: [...this.selectedChannels] });
     this._refreshState();
   }
@@ -1250,7 +1278,9 @@ export class Workspace {
   toggleScope() {
     if (this.viewer.overlay) { this.say('In the overlay, marks apply to the whole montage. Press O for the normal view to mark channels.'); return; }
     this.setScope(this.scope === 'whole' ? 'channels' : 'whole');
-    this.say(this.scope === 'whole' ? 'Next annotation: whole montage' : 'Next annotation: selected channels (click channel names to choose them)');
+    const some = this.viewer.shownSubset;
+    this.say(this.scope === 'whole' ? (some ? `Next annotation: the ${plural(some.length, 'channel')} shown` : 'Next annotation: whole montage')
+      : 'Next annotation: selected channels (click channel names to choose them)');
   }
 
   /**
@@ -1305,7 +1335,7 @@ export class Workspace {
     if (!v || !anns.length) return false;
     const s0 = v.view.startS;
     const s1 = s0 + v.view.durationS;
-    const rows = (a) => a.channels.map((c) => this.s.channels.findIndex((x) => x.name === c)).filter((i) => i >= 0);
+    const rows = (a) => a.channels.map((c) => this.viewer.channels.findIndex((x) => x.name === c)).filter((i) => i >= 0);
     const shown = (a) => a.onset_sample / this.sf < s1 && endSample(a) / this.sf > s0
       && (!a.channels.length || rows(a).some((i) => i >= v.view.firstChannel && i < v.view.firstChannel + v.view.nChannels));
     if (anns.some(shown)) return false;
@@ -1313,7 +1343,7 @@ export class Workspace {
     const want = { startS: centredStart((a.onset_sample + endSample(a)) / 2 / this.sf, v.view.durationS) };
     const r = rows(a);
     if (r.length && !r.some((i) => i >= v.view.firstChannel && i < v.view.firstChannel + v.view.nChannels)) {
-      want.firstChannel = Math.max(0, Math.min(r[0], this.s.channels.length - v.view.nChannels));
+      want.firstChannel = Math.max(0, Math.min(r[0], this.viewer.channels.length - v.view.nChannels));
     }
     v.setView(want, 'selection');
     this.broughtBack = (this.broughtBack || 0) + 1; // (the tour's step on selected annotations watches for it)
@@ -1352,10 +1382,18 @@ export class Workspace {
       this.typeMenuBtn.append(h('span.chev', {}, icon('chevron-down')));
       this.scopeWhole.setAttribute('aria-pressed', String(this.scope === 'whole'));
       this.scopeSome.setAttribute('aria-pressed', String(this.scope === 'channels'));
+      const shownSome = this.viewer ? this.viewer.shownSubset : null;
+      // With only some channels shown, the first choice is those channels: a mark never covers the whole montage then.
+      this.scopeWhole.textContent = shownSome ? 'Shown channels' : 'Whole montage';
+      this.scopeWhole.title = shownSome ? 'The next drag marks the channels shown (all of them, while only some are shown)' : 'The next drag marks every channel';
       const ch = this.selectedChannels;
       this.chanSummary.className = 'ws-chansummary';
       // (on the whole montage, Whole montage pressed says it: the summary steps out, leaving the toolbar room for one line)
-      if (this.scope === 'whole') { this.chanSummary.textContent = 'all channels'; this.chanSummary.title = 'Annotations apply to the whole montage'; this.chanSummary.classList.add('all'); }
+      if (this.scope === 'whole' && shownSome) {
+        this.chanSummary.textContent = `the ${plural(shownSome.length, 'channel')} shown`;
+        this.chanSummary.title = `Annotations apply to the channels shown: ${shownSome.join(', ')}`;
+        this.chanSummary.classList.add('selected');
+      } else if (this.scope === 'whole') { this.chanSummary.textContent = 'all channels'; this.chanSummary.title = 'Annotations apply to the whole montage'; this.chanSummary.classList.add('all'); }
       else if (!ch.length) { this.chanSummary.textContent = 'none selected'; this.chanSummary.title = 'Click channel names, or use Channels…'; this.chanSummary.classList.add('warning'); }
       else {
         this.chanSummary.textContent = ch.slice(0, 3).join(', ') + (ch.length > 3 ? ` (+${ch.length - 3})` : '');
@@ -1482,11 +1520,15 @@ export class Workspace {
 
   _logView = debounce(() => {
     const v = this.viewer.view;
-    const ch = this.s.channels;
+    const ch = this.viewer.channels;
     const last = Math.min(ch.length, v.firstChannel + v.nChannels) - 1;
+    // With only some channels shown, the rows are those channels: their places in the montage say which are on screen.
+    const some = this.viewer.shownSubset;
+    const montage = some ? this.s.channels.map((c) => c.name) : null;
     logger.event('view', {
       t_start: Math.round(v.startS * 1000) / 1000, duration: v.durationS, ch_start: v.firstChannel, n_channels: v.nChannels,
       first_channel: ch[v.firstChannel]?.name, last_channel: ch[last]?.name, scale_factor: Math.round(v.scaleFactor * 1e4) / 1e4, butterfly: Boolean(this.viewer.overlay),
+      ...(some ? { channels_shown: some.length, montage_rows: ch.slice(v.firstChannel, last + 1).map((c) => montage.indexOf(c.name)) } : {}),
     });
   }, 250);
 
@@ -1529,12 +1571,11 @@ export class Workspace {
 
   createAnnotation(t0, t1) {
     if (!this._checkEditable()) return null;
-    const byChannel = this._marksChannels();
-    if (byChannel && !this.selectedChannels.length) {
-      this.say("No channels selected: click channel names, use 'Channels…', or choose 'Whole montage'.");
+    const channels = this._newMarkChannels();
+    if (!channels) {
+      this.say(`No channels selected: click channel names, use 'Channels…', or choose '${this.viewer.shownSubset ? 'Shown channels' : 'Whole montage'}'.`);
       return null;
     }
-    const channels = byChannel ? [...this.selectedChannels] : [];
     let ann;
     try {
       ann = this.store.addInterval(this.currentLabel, t0, t1, channels);
@@ -1631,7 +1672,8 @@ export class Workspace {
     items.push({ label: this.quick.length ? 'Other type' : 'Change type to', submenu: sub });
     items.push({ separator: true }, { label: 'Edit times…', onSelect: () => { this.select([id]); this.editTimesOfSelected(); } },
       { label: 'Edit channels…', onSelect: () => this.editChannelsOf(id) }, ...this._confidenceMenuItems(id, a));
-    if (a.channels.length) items.push({ label: 'Apply to whole montage', onSelect: () => { logger.noteInput('menu:Apply to whole montage'); this.setAnnotationChannels(id, []); } });
+    // (not while only some channels are shown: a mark made or changed then stays on channels)
+    if (a.channels.length && !this.viewer.shownSubset) items.push({ label: 'Apply to whole montage', onSelect: () => { logger.noteInput('menu:Apply to whole montage'); this.setAnnotationChannels(id, []); } });
     items.push({ separator: true }, { label: 'Delete', onSelect: () => { logger.noteInput('menu:Delete'); this.deleteOne(id); } });
     showMenu(items, x, y);
   }
@@ -1655,6 +1697,11 @@ export class Workspace {
     if (!this._checkEditable()) return;
     try {
       const before = this.store.get(id);
+      // While only some channels are shown, a channel-specific mark is never made to cover every channel.
+      if (this.viewer.shownSubset && before.channels.length && !before.channels.includes(ch) && before.channels.length + 1 === this.s.channels.length) {
+        this.say(`Adding ${ch} would make this ${before.label} cover every channel: show all the channels (${touchFirst() ? 'Show all channels' : 'S'}) to apply it to the whole montage.`);
+        return;
+      }
       const a = this.store.toggleChannel(id, ch);
       const where = !a.channels.length ? 'now applies to the whole montage'
         : !before.channels.length ? `every channel but ${ch} (${plural(a.channels.length, 'channel')})`
@@ -1752,6 +1799,26 @@ export class Workspace {
   async editChannelsOf(id) {
     if (!this.store.has(id) || !this._checkEditable()) return;
     const a = this.store.get(id);
+    const some = this.viewer.shownSubset;
+    if (some) {
+      // Only the channels shown are offered; those hidden keep what the annotation had on them.
+      const all = this.s.channels.map((c) => c.name);
+      const shown = new Set(some);
+      const had = a.channels.length ? a.channels : all;
+      const chosen = await chooseChannels({ title: `Channels affected by this ${a.label}`, channels: this.viewer.channels,
+        chosen: had.filter((n) => shown.has(n)), map: this._channelMapOptions(this.viewer.channels) });
+      if (!chosen) return;
+      logger.noteInput(`dialog:Channels affected by this ${a.label}`);
+      const keep = new Set([...had.filter((n) => !shown.has(n)), ...chosen.channels]);
+      const next = all.filter((n) => keep.has(n));
+      if (!next.length) { inform('Channels not changed', 'Choose at least one channel.'); return; }
+      if (next.length === all.length && a.channels.length) {
+        inform('Channels not changed', 'While only some channels are shown, an annotation cannot be made to cover every channel. Show all the channels to apply it to the whole montage.');
+        return;
+      }
+      this.setAnnotationChannels(id, next.length === all.length ? [] : next);
+      return;
+    }
     const chosen = await chooseChannels({ title: `Channels affected by this ${a.label}`, channels: this.s.channels, chosen: a.channels,
       allowWholeMontage: true, wholeMontage: !a.channels.length, map: this._channelMapOptions() });
     if (!chosen) return;
@@ -1761,7 +1828,8 @@ export class Workspace {
   }
 
   async chooseChannelsForNew() {
-    const chosen = await chooseChannels({ title: 'Channels for new annotations', channels: this.s.channels, chosen: this.selectedChannels, map: this._channelMapOptions(),
+    const chosen = await chooseChannels({ title: 'Channels for new annotations', channels: this.viewer.shownSubset ? this.viewer.channels : this.s.channels,
+      chosen: this.selectedChannels, map: this._channelMapOptions(this.viewer.channels),
       bad: this.readOnly ? null : { marked: this.store.badChannels } });
     if (!chosen) return;
     logger.noteInput('dialog:Channels for new annotations');
@@ -1815,6 +1883,16 @@ export class Workspace {
         onSelect: () => this.clearChannelSelection('menu') });
     }
     items.push({ separator: true }, { label: 'Show this channel alone', onSelect: () => this.isolate(name, 'menu') });
+    // Show some channels: the selected ones, a choice from the list, or all of them again
+    const touch = touchFirst();
+    const pool = new Set(this.viewer.channels.map((c) => c.name));
+    const narrower = this.selectedChannels.filter((n) => pool.has(n));
+    if (narrower.length && narrower.length < this.viewer.channels.length && !this.viewer.overlay) {
+      items.push({ label: `Show only the selected channels (${narrower.length})`, onSelect: () => { logger.noteInput('menu:Show only the selected channels'); this.setShownChannels(narrower, 'menu'); } });
+    }
+    items.push({ label: this.viewer.shownSubset ? 'Change the channels shown…' : 'Show some channels…', shortcut: touch ? null : 'Shift+S',
+      onSelect: () => { logger.noteInput('menu:Show some channels'); this.chooseShownChannels('menu'); } });
+    if (this.viewer.shownSubset) items.push({ label: 'Show all channels', shortcut: touch ? null : 'S', onSelect: () => { logger.noteInput('menu:Show all channels'); this.setShownChannels(null, 'menu'); } });
     showMenu(items, x, y, { className: 'channel-menu' });
   }
 
@@ -1831,7 +1909,7 @@ export class Workspace {
   /** The channels from row a to row b (indices into the channels), in recording order. */
   _channelRange(a, b) {
     const [lo, hi] = [Math.min(a, b), Math.max(a, b)];
-    return this.s.channels.slice(lo, hi + 1).map((c) => c.name);
+    return this.viewer.channels.slice(lo, hi + 1).map((c) => c.name);
   }
 
   /** While a drag goes down the channel names: the range so far, shown at once and logged at the end. */
@@ -2094,7 +2172,7 @@ export class Workspace {
       }
       if (g.kind === 'draw') {
         const t = clamp(info.t, 0, this.s.recording.durationS);
-        this.viewer.setDragPreview({ t0: g.t, t1: t, colour: g.colour, channels: this._marksChannels() ? this.selectedChannels : [] });
+        this.viewer.setDragPreview({ t0: g.t, t1: t, colour: g.colour, channels: this._newMarkChannels() || [] });
         g.t1 = t;
       } else if (g.kind === 'resize') {
         if (dx > 1) g.moved = true;
@@ -2624,7 +2702,8 @@ export class Workspace {
     this.touchPrevCh = iconBtn('chevron-up', 'Previous channel alone', 'isolate-previous', () => this.stepIsolated(-1, 'button'));
     this.touchNextCh = iconBtn('chevron-down', 'Next channel alone', 'isolate-next', () => this.stepIsolated(1, 'button'));
     this.viewer.addTouchGroup('View', [this.touchOverlay, this.touchIsolate, this.touchPrevCh, this.touchNextCh,
-      btn('Go to time', 'goto', () => this.openGoTo('button')), btn('Show all', 'show-all', () => this.showAll('button'))]);
+      btn('Go to time', 'goto', () => this.openGoTo('button')), btn('Show all', 'show-all', () => this.showAll('button')),
+      btn('Some channels', 'channels-shown', () => this.chooseShownChannels('button'))]);
   }
 
   _refreshOverlayState() {
@@ -2647,13 +2726,26 @@ export class Workspace {
       this.scopeSome.disabled = true;
       this.chooseBtn.disabled = true;
       this.chanSummary.className = 'ws-chansummary';
-      this.chanSummary.textContent = 'all channels in the overlay';
-      this.chanSummary.title = 'In the overlay, new marks apply to the whole montage. Channel-specific marks are made in the normal view (O).';
+      const shownSome = v.shownSubset;
+      this.chanSummary.textContent = shownSome ? `the ${plural(shownSome.length, 'channel')} shown, in the overlay` : 'all channels in the overlay';
+      this.chanSummary.title = shownSome ? 'In the overlay, new marks apply to all the channels shown. Marks on fewer of them are made in the normal view (O).'
+        : 'In the overlay, new marks apply to the whole montage. Channel-specific marks are made in the normal view (O).';
     }
   }
 
   /** Whether the next mark is on the selected channels (never in the overlay). */
   _marksChannels() { return this.scope === 'channels' && !this.viewer.overlay; }
+
+  /**
+   * The channels of the next mark: the selected ones, or [] for the whole montage, or null when
+   * Selected channels is chosen with none selected. With only some channels shown, a mark never
+   * covers the whole montage: it is on the channels shown, or on those selected among them.
+   */
+  _newMarkChannels() {
+    if (this._marksChannels()) return this.selectedChannels.length ? [...this.selectedChannels] : null;
+    const some = this.viewer.shownSubset;
+    return some ? [...some] : [];
+  }
 
   // ------------------------------------------------------------------ the value under the pointer
   setReadout(on, via = 'button') {
@@ -2687,6 +2779,107 @@ export class Workspace {
     this.readoutEl.hidden = !text;
   }
 
+  // ------------------------------------------------------------------------- some channels only
+  // Show some channels (S switches between the channels chosen and all of them; Shift+S, the menu of a
+  // channel's name and the Recording tab choose them): the EEG shows only those channels. New marks
+  // are then on the channels shown, or on those selected among them, never on the whole montage.
+  // What is on the screen while some good channels are hidden is kept apart from what has been viewed
+  // (coverage.js), so that the parts seen only like this are asked for again, with every channel shown.
+
+  /** The montage's good channels: neither the study's bad channels nor those marked bad for the whole recording. */
+  _goodChannelNames() {
+    const bad = new Set(this.store.badChannels);
+    return this.s.channels.filter((c) => !c.bad && !bad.has(c.name)).map((c) => c.name);
+  }
+
+  /** Whether every good channel can be on the screen (all channels shown, or only bad ones hidden). */
+  _showsEveryGoodChannel() {
+    const some = this.viewer.shownSubset;
+    if (!some) return true;
+    const shown = new Set(some);
+    return this._goodChannelNames().every((n) => shown.has(n));
+  }
+
+  /** Show only the channels named (in the montage's order), or all of them (null). True when what is shown changed. */
+  setShownChannels(names, via = 'button', { quiet = false } = {}) {
+    if (!this.viewer.setShownChannels(names)) return false;
+    const some = this.viewer.shownSubset;
+    if (some) this.lastShownChannels = some;
+    if (this.gesture && this.gesture.kind === 'draw') { this.gesture = null; this.viewer.setDragPreview(null); }
+    if (some && this.selectedChannels.some((n) => !some.includes(n))) this.setSelectedChannels(this.selectedChannels); // keeps those shown
+    logger.event('state', { shown_channels: some, n_channels_shown: some ? some.length : this.s.channels.length, via });
+    this._refreshState();
+    this._refreshShownChannels();
+    if (this.timed) this._refreshCoverage();
+    if (!quiet) {
+      const touch = touchFirst();
+      const total = this.s.channels.length;
+      this.say(some ? `Showing ${some.length} of ${total} channels. New marks apply to these channels, or to those you select among them.`
+        + (this.timed && !this._showsEveryGoodChannel() ? ' Parts seen like this count as viewed only once you have seen them with all the good channels.' : '')
+        + ` ${touch ? 'Show all channels' : 'S'} shows them all again.`
+        : `All ${total} channels are shown again.${this.lastShownChannels && !touch ? ' S shows the channels you chose again.' : ''}`);
+    }
+    return true;
+  }
+
+  /** Choose the channels to show (Shift+S, the menu of a channel's name, the Recording tab, the touch View group). */
+  async chooseShownChannels(via = 'button') {
+    const chosen = await chooseChannels({ title: 'Channels to show', channels: this.s.channels,
+      chosen: this.viewer.shownSubset || this.lastShownChannels || [], map: this._channelMapOptions() });
+    if (!chosen || this._destroyed) return;
+    logger.noteInput('dialog:Channels to show');
+    if (!chosen.channels.length) { inform('Channels shown not changed', 'Choose at least one channel to show.'); return; }
+    if (!this.setShownChannels(chosen.channels.length >= this.s.channels.length ? null : chosen.channels, via)) {
+      this.say(this.viewer.shownSubset ? 'Those channels are shown already.' : 'All the channels are shown already.');
+    }
+  }
+
+  /** S: the channels chosen last, or all of them again (choosing them first when none were chosen yet). */
+  toggleShownChannels(via = 'key') {
+    if (this.viewer.shownSubset) { this.setShownChannels(null, via); return; }
+    if (this.lastShownChannels) { this.setShownChannels(this.lastShownChannels, via); return; }
+    this.chooseShownChannels(via);
+  }
+
+  /**
+   * The toolbar's Show all channels, there only while some are shown (the channels are chosen with
+   * Shift+S, the menu of a channel's name or the Recording tab, which keeps the toolbar to one line).
+   */
+  _shownChannelsTools() {
+    this.shownAllBtn = h('button.btn.toggle', { type: 'button', 'aria-pressed': 'true', 'data-log': 'channels-shown-all', hidden: true,
+      onclick: () => this.setShownChannels(null, 'button') }, 'Show all channels');
+    this.shownAllBtn.tabIndex = -1;
+    this.shownAllBtn.addEventListener('mousedown', (e) => e.preventDefault());
+    return this.shownAllBtn;
+  }
+
+  /** The Recording tab's line about the channels shown, with its buttons. */
+  _shownChannelsRow() {
+    this.shownText = h('span.caption');
+    this.shownChooseBtn = h('button.btn.small', { type: 'button', 'data-log': 'channels-shown-choose',
+      onclick: () => this.chooseShownChannels('button') }, 'Show some channels…');
+    this.shownAllRowBtn = h('button.btn.small', { type: 'button', 'data-log': 'channels-shown-all-tab', hidden: true,
+      onclick: () => this.setShownChannels(null, 'button') }, 'Show all channels');
+    const row = h('div.btn-row.view-tools.shown-channels', {}, this.shownChooseBtn, this.shownAllRowBtn, this.shownText);
+    this._refreshShownChannels();
+    return row;
+  }
+
+  _refreshShownChannels() {
+    const some = this.viewer ? this.viewer.shownSubset : null;
+    const total = this.s.channels.length;
+    if (this.shownAllBtn) {
+      this.shownAllBtn.hidden = !some;
+      this.shownAllBtn.title = some ? `Showing ${some.length} of ${total} channels: new marks apply to those, or to those selected among them. Click (or press S) to show every channel again.` : '';
+    }
+    if (this.shownText) {
+      this.shownText.textContent = some ? `Showing ${some.length} of ${total} channels (S shows them all). New marks apply to these channels.`
+        : `All ${total} channels shown. Show some channels to look at fewer at a time (Shift+S); new marks then apply to those only.`;
+      this.shownChooseBtn.textContent = some ? 'Change the channels shown…' : 'Show some channels…';
+      this.shownAllRowBtn.hidden = !some;
+    }
+  }
+
   // ------------------------------------------------------------------------- overlay and isolate
   setOverlay(on, via = 'button') {
     on = Boolean(on);
@@ -2703,7 +2896,7 @@ export class Workspace {
 
   /** Show one channel alone (by name; the same name again shows them all), turning the overlay on. */
   isolate(name, via = 'button') {
-    const row = this.s.channels.findIndex((c) => c.name === name);
+    const row = this.viewer.channels.findIndex((c) => c.name === name);
     if (row < 0) return;
     if (!this.viewer.overlay) this.setOverlay(true, via);
     this._setIsolated(this.viewer.isolated === row ? null : row, via);
@@ -2716,7 +2909,7 @@ export class Workspace {
     let row = v.hover && v.hover.area === 'channel_names' ? v.hover.row : null;
     if (row === null && this.pointerXY) {
       const r = v.valueAt(this.pointerXY.x, this.pointerXY.y);
-      if (r) row = this.s.channels.findIndex((c) => c.name === r.channel);
+      if (r) row = this.viewer.channels.findIndex((c) => c.name === r.channel);
     }
     if (row === null || row < 0) row = v.view.firstChannel;
     if (!v.overlay) this.setOverlay(true, via);
@@ -2727,7 +2920,7 @@ export class Workspace {
   stepIsolated(dir, via = 'key') {
     const v = this.viewer;
     if (!v.overlay || v.isolated === null) return;
-    const row = clamp(v.isolated + dir, 0, this.s.channels.length - 1);
+    const row = clamp(v.isolated + dir, 0, this.viewer.channels.length - 1);
     if (row === v.isolated) { this.say(dir > 0 ? 'That was the last channel.' : 'That was the first channel.'); return; }
     this._setIsolated(row, via);
     const first = v.view.firstChannel;
@@ -2738,7 +2931,7 @@ export class Workspace {
 
   _setIsolated(row, via) {
     if (!this.viewer.setIsolated(row)) return;
-    const name = row === null ? null : this.s.channels[row].name;
+    const name = row === null ? null : this.viewer.channels[row].name;
     logger.event('state', { isolated_channel: name, via });
     this._refreshOverlayState();
     this._showReadout();
@@ -2755,7 +2948,7 @@ export class Workspace {
     const v = this.viewer;
     if (!v.overlay || v.isolated === null) return;
     const first = v.view.firstChannel;
-    const last = Math.min(this.s.channels.length, first + v.view.nChannels) - 1;
+    const last = Math.min(this.viewer.channels.length, first + v.view.nChannels) - 1;
     if (v.isolated < first || v.isolated > last) this._setIsolated(clamp(v.isolated, first, last), 'view');
   }
 
@@ -2836,7 +3029,7 @@ export class Workspace {
     this.say('The whole recording is on the screen, as an overview: it does not count as viewed. Shift+End or Show all goes back.');
   }
 
-  /** V, O, I, G and Shift+End, and the arrow keys up and down while one channel is shown alone. True when the key was taken. */
+  /** V, O, I, G, S and Shift+S, Shift+End, and the arrow keys up and down while one channel is shown alone. True when the key was taken. */
   _viewKey(e, handled) {
     const k = e.key;
     const v = this.viewer;
@@ -2850,6 +3043,8 @@ export class Workspace {
     if (lk === 'o') return take('Overlay', () => this.setOverlay(!v.overlay, 'key'));
     if (lk === 'i') return take('Isolate', () => this.toggleIsolate('key'));
     if (lk === 'g') return take('Go to time', () => this.openGoTo('key'));
+    if (lk === 's') return e.shiftKey ? take('Choose the channels shown', () => this.chooseShownChannels('key'))
+      : take('Some channels or all', () => this.toggleShownChannels('key'));
     return false;
   }
 
@@ -2925,9 +3120,10 @@ export class Workspace {
   }
 
   /** What the channel chooser's map needs: where each channel goes, the group colours, and where the choice of view is kept. */
-  _channelMapOptions() {
+  /** The head map beside a channel chooser, for the channels it lists (the montage, or those shown). */
+  _channelMapOptions(channels = this.s.channels) {
     return {
-      layout: mapLayout(this.s.channels, this.electrodes ? this.electrodes.positions : null),
+      layout: mapLayout(channels, this.electrodes ? this.electrodes.positions : null),
       fileName: this.electrodes ? this.electrodes.fileName : null,
       colours: channelColours(this.s.channels, this.channelColourMode, this._positions()),
       storageKey: this._toolKey('channel_view'),
@@ -3024,21 +3220,41 @@ export class Workspace {
     const gaps = this._unviewed();
     if (!gaps.length) return true;
     const total = gaps.reduce((t, [a, b]) => t + (b - a), 0);
-    const shown = gaps.slice(0, 6);
+    // The parts seen only while some good channels were hidden (Show some channels) are listed apart:
+    // they are to be looked at again with all the channels shown.
+    const partly = this._partlyViewed();
+    const isPartly = (g) => partly.some(([a, b]) => a < g[1] - 1e-6 && b > g[0] + 1e-6);
+    const never = gaps.filter((g) => !isPartly(g));
+    const some = gaps.filter(isPartly);
     const pc = cov.percentText(cov.viewedFraction(this.s.viewed, this.s.recording.durationS, this._noData()));
     const one = gaps.length === 1;
+    const list = (items) => {
+      const shown = items.slice(0, 6);
+      const t = items.reduce((x, [a, b]) => x + (b - a), 0);
+      return [h('ul.unviewed-list', {}, shown.map(([a, b]) => h('li', {}, `${clockText(a)} to ${clockText(b)} (${friendlyDuration(b - a)})`))),
+        items.length > shown.length ? h('p.dialog-text', {}, `and ${items.length - shown.length} more, ${friendlyDuration(t)} in all.`) : null];
+    };
     const body = h('div', {},
-      h('p.dialog-text', {}, `You have viewed ${pc} of this recording. ${one ? 'This part has' : 'These parts have'} not been on the screen yet:`),
-      h('ul.unviewed-list', {}, shown.map(([a, b]) => h('li', {}, `${clockText(a)} to ${clockText(b)} (${friendlyDuration(b - a)})`))),
-      gaps.length > shown.length ? h('p.dialog-text', {}, `and ${gaps.length - shown.length} more, ${friendlyDuration(total)} in all.`) : null,
+      h('p.dialog-text', {}, `You have viewed ${pc} of this recording${some.length ? ' with all its good channels on the screen' : ''}.`
+        + (never.length ? ` ${never.length === 1 ? 'This part has' : 'These parts have'} not been on the screen yet:` : '')),
+      ...(never.length ? list(never) : []),
+      some.length ? h('p.dialog-text', {}, `${some.length === 1 ? 'This part was' : 'These parts were'} on the screen only while some good channels were hidden (Show some channels), `
+        + `so ${some.length === 1 ? 'it still needs' : 'they still need'} a look with all the channels shown:`) : null,
+      ...(some.length ? list(some) : []),
       h('p.dialog-text', {}, `Look at ${one ? 'it' : 'them'} before you save, or save now if you have reviewed ${one ? 'it' : 'them'} another way.`));
-    const choice = await showDialog({ title: one ? 'A part not yet viewed' : 'Parts not yet viewed', body, className: 'coverage-check', logText: `${plural(gaps.length, 'unviewed part')}, ${Math.round(total)} s`,
+    const title = !never.length ? (one ? 'A part seen with some channels hidden' : 'Parts seen with some channels hidden') : one ? 'A part not yet viewed' : 'Parts not yet viewed';
+    const choice = await showDialog({ title, body, className: 'coverage-check',
+      logText: `${plural(gaps.length, 'unviewed part')}${some.length ? ` (${some.length} seen with some channels hidden)` : ''}, ${Math.round(total)} s`,
       buttons: [{ label: 'Keep annotating', value: 'cancel' }, { label: 'Save anyway', value: 'save' },
         { label: one ? 'Go to that part' : 'Go to the first part', value: 'goto', kind: 'primary' }], cancelValue: 'cancel' });
-    logger.event('coverage_check', { viewed_fraction: this._viewedFraction(), n_unviewed: gaps.length, unviewed_s: Math.round(total * 10) / 10, choice });
+    logger.event('coverage_check', { viewed_fraction: this._viewedFraction(), n_unviewed: gaps.length, n_partly_viewed: some.length,
+      unviewed_s: Math.round(total * 10) / 10, choice });
     if (choice === 'goto') {
+      // Looking again with channels still hidden would not count: every channel comes back on the screen.
+      const shownAll = !this._showsEveryGoodChannel() && this.setShownChannels(null, 'coverage_check', { quiet: true });
       this.viewer.setView({ startS: cov.viewStartFor(gaps[0], this.viewer.view.durationS) }, 'unviewed');
-      this.say(`Not yet viewed: ${clockText(gaps[0][0])} to ${clockText(gaps[0][1])}.${one ? '' : ` ${touchFirst() ? 'Next part not yet viewed' : 'U (or Next part not yet viewed)'} shows the next one.`}`);
+      this.say(`${isPartly(gaps[0]) ? 'Seen only with some channels hidden' : 'Not yet viewed'}: ${clockText(gaps[0][0])} to ${clockText(gaps[0][1])}.`
+        + `${shownAll ? ' All the channels are shown again.' : ''}${one ? '' : ` ${touchFirst() ? 'Next part not yet viewed' : 'U (or Next part not yet viewed)'} shows the next one.`}`);
       this.viewer.over.focus({ preventScroll: true });
     }
     return choice === 'save';
