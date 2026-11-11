@@ -11,7 +11,7 @@ import { newId, nowLocalIso } from '../util.js';
 import { loadPart } from '../lazy.js';
 import {
   checkAnnotatorId, checkEmail, criteriaFromRows, criteriaRows, deepCopy, mergeSettings,
-  METRICS, parseRoles, plural, primaryRole, rolesOf, rolesText, settingChangeText, settingsProblems,
+  METRICS, parseRoles, plural, primaryRole, rolesOf, rolesText, settingsProblems,
 } from '../admin/model.js';
 
 export const ADMIN_ID = 'ADMIN';
@@ -669,13 +669,12 @@ export class DemoAdmin {
       const unknown = Object.keys(body.settings).find((k) => !known.includes(k));
       if (unknown) throw bad(`The settings block '${unknown}' cannot be changed here; these can: ${known.join(', ')}`, 'invalid_settings');
       const next = mergeSettings(this.s.settings, body.settings);
-      const { expertSettingsProblems } = await loadPart('settingsChecks');
+      const { expertSettingsProblems, settingChanges } = await loadPart('settingsChecks');
       const problems = [...settingsProblems(next, LABEL_NAMES), ...expertSettingsProblems(next)];
       if (problems.length) throw bad(problems[0], 'invalid_settings');
       for (const [block, values] of Object.entries(body.settings)) {
         for (const [key, value] of Object.entries(values || {})) {
-          const old = (this.s.settings[block] || {})[key];
-          if (JSON.stringify(old) !== JSON.stringify(value)) changed.push(settingChangeText(`${block}.${key}`, old, value));
+          changed.push(...settingChanges(`${block}.${key}`, (this.s.settings[block] || {})[key], value));
         }
       }
       this.s.settings = next;
@@ -684,17 +683,19 @@ export class DemoAdmin {
       const name = String(body.name).trim();
       if (!name) throw bad('name is missing');
       if (name.length > 200) throw bad('name must be text of at most 200 characters');
+      if (name !== this.s.name) changed.push(`the study's name from ${this.s.name} to ${name}`);
       this.s.name = name;
-      changed.push('the study\'s name');
     }
     if (body.logging_notice !== undefined) {
-      this.s.logging_notice = String(body.logging_notice).slice(0, 4000);
-      changed.push('the logging notice');
+      const notice = String(body.logging_notice).slice(0, 4000);
+      if (notice !== (this.s.logging_notice || '')) changed.push('the logging notice');
+      this.s.logging_notice = notice;
     }
     if (!changed.length && body.name === undefined && body.logging_notice === undefined && body.settings === undefined) {
       throw bad('Nothing to change: give name, settings or logging_notice');
     }
-    this._audit('settings_update', `Changed ${changed.join('; ')}`, { changes: body.settings || {}, name: body.name ?? null });
+    // only what is different; a save that changed nothing leaves no entry
+    if (changed.length) this._audit('settings_update', `Changed ${changed.join('; ')}`, { changes: body.settings || {}, name: body.name ?? null });
     return this.op_settings_get();
   }
 
