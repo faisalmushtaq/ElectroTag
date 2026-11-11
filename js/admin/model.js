@@ -427,7 +427,7 @@ export function defaultAnalysisConfig() {
   return {
     resolutions_s: [0.01, 0.05, 0.1],
     min_bin_coverage: 0.5,
-    channel_modes: ['time_only', 'time_and_channel'],
+    channel_modes: ['time_only'],
     include_any_artifact: true,
     include_group_rollups: true,
     match_criterion: 'iou',
