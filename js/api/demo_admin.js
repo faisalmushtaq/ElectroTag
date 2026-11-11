@@ -932,7 +932,7 @@ export class DemoAdmin {
     }
     if (out.added.length || out.replaced.length) {
       this._audit('recordings_register', `Added ${plural(out.added.length, 'recording')}${out.replaced.length ? ` and replaced ${out.replaced.length}` : ''} (${scope === 'study' ? 'the study' : scope})`,
-        { scope, added: out.added, replaced: out.replaced, skipped: out.skipped.length });
+        { scope, added: out.added, replaced: out.replaced, skipped: out.skipped.length, batch_id: body.batch_id ?? null });
     }
     return out;
   }

@@ -3,7 +3,7 @@
 
 import { h, clear } from '../ui/dom.js';
 import { MODES, routeForSection, whenText } from './model.js';
-import { auditSummary, opText } from './audit_words.js';
+import { auditSummary, joinRegistrations, opText, summaryText } from './audit_words.js';
 import { card, chip, dataTable, loading, messageArea, recordingName, sectionHead } from './ui.js';
 import { waitingCard } from './assessment_decision.js';
 
@@ -17,7 +17,7 @@ export class OverviewSection {
     this.recent = dataTable([
       { title: 'When', render: (e) => whenText(e.at) },
       { title: 'Who', render: (e) => e.by },
-      { title: 'What', render: (e) => h('span', {}, h('span.caption.block', {}, opText(e.op)), auditSummary(e, this.recentEntries || [])) },
+      { title: 'What', render: (e) => h('span', {}, h('span.caption.block', {}, opText(e.op)), summaryText(auditSummary(e, this.recentEntries || []))) },
     ], [], { empty: 'Nothing has been changed yet.', pageSize: 10 });
     this.saved = dataTable([
       { title: 'When', render: (r) => whenText(r.at) },
@@ -76,7 +76,7 @@ export class OverviewSection {
       if (c2) this.waiting.append(c2);
     }, () => {}); // (without it the Overview is as it was: the trainee's page still shows the assessment)
     this.recentEntries = o.recent || [];
-    this.recent.update(this.recentEntries);
+    this.recent.update(joinRegistrations(this.recentEntries));
     this.saved.update(o.last_saved || []);
   }
 }
