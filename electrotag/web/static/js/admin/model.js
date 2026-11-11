@@ -29,6 +29,7 @@ export const SECTIONS = Object.freeze([
   { key: 'recordings', route: 'admin-recordings', title: 'Recordings', group: 'data' },
   { key: 'problems', route: 'admin-problems', title: 'Problems', group: 'data' },
   { key: 'settings', route: 'admin-settings', title: 'Study settings', group: 'config' },
+  { key: 'repeats', route: 'admin-repeats', title: 'Repeat ratings', group: 'config' },
 ]);
 
 /** Links of the admin menu to the expert area, which administrators may use too: {group, route, title}. */

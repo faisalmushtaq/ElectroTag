@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
@@ -341,6 +342,83 @@ class QuestionnaireSettings:
 
 _DEFAULT_CONTACTS = {"full_name": "required", "email": "required", "phone": "optional", "institution": "optional"}
 
+#: The most repeats one rule may ask for, and the longest wait (days) before a repeat.
+MAX_REPEATS = 10
+MAX_REPEAT_DAYS = 365
+_RULE_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,40}$")
+
+
+@dataclass(frozen=True)
+class RepeatRule:
+    """One rule of repeat ratings: which recordings, how many repeats, and the days before each."""
+
+    rule_id: str
+    name: str = ""
+    every_recording: bool = True  # recordings: "all"; otherwise the datasets and recordings named
+    datasets: tuple[str, ...] = ()
+    recording_ids: tuple[str, ...] = ()
+    repeats: int = 1  # how many times a recording is rated again after the first rating
+    interval_days: int = 14  # days from saving one rating until the recording comes back for the next
+
+    def covers(self, recording_id: str, dataset_id: str) -> bool:
+        return self.every_recording or dataset_id in self.datasets or recording_id in self.recording_ids
+
+
+@dataclass(frozen=True)
+class RepeatSettings:
+    """repeats: ask annotators to rate recordings again, for intra-rater (test-retest) reliability.
+
+    The rules are applied in order: a recording takes the first rule that covers it, so a rule for some
+    recordings goes before a rule for all of them.
+    """
+
+    enabled: bool = False
+    rules: tuple[RepeatRule, ...] = ()
+
+    @classmethod
+    def from_dict(cls, block: dict[str, Any]) -> RepeatSettings:
+        enabled = _flag(block, "repeats", "enabled", False)
+        rules = block.get("rules", [])
+        if not isinstance(rules, list) or len(rules) > 50:
+            raise SettingsError("repeats.rules must be a list of at most 50 rules")
+        out: list[RepeatRule] = []
+        for i, r in enumerate(rules, start=1):
+            where = f"repeats.rules[{i}]"
+            if not isinstance(r, dict):
+                raise SettingsError(f"{where} must be a block (id, name, recordings, repeats, interval_days)")
+            rid = r.get("id")
+            if not isinstance(rid, str) or not _RULE_ID_RE.match(rid):
+                raise SettingsError(f"{where}.id must be up to 40 letters, digits, hyphens or underscores")
+            if any(x.rule_id == rid for x in out):
+                raise SettingsError(f"repeats.rules: the ID {rid!r} is used twice")
+            name = r.get("name", "")
+            if not isinstance(name, str) or len(name) > 100:
+                raise SettingsError(f"{where}.name must be text of at most 100 characters")
+            scope = r.get("recordings", "all")
+            if scope not in ("all", "some"):
+                raise SettingsError(f'{where}.recordings must be "all" or "some" (the datasets and recordings named)')
+            lists = {}
+            for key in ("datasets", "recording_ids"):
+                v = r.get(key, [])
+                if not isinstance(v, list) or len(v) > 10000 or not all(isinstance(x, str) and x for x in v):
+                    raise SettingsError(f"{where}.{key} must be a list of IDs")
+                lists[key] = tuple(dict.fromkeys(v))
+            if scope == "some" and not (lists["datasets"] or lists["recording_ids"]):
+                raise SettingsError(f"{where} applies to some recordings: name at least one dataset or recording")
+            repeats = _whole(r, where, "repeats", 1, 1, MAX_REPEATS, "how many times a recording is rated again")
+            days = _whole(r, where, "interval_days", 14, 1, MAX_REPEAT_DAYS,
+                          "the days from saving one rating until the recording comes back")
+            out.append(RepeatRule(rule_id=rid, name=name.strip(), every_recording=scope == "all",
+                                  datasets=lists["datasets"], recording_ids=lists["recording_ids"],
+                                  repeats=repeats, interval_days=days))
+        return cls(enabled=enabled, rules=tuple(out))
+
+    def rule_for(self, recording_id: str, dataset_id: str) -> RepeatRule | None:
+        """The first rule that covers a recording, or None (also while repeats are switched off)."""
+        if not self.enabled:
+            return None
+        return next((r for r in self.rules if r.covers(recording_id, dataset_id)), None)
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -396,6 +474,7 @@ class Settings:
     training: TrainingPolicy = field(default_factory=TrainingPolicy)
     replay: ReplaySettings = field(default_factory=ReplaySettings)
     questionnaire: QuestionnaireSettings = field(default_factory=QuestionnaireSettings)
+    repeats: RepeatSettings = field(default_factory=RepeatSettings)
     raw: dict[str, Any] = field(repr=False, default_factory=dict)
 
     @classmethod
@@ -469,6 +548,7 @@ class Settings:
                 training=TrainingPolicy.from_dict(_block(data, "training")),
                 replay=ReplaySettings.from_dict(_block(data, "replay")),
                 questionnaire=QuestionnaireSettings.from_dict(_block(data, "questionnaire")),
+                repeats=RepeatSettings.from_dict(_block(data, "repeats")),
                 raw=copy.deepcopy(data),
             )
         except KeyError as exc:  # pragma: no cover - defaults always complete

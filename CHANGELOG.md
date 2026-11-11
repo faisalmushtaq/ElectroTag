@@ -5,6 +5,17 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Repeat ratings, for intra-rater (test-retest) reliability: in the admin area's new Repeat ratings section (the
+study setting `repeats`, off by default), a study switches them on and sets rules, in order, each for all
+recordings or for chosen datasets and recordings, with how many times a recording is rated again (1 to 10) and the
+days between ratings (1 to 365). Once its days have passed since an annotator saved a recording, the recording
+comes back to them as a new recording, with their earlier marks and history not shown, and its save is kept as
+the next attempt marked as that repeat (`retest` in the completion register, `context.retest` in the files). The
+agreement analysis leaves repeats out of the comparisons between annotators, and compares each annotator with their
+own repeats when Who is compared is Each annotator with their own repeat ratings (`comparison` `within`,
+`--comparison within`), with each person's figures in `intrarater_by_annotator.tsv` (docs/admin_area.md, "Repeat
+ratings"; docs/reliability_guide.md, "Repeat ratings (test-retest)").
+
 The audit log's entry for a change of the study settings now names only what changed, from and to. A group of
 settings (the amplitude scales, the review's matching rules, the channel types) is gone through value by value
 ("eeg (display scalings) from 50 µV to 70 µV" rather than every scale before and after), the questionnaire's

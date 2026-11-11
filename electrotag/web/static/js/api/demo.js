@@ -463,6 +463,7 @@ export class DemoBackend {
       }
     }
     this._admin.standardAssignments(aid).forEach((a, i) => add(a.rid, a.mode, a.context_id, i + 1, 'assignment'));
+    if (this._rpm) this._rpm.schedule(this, items); // repeat ratings due (demo_repeats.js)
     if (!this._gate(aid).open) for (const i of items) if (i.source === 'assignment' && i.mode === 'standard' && !['done', 'unusable'].includes(i.status)) i.status = 'locked';
     return items;
   }
@@ -492,6 +493,7 @@ export class DemoBackend {
 
   async assignments() {
     const aid = this._aid();
+    if ((this._admin.s.settings.repeats || {}).enabled) this._rpm = await import('./demo_repeats.js');
     const items = this._workItems(aid);
     const nxt = this._nextItem(aid, items);
     const out = {
@@ -806,7 +808,7 @@ export class DemoBackend {
       confidence_setting: this._admin.studyBlock().annotation.confidence,
       recording: { file_name: info.file_name, sfreq: info.sfreq, n_samples: info.n_samples, ch_names: info.ch_names, size_bytes: info.size_bytes },
       guided: guidedSummary, feedback: out.feedback ? { passed: out.feedback.passed, metrics: out.feedback.metrics } : null,
-      revision,
+      revision, retest: item.retest,
     });
     this.state.done[key] = { saved_at, attempt };
     delete this.state.drafts[key];
@@ -1399,7 +1401,7 @@ export class DemoBackend {
         session: { session_id: `${s.annotator_id}-${s.saved_at}`, mode: s.mode, created_at: s.saved_at, app_version: 'web demonstration',
           confidence: s.confidence_setting || 'optional',
           context: { context_id: s.context_id, attempt: s.attempt, browser_session: s.session, guided: s.guided, practice: s.feedback,
-            ...(s.revision ? { revision: s.revision } : {}) } },
+            ...(s.revision ? { revision: s.revision } : {}), ...(s.retest ? { retest: { number: s.retest } } : {}) } },
         time_conventions: {
           onset_origin: 'first_sample',
           onset: 'Seconds from the first sample stored in the data file (BIDS events.tsv convention; equal to MNE raw.times).',

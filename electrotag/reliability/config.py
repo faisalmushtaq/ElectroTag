@@ -14,6 +14,11 @@ ANY_ARTIFACT = "ANY-artifact"
 VERSIONS = ("original", "corrected", "adjudicated")
 #: What a recording group is: the whole recording, or each task's part of it (a task's window).
 UNITS = ("recording", "task")
+#: between: annotators compared with each other (inter-rater), their repeat ratings left out; within: each
+#: annotator's first rating of a recording compared with their own repeat ratings of it (intra-rater).
+COMPARISONS = ("between", "within")
+#: The rater names of an intra-rater comparison: the first rating, then "repeat 1", "repeat 2", ...
+FIRST_RATING = "first rating"
 #: The annotator ID of every adjudicated version (a reserved ID, never an account).
 ADJUDICATED = "ADJUDICATED"
 #: Suffix of the roll-up category of a group term: the group term and every type below it.
@@ -65,6 +70,7 @@ class AnalysisConfig:
     # The originals (as annotated), the experts' corrections of them, or the adjudicated versions as the reference
     versions: str = "original"
     unit: str = "recording"  # or "task": each task's part of a recording is compared on its own
+    comparison: str = "between"  # COMPARISONS: between annotators, or within each annotator (repeat ratings)
 
     # Report
     timeline_max_recordings: int = 12
@@ -83,6 +89,13 @@ class AnalysisConfig:
             raise ValueError(f"versions must be one of {VERSIONS}")
         if self.unit not in UNITS:
             raise ValueError(f"unit must be one of {UNITS}")
+        if self.comparison not in COMPARISONS:
+            raise ValueError(f"comparison must be one of {COMPARISONS}")
+        if self.comparison == "within" and (self.versions != "original" or self.unit != "recording"
+                                            or self.reference_annotator):
+            raise ValueError("Each annotator's own repeat ratings are compared as annotated, by whole recording and "
+                             "without a reference annotator: choose the original versions, recordings and no "
+                             "reference")
         if self.versions == "adjudicated" and self.reference_annotator != ADJUDICATED:
             raise ValueError(f"The adjudicated versions are compared with everyone else, so the reference annotator "
                              f"must be {ADJUDICATED} (or none)")

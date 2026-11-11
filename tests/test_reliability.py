@@ -528,3 +528,45 @@ def test_agreement_compares_times_and_labels_only_by_default():
     # time and channel stays available when chosen
     both = analyse([a, b], channel_modes=("time_only", "time_and_channel")).table("events_summary")
     assert row(both, category="EMG-artifact", channel_mode="time_and_channel", threshold=0.2).f1 == 0.0
+
+
+def test_repeat_ratings_are_left_out_between_annotators_and_compared_within_each():
+    """The study setting repeats: a repeat is marked in its context; between annotators it is left out, within each
+    annotator it is a rater of its own ("repeat 1"), and intrarater_by_annotator gives each person's figures."""
+    from dataclasses import replace
+
+    a = doc("A", [("EMG-artifact", 0, 1, ()), ("Eye-blink-artifact", 5, 6, ())])
+    a_again = replace(doc("A", [("EMG-artifact", 0, 1.2, ()), ("Eye-blink-artifact", 5, 6, ())]),
+                      context={"retest": {"number": 1, "rule_id": "r", "interval_days": 7}})
+    b = doc("B", [("EMG-artifact", 0, 1, ())])
+    b_again = replace(doc("B", [("EMG-artifact", 3, 4, ())]), context={"retest": {"number": 1}})
+    docs = [a, a_again, b, b_again]
+    between = analyse(docs)
+    assert sorted(between.dataset.groups["rec.vhdr"].docs) == ["A", "B"]
+    assert between.dataset.groups["rec.vhdr"].docs["A"] is a, "the first rating, not the later repeat"
+    assert any("2 repeat ratings were left out" in w for w in between.settings_record["warnings"])
+    assert between.table("intrarater_by_annotator").empty
+
+    within = analyse(docs, comparison="within")
+    groups = within.dataset.groups
+    assert {k: sorted(g.docs) for k, g in groups.items()} == {
+        "rec.vhdr · A": ["first rating", "repeat 1"], "rec.vhdr · B": ["first rating", "repeat 1"]}
+    tr = within.table("timeresolved_pairwise")
+    pooled = row(tr, recording="ALL (pooled)", category="EMG-artifact", channel_mode="time_only",
+                 representation="exact")
+    assert (pooled.rater_1, pooled.rater_2) == ("first rating", "repeat 1")
+    people = within.table("intrarater_by_annotator")
+    a_any = people[(people.annotator == "A") & (people.category == "ANY-artifact")].iloc[0]
+    b_any = people[(people.annotator == "B") & (people.category == "ANY-artifact")].iloc[0]
+    assert a_any.event_f1 == 1.0 and b_any.event_f1 == 0.0
+    assert a_any.cohen_kappa > b_any.cohen_kappa
+    assert set(people.category) <= {"ANY-artifact", "EMG-artifact", "Eye-blink-artifact",
+                                    "Biological-artifact + subtypes", "Eye-artifact + subtypes"}, \
+        "only the types marked"
+    # only one annotator's repeats
+    one = analyse(docs, comparison="within", annotators=("A",))
+    assert list(one.dataset.groups) == ["rec.vhdr · A"]
+    with pytest.raises(ValueError, match="without a reference annotator"):
+        AnalysisConfig(comparison="within", reference_annotator="A").validate()
+    with pytest.raises(ValueError, match="comparison must be one of"):
+        AnalysisConfig(comparison="both").validate()

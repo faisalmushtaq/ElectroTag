@@ -50,6 +50,7 @@ another way, for example on an encrypted drive, and open them in their own brows
 - [Problems](#problems)
 - [Records](#records)
 - [Study settings](#study-settings)
+- [Repeat ratings](#repeat-ratings)
 - [The expert area](#the-expert-area)
   - [Saved work](#saved-work)
   - [Correcting saved work](#correcting-saved-work)
@@ -897,7 +898,9 @@ frame on the page, separated from the rest of the application, and Download the 
 the buttons named after its tables save them. An analysis can take a while on a large study; the
 page shows that it is working, and its button cannot be pressed again until the answer arrives.
 
-The **agreement analysis** compares annotators by category and time. The channels a mark was on are
+The **agreement analysis** compares annotators with each other, or, with **Who is compared** set to
+Each annotator with their own repeat ratings, each person's first rating of a recording with their
+own repeat ratings of it (see Repeat ratings). It compares them by category and time. The channels a mark was on are
 left out, so the same type marked at the same time agrees on whatever channels; Time and channel, under
 Compare in Settings of the analysis, adds the tables that compare the channels too. Choose the
 annotators and the recordings (none ticked means all of them), the kinds of session (usually
@@ -1266,6 +1269,33 @@ plain words, in that bar, what to correct (for example a type given to two numbe
 field concerned marked and focused. The bar says Unsaved changes while there are any; leaving the
 section with unsaved changes asks first (Leave without saving, or Stay here), and so does closing or
 reloading the page.
+
+## Repeat ratings
+
+Repeat ratings ask annotators to rate recordings they have saved again after some days, so that the
+study can measure how consistent each person is with themselves: intra-rater, or test-retest,
+reliability. They are off until **Ask annotators to rate recordings again** is ticked and saved, and
+switching them off later stops any further repeat from coming due while keeping the rules for later.
+
+Each **rule** says which recordings it covers, how many times each is **rated again** after the first
+rating (1 to 10), and the **days between ratings** (1 to 365), counted from when one rating was saved
+until the recording comes back for the next. A rule covers **all recordings**, or **some recordings**:
+the datasets ticked (all their recordings, including those added to the dataset later) and the
+recordings ticked one by one, together. The sentence under each rule says what it does, for example "1
+recording: rated 2 more times, 3 days apart". The rules are applied in order, and a recording takes
+the first rule that covers it, so rules for some recordings go above a rule for all of them; Move up
+and Move down put them in order, and a name helps the study team tell them apart. Save the repeat
+ratings checks the rules first and says what to correct, and the change is written to the audit log.
+
+A repeat comes back to every annotator who saved the recording, in their list as a new recording to
+do: their earlier marks are not shown and nothing says it is a repeat, so that they rate what they
+see rather than what they remember. Its save is kept as the next attempt of their work, marked as
+that repeat (`retest` in the completion register and the saved files), and the next repeat comes due
+the chosen days after it. A revision of a repeat stays that repeat, and revising never moves the next
+one. In the study team's counts a recording stays done while a repeat is due. The comparisons between
+annotators use each person's first rating (with its revisions) and leave the repeats out; Analyses
+compares each annotator with their own repeats when Who is compared is set to Each annotator with
+their own repeat ratings (the reliability guide, "Repeat ratings (test-retest)").
 
 ## The expert area
 

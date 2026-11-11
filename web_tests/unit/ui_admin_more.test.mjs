@@ -27,7 +27,7 @@ test('the menu: four groups, every section in one, and what was folded read back
   assert.deepEqual(m.sectionsOf('study').map((s) => s.title), ['Overview', 'Progress', 'Results', 'Analyses', 'Records']);
   assert.deepEqual(m.sectionsOf('people').map((s) => s.title), ['Annotators', 'Groups', 'Giving out work', 'Training', 'Questionnaire']);
   assert.deepEqual(m.sectionsOf('data').map((s) => s.title), ['Datasets', 'Recordings', 'Problems']);
-  assert.deepEqual(m.sectionsOf('config').map((s) => s.title), ['Study settings']);
+  assert.deepEqual(m.sectionsOf('config').map((s) => s.title), ['Study settings', 'Repeat ratings']);
   for (const s of m.SECTIONS) assert.ok(m.GROUPS.some((g) => g.key === s.group), s.key);
   assert.equal(m.groupOf('progress'), 'study');
   assert.equal(m.routeForSection('progress'), 'admin-progress');

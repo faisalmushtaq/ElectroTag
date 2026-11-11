@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 SETTINGS_BLOCKS = ("filters", "display", "channels", "selection", "logging", "annotation", "loading", "discovery",
                    "gamification", "review", "training", "replay")
 SETTINGS_BLOCKS += ("questionnaire",)  # the sign-up questionnaire (electrotag/web/questionnaire.py)
+SETTINGS_BLOCKS += ("repeats",)  # repeat ratings for intra-rater reliability (electrotag/config/settings.py)
 SET_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 ITEM_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,63}$")

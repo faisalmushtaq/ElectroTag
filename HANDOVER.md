@@ -245,7 +245,8 @@ section. [docs/developer_guide.md](docs/developer_guide.md) describes packaging 
 
 **3. Decisions for the research team**, listed under "Decisions still open" in
 [docs/design_decisions.md](docs/design_decisions.md): the agreement settings to pre-register, the
-competency criteria, scheduling repeat annotations for test-retest reliability, whether idle time
+competency criteria, the design of the repeat ratings for test-retest reliability (which the study
+setting `repeats` now schedules), whether idle time
 counts, the copyright holder named in the licence notice, and whether Emotiv's contact-quality
 channels should be shown.
 

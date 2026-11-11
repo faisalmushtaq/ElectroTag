@@ -12,7 +12,15 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from electrotag.reliability.config import ADJUDICATED, CHANNEL_MODES, MATCH_CRITERIA, UNITS, VERSIONS, AnalysisConfig
+from electrotag.reliability.config import (
+    ADJUDICATED,
+    CHANNEL_MODES,
+    COMPARISONS,
+    MATCH_CRITERIA,
+    UNITS,
+    VERSIONS,
+    AnalysisConfig,
+)
 
 #: Exit status when the analysis ran but no recording had two annotators to compare.
 EXIT_NOTHING_TO_COMPARE = 3
@@ -28,6 +36,7 @@ examples:
   electrotag-agreement /data/MyStudy/Annotated_Events --config agreement_settings.json
   electrotag-agreement /data/MyStudy/Annotated_Events --versions corrected
   electrotag-agreement /data/MyStudy/Annotated_Events --versions adjudicated --unit task
+  electrotag-agreement /data/MyStudy/Annotated_Events --comparison within
 
 exit status: 0 when the analysis ran, 2 for a mistake in the command (for example an unknown
 category or annotator, or a results folder that already holds results), and
@@ -92,6 +101,10 @@ def build_parser(prog: str = "electrotag-agreement") -> argparse.ArgumentParser:
     sel.add_argument("--unit", choices=UNITS,
                      help="recording compares whole recordings; task compares each task's part of a recording on "
                      "its own, from the tasks/tasks.json of the results folder (default: recording)")
+    sel.add_argument("--comparison", choices=COMPARISONS,
+                     help="between: annotators compared with each other (their repeat ratings left out); within: each "
+                     "annotator's first rating of a recording compared with their own repeat ratings of it "
+                     f"(test-retest reliability) (default: {_D.comparison})")
     tr = p.add_argument_group("time-resolved agreement")
     tr.add_argument("--resolutions", type=float, nargs="+", metavar="SECONDS",
                     help=f"Bin widths in seconds, besides the exact (sample-by-sample) comparison "
@@ -174,6 +187,7 @@ def config_from_args(args: argparse.Namespace) -> AnalysisConfig:
         "min_events": "min_events_per_category",
         "versions": "versions",
         "unit": "unit",
+        "comparison": "comparison",
     }
     for arg, key in mapping.items():
         value = getattr(args, arg)

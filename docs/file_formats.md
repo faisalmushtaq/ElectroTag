@@ -618,6 +618,7 @@ library downloads the same columns for the entries it shows.
 | `app_version` | ElectroTag version |
 | `n_needs_review` | Annotations of the uncertain type (`Data-artifact`), which the experts' lists show as needing review; empty in rows written before 30 October 2026 |
 | `n_bad_channels` | Channels the annotator marked bad for the whole recording; empty in rows written before 30 October 2026 |
+| `retest` | Which repeat rating the save is (the study setting `repeats`): `1` for the first repeat, `2` for the second; empty for a first rating and its revisions, and in rows written before 11 November 2026. The saved files say the same in `context.retest` (`number`, and for the save itself `rule_id` and `interval_days`) |
 
 Rows are only added after the outputs are verified. Updates hold a lock and
 replace the file atomically. `annotator-<ID>/completed_datasets.txt` lists the

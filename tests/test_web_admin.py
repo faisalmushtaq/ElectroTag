@@ -111,7 +111,8 @@ def test_overview_counts_and_recent_changes(client: TestClient, admin: Api, reco
 def test_settings_are_read_changed_and_checked(client: TestClient, admin: Api) -> None:
     s = admin.admin_ok("settings_get")
     assert set(s["settings"]) == {"filters", "display", "channels", "selection", "logging", "annotation", "loading",
-                                  "discovery", "gamification", "review", "training", "replay", "questionnaire"}
+                                  "discovery", "gamification", "review", "training", "replay", "questionnaire",
+                                  "repeats"}
     assert s["settings"]["annotation"]["allow_revisions"] is True
     assert s["settings"]["gamification"] == {"enabled": True, "leaderboard": True, "leaderboard_viewed_only": False}
     assert s["settings"]["filters"]["notch_hz"] == 50.0 and s["logging_notice"]
