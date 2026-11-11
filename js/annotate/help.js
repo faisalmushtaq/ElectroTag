@@ -63,6 +63,8 @@ export const HELP_HTML = `
 <tr><td><kbd>V</kbd></td><td>the channel, time and value under the pointer, in the line at the bottom</td></tr>
 <tr><td><kbd>O</kbd></td><td>overlay: the channels on screen on one shared axis</td></tr>
 <tr><td><kbd>I</kbd></td><td>in the overlay, one channel alone; ${arrow('up')} / ${arrow('down')} go to the previous / next channel</td></tr>
+<tr><td><kbd>Shift</kbd>+<kbd>S</kbd></td><td>show only some channels: choose them</td></tr>
+<tr><td><kbd>S</kbd></td><td>all the channels, or again only those you chose</td></tr>
 </table>
 <p>The <b>overlay</b> draws the channels on screen on one axis in thin lines, so that an artifact
 that reaches many channels, such as a blink, stands out as a dark band. Point at a name on the left
@@ -77,6 +79,12 @@ is the height of one row of EEG, as the scale bar at the right of the EEG shows.
 point at a row to see its name, or show fewer channels (${PAGE}).</p>
 <p>On the overview bar, the parts of the recording that have not been on the screen yet are white
 with a thin grey line above them; the Recording tab and the status line say how much you have viewed.</p>
+<p><b>Show some channels</b> (<kbd>Shift</kbd>+<kbd>S</kbd>, the menu of a channel's name, or the
+Recording tab) shows only the channels you choose, and <kbd>S</kbd> switches between them and all the
+channels. While only some are shown, a new mark applies to the channels shown (<b>Shown channels</b>
+in the toolbar), or to those you select among them, and never to the whole montage. A part of the
+recording seen like this counts as viewed only once you have also seen it with every good channel:
+until then its grey line on the overview bar is dotted, and Save and Finish lists it.</p>
 <p>Vertical dashed lines labelled in teal are the <b>original experimental events</b>.
 They cannot be edited. Hatched grey zones mark where the display filters may
 distort the signal (recording edges and discontinuities) and where the recording has no data;
@@ -201,6 +209,7 @@ annotations for the study's researchers.</p>
 <tr><td><kbd>U</kbd></td><td>the next part not yet viewed</td></tr>
 <tr><td><kbd>G</kbd></td><td>go to a time</td></tr>
 <tr><td><kbd>V</kbd> / <kbd>O</kbd> / <kbd>I</kbd></td><td>value under the pointer / overlay / one channel alone</td></tr>
+<tr><td><kbd>Shift</kbd>+<kbd>S</kbd> / <kbd>S</kbd></td><td>show only some channels / all of them, or those again</td></tr>
 <tr><td><kbd>H</kbd></td><td>in guided training: Show me</td></tr>
 <tr><td><kbd>?</kbd></td><td>this help</td></tr>
 </table>
@@ -215,7 +224,8 @@ work it offers a break, which you can take or put off for 15 minutes.</p>
 
 <h3>Finishing</h3>
 <p>Press <b>Save and Finish</b> when you have reviewed the whole recording; if some parts have
-not been on the screen, it lists them first and offers to take you to them. Your work is kept as a
+not been on the screen, or only while some channels were hidden, it lists them first and offers to
+take you to them. Your work is kept as a
 draft while you annotate (in this browser and with the study, as the time at the top says), so if
 you close the page you can continue later, where you left off; the recording is complete only once
 it is saved with Save and Finish. When the study cannot be reached, the top reads <i>Draft kept in

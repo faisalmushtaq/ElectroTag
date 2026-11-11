@@ -671,15 +671,16 @@ export class DemoBackend {
     if (draft.view !== undefined && draft.view !== null && typeof draft.view !== 'object') throw new ApiError(422, 'invalid_draft', 'draft.view must be an object');
     const elapsed = draft.elapsed_s === undefined ? 0 : draft.elapsed_s;
     if (typeof elapsed !== 'number' || !Number.isFinite(elapsed) || elapsed < 0) throw new ApiError(422, 'invalid_draft', 'draft.elapsed_s must be a number of seconds');
-    const viewed = draft.viewed === undefined || draft.viewed === null ? [] : draft.viewed;
-    if (!Array.isArray(viewed) || viewed.length > 5000 || viewed.some((p) => !Array.isArray(p) || p.length !== 2 || p.some((x) => typeof x !== 'number' || !Number.isFinite(x)) || !(p[0] >= 0 && p[0] <= p[1]))) {
-      throw new ApiError(422, 'invalid_draft', 'draft.viewed must be a list of [start_s, end_s] pairs of seconds');
-    }
+    const [viewed, some] = ['viewed', 'viewed_some_channels'].map((k) => {
+      const v = draft[k] ?? [];
+      if (!Array.isArray(v) || v.length > 5000 || v.some((p) => !Array.isArray(p) || p.length !== 2 || p.some((x) => typeof x !== 'number' || !Number.isFinite(x)) || !(p[0] >= 0 && p[0] <= p[1]))) throw new ApiError(422, 'invalid_draft', `draft.${k} must be a list of [start_s, end_s] pairs of seconds`);
+      return v;
+    });
     const bad = draft.bad_channels === undefined ? [] : draft.bad_channels;
     if (!Array.isArray(bad) || bad.length > 4096 || bad.some((c) => typeof c !== 'string' || c.length > 200)) throw new ApiError(422, 'invalid_draft', 'draft.bad_channels must be a list of channel names');
     const saved_at = nowLocalIso();
     this.state.drafts[item.key] = { annotations: anns, view: draft.view || {}, elapsed_s: Math.min(elapsed, MAX_ELAPSED_S), viewed, saved_at, bad_channels: [...new Set(bad)],
-      ...(revises !== null ? { revises } : {}) };
+      viewed_some_channels: some, ...(revises !== null ? { revises } : {}) };
     this._save();
     return { saved_at };
   }

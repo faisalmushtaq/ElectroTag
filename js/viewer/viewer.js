@@ -19,6 +19,7 @@ import { COLOURS, FONT } from '../ui/theme.js';
 import { CHANNEL_COUNTS, DURATIONS, OVERLAY_SPAN, axisFormat, axisTitle, decimateColumns, fitTags, meanOf, niceStep, overlayAlpha, overlayGain, stepOption, tickLabel, voltsText } from './geometry.js';
 import { LONG_PRESS_MS, TAP_SLOP_PX, edgePx, isDoubleTap, pinchView, twoFingers } from './touch.js';
 import { complement, mergeIntervals } from './coverage.js';
+import { intersect } from './coverage_partly.js';
 import { clampView, outsideStretches, viewSpan } from './bounds.js';
 import { nameEvery, namePx, traceWidths } from '../ui/comfort.js';
 import { icon } from '../views/common.js';
@@ -104,7 +105,8 @@ export class EegViewer {
     this.sfreq = o.recording.sfreq;
     this.nSamples = o.recording.nSamples;
     this.durationTotal = this.nSamples / this.sfreq;
-    this.channels = o.channels;
+    this.allChannels = o.channels; // the montage
+    this.channels = o.channels; // its channels on the rows: all of them, or those chosen with setShownChannels
     this.scalings = o.scalings || {};
     // in time order, so that those on screen are found by bisection (a marker file can hold 100,000 or more)
     this.events = [...(o.events || [])].sort((a, b) => a.onset_sample - b.onset_sample);
@@ -412,7 +414,16 @@ export class EegViewer {
   /** A line at the top left of the plot that stays while it applies (Show all says so), or null. */
   setCaption(text) { if ((text || null) !== this.caption) { this.caption = text || null; this.invalidate(['over']); } }
   /** The parts on screen so far (merged [start_s, end_s]); null hides the coverage. Only the overview changes. */
-  setCoverage(list) { this.coverage = list ? list.map((p) => [...p]) : null; this.invalidate(['overview']); }
+  /**
+   * What has been on screen (a merged list of [start_s, end_s], or null to show nothing of it), and the
+   * parts seen only while some good channels were hidden (`partly`): those are drawn as not yet viewed,
+   * with a dotted line along the top rather than a solid one.
+   */
+  setCoverage(list, partly = []) {
+    this.coverage = list ? list.map((p) => [...p]) : null;
+    this.coveragePartly = (partly || []).map((p) => [...p]);
+    this.invalidate(['overview']);
+  }
   /** Display comfort: { trace: 'thin'|'normal'|'thick', names: 'normal'|'large' }. */
   setComfort(c) {
     const next = { trace: c.trace || 'normal', names: c.names || 'normal' };
@@ -453,6 +464,34 @@ export class EegViewer {
     this.selectedChannels = new Set(names || []);
     this.channelsActive = Boolean(active);
     this.invalidate(['under', 'traces']);
+  }
+
+  /**
+   * Show only some of the montage's channels (names, kept in the montage's order), or all of them
+   * (null, or every name). The rows are then those channels alone: scrolling, the channels per screen,
+   * the overlay and the names all work on them. Returns true when what is shown changed.
+   */
+  setShownChannels(names) {
+    const want = names ? new Set(names) : null;
+    const next = want ? this.allChannels.filter((c) => want.has(c.name)) : this.allChannels;
+    const list = next.length && next.length < this.allChannels.length ? next : this.allChannels;
+    if (list.length === this.channels.length && list.every((c, i) => c === this.channels[i])) return false;
+    const before = this.channels;
+    const wasAll = this.view.nChannels >= before.length;
+    this.channels = list;
+    this.isolated = null;
+    this._offsets = new Map();
+    // as many rows as before when there are enough channels; every channel when all were on screen
+    const n = wasAll ? list.length : Math.min(this.view.nChannels, list.length);
+    this.view = { ...this.view, firstChannel: 0, nChannels: n };
+    this.invalidate();
+    if (this.onView) this.onView({ ...this.view }, 'channels_shown');
+    return true;
+  }
+
+  /** The names of the channels on the rows when only some are shown, or null when all of them are. */
+  get shownSubset() {
+    return this.channels === this.allChannels ? null : this.channels.map((c) => c.name);
   }
 
   setFilters(f) {
@@ -1337,13 +1376,23 @@ export class EegViewer {
     if (this.coverage) {
       const gaps = [...this.gaps.map(([a, b]) => [a / this.sfreq, b / this.sfreq]), ...outsideStretches(this.bounds, this.durationTotal)];
       const ts = (t) => (t / this.durationTotal) * W;
-      for (const [a, b] of complement(mergeIntervals([...this.coverage, ...gaps]), this.durationTotal)) {
+      const unseen = complement(mergeIntervals([...this.coverage, ...gaps]), this.durationTotal);
+      for (const [a, b] of unseen) {
         const xa = Math.floor(ts(a));
         const w = Math.max(1, Math.ceil(ts(b)) - xa);
         ctx.fillStyle = COLOURS.surface;
         ctx.fillRect(xa, 0, w, H);
         ctx.fillStyle = COLOURS.hatch;
         ctx.fillRect(xa, 0, w, 3);
+      }
+      // seen only with some good channels hidden: the line along the top dotted, over the white
+      for (const [a, b] of intersect(unseen, mergeIntervals(this.coveragePartly || []))) {
+        const xa = Math.floor(ts(a));
+        const w = Math.max(1, Math.ceil(ts(b)) - xa);
+        ctx.fillStyle = COLOURS.surface;
+        ctx.fillRect(xa, 0, w, 3);
+        ctx.fillStyle = COLOURS.hatch;
+        for (let x = xa; x < xa + w; x += 4) ctx.fillRect(x, 0, Math.min(2, xa + w - x), 3);
       }
     }
     const tx = (s) => (s / this.nSamples) * W;
