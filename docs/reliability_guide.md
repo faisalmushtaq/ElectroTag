@@ -249,8 +249,8 @@ require closer agreement on boundaries; Warby et al. (2014) used 0.2 in their
 evaluation of sleep-spindle detection. With the `tolerance` criterion the
 onsets and the offsets must each lie within a tolerance (overlap is not
 needed, which suits very short events such as blinks); `iou_and_tolerance`
-requires both. In time-and-channel mode the events must also share channels
-(see section 3).
+requires both. In time-and-channel mode, when it is chosen, the events must
+also share channels (see section 3).
 
 **How are events matched?** By default, one-to-one: each event can match at
 most one event of the other annotator. Among all possible one-to-one
@@ -285,11 +285,20 @@ disagreements can be inspected individually and re-analysed.
 
 ## 3. Channels
 
-Two modes are always reported:
+By default the agreement is on times and labels alone: every table compares
+when each type of artifact was marked, and the channels a mark was on play no
+part. Comparing channels as well multiplies what is reported and what has to
+be chosen (a unit per channel, the channel overlap needed for a match, how a
+whole-montage mark meets a mark on a few channels), so it is an option of the
+analysis rather than part of every run. The two modes are:
 
-* **Time only** ignores channel selections: an annotation counts wherever it
-  is in time.
-* **Time and channel** treats each channel separately and pools the results,
+* **Time only** (the default) ignores channel selections: an annotation counts
+  wherever it is in time, so a mark on Fp1 and a mark of the same type at the
+  same time on O2 agree, as do a whole-montage mark and a mark on one channel.
+* **Time and channel**, reported only when chosen (`channel_modes` in the
+  settings, `--channel-modes time_only time_and_channel` with
+  `electrotag-agreement`, or Time and channel in the admin area's settings of
+  the analysis), treats each channel separately and pools the results,
   so units are channel-seconds (or channel-bins). A **whole-montage annotation
   counts for every channel of the recording**, so a whole-montage annotation
   and an annotation on one channel overlap on that one channel only. For

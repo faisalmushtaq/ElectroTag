@@ -181,7 +181,7 @@ def test_repeated_same_label_annotations_are_unioned_for_time_agreement():
 def test_whole_montage_versus_channel_specific():
     a = doc("A", [("EMG-artifact", 0, 1, ())])  # whole montage
     b = doc("B", [("EMG-artifact", 0, 1, ("C1",))])
-    res = analyse([a, b])
+    res = analyse([a, b], channel_modes=("time_only", "time_and_channel"))
     df = res.table("timeresolved_pairwise")
     t = row(df, recording="ALL (pooled)", category="EMG-artifact", channel_mode="time_only", representation="exact")
     assert t.cohen_kappa == pytest.approx(1.0)
@@ -191,7 +191,7 @@ def test_whole_montage_versus_channel_specific():
     ev = res.table("events_summary")
     e = row(ev, category="EMG-artifact", channel_mode="time_and_channel", threshold=0.2)
     assert e.f1 == 1.0 and e.mean_channel_jaccard == pytest.approx(0.25)
-    strict = analyse([a, b], min_channel_jaccard=0.5).table("events_summary")
+    strict = analyse([a, b], min_channel_jaccard=0.5, channel_modes=("time_only", "time_and_channel")).table("events_summary")
     assert row(strict, category="EMG-artifact", channel_mode="time_and_channel", threshold=0.2).f1 == 0.0
 
 
@@ -370,7 +370,7 @@ def test_report_when_no_compared_recording_has_annotations(tmp_path):
 def test_events_on_excluded_channels_leave_channel_matching():
     blink = "Eye-blink-artifact"
     anns = [(blink, 1.0, 1.5, ("C4",)), (blink, 3.0, 3.5, ("C1",))]
-    res = analyse([doc("A", anns), doc("B", anns)], channel_exclude=("C4",))
+    res = analyse([doc("A", anns), doc("B", anns)], channel_exclude=("C4",), channel_modes=("time_only", "time_and_channel"))
     ev = res.table("events_summary")
     for mode in ("time_only", "time_and_channel"):
         r = row(ev, category=blink, channel_mode=mode, threshold=0.2)
@@ -479,7 +479,7 @@ def test_eog_and_ecg_channels_are_included_in_channel_analyses():
     blink = "Eye-blink-artifact"
     a = doc("A", [(blink, 1, 1.5, ("Fp1", "VEOG")), ("ECG-artifact", 3, 6, ("ECG",))], ch=chans)
     b = doc("B", [(blink, 1, 1.5, ("VEOG",)), ("ECG-artifact", 3, 6, ("ECG",))], ch=chans)
-    res = analyse([a, b])  # default settings: no channel is excluded
+    res = analyse([a, b], channel_modes=("time_only", "time_and_channel"))  # no channel is excluded by default
     tr = res.table("timeresolved_pairwise")
     r = row(tr, recording="ALL (pooled)", category=blink, channel_mode="time_and_channel", representation="exact")
     assert (r.both, r.only_1, r.only_2) == pytest.approx((0.5, 0.5, 0.0))  # VEOG agrees, Fp1 only in A
@@ -510,3 +510,21 @@ def test_versions_with_deliberate_mistakes_are_never_analysed(tmp_path):
     res = run_analysis([tmp_path], AnalysisConfig(resolutions_s=(1.0,)))
     assert res.dataset.annotators == ["A01", "A02"]
     assert "E01" not in json.dumps(res.dataset.files)
+
+
+def test_agreement_compares_times_and_labels_only_by_default():
+    """By default the channels of the marks are left out: the same type at the same time agrees, whatever channels."""
+    a = doc("A", [("EMG-artifact", 0, 1, ("C1",)), ("Eye-blink-artifact", 5, 6, ())])
+    b = doc("B", [("EMG-artifact", 0, 1, ("C2",)), ("Eye-blink-artifact", 5, 6, ("C3",))])
+    res = analyse([a, b])
+    assert AnalysisConfig().channel_modes == ("time_only",)
+    for table in ("timeresolved_pairwise", "events_summary", "events_matched"):
+        df = res.table(table)
+        assert not df.empty and set(df.channel_mode) == {"time_only"}, table
+    t = row(res.table("timeresolved_pairwise"), recording="ALL (pooled)", category="EMG-artifact",
+            channel_mode="time_only", representation="exact")
+    assert t.cohen_kappa == pytest.approx(1.0) and t.unit == "seconds"
+    assert row(res.table("events_summary"), category="EMG-artifact", channel_mode="time_only", threshold=0.2).f1 == 1.0
+    # time and channel stays available when chosen
+    both = analyse([a, b], channel_modes=("time_only", "time_and_channel")).table("events_summary")
+    assert row(both, category="EMG-artifact", channel_mode="time_and_channel", threshold=0.2).f1 == 0.0

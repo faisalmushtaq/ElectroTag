@@ -603,7 +603,9 @@ entry of its `reference_set.json` (`match_criterion`, `primary_iou_threshold`,
 analysis can also be given. A competency report is made again with the rule
 as it stands whenever it is opened, so a change reaches trainees who have
 already finished. The ANY-artifact rows and both channel modes are always
-computed for assessments, because the competency measures are based on them.
+computed for assessments, because the competency measures are based on them,
+whereas the agreement analysis compares times and labels only unless
+time and channel is chosen.
 
 ### The training programme
 

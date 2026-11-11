@@ -39,7 +39,10 @@ class AnalysisConfig:
     # Time-resolved agreement
     resolutions_s: tuple[float, ...] = (0.01, 0.05, 0.1)
     min_bin_coverage: float = 0.5  # 0 = any overlap marks the bin positive
-    channel_modes: tuple[str, ...] = CHANNEL_MODES
+    # Time only by default: agreement on when each type of artifact was marked, whichever channels the
+    # marks were on (a channel-specific mark counts as a mark on the whole recording at that time).
+    # time_and_channel, which also compares the channels, is chosen explicitly.
+    channel_modes: tuple[str, ...] = ("time_only",)
     include_any_artifact: bool = True  # pseudo-category: any artifact versus none
     include_group_rollups: bool = True  # e.g. "Eye-artifact + subtypes": agreement on the artifact family
 

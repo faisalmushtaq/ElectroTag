@@ -97,6 +97,7 @@ test('the agreement settings start from AnalysisConfig and are checked like it',
   assert.deepEqual(m.analysisProblems(d), []);
   assert.deepEqual(d.resolutions_s, [0.01, 0.05, 0.1]);
   assert.equal(d.primary_iou_threshold, 0.2);
+  assert.deepEqual(d.channel_modes, ['time_only'], 'times and labels only, unless time and channel is chosen');
   assert.match(m.analysisProblems({ ...d, resolutions_s: [0.1, 0.1] })[0], /only once/);
   assert.match(m.analysisProblems({ ...d, iou_thresholds: [1] })[0], /not including/);
   assert.match(m.analysisProblems({ ...d, channel_modes: [] })[0], /time and channel/);

@@ -155,8 +155,8 @@ export class AnalysesSection {
     const labels = this.area.labels;
     const categories = checkList(labels.map((l) => ({ value: l.label, text: l.label })), { selected: labels.map((l) => l.label),
       legend: 'Artifact categories (ANY-artifact is always included)', name: 'agreement-categories' });
-    const time = checkbox('Time only', true);
-    const channel = checkbox('Time and channel', true);
+    const time = checkbox('Time only', d.channel_modes.includes('time_only'));
+    const channel = checkbox('Time and channel', d.channel_modes.includes('time_and_channel'));
     const resolutions = textInput({ value: d.resolutions_s.join(' ') });
     const coverage = numberInput({ value: d.min_bin_coverage, min: 0, max: 1, step: 0.1 });
     const criterion = select(MATCH_CRITERIA, d.match_criterion);
@@ -238,7 +238,7 @@ export class AnalysesSection {
       if (original) result.prepend(comparisonCard(original, r, body.versions));
     }));
     this.agreementHost.append(card('Agreement between annotators',
-      h('p.caption', {}, 'Compares annotators by category, time and channel. The defaults are starting points: choose and report the settings for each study. ',
+      h('p.caption', {}, 'Compares annotators by category and time: the channels a mark was on are left out unless Time and channel is chosen in the settings. The defaults are starting points: choose and report the settings for each study. ',
         guide('choosing-settings', 'The reliability guide'), ' explains each measure and how to choose the settings.'),
       h('div.admin-grid', {}, annotators, recordings),
       h('fieldset.admin-fieldset', {}, h('legend', {}, 'Sessions'), h('div.row.wrap', {}, modes.map((m) => m.box))),
