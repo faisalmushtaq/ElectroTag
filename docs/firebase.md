@@ -114,7 +114,7 @@ the project.
 
 ## 4. Create the Firestore database in London
 
-In the Firebase console's left-hand menu, open **Databases and Storage**, then **Firebase**, and
+In the Firebase console's left-hand menu, open **Databases and Storage**, then **Firestore**, and
 choose **Create database**. For the location choose **europe-west2 (London)**; it cannot be changed later. Start in
 **production mode**: ElectroTag's rules (step 8) deny every direct access from browsers anyway.
 
