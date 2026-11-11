@@ -84,3 +84,52 @@ export function expertSettingsProblems(s) {
   return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}), ...topomapProblems(s.display || {}),
     ...questionnaireProblems(s.questionnaire)]; // the sign-up questionnaire (questionnaire_model.js)
 }
+
+// ------------------------------------------------------------- the audit log's words for a change
+// As electrotag/web/admin.py setting_changes: one entry for each value that changed, a group of settings
+// gone through value by value, the questionnaire's questions by their IDs, a long list by what came and went.
+const MAX_LISTED_VALUES = 10;
+const MAX_VALUE_TEXT = 80;
+const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const withIds = (v) => Array.isArray(v) && v.every((x) => plainObject(x) && typeof x.id === 'string');
+
+function valueText(v, unit = '') {
+  if (typeof v === 'boolean') return v ? 'on' : 'off';
+  if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length) || (plainObject(v) && !Object.keys(v).length)) return 'nothing';
+  if (unit === 'uV' && typeof v === 'number') return `${Math.round(v * 1e12) / 1e6} µV`;
+  const text = Array.isArray(v) ? (v.some(plainObject) ? `${v.length} items` : v.map((x) => valueText(x)).join(', '))
+    : plainObject(v) ? Object.entries(v).map(([k, x]) => `${k} ${valueText(x)}`).join(', ') : String(v);
+  return text.length <= MAX_VALUE_TEXT ? text : `${text.slice(0, MAX_VALUE_TEXT - 1).trimEnd()}…`;
+}
+
+function changesOf(path, block, old, value) {
+  if (same(old, value)) return [];
+  const name = path[path.length - 1].replace(/_/g, ' ');
+  const where = [block, ...path.slice(0, -1).map((p) => p.replace(/_/g, ' '))].join(' ');
+  if (plainObject(old) && plainObject(value)) {
+    return [...Object.keys(old), ...Object.keys(value).filter((k) => !(k in old))]
+      .flatMap((k) => changesOf([...path, k], block, old[k], value[k]));
+  }
+  if (withIds(old) && withIds(value) && (old.length || value.length)) {
+    const before = new Map(old.map((x) => [x.id, x]));
+    const after = new Map(value.map((x) => [x.id, x]));
+    const out = [...before.keys(), ...[...after.keys()].filter((i) => !before.has(i))].flatMap((i) => (!after.has(i) ? [`${name} ${i} (${where}) taken out`]
+      : !before.has(i) ? [`${name} ${i} (${where}) added`] : changesOf([...path, i], block, before.get(i), after.get(i))));
+    return out.length ? out : [`${name} (${where}) put in a new order`];
+  }
+  if (Array.isArray(old) && Array.isArray(value) && Math.max(old.length, value.length) > MAX_LISTED_VALUES) {
+    const added = value.filter((x) => !old.some((y) => same(x, y)));
+    const removed = old.filter((x) => !value.some((y) => same(x, y)));
+    const said = [...(added.length ? [`added ${valueText(added)}`] : []), ...(removed.length ? [`took out ${valueText(removed)}`] : [])];
+    return [said.length ? `${name} (${where}): ${said.join(' and ')}` : `${name} (${where}) put in a new order`];
+  }
+  const unit = block === 'display' && path[0] === 'scalings' ? 'uV' : '';
+  return [`${name} (${where}) from ${valueText(old, unit)} to ${valueText(value, unit)}`];
+}
+
+/** What changed in one setting ('block.key'), in words for the audit log: nothing when the value is the same. */
+export function settingChanges(key, old, value) {
+  const [block, ...rest] = String(key).split('.');
+  return changesOf(rest.join('.').split('.'), block, old, value);
+}

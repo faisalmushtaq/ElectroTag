@@ -149,20 +149,6 @@ export const SCALING_TYPES = Object.freeze(['eeg', 'eog', 'ecg', 'emg', 'misc'])
 /** The study's starting choice of channel colours (display.channel_colours; js/viewer/channel_colours.js). */
 export const CHANNEL_COLOUR_CHOICES = Object.freeze([['off', 'None: every trace in ink'], ['region', 'By region of the head'], ['side', 'By side of the head'], ['type', 'By channel type']]);
 
-function settingValueText(v) {
-  if (typeof v === 'boolean') return v ? 'on' : 'off';
-  if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length) || (typeof v === 'object' && !Object.keys(v).length)) return 'nothing';
-  if (Array.isArray(v)) return v.join(', ');
-  if (typeof v === 'object') return Object.entries(v).map(([k, x]) => `${k} ${x}`).join(', ');
-  return String(v);
-}
-
-/** A setting's change in words for the audit log (electrotag/web/admin.py setting_change_text). */
-export function settingChangeText(key, old, value) {
-  const [block, ...rest] = String(key).split('.');
-  return `${rest.join('.').replace(/_/g, ' ')} (${block}) from ${settingValueText(old)} to ${settingValueText(value)}`;
-}
-
 /** The competency measures of electrotag.training.assessment.METRICS, in the same order. */
 export const METRICS = Object.freeze({
   event_f1: {

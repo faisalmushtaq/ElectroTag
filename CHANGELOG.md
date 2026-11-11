@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The audit log's entry for a change of the study settings now names only what changed, from and to. A group of
+settings (the amplitude scales, the review's matching rules, the channel types) is gone through value by value
+("eeg (display scalings) from 50 µV to 70 µV" rather than every scale before and after), the questionnaire's
+questions by their IDs, and a long list such as the channels hidden by what was added and taken out; the study's
+name reads from and to as well, and a save that changes nothing leaves no entry (docs/admin_area.md, "Records").
+
 The agreement analysis now compares annotators by times and labels only: the channels a mark was on are left out
 by default, so the same type marked at the same time agrees whichever channels it was on, and the tables no longer
 carry the time-and-channel rows. Comparing the channels is still available when chosen (`channel_modes` in the

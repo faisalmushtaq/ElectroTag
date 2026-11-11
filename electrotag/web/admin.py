@@ -298,24 +298,89 @@ def pace_projection(days: list[date], today: date, *, assigned: int,
     return pace, pace_days, projection
 
 
-def _setting_value(value: Any) -> str:
+#: A list of more values than this is described by what was added and taken out rather than in full.
+MAX_LISTED_VALUES = 10
+#: A value's words are cut short after this many characters in the audit log's summary.
+MAX_VALUE_TEXT = 80
+
+
+def _number_text(value: float) -> str:
+    if value.is_integer():
+        return str(int(value))
+    if 1e-7 <= abs(value) < 1e-4:  # as the browser writes them (0.000047 rather than 4.7e-05)
+        return f"{value:.12f}".rstrip("0")
+    return repr(value)
+
+
+def _setting_value(value: Any, unit: str = "") -> str:
     if isinstance(value, bool):
         return "on" if value else "off"
     if value is None or value == "" or value == [] or value == {}:
         return "nothing"
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    if isinstance(value, list):
-        return ", ".join(str(v) for v in value)
-    if isinstance(value, dict):
-        return ", ".join(f"{k} {v}" for k, v in value.items())
-    return str(value)
+    if unit == "uV" and isinstance(value, (int, float)):  # display.scalings, kept in volts, shown in µV
+        return f"{_number_text(round(float(value) * 1e6, 6))} µV"
+    if isinstance(value, float):
+        text = _number_text(value)
+    elif isinstance(value, list):
+        text = ", ".join(_setting_value(v) for v in value) if not any(isinstance(v, dict) for v in value) \
+            else f"{len(value)} items"
+    elif isinstance(value, dict):
+        text = ", ".join(f"{k} {_setting_value(v)}" for k, v in value.items())
+    else:
+        text = str(value)
+    return text if len(text) <= MAX_VALUE_TEXT else text[:MAX_VALUE_TEXT - 1].rstrip() + "…"
+
+
+def _with_ids(value: Any) -> bool:
+    return isinstance(value, list) and all(isinstance(v, dict) and isinstance(v.get("id"), str) for v in value)
+
+
+def _changes(path: list[str], block: str, old: Any, new: Any) -> list[str]:
+    if old == new:
+        return []
+    name = path[-1].replace("_", " ")
+    where = " ".join([block, *(p.replace("_", " ") for p in path[:-1])])
+    if isinstance(old, dict) and isinstance(new, dict):  # each value of a group of settings on its own
+        out: list[str] = []
+        for k in [*old, *(k for k in new if k not in old)]:
+            out += _changes([*path, str(k)], block, old.get(k), new.get(k))
+        return out
+    if _with_ids(old) and _with_ids(new) and (old or new):  # the questionnaire's questions, by their IDs
+        before, after = {v["id"]: v for v in old}, {v["id"]: v for v in new}
+        out = []
+        for i in [*before, *(i for i in after if i not in before)]:
+            if i not in after:
+                out.append(f"{name} {i} ({where}) taken out")
+            elif i not in before:
+                out.append(f"{name} {i} ({where}) added")
+            else:
+                out += _changes([*path, i], block, before[i], after[i])
+        return out or [f"{name} ({where}) put in a new order"]
+    if (isinstance(old, list) and isinstance(new, list)
+            and max(len(old), len(new)) > MAX_LISTED_VALUES):  # a long list: what came in and went out
+        added = [v for v in new if v not in old]
+        removed = [v for v in old if v not in new]
+        said = ([f"added {_setting_value(added)}"] if added else []) + \
+            ([f"took out {_setting_value(removed)}"] if removed else [])
+        return [f"{name} ({where}): {' and '.join(said)}" if said else f"{name} ({where}) put in a new order"]
+    unit = "uV" if path[0] == "scalings" and block == "display" else ""
+    return [f"{name} ({where}) from {_setting_value(old, unit)} to {_setting_value(new, unit)}"]
+
+
+def setting_changes(key: str, old: Any, new: Any) -> list[str]:
+    """What changed in one setting, in words for the audit log: one entry for each value that changed.
+
+    "allow reviews (annotation) from on to off"; a group of settings is gone through value by value
+    ("eeg (display scalings) from 50 µV to 70 µV"), the questionnaire's questions by their IDs, and a
+    long list by what was added and taken out. Nothing when the value is the same.
+    """
+    block, name = key.split(".", 1)
+    return _changes(name.split("."), block, old, new)
 
 
 def setting_change_text(key: str, old: Any, new: Any) -> str:
-    """A setting's change in words for the audit log: "allow reviews (annotation) from on to off"."""
-    block, name = key.split(".", 1)
-    return f"{name.replace('_', ' ')} ({block}) from {_setting_value(old)} to {_setting_value(new)}"
+    """A setting's change in words for the audit log (setting_changes, joined)."""
+    return "; ".join(setting_changes(key, old, new))
 
 
 def invitation_out(inv: dict[str, Any] | None) -> dict[str, Any]:
@@ -694,17 +759,23 @@ class Admin:
         if name is None and notice is None and overrides is None:
             raise _bad("Nothing to change: give name, settings or logging_notice")
         before = self.store.settings.raw
-        what = [setting_change_text(k, (before.get(k.split(".")[0]) or {}).get(k.split(".", 1)[1]),
-                                    body["settings"][k.split(".")[0]][k.split(".", 1)[1]]) for k in changed]
-        what += ["the study's name"] if name is not None else []
-        what += ["the logging notice"] if notice is not None else []
+        # Only what is different: a setting sent with the value it has already is left out of the summary.
+        what: list[str] = []
+        for k in changed:
+            block, key = k.split(".", 1)
+            what += setting_changes(k, (before.get(block) or {}).get(key), body["settings"][block][key])
+        if name is not None and name != self.store.name:
+            what.append(f"the study's name from {self.store.name} to {name}")
+        if notice is not None and notice != (self.store.logging_notice or ""):
+            what.append("the logging notice")
         try:
             self.store.update_study(name=name, overrides=overrides, logging_notice=notice)
         except ValueError as exc:
             raise ApiError(400, "invalid_settings", f"These settings cannot be used: {exc}") from exc
-        self._audit(user, "settings_update", "Changed " + "; ".join(what),
-                    changes={k: body["settings"][k.split(".")[0]][k.split(".", 1)[1]] for k in changed},
-                    name=name, logging_notice=notice)
+        if what:  # a save that changed nothing leaves no entry
+            self._audit(user, "settings_update", "Changed " + "; ".join(what),
+                        changes={k: body["settings"][k.split(".")[0]][k.split(".", 1)[1]] for k in changed},
+                        name=name, logging_notice=notice)
         return self.op_settings_get(user, {})
 
     # --------------------------------------------------------------- users
