@@ -93,7 +93,7 @@ test('a change to a group of settings names only the values that changed', () =>
   const hide = 'ABCDEFGHIJKL'.split('');
   assert.deepEqual(c('channels.hide', hide, [...hide.slice(0, -1), 'M']), ['hide (channels): added M and took out L']);
   assert.deepEqual(c('annotation.quick_labels', ['A', 'B'], ['B', 'A']), ['quick labels (annotation) from A, B to B, A']);
-  assert.match(c('questionnaire.intro', 'a', 'b'.repeat(200))[0], /…$/);
+  assert.equal(c('questionnaire.intro', 'a', 'b'.repeat(200))[0].length, 'intro (questionnaire) from a to '.length + 200, 'kept whole: the admin area shows the first lines, and all on request');
 });
 
 test('the projected finish of a young study waits for three days of work', () => {
@@ -207,4 +207,28 @@ test('demonstration: the pace of a study in its first days is that of the days s
   assert.equal(t.pace_days, 1);
   assert.equal(t.pace_per_day, 3);
   assert.deepEqual(t.projection, { status: 'not_enough', date: null, reason: 'too_early' });
+});
+
+test('the parts of one registration are shown as one entry, and other entries as they are', () => {
+  const part = (at, ids, extra = {}) => ({ at, by: 'ADMIN', op: 'recordings_register', summary: `Registered ${ids.length} new recordings in study (dataset default)`,
+    details: { scope: 'study', dataset_id: 'default', added: ids, replaced: [], skipped: [], batch_id: 'b1', ...extra } });
+  const ids = (from, k) => Array.from({ length: k }, (_, i) => `r${from + i}`);
+  const other = { at: '3', by: 'ADMIN', op: 'user_add', summary: 'Added A05', details: {} };
+  // newest first, as the study returns them: five parts of 40, then an earlier registration of its own
+  const entries = [other, part('2.5', ids(160, 40)), part('2.4', ids(120, 40)), part('2.3', ids(80, 40)), part('2.2', ids(40, 40)),
+    part('2.1', ids(0, 40), { skipped: ['x'] }), part('1', ids(500, 3), { batch_id: 'b0' })];
+  const joined = audit.joinRegistrations(entries);
+  assert.equal(joined.length, 3);
+  assert.equal(joined[0], other);
+  assert.equal(joined[1].summary, 'Registered 200 new recordings, 1 not registered in study (dataset default)');
+  assert.equal(joined[1].details.added.length, 200);
+  assert.equal(joined[1].details.parts, 5);
+  assert.equal(joined[1].at, '2.5', 'when the last part was sent');
+  assert.equal(joined[2].summary, 'Registered 3 new recordings in study (dataset default)', 'another registration stays apart');
+  // without an ID (older entries, the electrotag-web command) each stays as it was
+  const old = [part('2', ids(0, 40), { batch_id: undefined }), part('1', ids(40, 40), { batch_id: undefined })];
+  assert.equal(audit.joinRegistrations(old).length, 2);
+  // the sandbox counts what was skipped rather than listing it
+  const demo = audit.joinRegistrations([part('2', ids(0, 2), { skipped: 1, replaced: ['r9'] }), part('1', ids(2, 2), { skipped: 2 })]);
+  assert.equal(demo[0].summary, 'Registered 4 new recordings, replaced 1 recording, 3 not registered in study (dataset default)');
 });

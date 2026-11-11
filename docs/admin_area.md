@@ -1121,7 +1121,11 @@ review rule "iou threshold (review matching) from 0.2 to 0.3"; the questionnaire
 by their IDs ("text (questionnaire questions q1) from … to …", or a question added or taken out); and a
 long list, such as the channels hidden, says what was added and taken out. A change that changes
 nothing (switching off an account that is off already, or saving the settings as they were) is not
-recorded.
+recorded. An entry longer than three lines, here and in Recent changes on the overview, shows its
+first lines with Show all beside it, which opens it in full (Show less closes it again). Recordings
+added together are one entry however many they are, for example "Registered 200 new recordings in
+study", although the admin area sends them to the study 40 at a time and each part is kept in the
+audit log with the same batch ID in its details.
 
 Visits lists each time someone signed in and used ElectroTag, newest first, with the mode, when
 the visit ended and how many interaction events it logged. When the study records interactions,

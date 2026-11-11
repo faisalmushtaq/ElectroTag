@@ -11,6 +11,11 @@ settings (the amplitude scales, the review's matching rules, the channel types) 
 questions by their IDs, and a long list such as the channels hidden by what was added and taken out; the study's
 name reads from and to as well, and a save that changes nothing leaves no entry (docs/admin_area.md, "Records").
 
+In Recent changes and the records, an entry longer than three lines shows its first lines with Show all, which
+opens it in full. Recordings added together are one entry, "Registered 200 new recordings", rather than one entry
+for each 40 the admin area sends at a time (the parts share a `batch_id`, docs/api.md); an entry's summary is kept
+up to 2000 characters rather than 500.
+
 The agreement analysis now compares annotators by times and labels only: the channels a mark was on are left out
 by default, so the same type marked at the same time agrees whichever channels it was on, and the tables no longer
 carry the time-and-channel rows. Comparing the channels is still available when chosen (`channel_modes` in the

@@ -89,7 +89,6 @@ export function expertSettingsProblems(s) {
 // As electrotag/web/admin.py setting_changes: one entry for each value that changed, a group of settings
 // gone through value by value, the questionnaire's questions by their IDs, a long list by what came and went.
 const MAX_LISTED_VALUES = 10;
-const MAX_VALUE_TEXT = 80;
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const plainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const withIds = (v) => Array.isArray(v) && v.every((x) => plainObject(x) && typeof x.id === 'string');
@@ -98,9 +97,8 @@ function valueText(v, unit = '') {
   if (typeof v === 'boolean') return v ? 'on' : 'off';
   if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length) || (plainObject(v) && !Object.keys(v).length)) return 'nothing';
   if (unit === 'uV' && typeof v === 'number') return `${Math.round(v * 1e12) / 1e6} µV`;
-  const text = Array.isArray(v) ? (v.some(plainObject) ? `${v.length} items` : v.map((x) => valueText(x)).join(', '))
+  return Array.isArray(v) ? (v.some(plainObject) ? `${v.length} items` : v.map((x) => valueText(x)).join(', '))
     : plainObject(v) ? Object.entries(v).map(([k, x]) => `${k} ${valueText(x)}`).join(', ') : String(v);
-  return text.length <= MAX_VALUE_TEXT ? text : `${text.slice(0, MAX_VALUE_TEXT - 1).trimEnd()}…`;
 }
 
 function changesOf(path, block, old, value) {

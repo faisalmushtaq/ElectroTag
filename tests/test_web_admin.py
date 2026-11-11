@@ -359,8 +359,17 @@ def test_recordings_registered_from_the_browser(client: TestClient, admin: Api, 
     manifests = build_manifests(folder)
     rid_edf = "sub-101/eeg/sub-101_task-rest_eeg.edf"
     rid_bdf = "sub-102/eeg/sub-102_task-rest_eeg.bdf"
-    r = admin.admin_ok("recordings_register", {"scope": "study", "manifests": manifests})
-    assert sorted(r["added"]) == [rid_edf, rid_bdf] and r["replaced"] == [] and r["skipped"] == []
+    # sent in two parts of one registration, as the admin area does for many recordings: the parts share an ID
+    admin.admin_error("recordings_register", {"scope": "study", "manifests": manifests[:1], "batch_id": "no spaces"},
+                      400, "bad_request")
+    added = []
+    for part in (manifests[:1], manifests[1:]):
+        added += admin.admin_ok("recordings_register", {"scope": "study", "manifests": part, "batch_id": "b1"})["added"]
+    parts = [e for e in admin_audit(admin) if e["op"] == "recordings_register"][:2]
+    assert [e["details"]["batch_id"] for e in parts] == ["b1", "b1"]
+    assert all(e["summary"].startswith("Registered 1 new recording in study") for e in parts)
+    r = {"added": added}
+    assert sorted(r["added"]) == [rid_edf, rid_bdf]
     recs = {x["recording_id"]: x for x in admin.admin_ok("recordings_list", {"scope": "study"})["recordings"]}
     rec = recs[rid_edf]
     assert (rec["registered_via"], rec["registered_by"], rec["format"], rec["retired"]) == (
@@ -783,4 +792,4 @@ def test_a_settings_change_is_told_value_by_value() -> None:
     hide = list("ABCDEFGHIJKL")
     assert c("channels.hide", hide, [*hide[:-1], "M"]) == ["hide (channels): added M and took out L"]
     assert c("annotation.quick_labels", ["A", "B"], ["B", "A"]) == ["quick labels (annotation) from A, B to B, A"]
-    assert c("questionnaire.intro", "a", "b" * 200)[0].endswith("…")
+    assert c("questionnaire.intro", "a", "b" * 200)[0] == "intro (questionnaire) from a to " + "b" * 200  # kept whole

@@ -35,9 +35,13 @@ def _clean(value: Any, depth: int = 0) -> Any:
     return str(value)[:2000]
 
 
+#: An entry's summary is kept to this many characters (the admin area shows the first lines, and all on request).
+MAX_SUMMARY = 2000
+
+
 def record(store: Any, by: str, op: str, summary: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
     """Append an entry to the study's audit log and return it."""
-    entry = {"at": now_local_iso(), "by": str(by), "op": str(op), "summary": str(summary)[:500],
+    entry = {"at": now_local_iso(), "by": str(by), "op": str(op), "summary": str(summary)[:MAX_SUMMARY],
              "details": _clean(dict(details or {}))}
     store.audit_append(entry)
     return entry

@@ -4,7 +4,7 @@
 
 import { h, clear } from '../ui/dom.js';
 import { MODES, filterAudit, rolesOf, whenText } from './model.js';
-import { AUDIT_OPS, auditSummary, opText } from './audit_words.js';
+import { AUDIT_OPS, auditSummary, joinRegistrations, opText, summaryText } from './audit_words.js';
 import { actionButton, card, dataTable, messageArea, sectionHead, select } from './ui.js';
 
 const PAGE = 50;
@@ -26,7 +26,7 @@ export class RecordsSection {
     this.audit = dataTable([
       { title: 'When', render: (e) => whenText(e.at) },
       { title: 'Who', render: (e) => e.by },
-      { title: 'Change', render: (e) => h('span', {}, h('span.caption.block', {}, opText(e.op)), auditSummary(e, this.entries)) },
+      { title: 'Change', render: (e) => h('span', {}, h('span.caption.block', {}, opText(e.op)), summaryText(auditSummary(e, this.entries))) },
       { title: 'Details', render: (e) => (e.details && Object.keys(e.details).length
         ? h('details.audit-details', {}, h('summary', {}, 'Show'), h('pre', {}, JSON.stringify(e.details, null, 2))) : '–') },
     ], [], { empty: 'No changes match.', pageSize: PAGE, caption: 'Audit log' });
@@ -90,8 +90,9 @@ export class RecordsSection {
   }
 
   _filter(keepPage = false) {
-    const rows = filterAudit(this.entries, { by: this.by.value, op: this.op.value });
-    this.auditNote.textContent = `${rows.length} of ${this.entries.length} entries shown${this.next ? ' (older entries not loaded yet)' : ''}.`;
+    const all = joinRegistrations(this.entries);
+    const rows = filterAudit(all, { by: this.by.value, op: this.op.value });
+    this.auditNote.textContent = `${rows.length} of ${all.length} entries shown${this.next ? ' (older entries not loaded yet)' : ''}.`;
     this.audit.update(rows, { keepPage });
   }
 
