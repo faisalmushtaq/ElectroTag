@@ -160,6 +160,7 @@ def test_a_repeat_comes_back_after_its_days_as_new_work_and_is_saved_as_the_repe
     assert [r.get("retest", "") for r in rows] == ["", "1"]
     doc = json.loads(service.store.saved_document("A03", SUB1, "standard", ""))
     assert doc["session"]["context"]["retest"] == {"number": 1, "rule_id": "pilot", "interval_days": 7}
+    clock.days(0)  # (the repeat was saved now; the clock still stood seven days on)
     assert _item(service, "A03", SUB1)["status"] == "done"
 
     # The second repeat counts its days from the first repeat's save; after it, no more.
