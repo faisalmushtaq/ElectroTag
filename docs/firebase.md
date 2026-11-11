@@ -114,22 +114,22 @@ the project.
 
 ## 4. Create the Firestore database in London
 
-In the Firebase console, open **Build**, then **Firestore Database**, and choose **Create
-database**. For the location choose **europe-west2 (London)**; it cannot be changed later. Start in
+In the Firebase console's left-hand menu, open **Databases and Storage**, then **Firebase**, and
+choose **Create database**. For the location choose **europe-west2 (London)**; it cannot be changed later. Start in
 **production mode**: ElectroTag's rules (step 8) deny every direct access from browsers anyway.
 
 ## 5. Turn on sign-in with email and password
 
-Open **Build**, then **Authentication**, choose **Get started**, then **Sign-in method**, and
-enable **Email/Password** (the first switch only; the passwordless email link is not used). The
-project's own addresses, `my-eeg-study.web.app` and `my-eeg-study.firebaseapp.com`, are already
-listed under **Settings**, **Authorized domains**, so the application published in step 8 can sign
-people in without further settings.
+In the left-hand menu, open **Security**, then **Authentication**, and choose **Get started**.
+Then, under **Sign-in method**, enable **Email/Password** (the first switch only; the passwordless
+email link is not used). Nothing else needs setting: the project's own addresses,
+`my-eeg-study.web.app` and `my-eeg-study.firebaseapp.com`, are allowed to sign people in from the
+start, so the application published in step 8 works without further settings.
 
 ## 6. Register the web application and its website
 
-Open **Project settings** (the cog beside Project overview), and under **Your apps** add a **Web**
-app (the `</>` button) with any nickname. Tick **Also set up Firebase Hosting for this app**, which
+Go to the project's overview page (**Project overview** at the top of the left-hand menu). Under
+the project's name, choose **Add app**, then **Web** (the `</>` icon), and give it any nickname. Tick **Also set up Firebase Hosting for this app**, which
 gives the project its website, and choose **Register app**. Firebase then shows a configuration
 block and instructions for installing its tool and deploying; choose **Next** through them and
 **Continue to console**, since step 8 does all of this for you. There is nothing to copy: once the
