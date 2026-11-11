@@ -266,6 +266,15 @@ def test_assignments_tell_the_home_page_the_time_worked_and_what_a_draft_holds(c
     for bad in ([[10, 5]], [[0, "x"]], [[0, 1, 2]], {"0": 1}, [[-1, 2]]):
         r = api.put(f"/drafts/{SUB2}?mode=standard", {**draft, "viewed": bad})
         assert r.status_code == 422 and "draft.viewed" in r.json()["message"], bad
+    # and the parts on screen only while some good channels were hidden (Show some channels), apart
+    assert api.ok("post", "/match", match_body(recordings, SUB2))["draft"]["viewed_some_channels"] == []
+    api.ok("put", f"/drafts/{SUB2}?mode=standard", {**draft, "viewed_some_channels": [[22.5, 40]]})
+    back = api.ok("post", "/match", match_body(recordings, SUB2))["draft"]
+    assert back["viewed_some_channels"] == [[22.5, 40]] and back["viewed"] == [[0, 10], [5, 22.5], [40, 50]]
+    item = next(i for i in api.ok("get", "/assignments")["items"] if i["recording_id"] == SUB2)
+    assert item["draft"]["viewed_s"] == 32.5, "only the parts seen with every good channel count as viewed"
+    r = api.put(f"/drafts/{SUB2}?mode=standard", {**draft, "viewed_some_channels": [[3, 1]]})
+    assert r.status_code == 422 and "draft.viewed_some_channels" in r.json()["message"]
     # a finished recording: its time and annotations, as the completion register has them
     api.ok("post", "/submissions", submission(recordings, SUB1, [BLINK, EMG]))
     done = next(i for i in api.ok("get", "/assignments")["items"] if i["recording_id"] == SUB1)

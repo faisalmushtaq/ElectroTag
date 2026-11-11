@@ -170,11 +170,15 @@ def _int_or_none(value: Any) -> int | None:
     return int(out) if out is not None else None
 
 
-def parse_viewed(value: Any) -> list[list[float]]:
-    """A draft's ``viewed``: the stretches of the recording on screen so far, as [start_s, end_s] pairs."""
+def parse_viewed(value: Any, key: str = "viewed") -> list[list[float]]:
+    """A draft's ``viewed``: the stretches of the recording on screen so far, as [start_s, end_s] pairs.
+
+    ``viewed_some_channels``, the stretches on screen only while some good channels were hidden, is
+    read the same way (``key`` names it in the error).
+    """
     if value is None:
         return []
-    what = "draft.viewed must be a list of [start_s, end_s] pairs of seconds"
+    what = f"draft.{key} must be a list of [start_s, end_s] pairs of seconds"
     if not isinstance(value, list) or len(value) > MAX_VIEWED:
         raise ApiError(422, "invalid_draft", what)
     out: list[list[float]] = []
@@ -752,11 +756,13 @@ class StudyService:
             raise ApiError(422, "invalid_draft", "draft.elapsed_s must be a number of seconds")
         elapsed = min(float(elapsed), MAX_ELAPSED_S)
         viewed = parse_viewed(draft.get("viewed"))
+        viewed_some = parse_viewed(draft.get("viewed_some_channels"), "viewed_some_channels")
         saved_at = now_local_iso()
         record = {"schema": "electrotag.web_draft", "recording_id": item.recording_id, "mode": item.mode,
                   "context_id": item.context_id, "annotator_id": user.annotator_id, "saved_at": saved_at,
                   "draft": {"annotations": anns, "view": view or {}, "elapsed_s": float(elapsed), "viewed": viewed,
-                            "saved_at": saved_at, "bad_channels": list(dict.fromkeys(bad))}}
+                            "viewed_some_channels": viewed_some, "saved_at": saved_at,
+                            "bad_channels": list(dict.fromkeys(bad))}}
         if revises is not None:
             record["revises"] = revises
             record["draft"]["revises"] = revises

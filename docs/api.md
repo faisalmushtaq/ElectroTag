@@ -100,7 +100,7 @@ Manifest = {                          // what the browser needs to show a regist
 
 Draft = {"annotations": [Annotation], "bad_channels": ["T7"], "view": {"start_s": 12.0, "duration_s": 10.0, "first_channel": 0,
          "n_channels": 32, "scale_factor": 1.0}, "elapsed_s": 312.4,
-         "viewed": [[0.0, 64.5], [120.0, 130.0]], "saved_at": "…",
+         "viewed": [[0.0, 64.5], [120.0, 130.0]], "viewed_some_channels": [[64.5, 90.0]], "saved_at": "…",
          "revises": 1,                // only in the draft of a revision: the version being revised
          "session_id": "…"}           // sent by the browser, never returned: the session the draft comes from
 ```
@@ -120,7 +120,11 @@ A draft's `elapsed_s` is the time worked so far, without the time paused (at lea
 `invalid_draft`; more than a week is kept as a week). `viewed` lists the
 stretches of the recording that have been on the screen, as `[start_s, end_s]` pairs in seconds
 (sorted and merged by the browser; at most 5000 pairs, each with `0 <= start_s <= end_s`, or 422
-`invalid_draft`). A draft without `viewed` counts as nothing viewed.
+`invalid_draft`). A draft without `viewed` counts as nothing viewed. `viewed_some_channels` lists, in
+the same form and under the same checks, the stretches that were on the screen only while some good
+channels were hidden (Show some channels); they do not count as viewed (`viewed_s` and the session's
+`viewed_fraction` leave them out), and the browser asks for them again before Save and Finish. A draft
+without it is kept with `[]`, and the study returns it as kept.
 
 ## Signing in
 

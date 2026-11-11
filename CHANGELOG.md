@@ -5,6 +5,15 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The annotation view can show only some channels (Show some channels, in the menu of a channel's name or the
+Recording tab, or Shift+S; S switches back to all of them, or to the ones chosen last). While some are hidden, new
+marks apply to the channels shown, or to those selected among them, and never to the whole montage; Whole montage
+reads Shown channels, and an annotation cannot be made to cover every channel. The parts of the recording on the
+screen while some good channels were hidden do not count as viewed: they are kept with the draft
+(`viewed_some_channels`), their line on the overview bar is dotted, the status line and the Recording tab say how
+much they come to, and Save and Finish lists them apart from the parts never seen, with Go to the first part
+showing every channel again (docs/using.md, "Showing only some channels").
+
 In Training, the Quiz and Snippets forms can add several of the experts' marked artifacts at once: tick them, or
 Select all, then Add the chosen. An artifact already in the quiz or the snippets is marked Added and cannot be
 chosen again, and the study refuses the same quiz segment or snippet twice (409 `duplicate`). In Giving out work,

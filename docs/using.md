@@ -35,6 +35,7 @@ at the end of the Help tab of the annotation view; each link opens the guide in 
 - [Bad channels](#bad-channels)
 - [Confidence and notes](#confidence-and-notes)
 - [Moving around the recording](#moving-around-the-recording)
+- [Showing only some channels](#showing-only-some-channels)
 - [Seeing the whole recording](#seeing-the-whole-recording)
 - [A part of a recording](#a-part-of-a-recording)
 - [Pausing and breaks](#pausing-and-breaks)
@@ -667,6 +668,10 @@ In the overlay (below), every new annotation applies to the whole montage, since
 and a drag cannot say which of them it means; the toolbar says "all channels in the overlay", and
 Selected channels waits until you press O for the normal view again.
 
+While only some channels are shown (see "Showing only some channels"), the first choice in the toolbar
+reads Shown channels: a drag then marks every channel shown, and Selected channels marks the ones you
+select among them. A mark made then never covers the whole montage.
+
 ## Changing annotations
 
 Each row of the Annotations list shows the whole label on its first line and, on the line below,
@@ -840,6 +845,30 @@ nearest 10-10 site); without that file such a montage stays black by region and 
 ElectroTag remembers your choice in this browser; until you choose, the study's default applies
 (none, unless the study team set one).
 
+## Showing only some channels
+
+A dense montage can be easier to work through a group of channels at a time. Show some channels, in
+the menu of a channel's name (right-click it, or a long press on an iPad) or in the Recording tab, or
+Shift+S, opens the channel chooser: choose the channels to keep on the screen and press OK. The EEG
+then shows those channels alone, in the montage's order, and scrolling, the number of channels on the
+screen and the overlay work on them. Show only the selected channels, in the same menu, shows the
+channels you have selected. S switches between all the channels and the ones you chose last, and Show
+all channels, in the toolbar while some are hidden, shows them all again.
+
+While only some channels are shown, every new mark is on those channels. Shown channels, which takes
+the place of Whole montage in the toolbar, marks all the channels shown; Selected channels marks those
+you select among them, by clicking their names or with Channels…, which lists only the channels shown.
+Changing an annotation keeps it the same way: Apply to whole montage is left out of its menu, Edit
+channels… offers the channels shown and leaves what the annotation has on the hidden channels as it
+was, and adding a channel that would make it cover every channel is refused. Show all the channels to
+apply a mark to the whole montage.
+
+Since an artifact can sit on the channels you hid, a part of the recording seen with some good
+channels hidden does not yet count as viewed. ElectroTag keeps those parts apart (with your draft),
+and they count as viewed once you have seen them with every good channel on the screen. Channels that
+are bad, in the study's list or marked bad by you, are left out of this: showing every channel but the
+bad ones counts as seeing everything.
+
 ## Seeing the whole recording
 
 ElectroTag keeps track of the parts of the recording that have been on the screen, so that none
@@ -853,6 +882,13 @@ Next part not yet viewed, in the Recording tab, or the key U, takes you to the n
 not seen after the screen, coming round from the start when there are none further on, with a
 second of what you saw before it. On an iPad it is the last of the buttons under the EEG. What you
 have viewed is kept with your draft, so it is still there when you continue later.
+
+Parts seen only while some good channels were hidden (see "Showing only some channels") still count
+as not viewed. On the overview bar their grey line is dotted, the line at the bottom adds how much
+they come to ("Viewed 64% (+12% with some channels hidden)"), and the Recording tab says how many
+there are. Next part not yet viewed says when the part it shows was seen like this. Before Save and
+Finish, they are listed apart from the parts never on the screen, and Go to the first part shows every
+channel again so that a second look counts.
 
 ## A part of a recording
 
@@ -933,7 +969,7 @@ Under the EEG a row of buttons does what the keys do on a computer: back and for
 little, more or less time, earlier and later channels, more or fewer of them, and larger or smaller
 traces, and one shows the next part not yet viewed. The View buttons switch the overlay on and off,
 show one channel alone (with buttons for the previous and next channel), open Go to time and Show
-all. Pause is at the top, as on a
+all, and Some channels chooses the channels to show. Pause is at the top, as on a
 computer. The numbered type buttons, 0 Uncertain, Whole montage and Selected channels, the Time and
 Amplitude scales, Delete, Undo and Redo are in the toolbars as on a computer, and a keyboard attached to the iPad works with every key described
 here. In Channels…, Map works by touch: tap an electrode to choose it, drag with the Pencil to

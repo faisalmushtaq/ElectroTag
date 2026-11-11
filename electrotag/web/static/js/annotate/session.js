@@ -119,7 +119,8 @@ export class AnnotationSession {
     this.startedAt = nowLocalIso();
     this.elapsedBase = 0;
     this.clock = null; // started when the recording is on screen (startClock)
-    this.viewed = []; // merged [start_s, end_s] on screen so far (coverage.js)
+    this.viewed = []; // merged [start_s, end_s] on screen so far with every good channel shown (coverage.js)
+    this.viewedSome = []; // the same, on screen only while some good channels were hidden (Show some channels)
     this.onSaved = null; // (where: 'browser' | 'study' | 'study_failed', at: Date) after a draft is kept, or not received by the study
     this.view = null;
     this.filters = null;
@@ -179,6 +180,13 @@ export class AnnotationSession {
     this._scheduleLocal();
   }
 
+  /** The parts on screen while some good channels were hidden changed (a merged list): kept as viewed is. */
+  noteViewedSome(list) {
+    this.viewedSome = list;
+    this._dirty = true;
+    this._scheduleLocal();
+  }
+
   get canSave() { return !this.readOnly && !this.tryOut && !this.finished; }
 
   // ----------------------------------------------------------------- drafts
@@ -189,6 +197,7 @@ export class AnnotationSession {
       view: this.view ? { ...this.view } : null,
       elapsed_s: Math.round(this.elapsedS * 10) / 10,
       viewed: toDraft(this.viewed),
+      ...(this.viewedSome.length ? { viewed_some_channels: toDraft(this.viewedSome) } : {}),
       saved_at: nowLocalIso(),
       ...(this.revision ? { revises: this.revision.revises } : {}),
     };
@@ -213,6 +222,7 @@ export class AnnotationSession {
     this.elapsedBase = Number(draft.elapsed_s) || 0;
     this.clock = null;
     this.viewed = fromDraft(draft.viewed, this.recording.durationS);
+    this.viewedSome = fromDraft(draft.viewed_some_channels, this.recording.durationS);
     this.resumed = true;
     this.restored = ok.length;
     this._dirty = false;
@@ -347,6 +357,9 @@ export class AnnotationSession {
     let viewed = this.viewed;
     for (const [a, b] of before) viewed = addInterval(viewed, a, b, this.recording.durationS);
     this.noteViewed(viewed);
+    let some = this.viewedSome;
+    for (const [a, b] of fromDraft(d.viewed_some_channels, this.recording.durationS)) some = addInterval(some, a, b, this.recording.durationS);
+    this.noteViewedSome(some);
     forgetDiscarded(this.localKey);
     this.saveLocal();
     return { n: ok.length, elapsedS: extra };

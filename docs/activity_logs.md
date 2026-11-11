@@ -295,7 +295,10 @@ buttons under the EEG on a touch screen, or two fingers on it: `t_start` and `du
 seconds), `ch_start` and `n_channels` (the channels shown), `first_channel` and
 `last_channel`, `scale_factor` (the amplitude scale, 1 at the start) and
 `butterfly`, which is true while the overlay draws the channels on screen on one
-shared axis. `status_message` (`text` shown in the status line).
+shared axis. While only some channels are shown (Show some channels), `ch_start` and `n_channels`
+count the channels shown, and the event adds `channels_shown`, how many there are, and
+`montage_rows`, the places in the montage (from 0) of the channels on the screen, which the
+proportion of channels seen in the summary tables uses. `status_message` (`text` shown in the status line).
 `window_activated` and `window_deactivated` (`top_window`, `title`; when the
 page gains or loses the focus).
 `app_state` (`state`: `active`, `inactive`, `hidden` or `suspended`).
@@ -313,8 +316,10 @@ ended it, `counts_as_break`, true for Take a break or a pause of five minutes or
 `elapsed_s`). `break_reminder` (`worked_s` since the last break and the study's `interval_s`) and
 `break_reminder_closed` (`choice`: `take_break`, `remind_later` or `paused` when a pause put it
 away). `next_unviewed` (`from_s` and `to_s` of the stretch shown, `n_unviewed`, the stretches left,
+`partly_viewed`, true when the stretch was on the screen only while some good channels were hidden,
 and `via`). `coverage_check`, before Save and Finish (`viewed_fraction`, `n_unviewed`,
-`unviewed_s`, and `choice`: `save` for Save anyway, `goto` for Go to the first part, or `cancel`).
+`n_partly_viewed`, how many of those were seen only with some good channels hidden, `unviewed_s`,
+and `choice`: `save` for Save anyway, `goto` for Go to the first part, or `cancel`).
 `uncertain_check`, before Save and Finish when marks are still Uncertain (`n_uncertain`,
 `n_annotations`, and `choice`: `save`, `goto` for Go to the first, or `cancel`). A
 change of the annotator's display comfort is a `state` event with `comfort` (`trace`, `names`
@@ -325,7 +330,10 @@ and `panel`).
 showing one channel alone is a `state` event with `isolated_channel` (its name, or null when all the
 channels are shown again) and `via` (`key`, `button`, or `view` when moving the channels on screen
 took the channel shown alone with it). The value under the pointer is a `state` event with
-`value_readout` (true or false) and `via`; the values it shows are not logged, since the `pointer`
+`value_readout` (true or false) and `via`; showing only some channels is a `state` event with
+`shown_channels` (their names, or null when all the channels are shown again), `n_channels_shown`
+and `via` (`key` for S and Shift+S, `button`, `menu`, `dialog`, or `coverage_check` when Go to the first
+part of the check before Save and Finish showed them all); the values it shows are not logged, since the `pointer`
 events already say where the pointer was. Widening, narrowing or hiding the side panel (since 9 November
 2026) is a `state` event with `side_panel`, holding `width_px`, the panel's width in pixels, and
 `hidden` (true or false), and `via` (`drag` for its edge dragged, `key` for the arrow keys on the

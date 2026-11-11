@@ -442,7 +442,11 @@ def segment_row(seg: Segment) -> dict[str, Any]:
         share_seen = min(1.0, _union_length([(max(0.0, a), min(duration, b)) for a, b in seen]) / duration)
     else:
         share_seen = _nan()
-    ch_seen = [(int(e.get("ch_start", 0)), int(e.get("ch_start", 0)) + int(e.get("n_channels", 0))) for e in views]
+    # With only some channels shown (Show some channels), a view lists the montage's rows on screen.
+    ch_seen = [(int(r), int(r) + 1) for e in views if isinstance(e.get("montage_rows"), list)
+               for r in e["montage_rows"] if isinstance(r, int) and not isinstance(r, bool) and r >= 0]
+    ch_seen += [(int(e.get("ch_start", 0)), int(e.get("ch_start", 0)) + int(e.get("n_channels", 0)))
+                for e in views if not isinstance(e.get("montage_rows"), list)]
     share_ch = min(1.0, _union_length([(a, min(n_ch, b)) for a, b in ch_seen]) / n_ch) if n_ch and ch_seen else _nan()
     scales = [e.get("scale_factor") for e in views]
     scale_changes = sum(1 for a, b in zip(scales, scales[1:]) if a != b)
