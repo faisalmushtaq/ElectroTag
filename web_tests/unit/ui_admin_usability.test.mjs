@@ -16,6 +16,7 @@ globalThis.localStorage = globalThis.localStorage || store();
 
 const m = await import('../../electrotag/web/static/js/admin/model.js');
 const audit = await import('../../electrotag/web/static/js/admin/audit_words.js');
+const checks = await import('../../electrotag/web/static/js/admin/settings_checks.js');
 const { DemoBackend } = await import('../../electrotag/web/static/js/api/demo.js');
 const { docsUrl, DOCS_BASE } = await import('../../electrotag/web/static/js/ui/docs.js');
 const { annotatorSays, reviewStatusText } = await import('../../electrotag/web/static/js/annotate/review_pass.js');
@@ -69,9 +70,30 @@ test('the audit log names every kind of change, in words, with the value before 
     assert.match(audit.opText(op), /^[A-Z]/);
   }
   assert.equal(audit.opText('something_new'), 'Something new');
-  assert.equal(m.settingChangeText('annotation.allow_reviews', true, false), 'allow reviews (annotation) from on to off');
-  assert.equal(m.settingChangeText('display.duration_s', 10, 20), 'duration s (display) from 10 to 20');
-  assert.equal(m.settingChangeText('channels.hide', [], ['COUNTER']), 'hide (channels) from nothing to COUNTER');
+  const c = checks.settingChanges;
+  assert.deepEqual(c('annotation.allow_reviews', true, false), ['allow reviews (annotation) from on to off']);
+  assert.deepEqual(c('display.duration_s', 10, 20), ['duration s (display) from 10 to 20']);
+  assert.deepEqual(c('channels.hide', [], ['COUNTER']), ['hide (channels) from nothing to COUNTER']);
+  assert.deepEqual(c('filters.notch_hz', 50, 50), [], 'the same value: nothing');
+});
+
+test('a change to a group of settings names only the values that changed', () => {
+  const c = checks.settingChanges;
+  // the amplitude scales, kept in volts, are named in µV, and only the one that changed
+  assert.deepEqual(c('display.scalings', { eeg: 5e-5, eog: 1.5e-4, ecg: 5e-4 }, { eeg: 4.7e-5, eog: 1.5e-4, ecg: 5e-4 }),
+    ['eeg (display scalings) from 50 µV to 47 µV']);
+  assert.deepEqual(c('review.matching', { match_criterion: 'iou', iou_threshold: 0.2, channel_jaccard: 0.5 },
+    { match_criterion: 'iou', iou_threshold: 0.3, channel_jaccard: 0.5 }), ['iou threshold (review matching) from 0.2 to 0.3']);
+  assert.deepEqual(c('channels.types', {}, { X1: 'eog' }), ['X1 (channels types) from nothing to eog']);
+  // the questionnaire's questions by their IDs
+  assert.deepEqual(c('questionnaire.questions', [{ id: 'q1', text: 'Old', required: true }, { id: 'q2', text: 'x' }],
+    [{ id: 'q1', text: 'New', required: true }, { id: 'q3', text: 'y' }]),
+  ['text (questionnaire questions q1) from Old to New', 'questions q2 (questionnaire) taken out', 'questions q3 (questionnaire) added']);
+  // a long list by what came in and what went out; a short one (the number keys' types) in full
+  const hide = 'ABCDEFGHIJKL'.split('');
+  assert.deepEqual(c('channels.hide', hide, [...hide.slice(0, -1), 'M']), ['hide (channels): added M and took out L']);
+  assert.deepEqual(c('annotation.quick_labels', ['A', 'B'], ['B', 'A']), ['quick labels (annotation) from A, B to B, A']);
+  assert.match(c('questionnaire.intro', 'a', 'b'.repeat(200))[0], /…$/);
 });
 
 test('the projected finish of a young study waits for three days of work', () => {

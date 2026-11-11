@@ -163,6 +163,17 @@ def test_settings_are_read_changed_and_checked(client: TestClient, admin: Api) -
     assert out["settings"]["display"]["scalings"]["eeg"] == 0.0001
     assert out["settings"]["display"]["scalings"]["misc"] == s["settings"]["display"]["scalings"]["misc"]
     assert Api(client, "A01").ok("get", "/me")["study"]["display"]["scalings"]["eeg"] == 0.0001
+    # Only what changed is in the summary, from and to: one scale of the group, in µV, and not the others.
+    scal = dict(out["settings"]["display"]["scalings"], eeg=0.00007)
+    admin.admin_ok("settings_update", {"settings": {"display": {"scalings": scal, "duration_s": 10}}})
+    entry = admin_audit(admin)[0]
+    assert entry["summary"] == "Changed eeg (display scalings) from 100 µV to 70 µV", entry["summary"]
+    # A save that changes nothing leaves no entry.
+    n = len(admin_audit(admin, 500))
+    admin.admin_ok("settings_update", {"settings": {"display": {"scalings": scal}}, "name": "Pilot study"})
+    assert len(admin_audit(admin, 500)) == n
+    admin.admin_ok("settings_update", {"name": "Pilot study two"})
+    assert admin_audit(admin)[0]["summary"] == "Changed the study's name from Pilot study to Pilot study two"
 
 
 # ------------------------------------------------------------------------ accounts
@@ -753,3 +764,23 @@ def test_the_audit_log_pages_newest_first(admin: Api, study: Path) -> None:
     assert [(e["op"], e["by"]) for e in entries] == [("programme_set", "command"), ("assign", "command"),
                                                     ("user_add", "command")]
     assert "a-long-password" not in json.dumps(entries)
+
+
+def test_a_settings_change_is_told_value_by_value() -> None:
+    """The audit log's words for a change (as the sandbox's settings_checks.js settingChanges)."""
+    from electrotag.web.admin import setting_changes as c
+
+    assert c("annotation.allow_reviews", True, False) == ["allow reviews (annotation) from on to off"]
+    assert c("filters.notch_hz", 50.0, 50) == []
+    assert c("display.scalings", {"eeg": 5e-5, "eog": 1.5e-4}, {"eeg": 4.7e-5, "eog": 1.5e-4}) == [
+        "eeg (display scalings) from 50 µV to 47 µV"]
+    assert c("review.matching", {"match_criterion": "iou", "iou_threshold": 0.2},
+             {"match_criterion": "iou", "iou_threshold": 0.3}) == ["iou threshold (review matching) from 0.2 to 0.3"]
+    assert c("questionnaire.questions", [{"id": "q1", "text": "Old", "required": True}, {"id": "q2", "text": "x"}],
+             [{"id": "q1", "text": "New", "required": True}, {"id": "q3", "text": "y"}]) == [
+        "text (questionnaire questions q1) from Old to New", "questions q2 (questionnaire) taken out",
+        "questions q3 (questionnaire) added"]
+    hide = list("ABCDEFGHIJKL")
+    assert c("channels.hide", hide, [*hide[:-1], "M"]) == ["hide (channels): added M and took out L"]
+    assert c("annotation.quick_labels", ["A", "B"], ["B", "A"]) == ["quick labels (annotation) from A, B to B, A"]
+    assert c("questionnaire.intro", "a", "b" * 200)[0].endswith("…")

@@ -1114,9 +1114,14 @@ saved or Conflict decided, and the kinds are listed in alphabetical order in the
 a conflict names whose version it kept, for example "kept A01's version (A)" or "kept E02's correction
 of A01's work (B)", from the start of the same adjudication among the entries shown (until that entry
 is shown, the letter alone is named). A change of the study
-settings is written in words with the value before and after, for example "allow reviews
-(annotation) from on to off", and a change that changes nothing (switching off an account that is
-off already) is not recorded.
+settings names only the settings that changed, each in words with its value before and after, for
+example "allow reviews (annotation) from on to off". A group of settings is gone through value by
+value, so a new amplitude scale reads "eeg (display scalings) from 50 µV to 70 µV" and a stricter
+review rule "iou threshold (review matching) from 0.2 to 0.3"; the questionnaire's questions are named
+by their IDs ("text (questionnaire questions q1) from … to …", or a question added or taken out); and a
+long list, such as the channels hidden, says what was added and taken out. A change that changes
+nothing (switching off an account that is off already, or saving the settings as they were) is not
+recorded.
 
 Visits lists each time someone signed in and used ElectroTag, newest first, with the mode, when
 the visit ended and how many interaction events it logged. When the study records interactions,
