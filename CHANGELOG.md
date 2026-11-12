@@ -11,6 +11,10 @@ pass or fail), and the study's training policy. Its button opens Training, where
 a study that uses no training confirms that with Confirm: no training. Changing a set's standards, adding a set or
 changing the training policy asks for the group to be confirmed again.
 
+The admin area's Artifact type descriptions no longer show the word "null" under Save for a type still in the original
+words, and the overlay of everyone's marks no longer shows it in its tooltip where an anonymous overlay leaves out the
+names; a test now finds any place in the application that would write it.
+
 Before the study starts: the admin area's Overview lists the settings a study chooses before its first study
 recording is saved, until each is confirmed: the agreement settings, the working time the study reports (active
 or wall-clock, with the idle threshold) and the repeat ratings. Each is confirmed on its own, keeping who confirmed
