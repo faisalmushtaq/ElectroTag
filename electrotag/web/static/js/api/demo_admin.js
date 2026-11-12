@@ -61,7 +61,7 @@ const SERVER_ONLY = {
 
 const bad = (message, code = 'bad_request', status = 400) => new ApiError(status, code, message);
 // datasets, collections, groups, hand-outs, tracking (demo_library.js, loaded when used), and what they change
-const LIBRARY_OP = /^(datasets?|collections?|groups?|handouts?|tracking|saved_work|probability)_|^(recordings_move|notify_preview_get|recording_warnings_list|withdrawals_list)$/;
+const LIBRARY_OP = /^(datasets?|collections?|groups?|handouts?|tracking|saved_work|probability|preregistration)_|^(recordings_move|notify_preview_get|recording_warnings_list|withdrawals_list)$/;
 const LIBRARY_HOOK = /^(overview|recordings_(list|register)|recording_remove|user_remove)$/;
 // How long an invitation link lasts unless the administrator chooses otherwise, and the longest allowed.
 const INVITE_DAYS = 14;
@@ -698,11 +698,6 @@ export class DemoAdmin {
     if (changed.length) this._audit('settings_update', `Changed ${changed.join('; ')}`, { changes: body.settings || {}, name: body.name ?? null });
     return this.op_settings_get();
   }
-
-  // Before the study starts: the settings confirmed before the study (demo_preregistration.js, loaded when asked)
-  async op_preregistration_get() { return (await import('./demo_preregistration.js')).status(this); }
-
-  async op_preregistration_confirm(body) { return (await import('./demo_preregistration.js')).confirm(this, body); }
 
   // ------------------------------------------------------------------ accounts
   op_users_list() {
