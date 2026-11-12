@@ -1000,8 +1000,9 @@ from exported results; every event and column is described in
 3. Register the recordings and check that every one was registered; the
    admin area and `electrotag web list` show what the study holds.
 4. Agree the settings of the agreement analysis, the measure of working time the
-   study reports and the design of any repeat ratings, and save them as the study's
-   (the block `preregistration` below, and `repeats`).
+   study reports, the design of any repeat ratings and the training standards, and
+   save them as the study's (the block `preregistration` below, `repeats`, `training`
+   and each reference set's pass mark and competency criteria).
 5. Confirm each of them in the admin area (Overview, Before the study starts)
    before the first annotator saves a recording.
 
@@ -1027,8 +1028,9 @@ The admin area's Analyses page saves `agreement` (Save these as the study's
 pre-registered settings) and starts its form from it, and each agreement report
 says whether its settings were these. The confirmations are kept apart from the
 settings, so that changing a setting never confirms it: each group (agreement,
-working time with the idle threshold, and repeat ratings) is confirmed in the
-admin area with its values, and a group changed since shows as changed until it
+working time with the idle threshold, repeat ratings, and the training standards:
+the block `training` with each reference set's practice pass mark, assessment
+matching and competency criteria) is confirmed in the admin area with its values, and a group changed since shows as changed until it
 is confirmed again. The results download holds the confirmations
 (`study/preregistration.json`) and the agreement settings in the form
 `electrotag-agreement --config` reads (`study/agreement_settings_preregistered.json`).

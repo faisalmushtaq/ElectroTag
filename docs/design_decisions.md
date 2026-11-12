@@ -825,12 +825,18 @@ study recording is saved, each confirmation records whether it came before or af
 results download carries the confirmations (`study/preregistration.json`) and the agreement settings
 in the form `electrotag-agreement --config` reads.
 
-The competency criteria can join the card once the research team has decided them (below).
+The training standards joined the card the same day: each reference set's practice pass mark,
+assessment matching and competency criteria, which the sets keep themselves, with the study's training
+policy. A study without any set confirms that it uses no training, as one without repeats confirms them
+off, and creating a set later asks for the group again. The values of the criteria remain the research
+team's decision (below); the card makes sure they are chosen and recorded before the study starts.
 
 ## Decisions still open
 
 1. **Competency criteria:** which metrics, thresholds and categories, and the
-   minimum number of reference events for a category to be judged.
+   minimum number of reference events for a category to be judged. They are set
+   in each training set and confirmed under Training standards in Before the
+   study starts.
 2. **Copyright holder** for the licence notice (currently "The ElectroTag
    authors"), which may need to be agreed with the University.
 3. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the

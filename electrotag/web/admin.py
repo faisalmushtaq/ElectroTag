@@ -612,9 +612,8 @@ class Admin:
                 "electrode_positions": positions_source(m)}
 
     def set_record(self, rs: ReferenceSet) -> dict[str, Any]:
-        from electrotag.training.assessment import CompetencyCriteria, assessment_matching
         from electrotag.training.guided import Tolerance
-        from electrotag.training.programme import PassRule
+        from electrotag.web.preregistration import set_standards
         from electrotag.web.quiz import feedback_of
 
         scope = self._set_scope(rs)
@@ -626,22 +625,13 @@ class Admin:
                          "provenance": dict(e.get("provenance") or {}),
                          "n_reference_events": int(e.get("n_annotations", 0) or 0),
                          "registered": self.store.manifest(scope, rid) is not None})
-        try:
-            criteria = CompetencyCriteria.from_dict(rs.criteria).to_dict()
-        except (ValueError, KeyError, TypeError):
-            criteria = dict(rs.criteria)
+        standards = set_standards(rs)  # the pass mark, the assessment's matching and the competency criteria
+        criteria, practice_pass, matching = (standards["criteria"], standards["practice_pass"],
+                                             standards["assessment_matching"])
         try:
             tolerance = Tolerance.from_dict(rs.guided.get("tolerance")).to_dict()
         except (ValueError, TypeError):
             tolerance = dict(rs.guided.get("tolerance") or {})
-        try:
-            practice_pass = PassRule.from_dict(rs.practice_pass).to_dict()
-        except (ValueError, TypeError):
-            practice_pass = dict(rs.practice_pass)
-        try:
-            matching = assessment_matching(rs)
-        except (ValueError, TypeError):
-            matching = {}
         return {"set_id": rs.set_id, "name": rs.name, "description": rs.description, "created_at": rs.created_at,
                 "created_by": rs.created_by, "practice_review": rs.practice_review,
                 "allowed_annotators": list(rs.assigned_annotators), "practice_pass": practice_pass,

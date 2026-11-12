@@ -821,6 +821,8 @@ category. A threshold can be given straight away, and giving one, or changing wh
 its measure; only the ticked measures count and are saved. A category is assessed only when the
 reference has at least the given number of events of it. Leave every measure unticked to report results without a pass or fail decision. ElectroTag
 suggests no thresholds: they depend on pilot data and on how well the experts agree with each other.
+The Overview's Before the study starts lists each set's criteria under Training standards, to confirm
+before the study starts.
 
 ### Quiz
 
@@ -905,11 +907,20 @@ reports, active time (idle time and time in other programs left out) or wall-clo
 the number of seconds without input after which an annotator counts as idle; both are chosen in Study
 settings, under Interaction log. **Repeat ratings** says whether recordings are rated again for
 test-retest reliability, which ones, how many times and how many days apart, as chosen in Repeat
-ratings.
+ratings. **Training standards** gathers what decides whether a trainee passes: for each reference set,
+its practice pass mark, how many assessment recordings it has and its competency criteria (a set with
+no criteria ticked is described as one whose assessment reports results without a pass or fail), and
+the study's training policy, what study work waits for and which stages trainees may skip. These live
+in each set (Training, Settings and Competency criteria) and in Study settings, so the button beside
+the group opens Training, where a study without any set yet creates one or adds the example set. A
+study that uses no training confirms that instead, with Confirm: no training, and creating a set
+later asks for the group to be confirmed again.
 
 Every one of these has a default, so ElectroTag cannot tell an untouched study from one that kept the
 defaults on purpose. Each group therefore has its own **Confirm** button, which records who confirmed
 it, when and the values confirmed; the button beside it opens the section where the group is chosen.
+Changing a set's pass mark or criteria, adding a set or an assessment recording, or changing the
+training policy marks the training standards as changed in the same way.
 Confirm stays greyed out for the agreement settings until the study has saved some of its own. A group
 whose settings change after it was confirmed is marked Changed since confirmed, with Confirm again,
 and every confirmation is kept in the audit log. Once every group is confirmed, the card folds into

@@ -23,7 +23,11 @@ export const tests = [
       await overview(page);
       const card = page.locator('.prereg-card');
       assert.match(await card.locator('h2').textContent(), /^Before the study starts$/);
-      assert.deepEqual(await Promise.all(['agreement', 'working_time', 'repeats'].map((n) => stateOf(page, n))), ['not_confirmed', 'not_confirmed', 'not_confirmed']);
+      assert.deepEqual(await Promise.all(['agreement', 'working_time', 'repeats', 'training'].map((n) => stateOf(page, n))),
+        ['not_confirmed', 'not_confirmed', 'not_confirmed', 'not_confirmed']);
+      // the training standards: the sandbox's training set with its pass mark and criteria, chosen in Training
+      assert.match(await item(page, 'training').textContent(), /practice passes at 80% score and 80% right type/);
+      assert.equal(await item(page, 'training').locator('button[data-to="training"]').textContent(), 'Choose in Training');
       assert.equal(await page.locator('[data-log="prereg-confirm-agreement"]').isDisabled(), true, 'the agreement settings are saved first');
       assert.match(await item(page, 'agreement').textContent(), /Not saved yet/);
       assert.match(await item(page, 'working_time').textContent(), /Active time \(active_s\)/);
@@ -47,6 +51,8 @@ export const tests = [
       await page.click('[data-log="prereg-confirm-agreement"]');
       await page.waitForFunction(() => document.querySelector('.prereg-item[data-item="agreement"]')?.dataset.state === 'confirmed');
       await page.click('[data-log="prereg-confirm-repeats"]');
+      await page.waitForFunction(() => document.querySelector('.prereg-item[data-item="repeats"]')?.dataset.state === 'confirmed');
+      await page.click('[data-log="prereg-confirm-training"]');
       // all confirmed: one folded line
       await page.locator('details.prereg-done').waitFor();
       assert.equal(await page.locator('.prereg-card').count(), 0);

@@ -559,9 +559,10 @@ async function script(call) {
   await call('admin preregistration_confirm (agreement)', (s) => s.b.admin('preregistration_confirm', { item: 'agreement' }));
   await call('admin preregistration_confirm (working time)', (s) => s.b.admin('preregistration_confirm', { item: 'working_time' }));
   await call('admin preregistration_confirm (working time, again)', (s) => s.b.admin('preregistration_confirm', { item: 'working_time' }));
+  await call('admin preregistration_confirm (training standards)', (s) => s.b.admin('preregistration_confirm', { item: 'training' }));
   await call('admin settings_update (the idle threshold)', (s) => s.b.admin('settings_update', { settings: { logging: { idle_after_s: 45 } } }));
   await call('admin preregistration_get (working time changed)', (s) => s.b.admin('preregistration_get', {}));
-  await call('admin audit (the confirmations)', (s) => s.b.admin('audit', { limit: 4 }));
+  await call('admin audit (the confirmations)', (s) => s.b.admin('audit', { limit: 5 }));
   await call('admin snippets_list', (s) => s.b.admin('snippets_list', { set_id: QUIZ.set_id }));
   const snippet = { set_id: QUIZ.set_id, recording_id: RIDS[1], start_s: 14, end_s: 17, label: 'Chewing-artifact', explanation: 'Rhythmic bursts on T7 and T8', channels: ['T7', 'T8'], snippet_id: 'chew' };
   await call('admin snippet_add', (s) => s.b.admin('snippet_add', snippet));

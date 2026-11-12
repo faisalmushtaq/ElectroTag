@@ -948,7 +948,7 @@ study's own recordings have `"self_contained": false` and `"scope": "study"`.
 | `settings_get` | `{}` | `{"name", "settings": {"filters", "display", "channels", "selection", "logging", "annotation", "loading", "discovery", "gamification", "review", "training", "replay", "questionnaire", "repeats", "preregistration"}, "logging_notice", "logging_notice_is_default"}`: the effective values of the blocks of `electrotag_study.json` that a study may change (`review`, `training`, `replay`, `questionnaire`, `repeats` and `preregistration` are described in the study settings guide) |
 | `settings_update` | `{"name"?, "settings"?: {block: {key: value}}, "logging_notice"?}` | as `settings_get`. Each key given replaces that setting; the result is checked with ElectroTag's own settings code and refused with 400 `invalid_settings` and the reason (also for a block or key that cannot be changed). `"logging_notice": ""` goes back to ElectroTag's own notice |
 | `preregistration_get` | `{}` | `{"items": [{"item", "state", "values", "ready", "confirmed_values", "confirmed_at", "confirmed_by", "before_start"}], "study_started_at": str \| null, "done": bool}`: the settings a study chooses before it starts (see "Before the study starts" below). Read only |
-| `preregistration_confirm` | `{"item"}` | as `preregistration_get`, after the group's settings as they are now are confirmed by the person asking; the same values confirmed again change nothing. 400 `bad_request` for an item other than `agreement`, `working_time` or `repeats`; 409 `not_saved` for `agreement` while the study has saved no agreement settings of its own. Audited, with the values confirmed |
+| `preregistration_confirm` | `{"item"}` | as `preregistration_get`, after the group's settings as they are now are confirmed by the person asking; the same values confirmed again change nothing. 400 `bad_request` for an item other than `agreement`, `working_time`, `repeats` or `training`; 409 `not_saved` for `agreement` while the study has saved no agreement settings of its own. Audited, with the values confirmed |
 | `users_list` | `{}` | `{"users": [UserRecord]}` (disabled accounts too) |
 | `user_add` | `{"annotator_id", "display_name"?, "email"?, "roles"?: ["annotator"], "role"?, "password"?, "invite"?: false, "expires_days"?: 14}` | `{"user": UserRecord, "invite_link": str \| null, "temporary_password": str \| null}`, with `"invite_token", "expires_at"` when `invite` is true. On Firebase `email` is required (400 `email_required`), the Firebase Authentication user is created (or, for a person already in another study of the project, given this study) with the custom claims below, and `invite_link` lets the person choose a password when none is given. On the server a temporary password (three groups of four characters) is made when none is given; with `"invite": true` the account is made with an invitation instead (as `user_invite`), and nobody knows its first password. A password has 8 to 200 characters; a password and `invite` together are 400; `invite` for an administrator is 409 `admin_account`. `roles` lists the account's roles; the older `role` alone gives one; with both, `role` must be the primary role of `roles` (400 otherwise). An unknown role is 400 `bad_request`, `participant` 400 `role_not_offered`, the IDs `ADJUDICATED` and `REFERENCE` 400 `reserved_id`. 409 `user_exists`, 409 `email_in_use` |
 | `user_update` | `{"annotator_id", "display_name"?, "roles"?, "role"?, "status"?, "notes"?}` | `{"user": UserRecord, "changed": bool}`; 404 `unknown_user`. `roles` replaces every role (the older `role` alone makes it the only one), checked as for `user_add`. A request that changes nothing (an account switched off already, say) gives `changed: false` and writes no audit entry. Disabling ends the person's sessions at once and stops them signing in; on Firebase the roles are also written into their claims. An administrator cannot take their own administrator role away or disable themselves (409 `self`) |
@@ -1114,13 +1114,17 @@ ElectroTag installed.
 
 ### Before the study starts
 
-Three groups of settings decide what a study's results mean, so the study team chooses them before the
+Four groups of settings decide what a study's results mean, so the study team chooses them before the
 first study recording is saved and reports them with the results: `agreement`, the agreement analysis's
 settings saved as the study's own (`settings.preregistration.agreement`, the keys of
 `PREREGISTERED_AGREEMENT_KEYS` in `electrotag/config/settings.py`, null until saved); `working_time`,
 the measure of working time the study reports (`settings.preregistration.working_time`, `active_s` or
-`wall_s`) with the idle threshold `logging.idle_after_s`; and `repeats`, the repeat ratings
-(`settings.repeats`). Every one has a default, so each is confirmed with `preregistration_confirm`,
+`wall_s`) with the idle threshold `logging.idle_after_s`; `repeats`, the repeat ratings
+(`settings.repeats`); and `training`, the training standards: `{"policy": {"skippable", "gate", "tour",
+"snippets_quiz_required"}, "sets": [{"set_id", "name", "assessment_recordings", "practice_pass",
+"assessment_matching", "criteria"}]}`, the study's `settings.training` and each reference set's standards
+for passing as `sets_list` gives them, in order of set ID (with no sets, confirming records that the
+study uses no training). Every one has a default, so each is confirmed with `preregistration_confirm`,
 which keeps who confirmed it, when and the values (a record of the kind `preregistration`, one for
 each group). In the answer of `preregistration_get`, `values` are the group's settings now (for
 `working_time`, `{"measure", "idle_after_s"}`; for `agreement`, every key, those left out taking the

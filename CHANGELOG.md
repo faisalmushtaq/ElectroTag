@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Before the study starts gains a fourth group, Training standards: each reference set's practice pass mark, number of
+assessment recordings and competency criteria (with a set that has none described as reporting results without a
+pass or fail), and the study's training policy. Its button opens Training, where a study without a set creates one;
+a study that uses no training confirms that with Confirm: no training. Changing a set's standards, adding a set or
+changing the training policy asks for the group to be confirmed again.
+
 The admin area's Artifact type descriptions no longer show the word "null" under Save for a type still in the original
 words, and the overlay of everyone's marks no longer shows it in its tooltip where an anonymous overlay leaves out the
 names; a test now finds any place in the application that would write it.
