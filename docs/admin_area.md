@@ -42,6 +42,7 @@ another way, for example on an encrypted drive, and open them in their own brows
   - [Snippets](#snippets)
   - [Artifact type descriptions](#artifact-type-descriptions)
   - [The example training set](#the-example-training-set)
+  - [Before the study starts](#before-the-study-starts)
 - [Analyses](#analyses)
   - [Deciding an assessment](#deciding-an-assessment)
 - [Results](#results)
@@ -132,7 +133,8 @@ saved. The buttons take you to the most common jobs: adding recordings, adding a
 assigning recordings and following progress. Two further figures count the open problem reports (with the
 recordings that cannot be annotated) and the saved recordings that have been reviewed. Each figure
 opens the section behind it: Open problems opens Problems, Reviewed the list of reviews in Results,
-and so on.
+and so on. Above them, until each is confirmed, Before the study starts lists the settings the study
+chooses before its first study recording is saved (see below).
 
 While hand-outs are open, a line under the figures says how many people have overdue work and across
 how many open hand-outs, with a warning chip when anyone is late, and See the hand-outs opens the
@@ -890,6 +892,35 @@ Create the example training set makes ElectroTag's simulated set (two recordings
 experts and one to practise on) and offers its recordings as a zip file to give to trainees. It is a
 placeholder until your experts' recordings are ready; replace it then.
 
+### Before the study starts
+
+Some settings decide what the study's results mean, so the study team chooses them before the first
+annotator saves a recording and reports them with the results, much as a study's analysis plan is
+registered before its data are collected. Until each of them is confirmed, a card at the top of the
+Overview, **Before the study starts**, lists them with their values in words. The **agreement
+settings** are the agreement analysis's time bins, matching, categories and the other settings of what
+is measured, saved as the study's own on the Analyses page (Save these as the study's pre-registered
+settings, under Settings of the analysis). **Working time** is the measure of working time the study
+reports, active time (idle time and time in other programs left out) or wall-clock time, together with
+the number of seconds without input after which an annotator counts as idle; both are chosen in Study
+settings, under Interaction log. **Repeat ratings** says whether recordings are rated again for
+test-retest reliability, which ones, how many times and how many days apart, as chosen in Repeat
+ratings.
+
+Every one of these has a default, so ElectroTag cannot tell an untouched study from one that kept the
+defaults on purpose. Each group therefore has its own **Confirm** button, which records who confirmed
+it, when and the values confirmed; the button beside it opens the section where the group is chosen.
+Confirm stays greyed out for the agreement settings until the study has saved some of its own. A group
+whose settings change after it was confirmed is marked Changed since confirmed, with Confirm again,
+and every confirmation is kept in the audit log. Once every group is confirmed, the card folds into
+one line, Settings chosen before the study started: all confirmed, which opens to show them.
+
+The study counts as started when the first study recording is saved (training does not count). A
+confirmation says whether it came before or after that, and once the study has started the card says
+so too, so that a group confirmed late is recorded as such. The results download holds the
+confirmations with their values (`study/preregistration.json`) and, once saved, the agreement settings
+in the form `electrotag-agreement --config` reads (`study/agreement_settings_preregistered.json`).
+
 ## Analyses
 
 The study computes the analyses from the saved annotations and the interaction logs, with the same
@@ -915,6 +946,15 @@ out, and when a category has too few annotations for the figures. The defaults a
 choose the settings for your study before you look at its results, report them, and keep The
 settings used (JSON) with the report. Each setting links to the part of the reliability guide that
 explains it.
+
+**Save these as the study's pre-registered settings**, at the foot of Settings of the analysis, keeps
+the categories and these settings as the study's own (all of them apart from the report's layout:
+Fewest annotations for figures and Recordings drawn as timelines); confirm them on the Overview, under
+Before the study starts. From then on the form starts from them, with a line at its top that says
+whether they are confirmed, and each report's summary says whether the analysis used them. An analysis
+whose settings differ is still run, with a warning that names the settings that differ and says to
+report it as exploratory. Who is compared, the versions and the sessions are chosen for each analysis
+and never make it differ.
 
 **Versions** chooses what is compared once experts have corrected or adjudicated work: the
 originals, as the annotators saved them (the default, which leaves every correction and adjudicated
@@ -1262,7 +1302,11 @@ was added is not stopped; their home page offers the new questions.
 how annotators use ElectroTag (clicks, keys and what is on the screen, never what they type), how
 often the pointer is sampled over the EEG, after how many seconds without input an annotator counts
 as idle, and the notice each annotator reads once after signing in; say there what is recorded and
-why, as the study's information sheet does.
+why, as the study's information sheet does. **Working time the study reports** records which measure of
+the activity analysis the study's results use: active time (`active_s`, which leaves out idle time and
+time in other programs) or wall-clock time (`wall_s`, all the time from opening a recording to closing
+it). Both are always in the activity tables, and idle periods are labelled in the logs either way;
+confirm the choice on the Overview, under Before the study starts.
 
 Save the settings, in the bar that stays at the foot of the window, checks them first and says in
 plain words, in that bar, what to correct (for example a type given to two number keys), with the
@@ -1295,7 +1339,9 @@ the chosen days after it. A revision of a repeat stays that repeat, and revising
 one. In the study team's counts a recording stays done while a repeat is due. The comparisons between
 annotators use each person's first rating (with its revisions) and leave the repeats out; Analyses
 compares each annotator with their own repeats when Who is compared is set to Each annotator with
-their own repeat ratings (the reliability guide, "Repeat ratings (test-retest)").
+their own repeat ratings (the reliability guide, "Repeat ratings (test-retest)"). Whether repeats are on,
+and their rules, are among the settings the study confirms before it starts (Overview, Before the study
+starts), including when it does without them.
 
 ## The expert area
 

@@ -244,10 +244,11 @@ version its own section in the changelog and, if wanted, publish a GitHub releas
 section. [docs/developer_guide.md](docs/developer_guide.md) describes packaging and CI.
 
 **3. Decisions for the research team**, listed under "Decisions still open" in
-[docs/design_decisions.md](docs/design_decisions.md): the settings to pre-register (agreement, working time and the repeat ratings for test-retest reliability, which the admin area's Repeat ratings section sets), the
-competency criteria, the copyright holder named in the licence notice, and whether Emotiv's contact-quality
-channels should be shown. Idle time was settled on 12 November 2026: it is labelled in the logs
-and kept apart in the summaries, and the study pre-registers whether it reports `active_s` or `wall_s`.
+[docs/design_decisions.md](docs/design_decisions.md): the competency criteria, the copyright holder
+named in the licence notice, and whether Emotiv's contact-quality channels should be shown. The settings
+a study chooses before it starts (the agreement settings, the measure of working time and the repeat
+ratings) are no longer open questions: the admin area's Overview lists them under Before the study
+starts until each is confirmed, and the results download keeps the confirmations (12 November 2026).
 
 **4. Data protection for real studies.** The interaction logs are participant data about the
 annotators, a Firebase study keeps the study's records with Google in London, and the audit log

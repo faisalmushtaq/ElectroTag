@@ -575,6 +575,15 @@ the results. Reasonable choices depend on the artifact: a 100 ms tolerance is
 large for a 50 ms electrode pop and small for a 4 s slow eye movement, which is
 why results are given per category.
 
+In the admin area, Save these as the study's pre-registered settings (under
+Settings of the analysis) keeps the chosen settings with the study, and the
+Overview's Before the study starts records when they were confirmed. Each
+agreement report then says whether it used them, and an analysis run with other
+settings carries a warning naming them, so that it can be reported as
+exploratory. The results download holds them as
+`study/agreement_settings_preregistered.json`, which
+`electrotag-agreement --config` reads.
+
 ## Extending the analysis
 
 Measures are registered in `electrotag.reliability.analysis.MEASURES`. A new

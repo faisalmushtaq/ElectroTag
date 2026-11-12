@@ -567,7 +567,11 @@ EEG) counts in full up to `idle_after_s` seconds; a longer gap counts only its
 first `idle_after_s` seconds. Time while ElectroTag was not the active
 application (another program in front) does not count. Opening and closing the
 recording count as inputs, so a recording's active time is never longer than its
-wall-clock time. `idle_s` is the rest of the wall-clock time.
+wall-clock time. `idle_s` is the rest of the wall-clock time. Which of
+`active_s` and `wall_s` a study reports is the study setting
+`preregistration.working_time` (Study settings, Working time the study reports),
+confirmed before the study starts with the idle threshold
+([admin area guide](admin_area.md), "Before the study starts").
 
 ### Ratings, notes, problems and reviews
 

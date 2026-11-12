@@ -999,5 +999,36 @@ from exported results; every event and column is described in
    the channels to hide and their types before registering the recordings.
 3. Register the recordings and check that every one was registered; the
    admin area and `electrotag web list` show what the study holds.
-4. Agree the settings of the agreement analysis and write them in a JSON file
-   (`electrotag agreement --config settings.json …`).
+4. Agree the settings of the agreement analysis, the measure of working time the
+   study reports and the design of any repeat ratings, and save them as the study's
+   (the block `preregistration` below, and `repeats`).
+5. Confirm each of them in the admin area (Overview, Before the study starts)
+   before the first annotator saves a recording.
+
+The block `preregistration` holds what the study chooses before it starts and
+reports with its results. `agreement` is the agreement analysis's settings saved
+as the study's own (null until saved): any of `resolutions_s`, `min_bin_coverage`,
+`channel_modes`, `include_any_artifact`, `include_group_rollups`,
+`match_criterion`, `iou_thresholds`, `primary_iou_threshold`,
+`onset_tolerance_s`, `offset_tolerance_s`, `allow_many_to_one`,
+`min_channel_jaccard`, `categories`, `duplicate_policy` and `channel_exclude`,
+checked as the analysis checks them, with those left out taking the analysis's
+defaults. `working_time` is the measure of working time the study reports,
+`active_s` (the default) or `wall_s`, both columns of the activity analysis's
+`recordings.tsv`; the idle threshold is `logging.idle_after_s`.
+
+```json
+{"preregistration": {"working_time": "active_s",
+  "agreement": {"resolutions_s": [0.1, 0.5], "match_criterion": "iou",
+                "iou_thresholds": [0.2], "primary_iou_threshold": 0.2}}}
+```
+
+The admin area's Analyses page saves `agreement` (Save these as the study's
+pre-registered settings) and starts its form from it, and each agreement report
+says whether its settings were these. The confirmations are kept apart from the
+settings, so that changing a setting never confirms it: each group (agreement,
+working time with the idle threshold, and repeat ratings) is confirmed in the
+admin area with its values, and a group changed since shows as changed until it
+is confirmed again. The results download holds the confirmations
+(`study/preregistration.json`) and the agreement settings in the form
+`electrotag-agreement --config` reads (`study/agreement_settings_preregistered.json`).

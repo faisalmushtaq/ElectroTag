@@ -27,6 +27,7 @@ research team.
 - [Recordings of every channel count up to 256 (30 October 2026)](#recordings-of-every-channel-count-up-to-256-30-october-2026)
 - [The sign-up questionnaire and contact details (30 October 2026)](#the-sign-up-questionnaire-and-contact-details-30-october-2026)
 - [Idle time (12 November 2026)](#idle-time-12-november-2026)
+- [Settings chosen before the study starts (12 November 2026)](#settings-chosen-before-the-study-starts-12-november-2026)
 - [Decisions still open](#decisions-still-open)
 <!-- /contents -->
 
@@ -779,41 +780,60 @@ interaction. The decision is that nothing is left out of the record: idle time i
 researchers choose at analysis whether to count it. ElectroTag already works this way, so no change
 to the application was needed.
 
-- **The logs label idle time rather than drop it.** Every period without input longer than
-  `logging.idle_after_s` (30 seconds by default) is logged as an `idle_start` and an `idle_end` with
-  its length, and every pause of the working-time clock carries its reason (`idle`, `hidden`,
-  `button`, `key` or `break`). What is logged does not depend on the clock's settings.
-- **The summary tables keep the measures apart.** Each row gives `wall_s` (opening to closing),
-  `active_s` (time with input, each gap counted up to the idle threshold), `inactive_s` (another
-  program in front), `idle_s` (the rest) and `idle_periods`, so an analysis can use `active_s` to
-  leave idle time out or `wall_s` to count it, and can test how much the choice matters
-  ([activity_logs.md](activity_logs.md), "Active time").
-- **The admin area sets what the working-time clock shows.** "Pause after (minutes without input)"
-  (`annotation.idle_pause_minutes`, 3 by default) pauses the clock the annotator sees; 0 keeps idle
-  time on it. "Idle after (seconds without input)" sets the threshold the logs use.
+**The logs label idle time rather than drop it.** Every period without input longer than
+`logging.idle_after_s` (30 seconds by default) is logged as an `idle_start` and an `idle_end` with
+its length, and every pause of the working-time clock carries its reason (`idle`, `hidden`,
+`button`, `key` or `break`). What is logged does not depend on the clock's settings.
+
+**The summary tables keep the measures apart.** Each row gives `wall_s` (opening to closing),
+`active_s` (time with input, each gap counted up to the idle threshold), `inactive_s` (another
+program in front), `idle_s` (the rest) and `idle_periods`, so an analysis can use `active_s` to
+leave idle time out or `wall_s` to count it, and can test how much the choice matters
+([activity_logs.md](activity_logs.md), "Active time").
+
+**The admin area sets what the working-time clock shows.** "Pause after (minutes without input)"
+(`annotation.idle_pause_minutes`, 3 by default) pauses the clock the annotator sees; 0 keeps idle
+time on it. "Idle after (seconds without input)" sets the threshold the logs use.
 
 A switch that left idle time out of the logs themselves was considered and not added: time that is
-not recorded cannot be recovered at analysis, whereas labelled time can always be left out. What
-remains for the research team is to pre-register which measure the study reports (`active_s` or
-`wall_s`) and the idle threshold, and to report them with the results.
+not recorded cannot be recovered at analysis, whereas labelled time can always be left out. Which
+measure the study reports is chosen in Study settings and confirmed before the study starts (below).
+
+## Settings chosen before the study starts (12 November 2026)
+
+The settings that decide what a study's results mean (the agreement analysis's settings, the measure
+of working time with its idle threshold, and the repeat ratings) were listed here as decisions for the
+research team. They are study settings rather than design questions, so the admin area now tracks them:
+the Overview's Before the study starts lists them until each is confirmed. Three choices shaped it.
+
+**Each group is confirmed explicitly.** Every one of these settings has a default, so an untouched
+study cannot be told from one that kept the defaults on purpose. A confirmation keeps who made it,
+when and the values confirmed, as a record of its own (`preregistration`) rather than a setting, so
+that changing a setting never confirms it; a group whose values change shows as changed until it is
+confirmed again, and the audit log keeps every confirmation.
+
+**The agreement settings are saved with the study.** They used to be chosen on the Analyses page for
+each run. The settings of what is measured (bins, matching, categories, channels left out) are now
+saved as the study's own (`preregistration.agreement`) and the form starts from them; who is compared,
+the versions and the report's layout stay choices for each analysis. A run whose settings differ is
+allowed, since exploratory analyses are legitimate, and is labelled as exploratory in its summary and
+warnings.
+
+**The card prompts and never blocks.** Blocking sign-in or work until everything is confirmed would
+get in the way of pilots and demonstrations. Instead, the study counts as started when its first
+study recording is saved, each confirmation records whether it came before or after that, and the
+results download carries the confirmations (`study/preregistration.json`) and the agreement settings
+in the form `electrotag-agreement --config` reads.
+
+The competency criteria can join the card once the research team has decided them (below).
 
 ## Decisions still open
 
-1. **Settings to pre-register.** For agreement: bin widths, the bin coverage
-   rule, the matching criterion, IoU thresholds or tolerances, and one-to-one
-   or many-to-one matching. For working time: whether `active_s` or `wall_s` is
-   reported and with which idle threshold (see "Idle time" above). For
-   intra-rater (test-retest) reliability: which recordings are rated again, how
-   many times and after how many days, set in the admin area's Repeat ratings
-   section (the study setting `repeats`, since 11 November 2026); the agreement
-   analysis compares each annotator with their own repeats. All of these are
-   settings the study can change; what is left is to choose them before the
-   study starts and report them with the results.
-2. **Competency criteria:** which metrics, thresholds and categories, and the
+1. **Competency criteria:** which metrics, thresholds and categories, and the
    minimum number of reference events for a category to be judged.
-3. **Copyright holder** for the licence notice (currently "The ElectroTag
+2. **Copyright holder** for the licence notice (currently "The ElectroTag
    authors"), which may need to be agreed with the University.
-4. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
+3. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
    other housekeeping channels. They could instead be shown (not annotated) as
    a guide to poor electrode contact; this needs a decision on whether they
    would help or bias annotators.

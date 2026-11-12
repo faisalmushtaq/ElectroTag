@@ -5,6 +5,18 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Before the study starts: the admin area's Overview lists the settings a study chooses before its first study
+recording is saved, until each is confirmed: the agreement settings, the working time the study reports (active
+or wall-clock, with the idle threshold) and the repeat ratings. Each is confirmed on its own, keeping who confirmed
+it, when, the values and whether the study had started; a group changed since shows as changed until confirmed
+again, and the list folds into one line once all are confirmed. The Analyses page saves the agreement settings as
+the study's (Save these as the study's pre-registered settings) and starts its form from them, and each agreement
+report says whether it used them, with a warning that names the settings that differ. Study settings gains Working
+time the study reports. The new study setting `preregistration` holds the agreement settings and the working time,
+the operations `preregistration_get` and `preregistration_confirm` the confirmations, and the results zip gains
+`study/preregistration.json` and `study/agreement_settings_preregistered.json` (docs/admin_area.md, "Before the
+study starts").
+
 Repeat ratings, for intra-rater (test-retest) reliability: in the admin area's new Repeat ratings section (the
 study setting `repeats`, off by default), a study switches them on and sets rules, in order, each for all
 recordings or for chosen datasets and recordings, with how many times a recording is rated again (1 to 10) and the

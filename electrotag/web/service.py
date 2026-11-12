@@ -338,6 +338,9 @@ class StudyService:
         from electrotag.web.artifact_texts import ArtifactTexts
 
         self.artifact_texts = ArtifactTexts(self)  # the study's own words for its artifact types
+        from electrotag.web.preregistration import Preregistration
+
+        self.preregistration = Preregistration(self)  # the settings confirmed before the study starts
 
     # ----------------------------------------------------------------- basics
     @property

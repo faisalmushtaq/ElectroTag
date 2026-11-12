@@ -102,6 +102,10 @@
     "enabled": false,
     "rules": []
   },
+  "preregistration": {
+    "agreement": null,
+    "working_time": "active_s"
+  },
   "questionnaire": {
     "enabled": true,
     "demographics": true,

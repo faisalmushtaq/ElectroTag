@@ -190,6 +190,14 @@ class Analyses:
                                "assignments": sum(unusable[r] for r in left_out)}
         summary["versions"] = clean_json(record.get("versions") or {"used": cfg.versions})
         summary["unit"] = cfg.unit
+        from electrotag.web.preregistration import agreement_check
+
+        # How these settings stand against the study's pre-registered ones (Before the study starts).
+        summary["preregistration"] = agreement_check(self.store.settings, cfg)
+        if summary["preregistration"]["state"] == "differs":
+            warnings.append("These settings differ from the study's pre-registered agreement settings ("
+                            + ", ".join(summary["preregistration"]["differs"]) + "), so report this analysis as "
+                            "exploratory, or run it again with the pre-registered settings.")
         html = build_html_report(result)
         if unusable_note:
             html = _with_note(html, unusable_note)
