@@ -19,10 +19,13 @@ export const tests = [
       await box.locator('summary').click();
       await box.locator('select').first().waitFor();
       await box.locator('select').first().selectOption(BLINK);
+      // a type in the original words has no line saying who changed it last (and no stray "null" in its place)
+      assert.doesNotMatch(await box.textContent(), /\bnull\b|Last changed by/);
       await box.locator('textarea[data-field="description"]').fill('A blink, in the words of our study.');
       await box.locator('textarea[data-field="shape"]').fill('A quick downward dip at Fp1 and Fp2.');
       await box.locator('[data-log="artifact-text-save"]').click();
       await box.locator('.chip', { hasText: 'The study\'s own words' }).first().waitFor();
+      assert.match(await box.textContent(), /Last changed by ADMIN, /);
       await t.screenshot(page, 'artifact_texts');
       const audit = await page.evaluate(() => globalThis.ElectroTag.backend.admin('audit', { limit: 3 }));
       assert.equal(audit.entries[0].op, 'artifact_text_set');

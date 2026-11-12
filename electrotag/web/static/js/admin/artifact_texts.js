@@ -131,7 +131,8 @@ function form(area, host, label, data, redraw) {
     await send(changes);
   } });
   const t = data.texts[label];
-  host.append(h('div.btn-row', {}, save), t ? h('p.caption', {}, `Last changed by ${t.changed_by || 'the study team'}, ${whenText(t.changed_at)}.`) : null, msg);
+  // (the browser's append writes a null as the text "null", so the line is left out when the type has no changes)
+  host.append(h('div.btn-row', {}, save), ...(t ? [h('p.caption', {}, `Last changed by ${t.changed_by || 'the study team'}, ${whenText(t.changed_at)}.`)] : []), msg);
 }
 
 /** The person's own catalogue again (GET /me), so that the words they changed show at once. */

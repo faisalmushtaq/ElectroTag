@@ -602,7 +602,7 @@ export class OverlayView {
   _showTip(at, who) {
     const t = this.tipText(at, who);
     clear(this.tip);
-    this.tip.append(h('b', {}, t.head), h('span.block', {}, t.types), t.who ? h('span.block.caption', {}, t.who) : null,
+    this.tip.append(h('b', {}, t.head), h('span.block', {}, t.types), ...(t.who ? [h('span.block.caption', {}, t.who)] : []),
       h('span.block.caption', {}, this.data.anonymous ? '' : 'Click for everyone, to show one in a lane.'));
     this.tip.hidden = false;
     const host = this.ws.eegHost.getBoundingClientRect();
