@@ -5,6 +5,10 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Before the study starts confirms only the values an administrator was shown: when another administrator has
+changed a group since the Overview was opened, Confirm confirms nothing, says so, and shows the values as they are
+now (`preregistration_confirm` takes the `values` shown, and answers 409 `changed` when they differ).
+
 Before the study starts gains a fourth group, Training standards: each reference set's practice pass mark, number of
 assessment recordings and competency criteria (with a set that has none described as reporting results without a
 pass or fail), and the study's training policy. Its button opens Training, where a study without a set creates one;

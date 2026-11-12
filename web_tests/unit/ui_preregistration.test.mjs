@@ -113,6 +113,19 @@ test('the sandbox: each group confirmed with its values, shown as changed when t
   assert.equal(st.items[3].values.sets[0].practice_pass.event_f1, 0.9);
 });
 
+test('the sandbox never confirms settings changed after they were shown', async () => {
+  const b = await demo();
+  const shown = (await b.admin('preregistration_get')).items[1].values;
+  await b.admin('settings_update', { settings: { logging: { idle_after_s: 60 } } }); // another administrator, meanwhile
+  const n = (await b.admin('audit', { limit: 50 })).entries.length;
+  await assert.rejects(() => b.admin('preregistration_confirm', { item: 'working_time', values: shown }), (e) => e.status === 409 && e.code === 'changed'
+    && e.message === 'The measure of working time was changed after this page was loaded, so nothing was confirmed. Check the values as they are now, then confirm again.');
+  assert.equal((await b.admin('audit', { limit: 50 })).entries.length, n, 'nothing confirmed');
+  assert.equal((await b.admin('preregistration_get')).items[1].state, 'not_confirmed');
+  const st = await b.admin('preregistration_confirm', { item: 'working_time', values: { measure: 'active_s', idle_after_s: 60 } });
+  assert.equal(st.items[1].state, 'confirmed');
+});
+
 test('the training standards in words, and the study without training', () => {
   const policy = { skippable: ['tour', 'snippets', 'guided', 'practice'], gate: 'met', tour: true, snippets_quiz_required: false };
   assert.match(preregText('training', { policy, sets: [] }), /^No training sets\. Confirm this if the study uses no training/);

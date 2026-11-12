@@ -74,6 +74,19 @@ export const tests = [
       assert.equal(await stateOf(page, 'working_time'), 'changed');
       assert.match(await item(page, 'working_time').textContent(), /Changed since confirmed.*Wall-clock time \(wall_s\)/s);
       assert.equal(await page.locator('[data-log="prereg-confirm-working_time"]').textContent(), 'Confirm again');
+
+      // Another administrator changes the idle threshold while this page is open: Confirm again confirms nothing,
+      // says why, and shows the values as they are now; confirmed after that, they are the ones kept.
+      await page.evaluate(() => globalThis.ElectroTag.backend.admin('settings_update', { settings: { logging: { idle_after_s: 45 } } }));
+      assert.doesNotMatch(await item(page, 'working_time').textContent(), /45 s/, 'this page still shows what it loaded');
+      await page.click('[data-log="prereg-confirm-working_time"]');
+      await page.waitForFunction(() => /changed after this page was loaded, so nothing was confirmed/.test(document.querySelector('.prereg-card').textContent));
+      assert.equal(await stateOf(page, 'working_time'), 'changed');
+      assert.match(await item(page, 'working_time').textContent(), /beyond 45 s without input/);
+      await page.click('[data-log="prereg-confirm-working_time"]');
+      await page.waitForFunction(() => document.querySelector('.prereg-item[data-item="working_time"]')?.dataset.state === 'confirmed');
+      const kept = await page.evaluate(() => globalThis.ElectroTag.backend.admin('preregistration_get'));
+      assert.deepEqual(kept.items[1].confirmed_values, { measure: 'wall_s', idle_after_s: 45 });
     },
   },
 ];
