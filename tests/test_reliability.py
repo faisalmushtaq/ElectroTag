@@ -570,3 +570,12 @@ def test_repeat_ratings_are_left_out_between_annotators_and_compared_within_each
         AnalysisConfig(comparison="within", reference_annotator="A").validate()
     with pytest.raises(ValueError, match="comparison must be one of"):
         AnalysisConfig(comparison="both").validate()
+
+
+def test_the_report_gives_bin_coverage_as_a_share_of_the_bin() -> None:
+    from electrotag.reliability.config import AnalysisConfig
+    from electrotag.reliability.report import _coverage_words
+
+    assert _coverage_words(AnalysisConfig()) == "at least 50% of it is covered"
+    assert _coverage_words(AnalysisConfig(min_bin_coverage=0.125)) == "at least 12.5% of it is covered"
+    assert _coverage_words(AnalysisConfig(min_bin_coverage=0.0)) == "any part of it is covered"

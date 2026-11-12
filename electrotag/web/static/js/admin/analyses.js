@@ -211,6 +211,12 @@ export class AnalysesSection {
     const offTol = numberInput({ value: d.offset_tolerance_s, min: 0, max: 60, step: 0.05 });
     const many = checkbox('Allow one event to match several (many-to-one)', d.allow_many_to_one);
     const jaccard = numberInput({ value: d.min_channel_jaccard, min: 0, max: 1, step: 0.1 });
+    // The channels a mark was on count only with Time and channel, so their overlap is asked for only then.
+    const jaccardField = field('Channel overlap needed (share of the channels, 0 to 1)', jaccard,
+      { hint: hintWith('For Time and channel: the channels both chose, as a share of those either chose; 0 means one shared channel is enough.', '3-channels') });
+    const syncChannels = () => { jaccardField.hidden = !channel.input.checked; };
+    channel.input.addEventListener('change', syncChannels);
+    syncChannels();
     const minEvents = numberInput({ value: d.min_events_per_category, min: 0, step: 1 });
     const anyArtifact = checkbox('Include ANY-artifact (any artifact against none)', d.include_any_artifact);
     const rollups = checkbox('Include group roll-ups (for example Eye-artifact and its subtypes)', d.include_group_rollups);
@@ -259,7 +265,8 @@ export class AnalysesSection {
         onset_tolerance_s: parseNumber(onTol.value, 'Onset tolerance', { min: 0 }),
         offset_tolerance_s: parseNumber(offTol.value, 'Offset tolerance', { min: 0 }),
         allow_many_to_one: many.input.checked,
-        min_channel_jaccard: parseNumber(jaccard.value, 'Channel overlap needed', { min: 0, max: 1 }),
+        // used only when channels are compared; otherwise the default, so that nothing unused is saved or differs
+        min_channel_jaccard: channel.input.checked ? parseNumber(jaccard.value, 'Channel overlap needed', { min: 0, max: 1 }) : defaultAnalysisConfig().min_channel_jaccard,
         min_events_per_category: parseNumber(minEvents.value, 'Fewest annotations for figures', { min: 0, integer: true }),
         timeline_max_recordings: parseNumber(timelines.value, 'Recordings drawn as timelines', { min: 0, integer: true }),
         duplicate_policy: duplicates.value,
@@ -312,15 +319,14 @@ export class AnalysesSection {
       h('details.admin-details', {}, h('summary', {}, 'Categories'), categories),
       h('details.admin-details', {}, h('summary', {}, 'Settings of the analysis'),
         preregNote,
-        h('fieldset.admin-fieldset', {}, h('legend', {}, 'Compare'), h('div.row.wrap', {}, time, channel)),
+        h('fieldset.admin-fieldset', {}, h('legend', {}, 'Compare'), h('div.row.wrap', {}, time, channel), jaccardField),
         h('div.form-grid', {},
           field('Time bins (s)', resolutions, { hint: hintWith('Bin widths for the binned comparisons; the exact comparison is always made.', '1-time-resolved-agreement') }),
-          field('Bin coverage needed', coverage, { hint: hintWith('Share of a bin an annotation must cover; 0 means any overlap.', '1-time-resolved-agreement') }),
+          field('Bin coverage needed (share of the bin, 0 to 1)', coverage, { hint: hintWith('Share of a bin an annotation must cover, whatever the bin\'s width: 0.5 is half of it, and 0 means any overlap.', '1-time-resolved-agreement') }),
           field('Event matching', criterion, { hint: hintWith('By overlap, by the closeness of start and end, or both.', '2-event-based-agreement') }),
           field('Overlap thresholds (IoU)', thresholds, { hint: hintWith('Intersection over union; each is reported, and 0 means any overlap.', '2-event-based-agreement') }),
           field('Main threshold (IoU)', primary, { hint: hintWith('For the boundary differences and the figures.', '2-event-based-agreement') }),
           field('Onset tolerance (s)', onTol), field('Offset tolerance (s)', offTol),
-          field('Channel overlap needed', jaccard, { hint: hintWith('Time-and-channel matching; 0 means one shared channel.', '3-channels') }),
           field('Fewest annotations for figures', minEvents),
           field('Recordings drawn as timelines', timelines),
           field('Someone saved a recording twice', duplicates),

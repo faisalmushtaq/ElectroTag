@@ -152,6 +152,12 @@ NOWRAP = {"category", "pair", "recording", "reference", "compared", "label_rater
 VALUE_TITLES = {"channel_mode": {"time_only": "time only", "time_and_channel": "time and channel"}}
 
 
+def _coverage_words(cfg: Any) -> str:
+    """When a time bin counts as marked, in words (min_bin_coverage is a share of the bin, from 0 to 1)."""
+    share = float(cfg.min_bin_coverage)
+    return f"at least {round(share * 100, 1):g}% of it is covered" if share > 0 else "any part of it is covered"
+
+
 @functools.lru_cache(maxsize=1)
 def _chart_rc() -> dict[str, Any]:
     """matplotlib settings of the charts: the design's serif when one is installed, and its colours."""
@@ -826,8 +832,7 @@ def build_html_report(result: Any) -> str:
             reps = (["exact"] if "exact" in reps else []) + [r for r in reps if r != "exact"]
             res = res.reindex(index=[c for c in show_cats if c in res.index], columns=reps).rename_axis(columns=None)
             add(_table(res.reset_index(), caption=f"Mean Cohen's kappa (time only) sample by sample ('Exact') and for "
-                       f"time bins of the widths shown; a bin counts as marked when at least {cfg.min_bin_coverage:g} "
-                       "of it is covered (0 = any overlap)."))
+                       f"time bins of the widths shown; a bin counts as marked when {_coverage_words(cfg)}."))
     else:
         add("<p class='muted'>No data.</p>")
 

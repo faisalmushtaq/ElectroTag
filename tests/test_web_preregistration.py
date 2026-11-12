@@ -293,3 +293,20 @@ def test_the_agreement_analysis_says_whether_it_used_the_pre_registered_settings
     names = z.namelist()
     assert "study/preregistration.json" in names and "study/agreement_settings_preregistered.json" in names
     assert "study/preregistration.json" in z.read("README.txt").decode()
+
+
+def test_the_channel_overlap_counts_only_when_channels_are_compared(empty: StudyService) -> None:
+    from electrotag.reliability.config import AnalysisConfig
+    from electrotag.web.preregistration import agreement_check
+
+    time_only = _with({"agreement": {"min_channel_jaccard": 0.5}}).preregistration.agreement
+    assert time_only["min_channel_jaccard"] == 0.0, "unused, so the default is kept"
+    both = _with({"agreement": {"min_channel_jaccard": 0.5, "channel_modes": ["time_only", "time_and_channel"]}})
+    assert both.preregistration.agreement["min_channel_jaccard"] == 0.5
+
+    _admin(empty, "settings_update", settings={"preregistration": {"agreement": {"resolutions_s": [0.5]}}})
+    s = empty.store.settings
+    assert agreement_check(s, AnalysisConfig(resolutions_s=(0.5,), min_channel_jaccard=0.3))["state"] == "matches"
+    assert agreement_check(s, AnalysisConfig(resolutions_s=(0.5,), min_channel_jaccard=0.3,
+                                             channel_modes=("time_only", "time_and_channel")))["differs"] == [
+        "channel_modes", "min_channel_jaccard"]

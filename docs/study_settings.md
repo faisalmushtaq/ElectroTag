@@ -1014,7 +1014,8 @@ as the study's own (null until saved): any of `resolutions_s`, `min_bin_coverage
 `onset_tolerance_s`, `offset_tolerance_s`, `allow_many_to_one`,
 `min_channel_jaccard`, `categories`, `duplicate_policy` and `channel_exclude`,
 checked as the analysis checks them, with those left out taking the analysis's
-defaults. `working_time` is the measure of working time the study reports,
+defaults. `min_channel_jaccard` counts only when `channel_modes` includes
+`time_and_channel`; otherwise the default is kept, whatever value is given. `working_time` is the measure of working time the study reports,
 `active_s` (the default) or `wall_s`, both columns of the activity analysis's
 `recordings.tsv`; the idle threshold is `logging.idle_after_s`.
 
