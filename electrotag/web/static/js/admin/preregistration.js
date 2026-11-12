@@ -101,15 +101,24 @@ export function confirmedText(entry) {
  * The list of groups with their state and a Confirm button each, for the Overview. `status` is the answer of
  * preregistration_get; `onChange(status)` is called with the answer of each confirmation.
  */
-export function preregistrationList(area, status, onChange) {
+export function preregistrationList(area, status, onChange, notice = '') {
   const msg = messageArea();
+  if (notice) msg.show('note', notice);
   const rows = (status.items || []).map((entry) => {
     const info = PREREG_ITEMS[entry.item] || { title: entry.item, section: 'overview', where: '' };
     const [words, kind] = stateChip(entry);
     const noTraining = entry.item === 'training' && !((entry.values || {}).sets || []).length;
     const confirm = entry.state === 'confirmed' ? null : actionButton(entry.state === 'changed' ? 'Confirm again' : noTraining ? 'Confirm: no training' : 'Confirm', {
       kind: 'small', working: 'Confirming…', msg, log: `prereg-confirm-${entry.item}`,
-      onClick: async () => onChange(await area.write('preregistration_confirm', { item: entry.item })),
+      onClick: async () => {
+        // with the values shown, so that settings another administrator changed meanwhile are never confirmed unseen
+        try {
+          onChange(await area.write('preregistration_confirm', { item: entry.item, values: entry.values }));
+        } catch (exc) {
+          if (!exc || exc.code !== 'changed') throw exc;
+          onChange(await area.read('preregistration_get'), exc.message); // the list as it is now, with why
+        }
+      },
     });
     if (confirm && !entry.ready) {
       confirm.disabled = true;
@@ -128,9 +137,9 @@ export function preregistrationList(area, status, onChange) {
 
 /** The Overview's card: the whole list while anything is to confirm, one folded line once all are confirmed. */
 export function preregistrationCard(area, status, host) {
-  const draw = (st) => {
+  const draw = (st, notice = '') => {
     clear(host);
-    const list = preregistrationList(area, st, draw);
+    const list = preregistrationList(area, st, draw, notice);
     if (st.done) {
       host.append(h('details.admin-details.prereg-done', {}, h('summary', {}, 'Settings chosen before the study started: all confirmed'), list));
       return;

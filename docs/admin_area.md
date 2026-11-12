@@ -920,7 +920,10 @@ Every one of these has a default, so ElectroTag cannot tell an untouched study f
 defaults on purpose. Each group therefore has its own **Confirm** button, which records who confirmed
 it, when and the values confirmed; the button beside it opens the section where the group is chosen.
 Changing a set's pass mark or criteria, adding a set or an assessment recording, or changing the
-training policy marks the training standards as changed in the same way.
+training policy marks the training standards as changed in the same way. Confirm confirms the values
+on your screen: when another administrator has changed the group since you opened the Overview,
+nothing is confirmed, a note says so, and the list shows the values as they are now to check and
+confirm again.
 Confirm stays greyed out for the agreement settings until the study has saved some of its own. A group
 whose settings change after it was confirmed is marked Changed since confirmed, with Confirm again,
 and every confirmation is kept in the audit log. Once every group is confirmed, the card folds into
