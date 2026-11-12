@@ -13,7 +13,9 @@ A group whose settings have changed since is shown as changed until it is confir
 every confirmation.
 
 * ``preregistration_get {}`` → :meth:`Preregistration.status`
-* ``preregistration_confirm {item}`` → the same, after the confirmation (audited)
+* ``preregistration_confirm {item, values?}`` → the same, after the confirmation (audited). ``values`` are the
+  settings the administrator was shown: when they are given and the study's settings are no longer those (another
+  administrator changed them since the page was loaded), nothing is confirmed and the answer is 409 ``changed``.
 
 The confirmations are records of the kind ``preregistration``, one for each group (its ID the group's name).
 """
@@ -43,8 +45,20 @@ def _moment(stamp: Any) -> datetime | None:
     return t if t.tzinfo else t.replace(tzinfo=timezone.utc)
 
 
+def _plain(v: Any) -> Any:
+    """A value as JSON compares it: a whole number the same whether it came as 30 or 30.0 (the browser sends back
+    the values it was shown, and JavaScript keeps no difference between them)."""
+    if isinstance(v, dict):
+        return {str(k): _plain(x) for k, x in v.items()}
+    if isinstance(v, (list, tuple)):
+        return [_plain(x) for x in v]
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    return v
+
+
 def _same(a: Any, b: Any) -> bool:
-    return json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
+    return json.dumps(_plain(a), sort_keys=True) == json.dumps(_plain(b), sort_keys=True)
 
 
 def set_standards(rs: Any) -> dict[str, Any]:
@@ -167,6 +181,10 @@ class Preregistration:
         if values is None:
             raise ApiError(409, "not_saved", "The study has no agreement settings of its own yet. Choose them on the "
                            "Analyses page and save them as the study's, then confirm them.")
+        if "values" in body and not _same(body["values"], values):
+            was = "was" if item == "working_time" else "were"
+            raise ApiError(409, "changed", f"The {ITEMS[item]} {was} changed after this page was loaded, so nothing "
+                           "was confirmed. Check the values as they are now, then confirm again.")
         now = now_local_iso()
         confirmed: list[bool] = []
 

@@ -168,6 +168,30 @@ def test_training_standards_cover_every_set_and_the_policy_or_confirm_that_there
     assert training["confirmed_values"]["sets"][0]["practice_pass"] == {"event_f1": 0.9, "label_accuracy": 0.8}
 
 
+def test_settings_changed_after_they_were_shown_are_never_confirmed(empty: StudyService) -> None:
+    shown = _admin(empty, "preregistration_get")["items"][1]["values"]
+    assert shown == {"measure": "active_s", "idle_after_s": 30.0}
+    # another administrator changes the idle threshold meanwhile
+    _admin(empty, "settings_update", settings={"logging": {"idle_after_s": 60}})
+    n = len(_admin(empty, "audit", limit=50)["entries"])
+    with pytest.raises(ApiError) as exc:
+        _admin(empty, "preregistration_confirm", item="working_time", values=shown)
+    assert (exc.value.status, exc.value.code) == (409, "changed")
+    assert exc.value.message == ("The measure of working time was changed after this page was loaded, so nothing was "
+                                 "confirmed. Check the values as they are now, then confirm again.")
+    assert empty.store.records("preregistration") == [] and len(_admin(empty, "audit", limit=50)["entries"]) == n
+    with pytest.raises(ApiError) as exc:
+        _admin(empty, "preregistration_confirm", item="repeats", values={"enabled": True, "rules": []})
+    assert exc.value.message.startswith("The repeat ratings were changed")
+
+    # The values as they are now (a whole number given as the browser sends it) are confirmed.
+    st = _admin(empty, "preregistration_confirm", item="working_time",
+                values={"measure": "active_s", "idle_after_s": 60})
+    assert st["items"][1]["state"] == "confirmed" and st["items"][1]["confirmed_values"]["idle_after_s"] == 60.0
+    st = _admin(empty, "preregistration_confirm", item="repeats")  # without values, as before: what is there now
+    assert st["items"][2]["state"] == "confirmed"
+
+
 def test_only_administrators_confirm(empty: StudyService) -> None:
     with pytest.raises(ApiError) as exc:
         empty.call("admin", User("A01", "", role="annotator"), {"op": "preregistration_confirm", "item": "repeats"})

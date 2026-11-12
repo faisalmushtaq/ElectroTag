@@ -80,6 +80,11 @@ export function confirm(admin, body) {
   if (values === null) {
     throw new ApiError(409, 'not_saved', 'The study has no agreement settings of its own yet. Choose them on the Analyses page and save them as the study\'s, then confirm them.');
   }
+  // the values the administrator was shown: changed since (by another administrator), nothing is confirmed
+  if ('values' in body && !same(body.values, values)) {
+    throw new ApiError(409, 'changed', `The ${ITEMS[item]} ${item === 'working_time' ? 'was' : 'were'} changed after this page was loaded, so nothing was confirmed. `
+      + 'Check the values as they are now, then confirm again.');
+  }
   const records = admin.s.preregistration || (admin.s.preregistration = {});
   const old = records[item];
   if (!old || !same(old.values, values)) {
