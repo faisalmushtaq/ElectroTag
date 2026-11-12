@@ -2,7 +2,7 @@
 // of electrotag.config.settings), with the words for their choices. Loaded with the Study settings
 // section, and by the sandbox when its settings are changed, so the sign-in page never needs them.
 
-import { MATCH_CRITERIA } from './model.js';
+import { MATCH_CRITERIA, analysisProblems, defaultAnalysisConfig } from './model.js';
 import { K_MAX, K_MIN } from './tasks_model.js';
 import { questionnaireProblems } from '../views/questionnaire_model.js';
 
@@ -108,7 +108,27 @@ export function repeatsProblems(rp) {
 /** Problems with the review, training and replay blocks of a study's settings, and the topographic map's (settingsProblems has the others). */
 export function expertSettingsProblems(s) {
   return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}), ...topomapProblems(s.display || {}), ...repeatsProblems(s.repeats || {}),
-    ...questionnaireProblems(s.questionnaire)]; // the sign-up questionnaire (questionnaire_model.js)
+    ...questionnaireProblems(s.questionnaire), // the sign-up questionnaire (questionnaire_model.js)
+    ...preregistrationProblems(s.preregistration || {})];
+}
+
+/** The agreement settings a study pre-registers (PREREGISTERED_AGREEMENT_KEYS in electrotag/config/settings.py). */
+export const PREREGISTERED_AGREEMENT_KEYS = Object.freeze(['resolutions_s', 'min_bin_coverage', 'channel_modes', 'include_any_artifact',
+  'include_group_rollups', 'match_criterion', 'iou_thresholds', 'primary_iou_threshold', 'onset_tolerance_s', 'offset_tolerance_s',
+  'allow_many_to_one', 'min_channel_jaccard', 'categories', 'duplicate_policy', 'channel_exclude']);
+
+/** The settings chosen before the study starts (preregistration): the measure of working time and the agreement settings. */
+export function preregistrationProblems(pr) {
+  const out = [];
+  if ('working_time' in pr && !['active_s', 'wall_s'].includes(pr.working_time)) {
+    out.push('The working time reported is active_s (idle time and time in other programs left out) or wall_s (all the time from opening to closing).');
+  }
+  const a = pr.agreement;
+  if (a === undefined || a === null) return out;
+  if (typeof a !== 'object' || Array.isArray(a)) return [...out, 'The pre-registered agreement settings are a block of settings, or none.'];
+  const unknown = Object.keys(a).find((k) => !PREREGISTERED_AGREEMENT_KEYS.includes(k));
+  if (unknown) return [...out, `The pre-registered agreement settings have no setting ${unknown}.`];
+  return [...out, ...analysisProblems({ ...defaultAnalysisConfig(), ...a })];
 }
 
 // ------------------------------------------------------------- the audit log's words for a change

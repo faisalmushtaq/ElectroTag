@@ -44,7 +44,9 @@ const TIMES = ['saved_at', 'created_at', 'modified_at', 'reported_at', 'reviewed
   'returned_at', 'expires_at', 'invited_at', 'ended_at', 'added_at', 'changed_at', 'save_times\\[\\]', 'today', 'days\\[\\]',
   // datasets, hand-outs and tracking (docs/api.md, "Datasets, collections, groups and hand-outs")
   'opened_at', 'assigned_at', 'set_aside_at', 'handed_out_at', 'given_at', 'first_assigned_at', 'last_saved_at', 'updated_at', 'removed_at',
-  'first_registered_at', 'last_registered_at'].join('|');
+  'first_registered_at', 'last_registered_at',
+  // the settings confirmed before the study starts (docs/api.md, "Before the study starts")
+  'confirmed_at', 'study_started_at'].join('|');
 export const ALLOWED = [
   ['.*', `(.*\\.)?(${TIMES})`, 'type', 'times: each side stamps its own'],
   ['.*', '(.*\\.)?(token|visit_id|session_id|problem_id|review_id|annotation\\.annotation_id)', 'type', 'IDs and tokens: each side makes its own'],
@@ -549,6 +551,17 @@ async function script(call) {
   await call('admin artifact_text_set (a look-alike that is no type)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { apart: [['Nothing', 'x']] } }));
   await call('me, with the study\'s own words', (s) => s.b.me());
   await call('admin artifact_text_set (back to the original)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { description: null, shape: null, apart: null } }));
+  // Before the study starts: the settings each confirmed with their values (electrotag/web/preregistration.py)
+  await call('admin preregistration_get', (s) => s.b.admin('preregistration_get', {}));
+  await call('admin preregistration_confirm (agreement not saved)', (s) => s.b.admin('preregistration_confirm', { item: 'agreement' }));
+  await call('admin preregistration_confirm (no such group)', (s) => s.b.admin('preregistration_confirm', { item: 'everything' }));
+  await call('admin settings_update (pre-registered settings)', (s) => s.b.admin('settings_update', { settings: { preregistration: { agreement: { resolutions_s: [0.5, 1], categories: ['EMG-artifact'] }, working_time: 'wall_s' } } }));
+  await call('admin preregistration_confirm (agreement)', (s) => s.b.admin('preregistration_confirm', { item: 'agreement' }));
+  await call('admin preregistration_confirm (working time)', (s) => s.b.admin('preregistration_confirm', { item: 'working_time' }));
+  await call('admin preregistration_confirm (working time, again)', (s) => s.b.admin('preregistration_confirm', { item: 'working_time' }));
+  await call('admin settings_update (the idle threshold)', (s) => s.b.admin('settings_update', { settings: { logging: { idle_after_s: 45 } } }));
+  await call('admin preregistration_get (working time changed)', (s) => s.b.admin('preregistration_get', {}));
+  await call('admin audit (the confirmations)', (s) => s.b.admin('audit', { limit: 4 }));
   await call('admin snippets_list', (s) => s.b.admin('snippets_list', { set_id: QUIZ.set_id }));
   const snippet = { set_id: QUIZ.set_id, recording_id: RIDS[1], start_s: 14, end_s: 17, label: 'Chewing-artifact', explanation: 'Rhythmic bursts on T7 and T8', channels: ['T7', 'T8'], snippet_id: 'chew' };
   await call('admin snippet_add', (s) => s.b.admin('snippet_add', snippet));

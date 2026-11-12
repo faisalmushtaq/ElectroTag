@@ -699,6 +699,11 @@ export class DemoAdmin {
     return this.op_settings_get();
   }
 
+  // Before the study starts: the settings confirmed before the study (demo_preregistration.js, loaded when asked)
+  async op_preregistration_get() { return (await import('./demo_preregistration.js')).status(this); }
+
+  async op_preregistration_confirm(body) { return (await import('./demo_preregistration.js')).confirm(this, body); }
+
   // ------------------------------------------------------------------ accounts
   op_users_list() {
     if (!this._isAdmin()) return { users: this._accounts.map((u) => ({ annotator_id: u.annotator_id, roles: rolesOf(u) })) };

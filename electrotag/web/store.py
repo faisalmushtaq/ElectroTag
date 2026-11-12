@@ -48,6 +48,9 @@ RECORD_KINDS += ("datasets", "collections", "groups", "handouts", "notices")
 RECORD_KINDS += ("questionnaires", "contacts")
 #: The study's own words for its artifact types, one record a type (electrotag/web/artifact_texts.py).
 RECORD_KINDS += ("artifact_texts",)
+#: The confirmations of the settings chosen before the study starts, one record a group
+#: (electrotag/web/preregistration.py).
+RECORD_KINDS += ("preregistration",)
 #: A record's ID: letters, digits, "_" and "-" (the browser makes 32 hexadecimal characters).
 RECORD_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
 #: The roles a person can be given now. One person may hold several (an expert who also annotates).

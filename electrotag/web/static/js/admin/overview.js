@@ -1,11 +1,12 @@
-// Overview: the study in numbers, the hand-outs open and the people with overdue work, the latest changes
-// from the audit log and the latest saved work.
+// Overview: the settings still to confirm before the study starts, the study in numbers, the hand-outs open and
+// the people with overdue work, the latest changes from the audit log and the latest saved work.
 
 import { h, clear } from '../ui/dom.js';
 import { MODES, routeForSection, whenText } from './model.js';
 import { auditSummary, joinRegistrations, opText, summaryText } from './audit_words.js';
 import { card, chip, dataTable, loading, messageArea, recordingName, sectionHead } from './ui.js';
 import { waitingCard } from './assessment_decision.js';
+import { preregistrationCard } from './preregistration.js';
 
 export class OverviewSection {
   constructor(area) {
@@ -14,6 +15,7 @@ export class OverviewSection {
     this.tiles = h('div.stat-tiles');
     this.due = h('div.overview-due');
     this.waiting = h('div.overview-waiting'); // finished assessments waiting for the study team's decision
+    this.prereg = h('div.overview-prereg'); // the settings to confirm before the study starts (preregistration.js)
     this.recent = dataTable([
       { title: 'When', render: (e) => whenText(e.at) },
       { title: 'Who', render: (e) => e.by },
@@ -28,7 +30,7 @@ export class OverviewSection {
     const go = (key, text) => h('button.btn', { type: 'button', onclick: () => area.go(key) }, text);
     this.el = h('section.admin-section', { 'data-section': 'overview' },
       sectionHead('Overview', 'The study at a glance. Choose a section to change something.'),
-      this.msg, this.waiting, this.tiles, this.due,
+      this.msg, this.prereg, this.waiting, this.tiles, this.due,
       h('div.btn-row.quick-links', {}, go('recordings', 'Add recordings'), go('annotators', 'Add an annotator'),
         go('assignments', 'Assign recordings'), go('handouts', 'Hand out recordings'), go('progress', 'See progress')),
       h('div.admin-grid', {},
@@ -69,6 +71,9 @@ export class OverviewSection {
         h('span', {}, c.overdue ? chip('Overdue', 'warning') : null, ` ${late}, across ${c.handouts_open} open hand-out${c.handouts_open === 1 ? '' : 's'}. `),
         h('a', { href: `#${routeForSection('handouts')}`, 'data-to': 'handouts' }, 'See the hand-outs')));
     }
+    clear(this.prereg);
+    this.area.read('preregistration_get').then((p) => preregistrationCard(this.area, p, this.prereg),
+      () => {}); // (a study server without it shows the Overview as before)
     clear(this.waiting);
     this.area.read('assessments_waiting_list').then((w) => {
       clear(this.waiting);

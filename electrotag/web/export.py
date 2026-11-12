@@ -241,6 +241,10 @@ def results_zip_file(store: Any, *, include_contacts: bool = False) -> Path:
                 zf.writestr(f"{base}/{rel}", data)
             for rel, data in study_record_files(store).items():
                 zf.writestr(rel, data)
+            from electrotag.web.preregistration import preregistration_files
+
+            for rel, data in preregistration_files(store).items():  # the settings chosen before the study started
+                zf.writestr(rel, data)
             readme = results_readme(store.name, base, now_local_iso())
             if include_contacts:
                 from electrotag.web.questionnaire import CONTACTS_WARNING, Questionnaire, contacts_csv
@@ -291,7 +295,10 @@ def results_readme(study_name: str, base: str, when: str) -> str:
         f"study/{STUDY_CONFIG_FILENAME} holds the study's settings, study/audit_log.jsonl every change an\n"
         "administrator made (oldest first, one JSON object a line), and study/manifests.json the description\n"
         "of each registered recording (its fingerprint, timing, channels and events). The EEG files\n"
-        "themselves never reached the study.\n\n"
+        "themselves never reached the study. study/preregistration.json holds the settings the study chose\n"
+        "before it started (agreement, working time and repeat ratings), with who confirmed each and when,\n"
+        "and study/agreement_settings_preregistered.json, when the study saved agreement settings of its\n"
+        "own, holds them in the form electrotag-agreement --config reads.\n\n"
         "Analyse the results with ElectroTag's commands, for example:\n"
         f"  electrotag-agreement {base} --config agreement_settings.json\n"
         f"  electrotag-activity {base}\n"

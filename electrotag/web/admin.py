@@ -46,6 +46,7 @@ SETTINGS_BLOCKS = ("filters", "display", "channels", "selection", "logging", "an
                    "gamification", "review", "training", "replay")
 SETTINGS_BLOCKS += ("questionnaire",)  # the sign-up questionnaire (electrotag/web/questionnaire.py)
 SETTINGS_BLOCKS += ("repeats",)  # repeat ratings for intra-rater reliability (electrotag/config/settings.py)
+SETTINGS_BLOCKS += ("preregistration",)  # chosen before the study starts (electrotag/web/preregistration.py)
 SET_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 ITEM_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$")
 EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,63}$")
@@ -86,6 +87,9 @@ OPERATIONS = READ_ONLY + (
 # The study's own words for its artifact types (electrotag/web/artifact_texts.py), for experts as well.
 READ_ONLY += ("artifact_texts_list",)
 OPERATIONS += ("artifact_texts_list", "artifact_text_set")
+# The settings chosen before the study starts and their confirmations (electrotag/web/preregistration.py).
+READ_ONLY += ("preregistration_get",)
+OPERATIONS += ("preregistration_get", "preregistration_confirm")
 # The training path (electrotag/web/training_path.py): the snippets of a set, a trainee's path and the gate, and
 # what the study team does after an assessment that did not meet the criteria.
 # The study team also passes or fails a finished assessment, lets a trainee through without passing, finds the
@@ -1861,6 +1865,12 @@ class Admin:
 
     def op_artifact_text_set(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.artifact_texts.set(user, body)
+
+    def op_preregistration_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.preregistration.get(user, body)
+
+    def op_preregistration_confirm(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return self.service.preregistration.confirm(user, body)
 
     def op_training_gate_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.training_path.admin_gate_get(user, body)

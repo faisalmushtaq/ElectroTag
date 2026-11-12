@@ -223,6 +223,10 @@ export class SettingsSection {
     const interactions = checkbox('Record how annotators use ElectroTag (clicks, keys and what is on the screen; never what they type)', lg.interactions !== false);
     const pointer = numberInput({ value: lg.pointer_hz ?? 5, min: 0, max: 60, step: 1 });
     const idle = numberInput({ value: lg.idle_after_s ?? 30, min: 5, max: 3600, step: 5 });
+    // the measure of working time the study reports (preregistration.working_time; Before the study starts)
+    const workingTime = select([['active_s', 'Active time (active_s): idle time and time in other programs left out'],
+      ['wall_s', 'Wall-clock time (wall_s): all the time from opening to closing']], (st.preregistration || {}).working_time || 'active_s');
+    workingTime.name = 'working_time';
     const notice = textArea({ value: this.data.logging_notice || '', rows: 4, placeholder: 'Shown to each annotator once after signing in, when interactions are recorded' });
     // the sign-up questionnaire (questionnaire.js)
     const questions = questionnaireEditor(st.questionnaire, () => this._setDirty(true));
@@ -268,6 +272,7 @@ export class SettingsSection {
           tour: tour.input.checked, snippets_quiz_required: snippetsQuiz.input.checked },
         logging: { interactions: interactions.input.checked, pointer_hz: numberOf(pointer, 'Pointer samples per second', { min: 0, max: 60 }),
           idle_after_s: numberOf(idle, 'Idle after', { min: 5, max: 3600 }) },
+        preregistration: { working_time: workingTime.value },
         questionnaire: questions.read(),
       };
       const merged = mergeSettings(st, wanted);
@@ -377,6 +382,8 @@ export class SettingsSection {
       card('Interaction log',
         interactions,
         h('div.form-grid', {}, field('Pointer samples per second over the EEG', pointer, { hint: '0 records none.' }), field('Idle after (seconds without input)', idle)),
+        field('Working time the study reports', workingTime, { hint: 'Both measures are in the activity analysis\'s tables, and idle periods are labelled in the logs either way; '
+          + 'this records which one the study\'s results use. Confirm it on the Overview, under Before the study starts.' }),
         field('Notice shown to annotators', notice, { hint: 'Say what is recorded and why, as the study\'s information sheet does.' })),
       this._saveBar(save, msg));
   }

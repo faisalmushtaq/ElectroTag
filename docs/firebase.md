@@ -313,6 +313,11 @@ Signed in as in step 11, you use the admin area (docs/admin_area.md explains eac
   their uses, the guided notes, the practice pass mark, the competency criteria and a short-segment
   quiz. *Add the example set* adds ElectroTag's simulated example set and gives you its
   recordings as a zip to pass on to trainees;
+* **confirm the settings chosen before the study starts**: the Overview's *Before the study starts*
+  lists the agreement settings (saved as the study's on the Analyses page), the working time the
+  study reports (Study settings) and the repeat ratings (Repeat ratings). Choose each, then press
+  its *Confirm*, before the first annotator saves a recording; the confirmations go into the
+  results download;
 * **change the settings**, follow the **progress**, run the **agreement**, **activity** and
   **competency** analyses, download the **results** (up to 25 MB; larger studies use step 14) and
   read the **audit log** of every change, with who made it and when.

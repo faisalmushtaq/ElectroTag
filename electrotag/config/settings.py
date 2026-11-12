@@ -420,6 +420,59 @@ class RepeatSettings:
         return next((r for r in self.rules if r.covers(recording_id, dataset_id)), None)
 
 
+#: The settings of the agreement analysis that a study pre-registers (electrotag.reliability.config.AnalysisConfig):
+#: what is measured and how marks are matched. Who is compared, the versions, the unit and the report's layout
+#: are chosen for each analysis.
+PREREGISTERED_AGREEMENT_KEYS = ("resolutions_s", "min_bin_coverage", "channel_modes", "include_any_artifact",
+                                "include_group_rollups", "match_criterion", "iou_thresholds", "primary_iou_threshold",
+                                "onset_tolerance_s", "offset_tolerance_s", "allow_many_to_one", "min_channel_jaccard",
+                                "categories", "duplicate_policy", "channel_exclude")
+#: The measures of working time a study can report (the activity analysis's recordings.tsv).
+WORKING_TIME_MEASURES = ("active_s", "wall_s")
+
+
+@dataclass(frozen=True)
+class PreregistrationSettings:
+    """preregistration: the settings a study chooses before it starts and reports with its results.
+
+    ``agreement`` holds the agreement analysis's settings saved as the study's (None until saved), and
+    ``working_time`` the measure of working time it reports. The confirmations are records of their own
+    (electrotag/web/preregistration.py), so that a change of these settings never confirms itself.
+    """
+
+    agreement: dict[str, Any] | None = None
+    working_time: str = "active_s"
+
+    @classmethod
+    def from_dict(cls, block: dict[str, Any]) -> PreregistrationSettings:
+        working = block.get("working_time", "active_s")
+        if working not in WORKING_TIME_MEASURES:
+            raise SettingsError("preregistration.working_time must be active_s (idle time and time in other programs "
+                                "left out) or wall_s (all the time from opening to closing)")
+        agreement = block.get("agreement")
+        if agreement is not None:
+            agreement = preregistered_agreement(agreement)
+        return cls(agreement=agreement, working_time=working)
+
+
+def preregistered_agreement(value: Any) -> dict[str, Any]:
+    """The agreement settings a study saves as its own, checked as the analysis checks them, with every key of
+    :data:`PREREGISTERED_AGREEMENT_KEYS` (those left out take the analysis's defaults)."""
+    from electrotag.reliability.config import AnalysisConfig
+
+    if not isinstance(value, dict):
+        raise SettingsError("preregistration.agreement must be a block of agreement settings, or null for none")
+    unknown = sorted(set(value) - set(PREREGISTERED_AGREEMENT_KEYS))
+    if unknown:
+        raise SettingsError(f"preregistration.agreement has no setting {unknown[0]!r}; it has "
+                            f"{', '.join(PREREGISTERED_AGREEMENT_KEYS)}")
+    try:
+        cfg = AnalysisConfig.from_dict({**AnalysisConfig().to_dict(), **value}).to_dict()
+    except (ValueError, TypeError) as exc:
+        raise SettingsError(f"preregistration.agreement cannot be used: {exc}") from exc
+    return {k: cfg[k] for k in PREREGISTERED_AGREEMENT_KEYS}
+
+
 @dataclass(frozen=True)
 class Settings:
     """All application settings after merging defaults and study overrides."""
@@ -475,6 +528,7 @@ class Settings:
     replay: ReplaySettings = field(default_factory=ReplaySettings)
     questionnaire: QuestionnaireSettings = field(default_factory=QuestionnaireSettings)
     repeats: RepeatSettings = field(default_factory=RepeatSettings)
+    preregistration: PreregistrationSettings = field(default_factory=PreregistrationSettings)
     raw: dict[str, Any] = field(repr=False, default_factory=dict)
 
     @classmethod
@@ -549,6 +603,7 @@ class Settings:
                 replay=ReplaySettings.from_dict(_block(data, "replay")),
                 questionnaire=QuestionnaireSettings.from_dict(_block(data, "questionnaire")),
                 repeats=RepeatSettings.from_dict(_block(data, "repeats")),
+                preregistration=PreregistrationSettings.from_dict(_block(data, "preregistration")),
                 raw=copy.deepcopy(data),
             )
         except KeyError as exc:  # pragma: no cover - defaults always complete
