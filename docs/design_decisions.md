@@ -26,6 +26,7 @@ research team.
 - [Screening-style adjudication and the library of conflicts (30 October 2026)](#screening-style-adjudication-and-the-library-of-conflicts-30-october-2026)
 - [Recordings of every channel count up to 256 (30 October 2026)](#recordings-of-every-channel-count-up-to-256-30-october-2026)
 - [The sign-up questionnaire and contact details (30 October 2026)](#the-sign-up-questionnaire-and-contact-details-30-october-2026)
+- [Idle time (12 November 2026)](#idle-time-12-november-2026)
 - [Decisions still open](#decisions-still-open)
 <!-- /contents -->
 
@@ -771,11 +772,37 @@ the save of the previous rating rather than from a calendar date, so that each p
 one the study chose whatever their pace. Rules are applied in order, first match, so that a study can
 set a default for all recordings and exceptions above it without overlaps to resolve.
 
+## Idle time (12 November 2026)
+
+The question left open was whether the time measurement should leave out periods without any
+interaction. The decision is that nothing is left out of the record: idle time is labelled, and the
+researchers choose at analysis whether to count it. ElectroTag already works this way, so no change
+to the application was needed.
+
+- **The logs label idle time rather than drop it.** Every period without input longer than
+  `logging.idle_after_s` (30 seconds by default) is logged as an `idle_start` and an `idle_end` with
+  its length, and every pause of the working-time clock carries its reason (`idle`, `hidden`,
+  `button`, `key` or `break`). What is logged does not depend on the clock's settings.
+- **The summary tables keep the measures apart.** Each row gives `wall_s` (opening to closing),
+  `active_s` (time with input, each gap counted up to the idle threshold), `inactive_s` (another
+  program in front), `idle_s` (the rest) and `idle_periods`, so an analysis can use `active_s` to
+  leave idle time out or `wall_s` to count it, and can test how much the choice matters
+  ([activity_logs.md](activity_logs.md), "Active time").
+- **The admin area sets what the working-time clock shows.** "Pause after (minutes without input)"
+  (`annotation.idle_pause_minutes`, 3 by default) pauses the clock the annotator sees; 0 keeps idle
+  time on it. "Idle after (seconds without input)" sets the threshold the logs use.
+
+A switch that left idle time out of the logs themselves was considered and not added: time that is
+not recorded cannot be recovered at analysis, whereas labelled time can always be left out. What
+remains for the research team is to pre-register which measure the study reports (`active_s` or
+`wall_s`) and the idle threshold, and to report them with the results.
+
 ## Decisions still open
 
 1. **Agreement settings to pre-register:** bin widths, the bin coverage rule,
    the matching criterion, IoU thresholds or tolerances, and one-to-one or
-   many-to-one matching.
+   many-to-one matching; and for working time, whether `active_s` or `wall_s`
+   is reported and with which idle threshold (see "Idle time" above).
 2. **Competency criteria:** which metrics, thresholds and categories, and the
    minimum number of reference events for a category to be judged.
 3. **Repeat annotation** for intra-rater (test-retest) reliability: the study
@@ -784,11 +811,9 @@ set a default for all recordings and exceptions above it without overlaps to res
    their own repeats. What is left to decide is the design: which recordings are
    rated again, how many times and after how many days, chosen before the study
    starts and reported with the results.
-4. **Idle time:** should the time measurement exclude periods without any
-   interaction?
-5. **Copyright holder** for the licence notice (currently "The ElectroTag
+4. **Copyright holder** for the licence notice (currently "The ElectroTag
    authors"), which may need to be agreed with the University.
-6. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
+5. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
    other housekeeping channels. They could instead be shown (not annotated) as
    a guide to poor electrode contact; this needs a decision on whether they
    would help or bias annotators.
