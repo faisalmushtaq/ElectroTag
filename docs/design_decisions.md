@@ -799,21 +799,21 @@ remains for the research team is to pre-register which measure the study reports
 
 ## Decisions still open
 
-1. **Agreement settings to pre-register:** bin widths, the bin coverage rule,
-   the matching criterion, IoU thresholds or tolerances, and one-to-one or
-   many-to-one matching; and for working time, whether `active_s` or `wall_s`
-   is reported and with which idle threshold (see "Idle time" above).
+1. **Settings to pre-register.** For agreement: bin widths, the bin coverage
+   rule, the matching criterion, IoU thresholds or tolerances, and one-to-one
+   or many-to-one matching. For working time: whether `active_s` or `wall_s` is
+   reported and with which idle threshold (see "Idle time" above). For
+   intra-rater (test-retest) reliability: which recordings are rated again, how
+   many times and after how many days, set in the admin area's Repeat ratings
+   section (the study setting `repeats`, since 11 November 2026); the agreement
+   analysis compares each annotator with their own repeats. All of these are
+   settings the study can change; what is left is to choose them before the
+   study starts and report them with the results.
 2. **Competency criteria:** which metrics, thresholds and categories, and the
    minimum number of reference events for a category to be judged.
-3. **Repeat annotation** for intra-rater (test-retest) reliability: the study
-   setting `repeats` and the admin area's Repeat ratings now schedule them (since
-   11 November 2026), and the agreement analysis compares each annotator with
-   their own repeats. What is left to decide is the design: which recordings are
-   rated again, how many times and after how many days, chosen before the study
-   starts and reported with the results.
-4. **Copyright holder** for the licence notice (currently "The ElectroTag
+3. **Copyright holder** for the licence notice (currently "The ElectroTag
    authors"), which may need to be agreed with the University.
-5. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
+4. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
    other housekeeping channels. They could instead be shown (not annotated) as
    a guide to poor electrode contact; this needs a decision on whether they
    would help or bias annotators.
