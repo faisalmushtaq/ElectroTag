@@ -315,7 +315,7 @@ export class AnalysesSection {
         h('fieldset.admin-fieldset', {}, h('legend', {}, 'Compare'), h('div.row.wrap', {}, time, channel)),
         h('div.form-grid', {},
           field('Time bins (s)', resolutions, { hint: hintWith('Bin widths for the binned comparisons; the exact comparison is always made.', '1-time-resolved-agreement') }),
-          field('Bin coverage needed', coverage, { hint: hintWith('Share of a bin an annotation must cover; 0 means any overlap.', '1-time-resolved-agreement') }),
+          field('Bin coverage needed (share of the bin, 0 to 1)', coverage, { hint: hintWith('Share of a bin an annotation must cover, whatever the bin\'s width: 0.5 is half of it, and 0 means any overlap.', '1-time-resolved-agreement') }),
           field('Event matching', criterion, { hint: hintWith('By overlap, by the closeness of start and end, or both.', '2-event-based-agreement') }),
           field('Overlap thresholds (IoU)', thresholds, { hint: hintWith('Intersection over union; each is reported, and 0 means any overlap.', '2-event-based-agreement') }),
           field('Main threshold (IoU)', primary, { hint: hintWith('For the boundary differences and the figures.', '2-event-based-agreement') }),

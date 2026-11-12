@@ -10,7 +10,7 @@ import { DEFAULT_SETTINGS } from '../../electrotag/web/static/js/api/demo_catalo
 import { currentValues, studyStartedAt } from '../../electrotag/web/static/js/api/demo_preregistration.js';
 import { defaultAnalysisConfig, settingsProblems } from '../../electrotag/web/static/js/admin/model.js';
 import { PREREGISTERED_AGREEMENT_KEYS, expertSettingsProblems } from '../../electrotag/web/static/js/admin/settings_checks.js';
-import { confirmedText, preregText, stateChip } from '../../electrotag/web/static/js/admin/preregistration.js';
+import { confirmedText, coverageText, preregText, stateChip } from '../../electrotag/web/static/js/admin/preregistration.js';
 import { preregNoteText, preregSummaryRow } from '../../electrotag/web/static/js/admin/analyses.js';
 
 const memory = () => {
@@ -41,7 +41,7 @@ test('the settings block: working time active_s by default, and agreement settin
 test('each group in words, with its state and who confirmed it', () => {
   assert.match(preregText('agreement', null), /Not saved yet/);
   assert.equal(preregText('agreement', agreement()),
-    'Time bins of 0.01, 0.05, 0.1 s with bin coverage 0.5; events matched by overlap (IoU 0, 0.2, 0.5, main 0.2), one-to-one; compared by time only; every artifact category.');
+    'Time bins of 0.01, 0.05, 0.1 s, a bin counting when at least 50% of it is marked; events matched by overlap (IoU 0, 0.2, 0.5, main 0.2), one-to-one; compared by time only; every artifact category.');
   assert.match(preregText('agreement', { ...agreement(), match_criterion: 'tolerance', allow_many_to_one: true, categories: ['EMG-artifact'] }),
     /by start and end within 0.5 s and 0.5 s, many-to-one; compared by time only; 1 artifact category\.$/);
   assert.match(preregText('working_time', { measure: 'active_s', idle_after_s: 30 }), /^Active time \(active_s\): idle time beyond 30 s/);
@@ -133,4 +133,11 @@ test('the study starts with its first research annotation, and confirmations aft
   const v = currentValues({ ...DEFAULT_SETTINGS, repeats: { enabled: true, rules: [{ id: 'a', name: ' Pilot ', recordings: 'some', datasets: ['p', 'p'], repeats: 2, interval_days: 7 }] } });
   assert.deepEqual(v.repeats.rules[0], { id: 'a', name: 'Pilot', recordings: 'some', datasets: ['p'], recording_ids: [], repeats: 2, interval_days: 7 });
   assert.equal(v.agreement, null);
+});
+
+test('bin coverage in words: a share of the bin, whatever its width', () => {
+  assert.equal(coverageText(0.5), 'a bin counting when at least 50% of it is marked');
+  assert.equal(coverageText(0.125), 'a bin counting when at least 12.5% of it is marked');
+  assert.equal(coverageText(1), 'a bin counting when at least 100% of it is marked');
+  assert.equal(coverageText(0), 'a bin counting when any part of it is marked');
 });

@@ -5,6 +5,10 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Bin coverage is now worded as the share of a bin that it is: the Analyses field reads Bin coverage needed (share of the
+bin, 0 to 1), Before the study starts describes it as a bin counting when at least 50% of it is marked, and the
+agreement report's caption gives it as a percentage ("any part of it" for 0).
+
 Before the study starts gains a fourth group, Training standards: each reference set's practice pass mark, number of
 assessment recordings and competency criteria (with a set that has none described as reporting results without a
 pass or fail), and the study's training policy. Its button opens Training, where a study without a set creates one;
