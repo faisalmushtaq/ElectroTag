@@ -7,13 +7,15 @@
 import { h, clear } from '../ui/dom.js';
 import { local } from '../util.js';
 import {
-  MATCH_CRITERIA, agreementSettingsFile, agreementSummaryRows, analysisProblems, defaultAnalysisConfig, fileParts, parseList, parseNumber, parseNumbers, setLabel,
+  MATCH_CRITERIA, agreementSettingsFile, agreementSummaryRows, analysisProblems, defaultAnalysisConfig, fileParts, parseList, parseNumber,
+  parseNumbers, setLabel, whenText,
 } from './model.js';
 import {
-  card, checkbox, checkList, dataTable, docsLink, downloadBase64, downloadText, elapsedTimer, field, infoTable, messageArea, numberInput, progressLine, reportFrame, sectionHead, select,
+  actionButton, card, checkbox, checkList, dataTable, docsLink, downloadBase64, downloadText, elapsedTimer, field, infoTable, messageArea, numberInput, progressLine, reportFrame, sectionHead, select,
   textInput,
 } from './ui.js';
 import { decisionBlock } from './assessment_decision.js';
+import { PREREGISTERED_AGREEMENT_KEYS } from './settings_checks.js';
 import { UNIT_CHOICES, VERSION_CHOICES, VERSION_WORDS, compareKeyResults, comparisonTsv, numberText, versionHint, versionSummaryRows } from './versions_model.js';
 
 /** A link to a part of the reliability guide (docs/reliability_guide.md), for the settings of the analysis. */
@@ -33,9 +35,31 @@ function downloads(base, html, tables, extra = []) {
   return h('div.btn-row.downloads', {}, ...buttons, ...extra);
 }
 
+/** What the agreement form starts from: the study's pre-registered settings, in words (Before the study starts). */
+export function preregNoteText(entry) {
+  const e = entry || {};
+  if (!e.values) return 'The study has not saved agreement settings of its own yet, so the settings below are the analysis\'s defaults. '
+    + 'Once chosen, save them as the study\'s and confirm them on the Overview, under Before the study starts.';
+  if (e.state === 'confirmed') return `The settings below are the study's pre-registered settings, confirmed by ${e.confirmed_by} (${whenText(e.confirmed_at)}). `
+    + 'An analysis with other settings is marked as exploratory.';
+  return `The settings below are the study's saved settings, ${e.state === 'changed' ? 'changed since they were confirmed' : 'not confirmed yet'}: `
+    + 'confirm them on the Overview, under Before the study starts.';
+}
+
+/** Whether an analysis used the study's pre-registered agreement settings (summary.preregistration), as a row; null
+ *  for a study that says nothing of them. */
+export function preregSummaryRow(summary) {
+  const p = (summary || {}).preregistration;
+  if (!p || !p.state) return null;
+  return ['Pre-registered settings', p.state === 'matches' ? 'Used: these are the study\'s pre-registered agreement settings'
+    : p.state === 'differs' ? `Not used: ${(p.differs || []).join(', ')} differ, so this analysis is exploratory`
+      : 'None saved yet (Before the study starts)'];
+}
+
 /** The analysis in a few plain figures; the key results are in the report below. */
 function summaryTable(summary) {
-  const rows = [...versionSummaryRows(summary), ...agreementSummaryRows(summary)];
+  const prereg = preregSummaryRow(summary);
+  const rows = [...versionSummaryRows(summary), ...agreementSummaryRows(summary), ...(prereg ? [prereg] : [])];
   return rows.length ? infoTable(rows) : null;
 }
 
@@ -84,8 +108,9 @@ export class AnalysesSection {
     this.msg.clear();
     if (this.running.size) return; // keep the forms and the running analysis as they are
     try {
-      const [u, r, s] = await Promise.all([this.area.read('users_list'), this.area.read('recordings_list', { scope: 'study' }),
-        this.area.read('sets_list').catch(() => ({ sets: [] }))]);
+      const [u, r, s, p] = await Promise.all([this.area.read('users_list'), this.area.read('recordings_list', { scope: 'study' }),
+        this.area.read('sets_list').catch(() => ({ sets: [] })), this.area.read('preregistration_get').catch(() => null)]);
+      this.prereg = p;
       this.users = u.users || [];
       this.recordings = r.recordings || [];
       this.sets = s.sets || [];
@@ -93,7 +118,9 @@ export class AnalysesSection {
       this.msg.problem(exc);
       return;
     }
-    const lists = JSON.stringify([this.users.map((u) => u.annotator_id), this.recordings.map((r) => r.recording_id), this.sets.map((x) => x.set_id)]);
+    // (and the study's pre-registered agreement settings, which the agreement form starts from)
+    const lists = JSON.stringify([this.users.map((u) => u.annotator_id), this.recordings.map((r) => r.recording_id), this.sets.map((x) => x.set_id),
+      (this._preregEntry() || {}).values || null]);
     if (lists !== this.lists) {
       this.lists = lists;
       for (const host of [this.agreementHost, this.activityHost, this.competencyHost, this.probabilityHost]) clear(host);
@@ -101,7 +128,7 @@ export class AnalysesSection {
       this._activityForm();
       this._competencyForm();
       this._probabilityForm();
-    }
+    } else if (this.preregNote) this.preregNote.textContent = preregNoteText(this._preregEntry()); // confirmed since, say
     // From a trainee's page in People ("Write T03's competency report"): their set and their name chosen.
     if (params && params.competency && this.competencyChoice) this.competencyChoice(params.competency, params.annotator, Boolean(params.decide));
   }
@@ -125,9 +152,15 @@ export class AnalysesSection {
     }
   }
 
+  /** The study's agreement settings and their confirmation (preregistration_get), or null. */
+  _preregEntry() {
+    return ((this.prereg || {}).items || []).find((i) => i.item === 'agreement') || null;
+  }
+
   // ------------------------------------------------------------- agreement
   _agreementForm() {
-    const d = defaultAnalysisConfig();
+    const saved = this._preregEntry();
+    const d = { ...defaultAnalysisConfig(), ...((saved && saved.values) || {}) };
     const annotators = checkList(this.users.map((u) => ({ value: u.annotator_id, text: u.annotator_id, extra: u.display_name || '' })),
       { legend: 'Annotators (none ticked: everyone)', name: 'agreement-annotators' });
     const recordings = checkList(this.recordings.map((r) => ({ value: r.recording_id, text: r.file_name || fileParts(r.recording_id).name, extra: fileParts(r.recording_id).folder })),
@@ -165,7 +198,7 @@ export class AnalysesSection {
     who.addEventListener('change', syncWho);
     const refField = field('Reference annotator', reference, { hint: 'When chosen, everyone is compared with this person only, for example an expert.' });
     const labels = this.area.labels;
-    const categories = checkList(labels.map((l) => ({ value: l.label, text: l.label })), { selected: labels.map((l) => l.label),
+    const categories = checkList(labels.map((l) => ({ value: l.label, text: l.label })), { selected: d.categories || labels.map((l) => l.label),
       legend: 'Artifact categories (ANY-artifact is always included)', name: 'agreement-categories' });
     const time = checkbox('Time only', d.channel_modes.includes('time_only'));
     const channel = checkbox('Time and channel', d.channel_modes.includes('time_and_channel'));
@@ -196,6 +229,21 @@ export class AnalysesSection {
     const msg = messageArea();
     const progress = progressLine();
     const result = this.results.agreement;
+    // The study's pre-registered settings: what the form starts from, and Save these as the study's.
+    const preregNote = h('p.caption.prereg-note', {}, preregNoteText(saved));
+    this.preregNote = preregNote;
+    const preregMsg = messageArea();
+    const savePrereg = actionButton('Save these as the study\'s pre-registered settings', { kind: 'small', working: 'Saving…', msg: preregMsg, log: 'agreement-preregister',
+      onClick: async () => {
+        preregMsg.clear();
+        const cfg = config();
+        const agreement = Object.fromEntries(PREREGISTERED_AGREEMENT_KEYS.map((k) => [k, cfg[k] ?? null]));
+        await this.area.write('settings_update', { settings: { preregistration: { agreement } } });
+        this.prereg = await this.area.read('preregistration_get').catch(() => this.prereg);
+        preregNote.textContent = preregNoteText(this._preregEntry());
+        this.lists = null; // the form starts from them next time
+        preregMsg.show('success', 'Saved as the study\'s agreement settings. Confirm them on the Overview, under Before the study starts.');
+      } });
     const run = h('button.btn.primary', { type: 'button', 'data-log': 'agreement-run' }, 'Run the agreement analysis');
     const config = () => {
       const cfg = {
@@ -263,6 +311,7 @@ export class AnalysesSection {
       refField,
       h('details.admin-details', {}, h('summary', {}, 'Categories'), categories),
       h('details.admin-details', {}, h('summary', {}, 'Settings of the analysis'),
+        preregNote,
         h('fieldset.admin-fieldset', {}, h('legend', {}, 'Compare'), h('div.row.wrap', {}, time, channel)),
         h('div.form-grid', {},
           field('Time bins (s)', resolutions, { hint: hintWith('Bin widths for the binned comparisons; the exact comparison is always made.', '1-time-resolved-agreement') }),
@@ -277,7 +326,10 @@ export class AnalysesSection {
           field('Someone saved a recording twice', duplicates),
           field('Channels to leave out', exclude)),
         many, h('p.caption', {}, 'Without many-to-one, each event is matched with at most one of the other annotator\'s. ', guide('2-event-based-agreement')),
-        anyArtifact, rollups, h('p.caption', {}, 'ANY-artifact and the group roll-ups: ', guide('1-time-resolved-agreement'))),
+        anyArtifact, rollups, h('p.caption', {}, 'ANY-artifact and the group roll-ups: ', guide('1-time-resolved-agreement')),
+        h('p.caption', {}, 'Saved as the study\'s: the categories and these settings, apart from the report\'s layout (Fewest annotations for figures and '
+          + 'Recordings drawn as timelines). Who is compared, the versions and the sessions are chosen for each analysis.'),
+        h('div.btn-row', {}, savePrereg), preregMsg),
       h('div.btn-row', {}, run), progress, msg), result);
   }
 

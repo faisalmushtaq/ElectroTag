@@ -270,6 +270,11 @@ export class DemoLibrary {
 
   _audit(op, summary, details) { this.a._audit(op, summary, details); }
 
+  // Before the study starts: the settings confirmed before the study (demo_preregistration.js, loaded when asked)
+  async op_preregistration_get() { return (await import('./demo_preregistration.js')).status(this.a); }
+
+  async op_preregistration_confirm(body) { return (await import('./demo_preregistration.js')).confirm(this.a, body); }
+
   // ------------------------------------------------------------- warnings found when recordings were added (Problems)
   /** The recordings with warnings found when they were added, the ones not dismissed first (admin.py). */
   async op_recording_warnings_list() {
