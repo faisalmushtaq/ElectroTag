@@ -137,12 +137,13 @@ def agreement_check(settings: Any, cfg: Any) -> dict[str, Any]:
     """How an agreement analysis's settings (an AnalysisConfig) stand against the study's pre-registered ones:
     ``state`` is ``not_saved`` (the study has saved none), ``matches`` or ``differs``, with the settings that
     differ."""
-    from electrotag.config.settings import PREREGISTERED_AGREEMENT_KEYS
+    from electrotag.config.settings import PREREGISTERED_AGREEMENT_KEYS, without_unused_channel_overlap
 
     saved = settings.preregistration.agreement
     if saved is None:
         return {"state": "not_saved", "differs": []}
     used = cfg.to_dict()
+    used |= without_unused_channel_overlap(used)
     differs = [k for k in PREREGISTERED_AGREEMENT_KEYS if not _same(saved.get(k), used.get(k))]
     return {"state": "differs" if differs else "matches", "differs": differs}
 

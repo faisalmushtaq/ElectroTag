@@ -70,7 +70,10 @@ function matchingText(a) {
 export function preregText(item, values) {
   if (item === 'agreement') {
     if (!values) return 'Not saved yet. Choose the settings on the Analyses page and save them as the study\'s.';
-    const channels = (values.channel_modes || []).includes('time_and_channel') ? 'time, and time and channel' : 'time only';
+    const modes = values.channel_modes || [];
+    const overlap = `with at least ${Math.round(Number(values.min_channel_jaccard) * 1000) / 10}% of the channels shared`;
+    const withChannels = Number(values.min_channel_jaccard) > 0 ? `time and channel (${overlap})` : 'time and channel (one shared channel enough)';
+    const channels = modes.includes('time_and_channel') ? (modes.includes('time_only') ? `time, and by ${withChannels}` : withChannels) : 'time only';
     const cats = values.categories ? plural(values.categories.length, 'artifact category', 'artifact categories') : 'every artifact category';
     return `Time bins of ${numbers(values.resolutions_s)} s, ${coverageText(values.min_bin_coverage)}; events matched ${matchingText(values)}, `
       + `${values.allow_many_to_one ? 'many-to-one' : 'one-to-one'}; compared by ${channels}; ${cats}.`;

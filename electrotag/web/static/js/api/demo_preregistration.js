@@ -36,6 +36,8 @@ export function currentValues(settings, sets = []) {
   const rp = settings.repeats || {};
   const d = defaultAnalysisConfig();
   const agreement = pr.agreement ? Object.fromEntries(PREREGISTERED_AGREEMENT_KEYS.map((k) => [k, k in pr.agreement ? pr.agreement[k] : d[k]])) : null;
+  // the channel overlap counts only when channels are compared, so otherwise it is kept as the default (settings.py)
+  if (agreement && !(agreement.channel_modes || []).includes('time_and_channel')) agreement.min_channel_jaccard = d.min_channel_jaccard;
   return {
     agreement,
     working_time: { measure: pr.working_time || 'active_s', idle_after_s: Number((settings.logging || {}).idle_after_s ?? 30) },

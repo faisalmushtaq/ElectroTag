@@ -470,7 +470,17 @@ def preregistered_agreement(value: Any) -> dict[str, Any]:
         cfg = AnalysisConfig.from_dict({**AnalysisConfig().to_dict(), **value}).to_dict()
     except (ValueError, TypeError) as exc:
         raise SettingsError(f"preregistration.agreement cannot be used: {exc}") from exc
-    return {k: cfg[k] for k in PREREGISTERED_AGREEMENT_KEYS}
+    return {k: cfg[k] for k in PREREGISTERED_AGREEMENT_KEYS} | without_unused_channel_overlap(cfg)
+
+
+def without_unused_channel_overlap(cfg: dict[str, Any]) -> dict[str, Any]:
+    """The channel overlap needed counts only when channels are compared (time_and_channel); otherwise it is kept as
+    the default, so that a value nobody uses is neither pre-registered nor a difference from it."""
+    from electrotag.reliability.config import AnalysisConfig
+
+    if "time_and_channel" in (cfg.get("channel_modes") or []):
+        return {}
+    return {"min_channel_jaccard": AnalysisConfig().min_channel_jaccard}
 
 
 @dataclass(frozen=True)

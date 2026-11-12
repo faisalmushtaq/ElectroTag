@@ -8,6 +8,9 @@ Each section below describes the changes in one version of ElectroTag;
 Bin coverage is now worded as the share of a bin that it is: the Analyses field reads Bin coverage needed (share of the
 bin, 0 to 1), Before the study starts describes it as a bin counting when at least 50% of it is marked, and the
 agreement report's caption gives it as a percentage ("any part of it" for 0).
+Channel overlap needed (share of the channels, 0 to 1) now appears under Compare only once Time and channel is ticked,
+since it counts only when channels are compared; otherwise its default is kept, so that the pre-registered agreement
+settings never hold or differ by a value nobody uses, and Before the study starts mentions it only with channels.
 
 Before the study starts gains a fourth group, Training standards: each reference set's practice pass mark, number of
 assessment recordings and competency criteria (with a set that has none described as reporting results without a

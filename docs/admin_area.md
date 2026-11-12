@@ -952,8 +952,8 @@ example) rather than every pair with each other. Categories chooses the artifact
 settings, with ElectroTag's defaults: the time bins for the binned comparisons, the share of a bin
 an annotation must cover, how events are matched (by overlap, by the closeness of their start and
 end, or both) with the overlap thresholds and the main threshold, the tolerances, whether one event
-may match several, the channel overlap needed when channels are compared, which channels to leave
-out, and when a category has too few annotations for the figures. The defaults are starting points:
+may match several, the channel overlap needed (shown under Compare once Time and channel is ticked,
+since it counts only when channels are compared), which channels to leave out, and when a category has too few annotations for the figures. The defaults are starting points:
 choose the settings for your study before you look at its results, report them, and keep The
 settings used (JSON) with the report. Each setting links to the part of the reliability guide that
 explains it.

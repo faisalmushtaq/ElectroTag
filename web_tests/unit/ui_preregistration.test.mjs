@@ -141,3 +141,15 @@ test('bin coverage in words: a share of the bin, whatever its width', () => {
   assert.equal(coverageText(1), 'a bin counting when at least 100% of it is marked');
   assert.equal(coverageText(0), 'a bin counting when any part of it is marked');
 });
+
+test('the channel overlap is described and kept only when channels are compared', async () => {
+  const both = { ...agreement(), channel_modes: ['time_only', 'time_and_channel'], min_channel_jaccard: 0.5 };
+  assert.match(preregText('agreement', both), /compared by time, and by time and channel \(with at least 50% of the channels shared\);/);
+  assert.match(preregText('agreement', { ...both, channel_modes: ['time_and_channel'], min_channel_jaccard: 0 }), /compared by time and channel \(one shared channel enough\);/);
+  assert.match(preregText('agreement', { ...agreement(), min_channel_jaccard: 0.5 }), /compared by time only;/);
+  const b = await demo();
+  await b.admin('settings_update', { settings: { preregistration: { agreement: { min_channel_jaccard: 0.5 } } } });
+  assert.equal((await b.admin('preregistration_get')).items[0].values.min_channel_jaccard, 0, 'unused, so the default is kept');
+  await b.admin('settings_update', { settings: { preregistration: { agreement: { min_channel_jaccard: 0.5, channel_modes: ['time_and_channel'] } } } });
+  assert.equal((await b.admin('preregistration_get')).items[0].values.min_channel_jaccard, 0.5);
+});
