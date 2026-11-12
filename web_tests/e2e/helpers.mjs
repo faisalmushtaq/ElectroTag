@@ -141,9 +141,35 @@ export async function skipFirstStages(page, timeout = 30000) {
  * Give a folder to a folder input (`webkitdirectory`). In WebKit, Playwright hangs until its timeout when one
  * browser is given the same folder a second time (the runner keeps one browser for every test), so each call
  * gives a fresh copy of the folder, under its own name and with its dates, so that what the page reads stays the same.
+ *
+ * For a folder, Playwright (1.63, `_setInputFiles` in its server's dom.ts) waits for the input's `input` event,
+ * with a listener it attaches while it hands over the folder. WebKit reads the folder on its own and can fire the
+ * event before that listener is there: the page then has its files (the review is on screen) while Playwright waits
+ * out its timeout. So this watches for the input's `change` event and, once the files have arrived, fires `input`
+ * again (nothing in the application listens for it) until Playwright has finished. A folder that never arrives
+ * still fails at the timeout, as before.
  */
 export async function chooseFolder(page, selector, folder, options = {}) {
   const copy = path.join(fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'et-folder-')), path.basename(folder));
   fs.cpSync(folder, copy, { recursive: true, preserveTimestamps: true }); // the pages compare files' dates
-  await page.setInputFiles(selector, copy, options);
+  const timeout = options.timeout ?? 30000;
+  await page.waitForSelector(selector, { state: 'attached', timeout });
+  const mark = `et${Date.now()}${Math.random().toString(36).slice(2)}`;
+  await page.$eval(selector, (el, m) => el.addEventListener('change', () => { el.dataset.etFolderArrived = m; }, { once: true }), mark);
+  let settled = false;
+  const given = page.setInputFiles(selector, copy, options).finally(() => { settled = true; });
+  const nudge = (async () => {
+    const arrived = await page.waitForFunction(([sel, m]) => document.querySelector(sel)?.dataset.etFolderArrived === m,
+      [selector, mark], { timeout }).then(() => true, () => false);
+    for (let i = 0; arrived && !settled && i < 40; i += 1) {
+      await new Promise((r) => { setTimeout(r, 250); });
+      if (!settled) await page.$eval(selector, (el) => el.dispatchEvent(new Event('input'))).catch(() => {});
+    }
+  })();
+  try {
+    await given;
+  } finally {
+    settled = true;
+    await nudge;
+  }
 }
