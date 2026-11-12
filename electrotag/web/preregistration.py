@@ -1,9 +1,12 @@
 """The settings a study chooses before it starts (docs/admin_area.md, "Before the study starts").
 
-Three groups of settings decide what a study's results mean, so the study team chooses them before the study
+Four groups of settings decide what a study's results mean, so the study team chooses them before the study
 starts and reports them with the results: the agreement analysis's settings (saved as the study's own in
 ``preregistration.agreement``), the measure of working time it reports (``preregistration.working_time``, with
-the idle threshold ``logging.idle_after_s``) and the repeat ratings for test-retest reliability (``repeats``).
+the idle threshold ``logging.idle_after_s``), the repeat ratings for test-retest reliability (``repeats``) and the
+training standards: the study's training policy (``training``) with each reference set's practice pass mark,
+assessment matching and competency criteria, which the sets keep themselves. A study without training sets
+confirms that it uses none.
 Every one has a default, so an untouched study cannot be told from one that kept the defaults on purpose: an
 administrator confirms each group, and the confirmation keeps who confirmed it, when, and the values confirmed.
 A group whose settings have changed since is shown as changed until it is confirmed again; the audit log keeps
@@ -29,7 +32,7 @@ from electrotag.web.store import User
 KIND = "preregistration"
 #: The groups of settings, in the order the admin area lists them, with their names in the audit log.
 ITEMS = {"agreement": "agreement settings", "working_time": "measure of working time",
-         "repeats": "repeat ratings"}
+         "repeats": "repeat ratings", "training": "training standards"}
 
 
 def _moment(stamp: Any) -> datetime | None:
@@ -44,8 +47,40 @@ def _same(a: Any, b: Any) -> bool:
     return json.dumps(a, sort_keys=True) == json.dumps(b, sort_keys=True)
 
 
-def current_values(settings: Any) -> dict[str, Any]:
+def set_standards(rs: Any) -> dict[str, Any]:
+    """A reference set's standards for passing: the practice pass mark, how assessment marks are matched with the
+    reference and the competency criteria, as the admin area shows them (a set kept with values ElectroTag cannot
+    read gives them as kept)."""
+    from electrotag.training.assessment import CompetencyCriteria, assessment_matching
+    from electrotag.training.programme import PassRule
+
+    try:
+        criteria = CompetencyCriteria.from_dict(rs.criteria).to_dict()
+    except (ValueError, KeyError, TypeError):
+        criteria = dict(rs.criteria)
+    try:
+        practice_pass = PassRule.from_dict(rs.practice_pass).to_dict()
+    except (ValueError, TypeError):
+        practice_pass = dict(rs.practice_pass)
+    try:
+        matching = assessment_matching(rs)
+    except (ValueError, TypeError):
+        matching = {}
+    return {"practice_pass": practice_pass, "assessment_matching": matching, "criteria": criteria}
+
+
+def training_values(store: Any) -> dict[str, Any]:
+    """The training standards: the study's training policy and each reference set's standards for passing."""
+    tp = store.settings.training
+    sets = [{"set_id": rs.set_id, "name": rs.name, "assessment_recordings": len(rs.assessment_recordings),
+             **set_standards(rs)} for rs in sorted(store.reference_sets(), key=lambda r: r.set_id)]
+    return {"policy": {"skippable": list(tp.skippable), "gate": tp.gate, "tour": tp.tour,
+                       "snippets_quiz_required": tp.snippets_quiz_required}, "sets": sets}
+
+
+def current_values(store: Any) -> dict[str, Any]:
     """The settings of each group as they are now (what a confirmation keeps)."""
+    settings = store.settings
     rp = settings.repeats
     return {
         "agreement": settings.preregistration.agreement,
@@ -56,6 +91,7 @@ def current_values(settings: Any) -> dict[str, Any]:
                                "recordings": "all" if r.every_recording else "some",
                                "datasets": list(r.datasets), "recording_ids": list(r.recording_ids),
                                "repeats": r.repeats, "interval_days": r.interval_days} for r in rp.rules]},
+        "training": training_values(store),
     }
 
 
@@ -73,7 +109,7 @@ def status(store: Any) -> dict[str, Any]:
     ``state`` is ``not_confirmed``, ``confirmed`` (its values are the ones confirmed) or ``changed`` (they have
     changed since); ``before_start`` says whether it was confirmed before the first study recording was saved.
     """
-    values = current_values(store.settings)
+    values = current_values(store)
     records = {str(r.get("item")): r for r in store.records(KIND)}
     started = study_started_at(store)
     start = _moment(started)
@@ -126,7 +162,7 @@ class Preregistration:
         item = body.get("item")
         if item not in ITEMS:
             raise ApiError(400, "bad_request", f"item must be one of {', '.join(ITEMS)}")
-        values = current_values(self.store.settings)[item]
+        values = current_values(self.store)[item]
         if values is None:
             raise ApiError(409, "not_saved", "The study has no agreement settings of its own yet. Choose them on the "
                            "Analyses page and save them as the study's, then confirm them.")
@@ -144,6 +180,8 @@ class Preregistration:
         if confirmed:
             started = study_started_at(self.store)
             when = " after the study started" if started else ""
+            if item == "training" and not values["sets"]:
+                when = " (no training sets: the study uses no training)" + when
             audit.record(self.store, user.annotator_id, "preregistration_confirm",
                          f"Confirmed the {ITEMS[item]}{when}", {"item": item, "values": values,
                                                                 "study_started_at": started})

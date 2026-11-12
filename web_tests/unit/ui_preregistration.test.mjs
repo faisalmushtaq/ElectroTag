@@ -75,7 +75,7 @@ test('the sandbox: each group confirmed with its values, shown as changed when t
   const b = await demo();
   let st = await b.admin('preregistration_get');
   assert.deepEqual(st.items.map((i) => [i.item, i.state, i.ready]), [['agreement', 'not_confirmed', false], ['working_time', 'not_confirmed', true],
-    ['repeats', 'not_confirmed', true]]);
+    ['repeats', 'not_confirmed', true], ['training', 'not_confirmed', true]]);
   assert.equal(st.done, false);
   assert.equal(st.study_started_at, null);
   await assert.rejects(() => b.admin('preregistration_confirm', { item: 'agreement' }), (e) => e.status === 409 && e.code === 'not_saved');
@@ -84,12 +84,12 @@ test('the sandbox: each group confirmed with its values, shown as changed when t
   await b.admin('settings_update', { settings: { preregistration: { agreement: { resolutions_s: [0.5, 1] } } } });
   st = await b.admin('preregistration_get');
   assert.deepEqual(st.items[0].values, { ...agreement(), resolutions_s: [0.5, 1] }, 'the rest as the analysis\'s defaults');
-  for (const item of ['agreement', 'working_time', 'repeats']) st = await b.admin('preregistration_confirm', { item });
+  for (const item of ['agreement', 'working_time', 'repeats', 'training']) st = await b.admin('preregistration_confirm', { item });
   assert.equal(st.done, true);
-  assert.deepEqual(st.items.map((i) => [i.confirmed_by, i.before_start]), [['ADMIN', true], ['ADMIN', true], ['ADMIN', true]]);
+  assert.deepEqual(st.items.map((i) => [i.confirmed_by, i.before_start]), [['ADMIN', true], ['ADMIN', true], ['ADMIN', true], ['ADMIN', true]]);
   assert.deepEqual(st.items[1].confirmed_values, { measure: 'active_s', idle_after_s: 30 });
-  const log = (await b.admin('audit', { limit: 3 })).entries.map((e) => [e.op, e.summary]);
-  assert.deepEqual(log, [['preregistration_confirm', 'Confirmed the repeat ratings'], ['preregistration_confirm', 'Confirmed the measure of working time'],
+  const log = (await b.admin('audit', { limit: 4 })).entries.map((e) => [e.op, e.summary]);
+  assert.deepEqual(log, [['preregistration_confirm', 'Confirmed the training standards'], ['preregistration_confirm', 'Confirmed the repeat ratings'], ['preregistration_confirm', 'Confirmed the measure of working time'],
     ['preregistration_confirm', 'Confirmed the agreement settings']]);
   const n = (await b.admin('audit', { limit: 50 })).entries.length;
   await b.admin('preregistration_confirm', { item: 'repeats' });
@@ -98,10 +98,32 @@ test('the sandbox: each group confirmed with its values, shown as changed when t
   // the idle threshold is part of working time: changed, it asks to be confirmed again
   await b.admin('settings_update', { settings: { logging: { idle_after_s: 60 } } });
   st = await b.admin('preregistration_get');
-  assert.deepEqual(st.items.map((i) => i.state), ['confirmed', 'changed', 'confirmed']);
+  assert.deepEqual(st.items.map((i) => i.state), ['confirmed', 'changed', 'confirmed', 'confirmed']);
   assert.equal(st.done, false);
   st = await b.admin('preregistration_confirm', { item: 'working_time' });
   assert.equal(st.items[1].state, 'confirmed');
+
+  // the training standards: the sandbox's own set with its pass mark and criteria, as Training shows them
+  const training = st.items[3];
+  const { sets } = await b.admin('sets_list');
+  assert.deepEqual(training.values.sets.map((x) => [x.set_id, x.criteria]), sets.map((x) => [x.set_id, x.criteria]));
+  await b.admin('set_update', { set_id: sets[0].set_id, practice_pass: { event_f1: 0.9, label_accuracy: 0.8 } });
+  st = await b.admin('preregistration_get');
+  assert.equal(st.items[3].state, 'changed');
+  assert.equal(st.items[3].values.sets[0].practice_pass.event_f1, 0.9);
+});
+
+test('the training standards in words, and the study without training', () => {
+  const policy = { skippable: ['tour', 'snippets', 'guided', 'practice'], gate: 'met', tour: true, snippets_quiz_required: false };
+  assert.match(preregText('training', { policy, sets: [] }), /^No training sets\. Confirm this if the study uses no training/);
+  const set = (criteria, n = 2) => ({ set_id: 'pilot', name: 'Pilot set', assessment_recordings: n, practice_pass: { event_f1: 0.8, label_accuracy: 0.75 }, criteria });
+  assert.equal(preregText('training', { policy, sets: [set({ criteria: [{ metric: 'event_f1', threshold: 0.7, scope: 'overall' },
+    { metric: 'false_positives_per_min', threshold: 2, scope: 'overall' }, { metric: 'time_kappa', threshold: 0.6, scope: 'each_category' }], min_reference_events: 3 })] }),
+  'Pilot set: practice passes at 80% score and 75% right type; 2 assessment recordings; passing needs event F1 at least 0.7, extra events per minute at most 2, '
+    + 'Cohen\'s kappa at least 0.6 in each category (categories with at least 3 reference events). Study work waits until the competency assessment is passed. '
+    + 'Trainees may skip the tour, the snippets, learning with the experts, practice.');
+  assert.match(preregText('training', { policy: { ...policy, skippable: [], gate: 'off' }, sets: [set({ criteria: [] }, 0)] }),
+    /no assessment recordings yet; no competency criteria ticked, so its assessment reports results without a pass or fail\. Study work is open at once\. Trainees may skip no stage\.$/);
 });
 
 test('the study starts with its first research annotation, and confirmations after it say so', () => {

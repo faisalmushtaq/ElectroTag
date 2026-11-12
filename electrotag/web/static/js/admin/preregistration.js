@@ -7,7 +7,7 @@
 // group is confirmed, and folds it into one line afterwards.
 
 import { h, clear } from '../ui/dom.js';
-import { plural, whenText } from './model.js';
+import { METRICS, plural, whenText } from './model.js';
 import { actionButton, card, chip, messageArea } from './ui.js';
 import { ruleText } from './repeats.js';
 
@@ -16,7 +16,40 @@ export const PREREG_ITEMS = Object.freeze({
   agreement: { title: 'Agreement settings', section: 'analyses', where: 'Choose on the Analyses page' },
   working_time: { title: 'Working time', section: 'settings', where: 'Choose in Study settings' },
   repeats: { title: 'Repeat ratings', section: 'repeats', where: 'Choose in Repeat ratings' },
+  training: { title: 'Training standards', section: 'training', where: 'Choose in Training' },
 });
+
+const percent = (x) => `${Math.round(Number(x) * 100)}%`;
+/** Short names of the competency measures (model.js METRICS has their full labels). */
+const MEASURE_WORDS = { event_f1: 'event F1', event_recall: 'sensitivity', event_precision: 'precision', time_kappa: 'Cohen\'s kappa',
+  time_positive_agreement: 'positive agreement', channel_positive_agreement: 'positive agreement by channel', mean_iou: 'mean overlap (IoU)',
+  mean_channel_jaccard: 'mean channel overlap', label_accuracy: 'same label', false_positives_per_min: 'extra events per minute' };
+const SKIP_WORDS = { tour: 'the tour', snippets: 'the snippets', guided: 'learning with the experts', practice: 'practice' };
+const GATE_WORDS = { met: 'Study work waits until the competency assessment is passed.', completed: 'Study work waits until the competency assessment is finished.',
+  off: 'Study work is open at once.' };
+
+/** A set's competency criteria in words, or what an assessment does without them. */
+function criteriaText(c) {
+  const list = (c && c.criteria) || [];
+  if (!list.length) return 'no competency criteria ticked, so its assessment reports results without a pass or fail';
+  const one = (x) => `${MEASURE_WORDS[x.metric] || x.metric} ${(METRICS[x.metric] || {}).better === 'lower' ? 'at most' : 'at least'} ${x.threshold}`
+    + `${x.scope === 'each_category' ? ' in each category' : ''}`;
+  return `passing needs ${list.map(one).join(', ')} (categories with at least ${c.min_reference_events} reference events)`;
+}
+
+/** The training standards in words: each set's pass marks and criteria, then the study's training policy. */
+function trainingText(v) {
+  const sets = v.sets || [];
+  if (!sets.length) return 'No training sets. Confirm this if the study uses no training; otherwise create a set in Training first.';
+  const p = v.policy || {};
+  const skip = (p.skippable || []).map((x) => SKIP_WORDS[x] || x);
+  const each = sets.map((x) => {
+    const pass = x.practice_pass || {};
+    const n = x.assessment_recordings ? plural(x.assessment_recordings, 'assessment recording') : 'no assessment recordings yet';
+    return `${x.name || x.set_id}: practice passes at ${percent(pass.event_f1)} score and ${percent(pass.label_accuracy)} right type; ${n}; ${criteriaText(x.criteria)}.`;
+  });
+  return `${each.join(' ')} ${GATE_WORDS[p.gate] || ''} Trainees may skip ${skip.length ? skip.join(', ') : 'no stage'}.`;
+}
 
 const numbers = (xs) => (xs || []).map((x) => String(x)).join(', ');
 
@@ -43,6 +76,7 @@ export function preregText(item, values) {
       ? `Wall-clock time (wall_s): all the time from opening a recording to closing it. Idle periods, beyond ${idle} without input, are still labelled in the logs.`
       : `Active time (active_s): idle time beyond ${idle} without input, and time in other programs, left out.`;
   }
+  if (item === 'training') return trainingText(values || {});
   const r = values || {};
   if (!r.enabled) return 'Off: no recording is rated again.';
   return `On. ${(r.rules || []).map((x) => ruleText(x)).join(' ')}`;
@@ -72,7 +106,8 @@ export function preregistrationList(area, status, onChange) {
   const rows = (status.items || []).map((entry) => {
     const info = PREREG_ITEMS[entry.item] || { title: entry.item, section: 'overview', where: '' };
     const [words, kind] = stateChip(entry);
-    const confirm = entry.state === 'confirmed' ? null : actionButton(entry.state === 'changed' ? 'Confirm again' : 'Confirm', {
+    const noTraining = entry.item === 'training' && !((entry.values || {}).sets || []).length;
+    const confirm = entry.state === 'confirmed' ? null : actionButton(entry.state === 'changed' ? 'Confirm again' : noTraining ? 'Confirm: no training' : 'Confirm', {
       kind: 'small', working: 'Confirming…', msg, log: `prereg-confirm-${entry.item}`,
       onClick: async () => onChange(await area.write('preregistration_confirm', { item: entry.item })),
     });

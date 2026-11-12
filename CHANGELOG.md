@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Before the study starts gains a fourth group, Training standards: each reference set's practice pass mark, number of
+assessment recordings and competency criteria (with a set that has none described as reporting results without a
+pass or fail), and the study's training policy. Its button opens Training, where a study without a set creates one;
+a study that uses no training confirms that with Confirm: no training. Changing a set's standards, adding a set or
+changing the training policy asks for the group to be confirmed again.
+
 Before the study starts: the admin area's Overview lists the settings a study chooses before its first study
 recording is saved, until each is confirmed: the agreement settings, the working time the study reports (active
 or wall-clock, with the idle threshold) and the repeat ratings. Each is confirmed on its own, keeping who confirmed

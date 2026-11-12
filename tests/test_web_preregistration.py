@@ -80,8 +80,8 @@ def empty(tmp_path: Path):
 def test_each_group_is_confirmed_with_its_values_and_shown_as_changed_when_they_change(empty: StudyService) -> None:
     st = _admin(empty, "preregistration_get")
     assert _states(st) == [("agreement", "not_confirmed"), ("working_time", "not_confirmed"),
-                           ("repeats", "not_confirmed")]
-    assert [i["ready"] for i in st["items"]] == [False, True, True], "the agreement settings are saved first"
+                           ("repeats", "not_confirmed"), ("training", "not_confirmed")]
+    assert [i["ready"] for i in st["items"]] == [False, True, True, True], "the agreement settings are saved first"
     assert (st["done"], st["study_started_at"]) == (False, None)
     assert st["items"][1]["values"] == {"measure": "active_s", "idle_after_s": 30.0}
     assert st["items"][2]["values"] == {"enabled": False, "rules": []}
@@ -95,17 +95,18 @@ def test_each_group_is_confirmed_with_its_values_and_shown_as_changed_when_they_
     assert (exc.value.status, exc.value.code) == (400, "bad_request")
 
     _admin(empty, "settings_update", settings={"preregistration": {"agreement": {"resolutions_s": [0.5, 1]}}})
-    for item in ("agreement", "working_time", "repeats"):
+    for item in ("agreement", "working_time", "repeats", "training"):
         st = _admin(empty, "preregistration_confirm", item=item)
     assert st["done"] is True
     assert {(i["confirmed_by"], i["before_start"]) for i in st["items"]} == {("ADMIN", True)}
     assert st["items"][0]["confirmed_values"]["resolutions_s"] == [0.5, 1]
-    log = _admin(empty, "audit", limit=4)["entries"]
-    assert [(e["op"], e["summary"]) for e in log[:3]] == [
+    log = _admin(empty, "audit", limit=5)["entries"]
+    assert [(e["op"], e["summary"]) for e in log[:4]] == [
+        ("preregistration_confirm", "Confirmed the training standards (no training sets: the study uses no training)"),
         ("preregistration_confirm", "Confirmed the repeat ratings"),
         ("preregistration_confirm", "Confirmed the measure of working time"),
         ("preregistration_confirm", "Confirmed the agreement settings")]
-    assert log[3]["summary"] == "Changed agreement (preregistration) from nothing to resolutions_s 0.5, 1"
+    assert log[4]["summary"] == "Changed agreement (preregistration) from nothing to resolutions_s 0.5, 1"
     n = len(_admin(empty, "audit", limit=50)["entries"])
     _admin(empty, "preregistration_confirm", item="repeats")
     assert len(_admin(empty, "audit", limit=50)["entries"]) == n, "the same values again: no new entry"
@@ -114,7 +115,8 @@ def test_each_group_is_confirmed_with_its_values_and_shown_as_changed_when_they_
     _admin(empty, "settings_update", settings={"logging": {"idle_after_s": 60},
                                                "repeats": {"enabled": True, "rules": [{"id": "all", "repeats": 1}]}})
     st = _admin(empty, "preregistration_get")
-    assert _states(st) == [("agreement", "confirmed"), ("working_time", "changed"), ("repeats", "changed")]
+    assert _states(st) == [("agreement", "confirmed"), ("working_time", "changed"), ("repeats", "changed"),
+                           ("training", "confirmed")]
     assert st["items"][1]["confirmed_values"]["idle_after_s"] == 30.0
     assert st["items"][1]["values"]["idle_after_s"] == 60.0
     st = _admin(empty, "preregistration_confirm", item="working_time")
@@ -127,6 +129,43 @@ def test_each_group_is_confirmed_with_its_values_and_shown_as_changed_when_they_
     assert _admin(empty, "preregistration_get")["items"][0]["state"] == "changed"
     _admin(empty, "settings_update", settings={"preregistration": {"agreement": {"resolutions_s": [0.5, 1]}}})
     assert _admin(empty, "preregistration_get")["items"][0]["state"] == "confirmed"
+
+
+def test_training_standards_cover_every_set_and_the_policy_or_confirm_that_there_is_no_training(
+        empty: StudyService) -> None:
+    st = _admin(empty, "preregistration_confirm", item="training")
+    training = st["items"][3]
+    assert training["values"] == {"policy": {"skippable": ["tour", "snippets", "guided", "practice"], "gate": "met",
+                                             "tour": True, "snippets_quiz_required": False}, "sets": []}
+    assert training["state"] == "confirmed", "no training, confirmed as such"
+
+    # A new set is new training: its standards are to confirm.
+    _admin(empty, "set_create", set_id="pilot", name="Pilot set")
+    training = _admin(empty, "preregistration_get")["items"][3]
+    assert training["state"] == "changed"
+    assert training["values"]["sets"] == [{
+        "set_id": "pilot", "name": "Pilot set", "assessment_recordings": 0,
+        "practice_pass": {"event_f1": 0.8, "label_accuracy": 0.8},
+        "assessment_matching": {"match_criterion": "iou", "iou_threshold": 0.2, "onset_tolerance_s": 0.5,
+                                "offset_tolerance_s": 0.5},
+        "criteria": {"criteria": [], "min_reference_events": 3, "categories": None}}]
+    assert training["values"]["sets"][0]["criteria"] == _admin(empty, "sets_list")["sets"][0]["criteria"], \
+        "as Training shows them"
+    _admin(empty, "preregistration_confirm", item="training")
+    assert _admin(empty, "audit", limit=1)["entries"][0]["summary"] == "Confirmed the training standards"
+
+    # The set's criteria and pass mark, and the study's training policy, each ask for it again.
+    _admin(empty, "set_update", set_id="pilot", criteria={"criteria": [{"metric": "event_f1", "threshold": 0.7}],
+                                                          "min_reference_events": 3, "categories": None})
+    assert _admin(empty, "preregistration_get")["items"][3]["state"] == "changed"
+    _admin(empty, "preregistration_confirm", item="training")
+    _admin(empty, "set_update", set_id="pilot", practice_pass={"event_f1": 0.9})
+    assert _admin(empty, "preregistration_get")["items"][3]["state"] == "changed"
+    _admin(empty, "preregistration_confirm", item="training")
+    _admin(empty, "settings_update", settings={"training": {"gate": "completed"}})
+    training = _admin(empty, "preregistration_get")["items"][3]
+    assert training["state"] == "changed" and training["values"]["policy"]["gate"] == "completed"
+    assert training["confirmed_values"]["sets"][0]["practice_pass"] == {"event_f1": 0.9, "label_accuracy": 0.8}
 
 
 def test_only_administrators_confirm(empty: StudyService) -> None:

@@ -315,7 +315,9 @@ Signed in as in step 11, you use the admin area (docs/admin_area.md explains eac
   recordings as a zip to pass on to trainees;
 * **confirm the settings chosen before the study starts**: the Overview's *Before the study starts*
   lists the agreement settings (saved as the study's on the Analyses page), the working time the
-  study reports (Study settings) and the repeat ratings (Repeat ratings). Choose each, then press
+  study reports (Study settings), the repeat ratings (Repeat ratings) and the training standards
+  (each training set's pass mark and competency criteria, in Training, or *Confirm: no training*
+  for a study without training). Choose each, then press
   its *Confirm*, before the first annotator saves a recording; the confirmations go into the
   results download;
 * **change the settings**, follow the **progress**, run the **agreement**, **activity** and
