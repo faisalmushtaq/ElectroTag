@@ -325,6 +325,12 @@ and `choice`: `save` for Save anyway, `goto` for Go to the first part, or `cance
 change of the annotator's display comfort is a `state` event with `comfort` (`trace`, `names`
 and `panel`).
 
+**Viewing filters.** A change of the viewing filters is a `state` event with `filters` (`highpass_hz`,
+`notch_hz` and `notch_harmonics`, null for a filter that is off, and `method`) and `via`. The
+toolbar's No high-pass and No notch add `filter` (`highpass` or `notch`), `applied` (false
+when the press showed the EEG without that filter, true when it brought the filter back) and `via:
+button`; a change in the side panel's viewing options has neither `filter` nor `applied`.
+
 **Viewing tools.** Switching the overlay on or off is a `state` event with
 `overlay` (true or false) and `via` (`key` for O, `button` for the toolbar or the touch button);
 showing one channel alone is a `state` event with `isolated_channel` (its name, or null when all the

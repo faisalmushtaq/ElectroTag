@@ -488,9 +488,10 @@ Undo and Redo when there is no change to take back or make again. Draw/edit is o
 annotate; pressed, it switches to view only, in which nothing can be drawn or changed by accident,
 and the second row reads "View only" until you press it again. The second chooses what you mark next: the numbered type buttons, 0 Uncertain and the menu of all
 types after "Draw as", then Whole montage or Selected channels with Channels… and Clear channel
-selection, Overlay, and the scales: Time, the seconds on the screen, and Amplitude, the height of a
+selection, Overlay, the filters (No high-pass and No notch), and the scales: Time, the
+seconds on the screen, and Amplitude, the height of a
 row of EEG, each with − and + beside it. Each type button shows its number and a short name (1
-Blink, 2 HEM, 3 EMG and so on). On a wide screen the toolbar keeps to one line: below 1,700 pixels
+Blink, 2 HEM, 3 EMG and so on). On a wide screen the toolbar keeps to one line: below 2,050 pixels
 across, the scales leave out their captions (their tips still name them), and with Whole montage
 chosen the words "all channels" are left out, since the pressed button says so. When the window is
 too narrow even then, as on most laptops, the toolbar continues on a second line. On the right, above
@@ -829,6 +830,13 @@ channels. ElectroTag remembers whether you last used the overlay, in this browse
 The Recording tab holds the viewing options: the 1 Hz high-pass filter and the notch filter for
 mains interference (50 Hz in the UK and Europe, 60 Hz in North America). They change only what you
 see; the file is never changed. Some studies fix these settings, and the tab then says so.
+No high-pass and No notch, in the toolbar, do the same in one press: each shows the EEG
+without that filter while it is pressed, so that you can see how the filter changes what you are
+looking at, and with the filter again when you press it once more. They and the Recording tab are
+one setting, so each follows the other, and both are greyed out when the study fixes the filters.
+On a screen narrower than 900 pixels, such as an iPad held upright, the two buttons are left out
+of the toolbar to keep room for the EEG, and the Recording tab does the same.
+The record of how you use ElectroTag notes each press and the filters then in force.
 
 Colour channels by, in the same place, colours each channel's trace and name by its group, which
 makes it easier to keep track of where a channel sits in a dense montage. By region, frontal

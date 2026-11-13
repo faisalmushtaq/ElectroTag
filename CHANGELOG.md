@@ -5,6 +5,11 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The annotation toolbar has two filter buttons, No high-pass and No notch: each shows the EEG without that
+filter while pressed and with it again when pressed once more. They and the side panel's viewing options are one
+setting, greyed out when the study fixes the filters. Each press is logged as a `state` event with the filters in
+force, `filter` (`highpass` or `notch`), `applied` and `via: button` (docs/activity_logs.md, "Viewing filters"). To keep the toolbar on one line at 1,920 pixels, the Time and Amplitude captions are now left out below 2,050 pixels rather than 1,700.
+
 Bin coverage is now worded as the share of a bin that it is: the Analyses field reads Bin coverage needed (share of the
 bin, 0 to 1), Before the study starts describes it as a bin counting when at least 50% of it is marked, and the
 agreement report's caption gives it as a percentage ("any part of it" for 0).

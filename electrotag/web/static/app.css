@@ -674,9 +674,9 @@ ol.stages.path .stage {
 .ws-chansummary { color: var(--text-secondary); font: var(--t-14); overflow: hidden; text-overflow: ellipsis; min-width: 96px; max-width: 180px; }
 .ws-chansummary.warning { color: var(--destructive); font-weight: 600; }
 .ws-chansummary.all { display: none; }
-/* Below 1700 pixels the scales go without their captions (their menus and buttons are named for screen
+/* Below 2050 pixels the scales go without their captions (their menus and buttons are named for screen
    readers and in their tips), so that the toolbar keeps to one line on more screens. */
-@media (max-width: 1700px) { .ws-toolbar .ws-scales .scale-caption { display: none; } .ws-toolbar .ws-scales .btn.icon.small:first-of-type { margin-left: 2px; } }
+@media (max-width: 2050px) { .ws-toolbar .ws-scales .scale-caption { display: none; } .ws-toolbar .ws-scales .btn.icon.small:first-of-type { margin-left: 2px; } }
 .ws-chansummary.selected { color: var(--selection-channel); font-weight: 600; }
 .ws-main { position: relative; display: flex; min-height: 0; min-width: 0; }
 .ws-eeg { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; padding: 8px 0 8px 8px; }
@@ -1372,6 +1372,11 @@ button.review-line { text-align: left; font: var(--t-14); }
 .view-tools { margin: 8px 0 12px; }
 /* Overlay in the toolbar; on a touch screen it is among the View buttons under the EEG instead. */
 .ws-overlay-tool { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+/* Without high-pass and Without notch (workspace.js _filterButtons): pressed while the EEG is shown without that filter. */
+.ws-filters { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+.ws-filters .btn.small { padding: 0 10px; }
+/* On a narrow screen (an iPad upright) the toolbar already takes three lines; the filters stay in the Recording tab. */
+@media (max-width: 900px) { .ws-toolbar .ws-filters { display: none; } }
 @media (pointer: coarse) { .ws-overlay-tool { display: none; } }
 .view-tools .caption { margin: 0; flex: 1 1 200px; }
 .goto-bar {
