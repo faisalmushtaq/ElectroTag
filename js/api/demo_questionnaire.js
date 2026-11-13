@@ -13,7 +13,7 @@ import { nowLocalIso } from '../util.js';
 import { rolesOf } from '../admin/model.js';
 import {
   CONTACT_FIELDS, CONTACT_TITLES, CONTACTS_WARNING, DEMOGRAPHICS_NOTE, GROUPS, GROUP_TITLES, PREFER_NOT, PREFER_NOT_LABEL,
-  QuestionnaireProblem, REQUIRED_TEXT, checkAnswers, checkContactValues, effectiveQuestions, versionOf,
+  QuestionnaireProblem, REQUIRED_TEXT, checkAnswers, checkContactValues, effectiveQuestions, toAnswer, versionOf,
 } from '../views/questionnaire_model.js';
 import { DEFAULT_SETTINGS } from './demo_catalogue.js';
 
@@ -23,7 +23,7 @@ const WORK_ROLES = ['annotator', 'expert', 'participant'];
 /** The answers the sandbox's own accounts start with (questionnaire.py EXAMPLE_ANSWERS). */
 export const EXAMPLE_ANSWERS = Object.freeze({
   datasets_analysed: '3–10', eeg_years: '3–5', annotation_hours: '10–50', artifact_training: 'A course or workshop',
-  eeg_systems: ['Brain Products'], eeg_setting: 'Research', confidence: '3', career_stage: 'PhD', discipline: 'Neuroscience',
+  eeg_systems: ['Brain Products'], eeg_density: 'Low', preprocessing: 'Filtering and re-referencing', eeg_setting: 'Research', confidence: '3', career_stage: 'PhD', discipline: 'Neuroscience',
   country: 'United Kingdom', age_band: PREFER_NOT, gender: PREFER_NOT, first_language: PREFER_NOT,
 });
 export const EXAMPLE_AT = '2026-10-28T09:00:00.000+00:00';
@@ -115,10 +115,10 @@ export class DemoQuestionnaire {
     const u = this.b._admin.user(aid);
     const latest = this._latest(aid);
     const questions = this.questions();
-    const given = (latest && latest.answers) || {};
+    // the questions added or changed since the person answered, asked at their next sign-in (questionnaire.py to_answer)
+    const due = this.asked(u) ? toAnswer(questions, this.record(aid)) : [];
     return { enabled: this.block.enabled !== false, asked: this.asked(u), answered: Boolean(latest), answered_at: latest ? latest.at : null,
-      version: latest ? latest.version : null, current_version: versionOf(questions),
-      missing: latest ? questions.filter((q) => q.required !== false && !(q.id in given)).length : 0 };
+      version: latest ? latest.version : null, current_version: versionOf(questions), missing: due.length, to_answer: due };
   }
 
   /** GET /me/questionnaire. */
@@ -133,11 +133,13 @@ export class DemoQuestionnaire {
     const values = Object.fromEntries(CONTACT_FIELDS.map((k) => [k, String((c && c[k]) || '')]));
     if (!c) values.email = String((u && u.email) || '');
     const shown = CONTACT_FIELDS.filter((k) => (levels[k] || 'optional') !== 'off');
+    const due = toAnswer(questions, rec);
+    const keep = (o) => Object.fromEntries(Object.entries(o || {}).filter(([k]) => !due.includes(k))); // a changed question is asked afresh
     return {
       enabled: this.block.enabled !== false, asked: this.asked(u),
       groups: GROUPS.filter((g) => questions.some((q) => q.group === g)).map((g) => ({ key: g, title: GROUP_TITLES[g] })),
       questions, version: versionOf(questions), prefer_not: { value: PREFER_NOT, label: PREFER_NOT_LABEL },
-      answers: { ...((latest && latest.answers) || {}) }, other: { ...((latest && latest.other) || {}) },
+      answers: keep(latest && latest.answers), other: keep(latest && latest.other), to_answer: due,
       answered_at: latest ? latest.at : null, answered_version: latest ? latest.version : null,
       n_versions: ((rec && rec.history) || []).length,
       contacts: { fields: shown.map((k) => ({ key: k, title: CONTACT_TITLES[k], level: levels[k] || 'optional' })),
@@ -204,6 +206,7 @@ export class DemoQuestionnaire {
     const counts = Object.fromEntries(questions.map((q) => [q.id, {}]));
     const rows = [];
     const waiting = [];
+    const updating = [];
     const accounts = [...this.b._admin.s.users].sort((a, b) => (a.annotator_id < b.annotator_id ? -1 : 1));
     const known = new Set(accounts.map((u) => u.annotator_id));
     const row = (aid, rec, extra = {}) => {
@@ -217,7 +220,9 @@ export class DemoQuestionnaire {
         if (this.asked(u) && u.status === 'active') waiting.push(u.annotator_id);
         continue;
       }
-      row(u.annotator_id, rec);
+      const due = this.asked(u) ? toAnswer(questions, rec) : [];
+      if (due.length && u.status === 'active') updating.push(u.annotator_id);
+      row(u.annotator_id, rec, { to_answer: due });
     }
     for (const aid of Object.keys(this._answers).sort()) if (!known.has(aid) && this._answers[aid].history.length) row(aid, this._answers[aid], { removed: true });
     for (const r of rows) {
@@ -225,12 +230,13 @@ export class DemoQuestionnaire {
         if (!(qid in counts)) continue;
         const q = questions.find((x) => x.id === qid);
         for (const v of Array.isArray(value) ? value : [value]) {
-          const key = v === PREFER_NOT ? PREFER_NOT_LABEL : q.type === 'text' ? 'answered' : String(v);
+          // (a short answer in their own words counts as answered; a tick-box answer such as None by itself)
+          const key = v === PREFER_NOT ? PREFER_NOT_LABEL : q.type === 'text' && !(q.options || []).includes(v) ? 'answered' : String(v);
           counts[qid][key] = (counts[qid][key] || 0) + 1;
         }
       }
     }
-    return { questions, version: versionOf(questions), rows, counts, not_answered: waiting, enabled: this.block.enabled !== false,
+    return { questions, version: versionOf(questions), rows, counts, not_answered: waiting, to_update: updating, enabled: this.block.enabled !== false,
       demographics: this.block.demographics !== false, demographics_note: DEMOGRAPHICS_NOTE, prefer_not: { value: PREFER_NOT, label: PREFER_NOT_LABEL } };
   }
 

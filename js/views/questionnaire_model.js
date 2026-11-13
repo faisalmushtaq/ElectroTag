@@ -23,6 +23,8 @@ export const DEFAULT_CONTACTS = { full_name: 'required', email: 'required', phon
 export const CONTACT_LIMITS = { full_name: 200, email: 254, phone: 40, institution: 200 };
 export const MAX_QUESTIONS = 60;
 export const MAX_OPTIONS = 30;
+/** The answers a text question can offer as tick boxes instead of the text (None, Not applicable). */
+export const MAX_TEXT_OPTIONS = 5;
 export const MAX_ANSWER = 200;
 export const EXPERIENCE_QUESTION = 'datasets_analysed';
 export const GATED = 'questionnaire_required';
@@ -71,16 +73,26 @@ export function checkQuestion(q, n) {
   const required = q.required === undefined ? true : q.required;
   if (typeof required !== 'boolean') throw new QuestionnaireProblem(`${where}: required must be true or false`);
   out.required = required;
-  if (q.type === 'text') {
-    if ((q.options && q.options.length) || q.other_option) throw new QuestionnaireProblem(`${where}: a text question has no options`);
-  } else {
-    const opts = q.options;
-    if (!Array.isArray(opts) || opts.length < 2 || opts.length > MAX_OPTIONS) throw new QuestionnaireProblem(`${where}: give from 2 to ${MAX_OPTIONS} options`);
+  const cleanOptions = (opts) => {
     const clean = opts.map((o) => plain(o, `${where}: an option`, 120));
     if (new Set(clean.map((c) => c.toLowerCase())).size !== clean.length) throw new QuestionnaireProblem(`${where}: an option is given twice`);
     if (clean.some((c) => [PREFER_NOT_LABEL.toLowerCase(), PREFER_NOT].includes(c.toLowerCase()))) {
       throw new QuestionnaireProblem(`${where}: leave out "${PREFER_NOT_LABEL}"; ElectroTag offers it with every question`);
     }
+    return clean;
+  };
+  if (q.type === 'text') {
+    // a short answer may offer a few answers as tick boxes instead of the text, such as None or Not applicable
+    if (q.other_option) throw new QuestionnaireProblem(`${where}: a text question has no option that asks for their own words (its answer is in their own words already)`);
+    const opts = q.options === undefined || q.options === null ? [] : q.options;
+    if (!Array.isArray(opts) || opts.length > MAX_TEXT_OPTIONS) {
+      throw new QuestionnaireProblem(`${where}: a text question can offer up to ${MAX_TEXT_OPTIONS} answers as tick boxes instead of the text, such as None or Not applicable`);
+    }
+    if (opts.length) out.options = cleanOptions(opts);
+  } else {
+    const opts = q.options;
+    if (!Array.isArray(opts) || opts.length < 2 || opts.length > MAX_OPTIONS) throw new QuestionnaireProblem(`${where}: give from 2 to ${MAX_OPTIONS} options`);
+    const clean = cleanOptions(opts);
     out.options = clean;
     if (q.other_option !== undefined && q.other_option !== null && q.other_option !== '') {
       const other = plain(q.other_option, `${where}: other_option`, 120);
@@ -146,6 +158,24 @@ function canonical(v) {
   if (Array.isArray(v)) return `[${v.map(canonical).join(',')}]`;
   if (v && typeof v === 'object') return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical(v[k])}`).join(',')}}`;
   return JSON.stringify(v);
+}
+
+/** What an answer to a question rests on (MEANING_FIELDS): a change to any of these asks the question again. */
+const MEANING = ['text', 'type', 'options', 'other_option'];
+const meaningOf = (q) => canonical(Object.fromEntries(MEANING.map((k) => [k, q[k] === undefined ? null : q[k]])));
+
+/**
+ * The required questions a person who has answered must answer again (questionnaire.py to_answer): those added
+ * since their latest answers and those whose wording or options have changed since. `record` is their record
+ * ({history, definitions}); empty for someone who has not answered yet, or is up to date.
+ */
+export function toAnswer(questions, record) {
+  const history = (record && record.history) || [];
+  if (!history.length) return [];
+  const latest = history[history.length - 1];
+  const given = latest.answers || {};
+  const then = new Map((((record.definitions || {})[latest.version]) || []).map((q) => [q.id, q]));
+  return questions.filter((q) => q.required !== false && (!(q.id in given) || (then.has(q.id) && meaningOf(then.get(q.id)) !== meaningOf(q)))).map((q) => q.id);
 }
 
 /** The version of a wording: "q-" and ten hexadecimal digits of the SHA-256 of its JSON (version_of). */
