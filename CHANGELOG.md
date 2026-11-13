@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Study settings, Annotation, opens with a checklist of the artifact types annotators can choose: untick a type the study
+does not use to take it out of the type buttons, the number keys, Find a type, Change type and the menus of a mark
+(for experts and trainees too). Marks that already have the type keep it, the artifact reference guide still
+describes every type, Data-artifact (Uncertain) is always available and at least one specific type must stay. A
+type unticked leaves its number key at once. The setting is `annotation.hidden_labels`, given to annotators with
+the study's other annotation settings.
+
 Bin coverage is now worded as the share of a bin that it is: the Analyses field reads Bin coverage needed (share of the
 bin, 0 to 1), Before the study starts describes it as a bin counting when at least 50% of it is marked, and the
 agreement report's caption gives it as a percentage ("any part of it" for 0).

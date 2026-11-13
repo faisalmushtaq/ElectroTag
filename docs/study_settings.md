@@ -37,6 +37,7 @@ nothing after it on the line.
 - [The viewing filters](#the-viewing-filters)
 - [The display](#the-display)
   - [The types on the number keys](#the-types-on-the-number-keys)
+  - [Artifact types the study does not use](#artifact-types-the-study-does-not-use)
   - [Long sessions](#long-sessions)
 - [Which recording comes next](#which-recording-comes-next)
   - [Tracking who has rated what](#tracking-who-has-rated-what)
@@ -293,6 +294,29 @@ order, with up to nine names from the label catalogue:
 
 Names that are not in the label catalogue are left out, and the other types
 stay available from the menu and the searchable list (the / key).
+
+### Artifact types the study does not use
+
+`annotation.hidden_labels` (empty by default) names artifact types the study
+does not use. They are left out of every list an annotator chooses a type from:
+the numbered buttons and keys, the menu of all types, Find a type (the / key),
+Change type and the menus of a mark, for everyone who annotates in the study,
+experts and trainees included. A mark that already has a hidden type, made
+before it was hidden, keeps it, shows in its colour and can be changed to
+another type; the artifact reference guide still describes every type, and the
+analyses are unchanged. A type on a number key cannot be hidden until it is
+taken off the keys, Data-artifact (Uncertain / needs review, key 0) is always
+available, and at least one specific type must stay available. In the admin
+area this is the checklist at the top of Study settings, Annotation, where
+unticking a type takes it off its key at once.
+
+```json
+{"settings": {"annotation": {"hidden_labels": ["Chewing-artifact", "Rocking-patting-artifact"]}}}
+```
+
+Hiding a type changes what annotators can mark, so choose it before the study
+starts. A training set whose reference marks use a hidden type asks trainees for
+a type they can no longer choose, so check the training sets after hiding one.
 `annotation.min_duration_samples` (1 by default) is the shortest annotation
 that is accepted.
 

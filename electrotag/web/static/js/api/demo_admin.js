@@ -392,7 +392,7 @@ export class DemoAdmin {
       display: { duration_s: st.display.duration_s, n_channels: st.display.n_channels, scalings: { ...st.display.scalings },
         channel_colours: st.display.channel_colours, topomap: st.display.topomap !== false,
         topomap_filters: st.display.topomap_filters || 'as_shown', topomap_reference: st.display.topomap_reference || 'as_recorded' },
-      annotation: Object.fromEntries(['min_duration_samples', 'quick_labels', ...Object.keys(DEFAULT_ANNOTATION), 'allow_revisions', 'allow_reviews',
+      annotation: Object.fromEntries(['min_duration_samples', 'quick_labels', 'hidden_labels', ...Object.keys(DEFAULT_ANNOTATION), 'allow_revisions', 'allow_reviews',
         'show_reviews_to_annotators'].map((k) => [k, deepCopy(st.annotation[k])])),
       gamification: { enabled: st.gamification.enabled !== false,
         leaderboard: st.gamification.enabled !== false && st.gamification.leaderboard !== false },
@@ -670,7 +670,7 @@ export class DemoAdmin {
       if (unknown) throw bad(`The settings block '${unknown}' cannot be changed here; these can: ${known.join(', ')}`, 'invalid_settings');
       const next = mergeSettings(this.s.settings, body.settings);
       const { expertSettingsProblems, settingChanges } = await loadPart('settingsChecks');
-      const problems = [...settingsProblems(next, LABEL_NAMES), ...expertSettingsProblems(next)];
+      const problems = [...settingsProblems(next, LABEL_NAMES), ...expertSettingsProblems(next, CATALOGUE.labels)];
       if (problems.length) throw bad(problems[0], 'invalid_settings');
       for (const [block, values] of Object.entries(body.settings)) {
         for (const [key, value] of Object.entries(values || {})) {

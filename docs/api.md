@@ -176,6 +176,7 @@ password.
                 "topomap": true, "topomap_filters": "as_shown" | "none",   // the topographic map, and the signal
                 "topomap_reference": "as_recorded" | "average"},           //   it maps until the annotator chooses
     "annotation": {"min_duration_samples": 1, "quick_labels": ["Eye-blink-artifact", "…"],
+                   "hidden_labels": [],        // types left out of the lists an annotator chooses from
                    "break_reminder_minutes": 50, "idle_pause_minutes": 3, "coverage_check": "warn" | "off",
                    "allow_revisions": true, "allow_reviews": true, "show_reviews_to_annotators": true,
                    "confidence": "optional" | "every_mark",

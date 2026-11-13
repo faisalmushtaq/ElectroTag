@@ -410,6 +410,23 @@ def _numbers(value: Any, what: str, keys: tuple[str, ...]) -> dict[str, float]:
     return out
 
 
+def _check_hidden_labels(value: Any, catalogue: Any) -> None:
+    """annotation.hidden_labels against the study's catalogue: known types only, and at least one specific type left
+    for annotators besides the uncertain one (the settings check the rest)."""
+    from electrotag.app.annotations.labels import UNCERTAIN_LABEL
+
+    if not isinstance(value, list):
+        return  # (the settings say what is wrong)
+    unknown = [x for x in value if not (isinstance(x, str) and catalogue.is_permitted(x))]
+    if unknown:
+        raise ApiError(400, "invalid_settings", f"annotation.hidden_labels: {unknown[0]!r} is not an artifact type of "
+                       "the catalogue")
+    left = [x for x in catalogue.specific_labels if x not in value and x != UNCERTAIN_LABEL]
+    if not left:
+        raise ApiError(400, "invalid_settings", "annotation.hidden_labels would hide every specific artifact type: "
+                       "keep at least one available to annotators")
+
+
 def _accepted(value: Any, catalogue: Any) -> dict[str, list[str]]:
     if not isinstance(value, dict) or not all(isinstance(v, list) for v in value.values()):
         raise ApiError(400, "invalid_set", "guided_tolerance.accepted_labels must map an artifact type to the types "
@@ -759,6 +776,8 @@ class Admin:
             what.append(f"the study's name from {self.store.name} to {name}")
         if notice is not None and notice != (self.store.logging_notice or ""):
             what.append("the logging notice")
+        if overrides is not None and "hidden_labels" in (changes or {}).get("annotation", {}):
+            _check_hidden_labels(changes["annotation"]["hidden_labels"], self.store.catalogue)
         try:
             self.store.update_study(name=name, overrides=overrides, logging_notice=notice)
         except ValueError as exc:
