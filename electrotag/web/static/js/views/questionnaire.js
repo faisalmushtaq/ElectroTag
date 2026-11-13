@@ -35,16 +35,28 @@ function questionField(q, answer, other) {
   };
   let read;
   if (q.type === 'text') {
-    const text = h('input.field.q-answer', { type: 'text', maxlength: '200', 'aria-labelledby': '', value: answer && answer !== PREFER_NOT ? answer : '' });
-    const pnts = h('input', { type: 'checkbox', value: PREFER_NOT });
-    pnts.checked = answer === PREFER_NOT;
-    text.disabled = pnts.checked;
-    pnts.addEventListener('change', () => { text.disabled = pnts.checked; });
+    // In their own words, or one of the tick boxes the question offers instead (such as None or Not applicable) or
+    // Prefer not to say: a tick box answers the question by itself, so it greys out the text and the other boxes.
+    const set = q.options || [];
+    const ticked = answer === PREFER_NOT || set.includes(answer) ? answer : null;
+    const text = h('input.field.q-answer', { type: 'text', maxlength: '200', 'aria-labelledby': '', value: answer && !ticked ? answer : '' });
+    const boxes = [...set, PREFER_NOT].map((value) => {
+      const input = h('input', { type: 'checkbox', value, 'data-answer': value === PREFER_NOT ? null : value });
+      input.checked = ticked === value;
+      return input;
+    });
+    const sync = (changed) => {
+      if (changed && changed.checked) boxes.forEach((b) => { if (b !== changed) b.checked = false; });
+      text.disabled = boxes.some((b) => b.checked);
+    };
+    boxes.forEach((b) => b.addEventListener('change', () => sync(b)));
+    sync(null);
     const lid = uid('legend');
     legend.id = lid;
     text.setAttribute('aria-labelledby', lid);
-    fs.append(text, h('label.check.q-choice.q-prefer', {}, pnts, h('span', {}, PREFER_NOT_LABEL)));
-    read = () => (pnts.checked ? PREFER_NOT : text.value.trim() || null);
+    fs.append(text, ...boxes.map((b) => h(`label.check.q-choice${b.value === PREFER_NOT ? '.q-prefer' : '.q-instead'}`, {}, b,
+      h('span', {}, b.value === PREFER_NOT ? PREFER_NOT_LABEL : b.value))));
+    read = () => { const b = boxes.find((x) => x.checked); return b ? b.value : text.value.trim() || null; };
     return { el: fs, id: q.id, read, readOther: () => '' };
   }
   const kind = q.type === 'multi' ? 'checkbox' : 'radio';
@@ -99,23 +111,27 @@ function contactFields(spec) {
  * the form, or a message with Try again. The interaction log is paused while it is shown (app.js) and records only
  * that it was answered, with the number of questions answered.
  */
-export async function openQuestionnaire(app, asked, { first = false, then = null } = {}) {
+export async function openQuestionnaire(app, asked, { first = false, update = false, then = null } = {}) {
   const { data, error } = await asked;
   if (error) {
     if (error.status === 401) return;
     app._render(h('div.view', {}, appHeader(app), h('main.page', {}, h('h1', {}, 'A few questions before you start'),
       h('p.banner', { role: 'alert' }, `The questionnaire could not be loaded: ${error.message}`),
-      h('div.btn-row', {}, h('button.btn.primary', { type: 'button', onclick: () => app.showQuestionnaire({ first, then }) }, 'Try again')))), 'questionnaire');
+      h('div.btn-row', {}, h('button.btn.primary', { type: 'button', onclick: () => app.showQuestionnaire({ first, update, then }) }, 'Try again')))), 'questionnaire');
     return;
   }
   const onSaved = async (answer, nAnswered) => {
     app._resumeLog();
     logger.event('questionnaire_answered', { n_answered: nAnswered }); // never an answer, nor anything typed
-    if (app.me) app.me.questionnaire = { ...(app.me.questionnaire || {}), answered: true, answered_at: answer.answered_at, version: answer.answered_version, missing: 0 };
+    if (app.me) app.me.questionnaire = { ...(app.me.questionnaire || {}), answered: true, answered_at: answer.answered_at, version: answer.answered_version, missing: 0, to_answer: [] };
     if (then) await then();
     else app.showHome();
   };
-  app._render(questionnaireView(app, data, { first, onSaved, onLeave: () => app.showHome() }), 'questionnaire');
+  // (asked at sign-in with questions added or changed since: like the first time, there is no way past them)
+  const due = update && (data.to_answer || []).length ? data.to_answer : [];
+  app._render(questionnaireView(app, data, { first, due, onSaved, onLeave: () => app.showHome() }), 'questionnaire');
+  const firstDue = due.length ? document.querySelector(`.q-question[data-question="${due[0]}"]`) : null;
+  if (firstDue && firstDue.scrollIntoView) firstDue.scrollIntoView({ block: 'center' });
 }
 
 /**
@@ -123,19 +139,25 @@ export async function openQuestionnaire(app, asked, { first = false, then = null
  * person came from home to change their answers (Save my answers, or Back to my recordings).
  * `onSaved(answer, nAnswered)` follows a save the study accepted; `onLeave()` goes back without saving.
  */
-export function questionnaireView(app, data, { first = false, onSaved, onLeave }) {
+export function questionnaireView(app, data, { first = false, due = [], onSaved, onLeave }) {
+  const forced = first || due.length > 0; // the first sign-in, or questions added or changed since
   const groups = data.groups || [];
   const fields = [];
   const cards = groups.map((g) => {
     const qs = (data.questions || []).filter((q) => q.group === g.key);
     const made = qs.map((q) => questionField(q, (data.answers || {})[q.id], (data.other || {})[q.id]));
+    for (const f of made) {
+      if (!due.includes(f.id)) continue;
+      f.el.classList.add('q-due');
+      f.el.querySelector('legend').prepend(h('span.chip.warning.q-new', {}, 'New or changed'), ' ');
+    }
     fields.push(...made);
     return h('section.card.q-group', { 'data-group': g.key }, h('h2', {}, g.title), made.map((f) => f.el));
   });
   const contacts = contactFields(data.contacts || {});
   const problem = h('p.banner.q-problem', { role: 'alert', hidden: true });
   const status = h('p.caption.q-status', { role: 'status' });
-  const save = h('button.btn.primary', { type: 'submit', 'data-log': 'questionnaire-save' }, first ? 'Save and continue' : 'Save my answers');
+  const save = h('button.btn.primary', { type: 'submit', 'data-log': 'questionnaire-save' }, forced ? 'Save and continue' : 'Save my answers');
   let sending = false;
   const form = h('form.q-form', { novalidate: true, onsubmit: async (e) => {
     e.preventDefault();
@@ -164,7 +186,7 @@ export function questionnaireView(app, data, { first = false, onSaved, onLeave }
         : exc.message || 'Your answers could not be saved. Press the button again.';
       problem.hidden = false;
       const q = /“(.+)”/.exec(problem.textContent);
-      const where = q ? fields.find((f) => f.el.querySelector('legend').firstChild.textContent === q[1]) : null;
+      const where = q ? fields.find((f) => f.el.querySelector('legend').textContent.includes(q[1])) : null;
       (where ? where.el : problem).scrollIntoView({ block: 'center' });
     } finally {
       sending = false;
@@ -176,15 +198,18 @@ export function questionnaireView(app, data, { first = false, onSaved, onLeave }
     h('p.caption', {}, 'Your name and contact details are kept apart from your answers and seen only by the study team. They never appear in the research data, which uses your annotator ID.'),
     contacts.el),
   problem,
-  h('div.btn-row.q-actions', {}, save, first ? null : h('button.btn.quiet', { type: 'button', 'data-log': 'questionnaire-back', onclick: () => onLeave() }, 'Back to my recordings')),
+  h('div.btn-row.q-actions', {}, save, forced ? null : h('button.btn.quiet', { type: 'button', 'data-log': 'questionnaire-back', onclick: () => onLeave() }, 'Back to my recordings')),
   status);
   const when = data.answered_at ? new Date(data.answered_at) : null;
+  const n = due.length;
   const intro = first
     ? 'Before your first recording, a few questions about your experience of EEG and your career, and how the study team can reach you. It takes about three minutes.'
+    : n ? `Since you last answered, the study team has added or changed ${n === 1 ? 'a question' : `${n} questions`}, marked New or changed below. `
+      + 'Please answer them to carry on; your other answers are kept as they are, and you can change them too.'
     : `You answered these questions${when && !Number.isNaN(when.getTime()) ? ` on ${when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}. Change anything that is different now: the study keeps each version with its date.`;
   return h('div.view.questionnaire', { 'data-view': 'questionnaire' }, appHeader(app),
     h('main.page.q-page', {},
-      h('h1', {}, first ? 'A few questions before you start' : 'Your answers'),
+      h('h1', {}, first ? 'A few questions before you start' : n ? (n === 1 ? 'A new question' : 'New questions') : 'Your answers'),
       h('p.subtitle', {}, intro),
       h('p.caption.q-privacy', {}, `Every question has ${PREFER_NOT_LABEL}. Your answers are research data, kept under your annotator ID (${data.annotator_id || app.me.annotator_id}) and seen only by the study team; other annotators and experts never see them.`),
       form));

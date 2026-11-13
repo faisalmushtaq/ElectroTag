@@ -90,7 +90,7 @@ export const tests = [
       const events = await page.evaluate(() => [...globalThis.ElectroTag.backend.visits.values()].flatMap((v) => v.events));
       const answered = events.filter((e) => e.type === 'questionnaire_answered');
       assert.equal(answered.length, 1);
-      assert.equal(answered[0].n_answered, 13);
+      assert.equal(answered[0].n_answered, 15);
       const logged = JSON.stringify(events);
       for (const w of [...TYPED, 'Postdoc', 'prefer_not_to_say']) assert.ok(!logged.includes(w), `the log holds ${w}`);
       // changing an answer later, from home: a second version is kept
@@ -191,7 +191,7 @@ export const tests = [
       const events = text.trim().split('\n').map((line) => JSON.parse(line));
       const answered = events.filter((e) => e.type === 'questionnaire_answered');
       assert.equal(answered.length, 1);
-      assert.equal(answered[0].n_answered, 13);
+      assert.equal(answered[0].n_answered, 15);
       for (const w of [...TYPED, 'Postdoc', 'prefer_not_to_say']) assert.ok(!text.includes(w), `the log holds ${w}`);
       await signIn(page, 'ADMIN', 'electrotag');
       await waitForRoute(page, 'admin');

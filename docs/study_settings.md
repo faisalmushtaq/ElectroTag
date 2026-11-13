@@ -928,6 +928,9 @@ ElectroTag's default questionnaire (null means the same): the person's
 experience of EEG (EEG datasets analysed, in the log-like bands 0, 1–2, 3–10,
 11–30, 31–100 and over 100; years working with EEG; hours of artifact
 annotation; formal training in recognising artifacts; the EEG systems used;
+the density of EEG they are most comfortable working with, low, high, both,
+neither or other, in their own words; the pre-processing stages they usually
+complete before annotating, in their own words or None or Not applicable;
 clinical or research EEG; and confidence on a scale from 1 to 5), their career
 stage (undergraduate, master's, PhD, postdoc, faculty, clinician, EEG
 technologist, industry or other), discipline and country of work, and, in the
@@ -938,7 +941,13 @@ letters, digits and `_`, the column's name in the results), a `group`
 one answer, `multi` for several, `text` for a short answer on one line), its
 `options` (2 to 30, for `choice` and `multi`), optionally the `other_option`
 that asks for the person's own words and a line of `help`, and whether an
-answer is `required` (true by default). Every question offers "Prefer not to
+answer is `required` (true by default). A `text` question can also have
+`options`, up to 5: tick boxes that answer it instead of the text, such as
+`["None", "Not applicable"]`; ticking one greys out the text, and the answer
+is kept as the box's words. A required question added after people have
+answered, or one whose `text`, `type`, `options` or `other_option` changes, is
+asked again at each person's next sign-in, before anything else, with their
+other answers kept. Every question offers "Prefer not to
 say", which ElectroTag adds itself and which counts as an answer, so a
 definition never lists it. `demographics` false leaves out the demographic
 group: these are personal data of a more sensitive kind, so include them only

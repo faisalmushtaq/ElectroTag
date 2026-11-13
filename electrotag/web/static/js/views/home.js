@@ -201,8 +201,8 @@ export async function questionnaireDue(app) {
     // My recordings works without it; the study still waits for the answers before any work opens
   }
   const q = app.me && app.me.questionnaire;
-  if (!q || !q.asked || q.answered) return false;
-  await app.showQuestionnaire({ first: true, then: () => app.showHome() });
+  if (!q || !q.asked || (q.answered && !q.missing)) return false;
+  await app.showQuestionnaire({ first: !q.answered, update: Boolean(q.answered), then: () => app.showHome() });
   return true;
 }
 
@@ -219,8 +219,9 @@ export function questionnaireLine(app) {
   }
   const d = q.answered_at ? new Date(q.answered_at) : null;
   const when = d && !Number.isNaN(d.getTime()) ? ` on ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : '';
-  return h('p.caption.q-home', {}, `You answered the sign-up questionnaire${when}${q.missing ? `; the study team has added ${q.missing === 1 ? 'a question' : `${q.missing} questions`} since` : ''}. `,
-    h('button.link', { type: 'button', 'data-log': 'questionnaire-open', onclick: () => app.showQuestionnaire() }, q.missing ? 'Answer the new questions' : 'See or change my answers'));
+  return h('p.caption.q-home', {}, `You answered the sign-up questionnaire${when}${q.missing ? `; the study team has added or changed ${q.missing === 1 ? 'a question' : `${q.missing} questions`} since` : ''}. `,
+    h('button.link', { type: 'button', 'data-log': 'questionnaire-open', onclick: () => (q.missing ? app.showQuestionnaire({ update: true, then: () => app.showHome() }) : app.showQuestionnaire()) },
+      q.missing ? 'Answer the new questions' : 'See or change my answers'));
 }
 
 /** Where the annotators' guide is read (docs/using.md, in a new tab). */

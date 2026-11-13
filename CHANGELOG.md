@@ -5,6 +5,16 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The sign-up questionnaire asks two more questions about experience: "What density are you most comfortable working
+with?" (Low, High, Both, Neither, or Other in their own words) and "What pre-processing stages do you typically
+complete before annotating?" (in their own words, or None or Not applicable). A short-answer question can now offer up
+to five tick boxes that answer it instead of the text: ticking one greys out the text and answers a required question.
+Study settings edits them (Tick boxes instead of the text). A required question added after people have answered, or
+one whose wording or options change, is asked at each person's next sign-in, before anything else, marked New or
+changed, with their other answers kept (a changed question is asked afresh); their work stays open meanwhile. The
+Questionnaire section names who still has such questions to answer. `GET /me` gains `questionnaire.to_answer`,
+`GET /me/questionnaire` `to_answer`, and `questionnaire_summary` `to_update`.
+
 Bin coverage is now worded as the share of a bin that it is: the Analyses field reads Bin coverage needed (share of the
 bin, 0 to 1), Before the study starts describes it as a bin counting when at least 50% of it is marked, and the
 agreement report's caption gives it as a percentage ("any part of it" for 0).
