@@ -1228,7 +1228,18 @@ a change to apply to it.
 **The next recording** chooses the order in which annotators are offered their recordings: at
 random among those they have not finished, in a reproducible order made from a seed and the
 annotator's ID, or in the order they were assigned. Unfinished work always comes first.
-**Annotation** chooses the artifact types on the number keys 1 to 9, in the order the toolbar shows
+**Annotation** opens with the checklist Artifact types annotators can choose, every type ticked at
+first. Untick a type the study does not use to take it out of every list annotators choose a type
+from: the type buttons and number keys, Find a type, Change type and the menus of a mark, for
+experts and trainees as well. A type you untick leaves its number key at once, with a line naming
+the keys emptied. A mark that already has the type keeps it and can still be changed, the artifact
+reference guide still describes it, and Data-artifact (Uncertain / needs review) is always available.
+At least one specific type must stay ticked. Since this changes what annotators can mark, settle it
+before the study starts. When a training set's reference marks or quiz answers use a type you
+untick, a warning under the checklist names each such set, the type and how many marks and answers
+use it, since trainees would be asked for a type they can no longer choose; change those in
+Training, or keep the type available. The warning does not stop you saving.
+Annotation then chooses the artifact types on the number keys 1 to 9, in the order the toolbar shows
 them, and the shortest annotation in samples. Data-artifact, the type for an artifact whose type
 cannot be told, always has the key 0 and its own Uncertain button, so it is left out of the numbered
 keys when it is chosen for one. **Join a mark that overlaps another of the same type**

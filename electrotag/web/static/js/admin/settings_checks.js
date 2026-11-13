@@ -106,10 +106,11 @@ export function repeatsProblems(rp) {
 }
 
 /** Problems with the review, training and replay blocks of a study's settings, and the topographic map's (settingsProblems has the others). */
-export function expertSettingsProblems(s) {
+export function expertSettingsProblems(s, labels = null) {
   return [...reviewProblems(s.review || {}), ...trainingProblems(s.training || {}), ...replayProblems(s.replay || {}), ...topomapProblems(s.display || {}), ...repeatsProblems(s.repeats || {}),
     ...questionnaireProblems(s.questionnaire), // the sign-up questionnaire (questionnaire_model.js)
-    ...preregistrationProblems(s.preregistration || {})];
+    ...preregistrationProblems(s.preregistration || {}),
+    ...(labels ? hiddenTypeProblems(s, labels) : [])]; // the hidden artifact types, against the catalogue's (labels)
 }
 
 /** The agreement settings a study pre-registers (PREREGISTERED_AGREEMENT_KEYS in electrotag/config/settings.py). */
@@ -176,4 +177,19 @@ function changesOf(path, block, old, value) {
 export function settingChanges(key, old, value) {
   const [block, ...rest] = String(key).split('.');
   return changesOf(rest.join('.').split('.'), block, old, value);
+}
+
+/** annotation.hidden_labels against the catalogue's types (`labels`, as the admin area has them): known types only,
+ *  never the uncertain type, and at least one specific type left for annotators (as electrotag/web/admin.py checks). */
+export function hiddenTypeProblems(settings, labels) {
+  const hidden = ((settings && settings.annotation) || {}).hidden_labels || [];
+  if (!Array.isArray(hidden)) return ['The hidden artifact types are a list of type names.'];
+  const known = new Set((labels || []).map((l) => l.label));
+  const unknown = hidden.find((n) => !known.has(n));
+  if (unknown) return [`${unknown} is not an artifact type of the catalogue.`];
+  if (hidden.includes('Data-artifact')) return ['Data-artifact (Uncertain / needs review) is always available to annotators.'];
+  const onKey = (((settings && settings.annotation) || {}).quick_labels || []).find((n) => hidden.includes(n));
+  if (onKey) return [`${onKey} is on a number key: take it off the keys, or keep it available to annotators.`];
+  const left = (labels || []).filter((l) => !l.is_group && l.label !== 'Data-artifact' && !hidden.includes(l.label));
+  return left.length ? [] : ['Keep at least one specific artifact type available to annotators.'];
 }

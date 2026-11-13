@@ -382,6 +382,7 @@ class StudyService:
                         "topomap_reference": s.display.topomap_reference},
             "annotation": {"min_duration_samples": s.min_duration_samples,
                            "quick_labels": [q for q in s.quick_labels if cat.is_permitted(q)],
+                           "hidden_labels": [q for q in s.hidden_labels if cat.is_permitted(q)],
                            "break_reminder_minutes": s.break_reminder_minutes,
                            "idle_pause_minutes": s.idle_pause_minutes, "coverage_check": s.coverage_check,
                            "allow_revisions": s.allow_revisions, "allow_reviews": s.allow_reviews,
