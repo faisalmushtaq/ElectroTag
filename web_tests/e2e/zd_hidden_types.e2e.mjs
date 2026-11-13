@@ -25,7 +25,8 @@ export const tests = [
       assert.match(await settings.locator('.types-in-training .banner').textContent(),
         /A training set uses a type you are hiding.*Demonstration training set: Eye-blink-artifact \(\d+ reference marks and 1 quiz answer\)/);
       assert.match(await settings.locator('.keys-cleared').textContent(), /key 1 \(Eye-blink-artifact\)/);
-      assert.equal(await page.locator('select[aria-label="Key 2"] option[value="Eye-blink-artifact"]').isDisabled(), true);
+      // (Playwright's isDisabled does not report an option's own disabled property, so it is read directly)
+      assert.equal(await page.$eval('select[aria-label="Key 2"] option[value="Eye-blink-artifact"]', (o) => o.disabled), true, 'not offered on the other keys');
       await page.click('[data-log="settings-save"]');
       await page.waitForFunction(() => /The settings are saved/.test(document.querySelector('.admin-section[data-section="settings"] .sticky-save .admin-msg')?.textContent || ''));
       const saved = await page.evaluate(() => globalThis.ElectroTag.backend.admin('settings_get'));
