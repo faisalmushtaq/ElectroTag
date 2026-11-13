@@ -9,7 +9,7 @@ import { DemoBackend } from '../../electrotag/web/static/js/api/demo.js';
 import { DEFAULT_SETTINGS } from '../../electrotag/web/static/js/api/demo_catalogue.js';
 import { EXAMPLE_ANSWERS } from '../../electrotag/web/static/js/api/demo_questionnaire.js';
 import {
-  PREFER_NOT, answerText, answeredCount, checkAnswers, checkContactValues, checkQuestions, effectiveQuestions, questionnaireProblems, versionOf,
+  PREFER_NOT, answerText, answeredCount, checkAnswers, checkContactValues, checkQuestions, effectiveQuestions, questionnaireProblems, toAnswer, versionOf,
 } from '../../electrotag/web/static/js/views/questionnaire_model.js';
 
 const memory = () => {
@@ -38,7 +38,11 @@ test('a study\'s own questions are checked in the study\'s words', () => {
   assert.throws(() => checkQuestions(q({ other_option: 'Maybe' })), /other_option must be one of its options/);
   assert.throws(() => checkQuestions(q({ id: 'Bad' })), /id must be a short name/);
   assert.throws(() => checkQuestions([...q({}), ...q({})]), /used twice/);
-  assert.throws(() => checkQuestions(q({ type: 'text' })), /a text question has no options/);
+  // a short answer may offer up to five tick boxes instead of the text (None, Not applicable), but no "Other"
+  assert.deepEqual(checkQuestions(q({ type: 'text' }))[0].options, ['Yes', 'No']);
+  assert.equal(checkQuestions(q({ type: 'text', options: [] }))[0].options, undefined);
+  assert.throws(() => checkQuestions(q({ type: 'text', options: ['a', 'b', 'c', 'd', 'e', 'f'] })), /up to 5 answers as tick boxes/);
+  assert.throws(() => checkQuestions(q({ type: 'text', other_option: 'Yes' })), /has no option that asks for their own words/);
   assert.equal(checkQuestions(null), null);
   assert.deepEqual(questionnaireProblems({ contacts: { phone: 'sometimes' } }), ['These settings cannot be used: questionnaire.contacts.phone must be required, optional or off']);
   assert.deepEqual(questionnaireProblems(DEFAULTS), []);
@@ -104,4 +108,54 @@ test('the sandbox: its own accounts have answered, a visitor\'s new account wait
   assert.match(audit, /Q01's contact details changed/);
   assert.match(audit, /Downloaded the contact details of 4 people/);
   assert.ok(!audit.includes('Cerys') && !audit.includes('cerys@'), 'no name or contact detail in the audit log');
+});
+
+test('the two new default questions, and tick-box answers to a short answer', () => {
+  const by = Object.fromEntries(QUESTIONS.map((q) => [q.id, q]));
+  assert.deepEqual([by.eeg_density.type, by.eeg_density.options, by.eeg_density.other_option], ['choice', ['Low', 'High', 'Both', 'Neither', 'Other'], 'Other']);
+  assert.deepEqual([by.preprocessing.type, by.preprocessing.options, by.preprocessing.required], ['text', ['None', 'Not applicable'], true]);
+  for (const q of QUESTIONS) assert.ok(q.id in EXAMPLE_ANSWERS, `an example answer to ${q.id}`);
+  const every = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.type === 'multi' ? [PREFER_NOT] : PREFER_NOT]));
+  assert.equal(checkAnswers(QUESTIONS, { ...every, preprocessing: 'Not applicable' }, {})[0].preprocessing, 'Not applicable');
+  assert.throws(() => checkAnswers(QUESTIONS, { ...every, preprocessing: null }, {}), (e) => e.code === 'questionnaire_incomplete');
+});
+
+test('which questions are asked again: added, or reworded or with other options, and required', () => {
+  const qs = [{ id: 'a', group: 'career', text: 'A?', type: 'choice', required: true, options: ['1', '2'] },
+    { id: 'b', group: 'career', text: 'B?', type: 'text', required: true }, { id: 'c', group: 'career', text: 'C?', type: 'text', required: false }];
+  const rec = { history: [{ at: 'x', version: 'v1', answers: { a: '1', b: 'words' } }], definitions: { v1: qs } };
+  assert.deepEqual(toAnswer(qs, rec), []);
+  assert.deepEqual(toAnswer(qs, null), []);
+  const now = JSON.parse(JSON.stringify(qs));
+  now[0].options = ['1', '2', '3'];
+  now[1].help = 'A hint';
+  now.push({ id: 'd', group: 'career', text: 'D?', type: 'text', required: true }, { id: 'e', group: 'career', text: 'E?', type: 'text', required: false });
+  assert.deepEqual(toAnswer(now, rec), ['a', 'd']);
+  now[1].text = 'B, reworded?';
+  assert.deepEqual(toAnswer(now, rec), ['a', 'b', 'd']);
+});
+
+test('the sandbox asks the questions added or changed since, at the next sign-in', async () => {
+  const b = new DemoBackend({ storage: memory(), tokens: memory() });
+  await b.login('A01', 'demo');
+  let me = await b.me();
+  assert.deepEqual([me.questionnaire.answered, me.questionnaire.missing, me.questionnaire.to_answer], [true, 0, []], 'the example account has answered every question');
+  const qs = (await b.questionnaire()).questions;
+  await b.logout();
+  await b.login('ADMIN', 'demo');
+  const now = qs.map((q) => (q.id === 'eeg_years' ? { ...q, text: 'For how many years have you worked with EEG?' } : q));
+  now.push({ id: 'montage', group: 'experience', text: 'Which montage do you read EEG in?', type: 'text', required: true, options: ['None', 'Not applicable'] });
+  await b.admin('settings_update', { settings: { questionnaire: { questions: now } } });
+  assert.deepEqual((await b.admin('questionnaire_summary', {})).to_update.includes('A01'), true);
+  await b.logout();
+  await b.login('A01', 'demo');
+  me = await b.me();
+  assert.deepEqual([me.questionnaire.missing, me.questionnaire.to_answer], [2, ['eeg_years', 'montage']]);
+  const view = await b.questionnaire();
+  assert.deepEqual(view.to_answer, ['eeg_years', 'montage']);
+  assert.ok(!('eeg_years' in view.answers) && view.answers.datasets_analysed === EXAMPLE_ANSWERS.datasets_analysed, 'a changed question asked afresh, the rest kept');
+  await b.match({ sha256: '0'.repeat(64), size_bytes: 1 }).catch((e) => assert.notEqual(e.code, 'questionnaire_required', 'work is never refused for questions added later'));
+  await b.saveQuestionnaire({ answers: { ...view.answers, eeg_years: '1–2', montage: 'Not applicable' }, contacts: { full_name: 'Demo annotator', email: 'a01@example.org' } });
+  me = await b.me();
+  assert.deepEqual([me.questionnaire.missing, me.questionnaire.to_answer], [0, []]);
 });

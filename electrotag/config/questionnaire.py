@@ -40,6 +40,8 @@ DEFAULT_CONTACTS = {"full_name": "required", "email": "required", "phone": "opti
 QUESTION_ID_RE = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 MAX_QUESTIONS = 60
 MAX_OPTIONS = 30
+#: The answers a text question can offer as tick boxes instead of the text (None, Not applicable).
+MAX_TEXT_OPTIONS = 5
 MAX_TEXT = 300
 MAX_HELP = 500
 MAX_OPTION = 120
@@ -78,6 +80,16 @@ def _plain(value: Any, what: str, limit: int, *, required: bool = True) -> str:
     return text
 
 
+def _options(opts: list[Any], where: str) -> list[str]:
+    clean = [_plain(o, f"{where}: an option", MAX_OPTION) for o in opts]
+    if len({c.lower() for c in clean}) != len(clean):
+        raise QuestionnaireError(f"{where}: an option is given twice")
+    if any(c.lower() in (PREFER_NOT_LABEL.lower(), PREFER_NOT) for c in clean):
+        raise QuestionnaireError(f"{where}: leave out \"{PREFER_NOT_LABEL}\"; ElectroTag offers it with every "
+                                 "question")
+    return clean
+
+
 def check_question(q: Any, n: int) -> dict[str, Any]:
     """One question of a definition, checked and tidied (spaces collapsed, keys in a fixed order)."""
     where = f"Question {n}"
@@ -103,18 +115,23 @@ def check_question(q: Any, n: int) -> dict[str, Any]:
         raise QuestionnaireError(f"{where}: required must be true or false")
     out["required"] = required
     if q["type"] == "text":
-        if q.get("options") or q.get("other_option"):
-            raise QuestionnaireError(f"{where}: a text question has no options")
+        # A short answer may offer a few answers as tick boxes instead of the text, such as None or Not applicable:
+        # ticking one greys out the text and answers the question.
+        if q.get("other_option"):
+            raise QuestionnaireError(f"{where}: a text question has no option that asks for their own words (its "
+                                     "answer is in their own words already)")
+        opts = q.get("options") or []
+        if not isinstance(opts, list) or len(opts) > MAX_TEXT_OPTIONS:
+            raise QuestionnaireError(f"{where}: a text question can offer up to {MAX_TEXT_OPTIONS} answers as tick "
+                                     "boxes instead of the text, such as None or Not applicable")
+        if opts:
+            clean = _options(opts, where)
+            out["options"] = clean
     else:
         opts = q.get("options")
         if not isinstance(opts, list) or not 2 <= len(opts) <= MAX_OPTIONS:
             raise QuestionnaireError(f"{where}: give from 2 to {MAX_OPTIONS} options")
-        clean = [_plain(o, f"{where}: an option", MAX_OPTION) for o in opts]
-        if len({c.lower() for c in clean}) != len(clean):
-            raise QuestionnaireError(f"{where}: an option is given twice")
-        if any(c.lower() in (PREFER_NOT_LABEL.lower(), PREFER_NOT) for c in clean):
-            raise QuestionnaireError(f"{where}: leave out \"{PREFER_NOT_LABEL}\"; ElectroTag offers it with every "
-                                     "question")
+        clean = _options(opts, where)
         out["options"] = clean
         other = q.get("other_option")
         if other not in (None, ""):
@@ -171,6 +188,15 @@ def effective_questions(questions: list[dict[str, Any]] | None, demographics: bo
     return sorted(chosen, key=lambda q: GROUPS.index(q["group"]))
 
 
+#: What a person's answer to a question rests on: a change to any of these asks them the question again (a change to
+#: its help, its group or whether it is required does not).
+MEANING_FIELDS = ("text", "type", "options", "other_option")
+
+
+def meaning_of(q: dict[str, Any]) -> dict[str, Any]:
+    return {k: q.get(k) for k in MEANING_FIELDS}
+
+
 def version_of(questions: list[dict[str, Any]]) -> str:
     """A short name of a questionnaire's wording and options ("q-" and 10 hexadecimal digits): answers given to
     different wordings carry different versions, so that an analysis can tell them apart."""
@@ -180,4 +206,5 @@ def version_of(questions: list[dict[str, Any]]) -> str:
 
 __all__ = ["CONTACT_FIELDS", "CONTACT_LEVELS", "DEFAULT_CONTACTS", "DEFAULT_QUESTIONS", "DEMOGRAPHICS_NOTE",
            "EXPERIENCE_QUESTION", "GROUPS", "GROUP_TITLES", "PREFER_NOT", "PREFER_NOT_LABEL", "QUESTION_TYPES",
-           "QuestionnaireError", "check_contacts", "check_questions", "effective_questions", "version_of"]
+           "QuestionnaireError", "check_contacts", "check_questions", "effective_questions", "meaning_of",
+           "version_of"]

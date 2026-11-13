@@ -5,6 +5,16 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The sign-up questionnaire asks two more questions about experience: "What density are you most comfortable working
+with?" (Low, High, Both, Neither, or Other in their own words) and "What pre-processing stages do you typically
+complete before annotating?" (in their own words, or None or Not applicable). A short-answer question can now offer up
+to five tick boxes that answer it instead of the text: ticking one greys out the text and answers a required question.
+Study settings edits them (Tick boxes instead of the text). A required question added after people have answered, or
+one whose wording or options change, is asked at each person's next sign-in, before anything else, marked New or
+changed, with their other answers kept (a changed question is asked afresh); their work stays open meanwhile. The
+Questionnaire section names who still has such questions to answer. `GET /me` gains `questionnaire.to_answer`,
+`GET /me/questionnaire` `to_answer`, and `questionnaire_summary` `to_update`.
+
 Study settings, Annotation, opens with a checklist of the artifact types annotators can choose: untick a type the study
 does not use to take it out of the type buttons, the number keys, Find a type, Change type and the menus of a mark
 (for experts and trainees too). Marks that already have the type keep it, the artifact reference guide still

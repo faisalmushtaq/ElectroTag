@@ -276,10 +276,10 @@ export class App {
     // Administrators start in the admin area (or where a reload left them); they can still annotate.
     const back = this._adminReturn;
     this._adminReturn = null;
-    // The sign-up questionnaire comes before any work (js/views/questionnaire.js); then the way on as usual.
+    // The sign-up questionnaire, and questions added or changed since, come before any work (views/questionnaire.js).
     const q = this.me.questionnaire;
-    if (q && q.asked && !q.answered) {
-      await this.showQuestionnaire({ first: true, then: () => this._land(want, back, quiet) });
+    if (q && q.asked && (!q.answered || q.missing)) {
+      await this.showQuestionnaire({ first: !q.answered, update: Boolean(q.answered), then: () => this._land(want, back, quiet) });
       return;
     }
     await this._land(want, back, quiet);

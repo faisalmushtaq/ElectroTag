@@ -357,7 +357,8 @@ what they said. Answers lists each person's current answers by annotator ID, wit
 the first questions of the questionnaire and how many times they changed their answers; Open goes to
 their page in Annotators, which has every answer, the earlier versions and their contact details. The
 line under the table names the people who have not answered yet, whose work stays closed until they
-do. Download the answers (CSV) saves the table, a row for each person and a column for each question
+do, and the next line those who still have questions added or changed since they answered, which they
+are asked at their next sign-in. Download the answers (CSV) saves the table, a row for each person and a column for each question
 (with the words given with Other beside it). Answers by question counts how often each answer was
 given; Prefer not to say counts as an answer, and a question answered in the person's own words
 counts as answered. The answers are research data kept under annotator IDs, as the results zip keeps
@@ -367,7 +368,16 @@ Contact details gives Download the contacts list (CSV): each person's annotator 
 phone and institution, when they last changed them and whether their account is active. The file
 identifies people, so the page says so and asks before downloading it; keep it apart from the research
 data, share it only with the study team, and delete it when it is no longer needed. Each download is
-noted in the audit log. The questions themselves are edited in Study settings.
+noted in the audit log. The questions themselves are edited in Study settings, under Sign-up
+questionnaire: reword a question, change its options, add one with Add a question, move or remove one.
+A question answered in the person's own words (A short answer in their own words) can also offer up to
+five tick boxes, under Tick boxes instead of the text, such as None or Not applicable: ticking one
+greys out the text and answers the question, so a required question is answered without any text.
+When you add a required question, or change the wording or the options of one, after people have
+answered, each of them is asked it at their next sign-in, before anything else, with their other
+answers kept; their work stays open meanwhile, since they have answered once. A changed question is
+asked afresh, without the earlier answer. Changing only a question's help, its group or whether it is
+required asks nobody again, and adding a question that is not required asks nobody either.
 
 ## Datasets
 

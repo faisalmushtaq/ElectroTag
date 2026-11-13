@@ -603,7 +603,7 @@ async function script(call) {
   await call('expert before the questionnaire', (s) => s.b.expert('replay_consent_get', {}));
   await call('questionnaire (new)', (s) => s.b.questionnaire());
   const answers = { datasets_analysed: '11–30', eeg_years: '6–10', annotation_hours: '51–200', artifact_training: 'Other', eeg_systems: ['OpenBCI', 'BioSemi', 'Other'],
-    eeg_setting: 'Both', confidence: '4', career_stage: 'Postdoc', discipline: 'Engineering', country: '  Ghana ', age_band: PREFER_NOT, gender: 'Prefer to self-describe', first_language: 'Twi' };
+    eeg_density: 'Other', preprocessing: 'None', eeg_setting: 'Both', confidence: '4', career_stage: 'Postdoc', discipline: 'Engineering', country: '  Ghana ', age_band: PREFER_NOT, gender: 'Prefer to self-describe', first_language: 'Twi' };
   const contacts = { full_name: 'Ama Owusu', email: 'ama@example.org', phone: '+44 113 000 0000', institution: 'University of Leeds' };
   await call('questionnaire save (a question left out)', (s) => s.b.saveQuestionnaire({ answers: { ...answers, eeg_years: null }, contacts }));
   await call('questionnaire save (not an option)', (s) => s.b.saveQuestionnaire({ answers: { ...answers, datasets_analysed: 'Lots' }, contacts }));
@@ -639,6 +639,23 @@ async function script(call) {
   await call('questionnaire (no demographics)', (s) => s.b.questionnaire());
   await call('questionnaire save (an institution needed)', (s) => s.b.saveQuestionnaire({ answers: { ...answers, age_band: undefined, gender: undefined, first_language: undefined }, contacts: { full_name: 'Demo annotator', email: 'a01@example.org' } }));
   await call('questionnaire save (demographics gone)', (s) => s.b.saveQuestionnaire({ answers, contacts: { full_name: 'Demo annotator', email: 'a01@example.org', institution: 'Leeds' } }));
+  await call('logout', (s) => s.b.logout());
+  // A question added and another reworded after A01 answered: asked again at the next sign-in, the rest kept
+  await call('login', (s) => s.b.login('ADMIN', s.password));
+  await call('admin settings_update (a question added, one reworded)', async (s) => {
+    const { settings } = await s.b.admin('settings_get', {});
+    const questions = (await s.b.questionnaire()).questions.map((q) => (q.id === 'eeg_years' ? { ...q, text: 'For how many years have you worked with EEG?' } : q));
+    questions.push({ id: 'montage', group: 'experience', text: 'Which montage do you read EEG in?', type: 'text', required: true, options: ['None', 'Not applicable'] });
+    return s.b.admin('settings_update', { settings: { questionnaire: { ...settings.questionnaire, questions } } });
+  });
+  await call('admin questionnaire_summary (questions to answer again)', (s) => s.b.admin('questionnaire_summary', {}));
+  await call('logout', (s) => s.b.logout());
+  await call('login', (s) => s.b.login('A01', s.password));
+  await call('me (questions added and changed)', (s) => s.b.me());
+  await call('questionnaire (questions added and changed)', (s) => s.b.questionnaire());
+  await call('questionnaire save (the new questions answered)', (s) => s.b.saveQuestionnaire({ answers: { ...answers, age_band: undefined, gender: undefined, first_language: undefined, eeg_years: '1–2', montage: 'Not applicable' },
+    contacts: { full_name: 'Demo annotator', email: 'a01@example.org', institution: 'Leeds' } }));
+  await call('me (up to date)', (s) => s.b.me());
   await call('logout', (s) => s.b.logout());
 
   // ------------------------------------------------------------ datasets, collections, groups and hand-outs (ADMIN)
