@@ -5,6 +5,11 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The annotation toolbar has two filter buttons, No high-pass and No notch: each shows the EEG without that
+filter while pressed and with it again when pressed once more. They and the side panel's viewing options are one
+setting, greyed out when the study fixes the filters. Each press is logged as a `state` event with the filters in
+force, `filter` (`highpass` or `notch`), `applied` and `via: button` (docs/activity_logs.md, "Viewing filters"). To keep the toolbar on one line at 1,920 pixels, the Time and Amplitude captions are now left out below 2,050 pixels rather than 1,700.
+
 The sign-up questionnaire asks two more questions about experience: "What density are you most comfortable working
 with?" (Low, High, Both, Neither, or Other in their own words) and "What pre-processing stages do you typically
 complete before annotating?" (in their own words, or None or Not applicable). A short-answer question can now offer up

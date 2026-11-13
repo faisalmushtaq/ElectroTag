@@ -383,7 +383,7 @@ export class Workspace {
       this.typeCaption, h('div.chips', {}, this.chips), this.typeMenuBtn, h('span.sep'),
       // (the scope, its channels and their Clear stay together when the toolbar wraps)
       h('span.ws-scope', {}, h('div.segmented', { role: 'group', 'aria-label': 'Applies to' }, this.scopeWhole, this.scopeSome), this.chooseBtn, this.chanSummary, this.clearChBtn),
-      h('span.ws-overlay-tool', {}, h('span.sep'), this._overlayButton(), this._shownChannelsTools()), h('span.sep'), this._scaleTools());
+      h('span.ws-overlay-tool', {}, h('span.sep'), this._overlayButton(), this._shownChannelsTools()), this._filterButtons(), h('span.sep'), this._scaleTools());
     // Every type button shows its number and code; the toolbar wraps onto a second line when it needs one (app.css).
     return this.toolbar;
   }
@@ -583,20 +583,13 @@ export class Workspace {
     const n50 = h('input', { type: 'radio', name: 'notchf', id: 'notch-50', checked: (f.notchHz || 50) === 50, disabled: locked });
     const n60 = h('input', { type: 'radio', name: 'notchf', id: 'notch-60', checked: f.notchHz === 60, disabled: locked });
     const harm = h('input', { type: 'checkbox', id: 'notch-harm', checked: Boolean(f.notchHarmonics), disabled: locked });
-    const study = (this.s.me && this.s.me.study) || {};
-    const hpHz = (study.filters && study.filters.highpass_hz) || 1;
+    const hpHz = this._highpassHz();
+    // (the toolbar's No high-pass and No notch change the same filters: the panel follows them)
+    this._filterInputs = { hpOn, hpOff, notch, n50, n60, harm };
     const apply = () => {
       const nf = { highpassHz: hpOn.checked ? hpHz : null, notchHz: notch.checked ? (n60.checked ? 60 : 50) : null, notchHarmonics: notch.checked && harm.checked };
       for (const el of [n50, n60, harm]) el.disabled = locked || !notch.checked;
-      this.s.filters = nf;
-      this.viewer.setFilters(nf);
-      if (this.topo) this.topo.update();
-      this._updateEdgeText();
-      this._refreshFixed();
-      local.set(`electrotag.filters|${study.study_id || ''}`, {
-        highpass_enabled: Boolean(nf.highpassHz), highpass_hz: hpHz, notch_enabled: Boolean(nf.notchHz), notch_hz: nf.notchHz || 50, notch_harmonics: nf.notchHarmonics,
-      });
-      logger.event('state', { filters: this._filtersLog(), via: logger.via() });
+      this._applyFilters(nf, { via: logger.via() });
     };
     for (const el of [hpOn, hpOff, notch, n50, n60, harm]) el.addEventListener('change', apply);
     for (const el of [n50, n60, harm]) el.disabled = locked || !notch.checked;
@@ -693,6 +686,87 @@ export class Workspace {
   _updateEdgeText() {
     const hw = edgeHalfWidthS(this.s.filters);
     if (this.edgeRow) this.edgeRow.textContent = hw ? `±${hw.toFixed(2)} s at edges and discontinuities` : 'none (no filters)';
+  }
+
+  /** The study's high-pass frequency (1 Hz unless it chooses another). */
+  _highpassHz() {
+    const study = (this.s.me && this.s.me.study) || {};
+    return (study.filters && study.filters.highpass_hz) || 1;
+  }
+
+  /**
+   * Shows the EEG with the filters `nf` ({highpassHz, notchHz, notchHarmonics}), remembers them for this study in this
+   * browser, and logs a `state` event with the filters in force; `extra` adds to it (the toolbar's buttons name the
+   * filter and whether it is now applied).
+   */
+  _applyFilters(nf, extra = {}) {
+    const study = (this.s.me && this.s.me.study) || {};
+    if (nf.notchHz) this._lastNotch = { notchHz: nf.notchHz, notchHarmonics: nf.notchHarmonics };
+    this.s.filters = nf;
+    this.viewer.setFilters(nf);
+    if (this.topo) this.topo.update();
+    this._updateEdgeText();
+    this._refreshFixed();
+    this._syncFilterControls();
+    local.set(`electrotag.filters|${study.study_id || ''}`, {
+      highpass_enabled: Boolean(nf.highpassHz), highpass_hz: this._highpassHz(), notch_enabled: Boolean(nf.notchHz), notch_hz: nf.notchHz || 50, notch_harmonics: nf.notchHarmonics,
+    });
+    logger.event('state', { filters: this._filtersLog(), ...extra });
+  }
+
+  /**
+   * The toolbar's No high-pass and No notch: each shows the EEG without that filter while pressed, and
+   * with it again when pressed once more (the side panel's viewing options change the same filters). Logged as a
+   * `state` event with the filters, `filter` (`highpass` or `notch`), `applied` and `via: 'button'`. Fixed by the
+   * study team (filters.locked), they are greyed out, as the viewing options are.
+   */
+  _filterButtons() {
+    // short labels, so that the toolbar keeps to one line on a wide screen
+    const make = (filter, label, title) => {
+      const b = h('button.btn.small.toggle.filter-off', { type: 'button', 'aria-pressed': 'false', 'data-log': `without-${filter}`, title,
+        onclick: () => this.toggleFilter(filter, 'button') }, label);
+      b.tabIndex = -1;
+      return keepFocusOnClick(b);
+    };
+    this.withoutHighpassBtn = make('highpass', 'No high-pass', `Show the EEG without the ${this._highpassHz()} Hz high-pass filter; press again to filter it again. Only what you see changes.`);
+    this.withoutNotchBtn = make('notch', 'No notch', 'Show the EEG without the notch filter at the mains frequency; press again to filter it again. Only what you see changes.');
+    const group = h('span.ws-filters', { role: 'group', 'aria-label': 'Filters' }, this.withoutHighpassBtn, this.withoutNotchBtn);
+    this._syncFilterControls();
+    return group;
+  }
+
+  /** Shows the EEG without the high-pass or the notch filter, or with it again (`filter`: highpass or notch). */
+  toggleFilter(filter, via = 'button') {
+    if (this.filtersLocked) return;
+    const f = this.s.filters;
+    const study = (this.s.me && this.s.me.study) || {};
+    let nf;
+    if (filter === 'highpass') nf = { ...f, highpassHz: f.highpassHz ? null : this._highpassHz() };
+    else {
+      const back = this._lastNotch || { notchHz: (study.filters && study.filters.notch_hz) || 50, notchHarmonics: Boolean(study.filters && study.filters.notch_harmonics) };
+      nf = f.notchHz ? { ...f, notchHz: null, notchHarmonics: false } : { ...f, ...back };
+    }
+    logger.noteInput(`button:without-${filter}`);
+    this._applyFilters(nf, { filter, applied: Boolean(filter === 'highpass' ? nf.highpassHz : nf.notchHz), via });
+  }
+
+  /** The toolbar's buttons and the side panel's viewing options show the filters in force. */
+  _syncFilterControls() {
+    const f = this.s.filters || {};
+    for (const [b, off] of [[this.withoutHighpassBtn, !f.highpassHz], [this.withoutNotchBtn, !f.notchHz]]) {
+      if (!b) continue;
+      b.setAttribute('aria-pressed', off ? 'true' : 'false');
+      b.disabled = Boolean(this.filtersLocked);
+      if (this.filtersLocked) b.title = 'The filters are fixed by the study team.';
+    }
+    const i = this._filterInputs;
+    if (!i) return;
+    i.hpOn.checked = Boolean(f.highpassHz);
+    i.hpOff.checked = !f.highpassHz;
+    i.notch.checked = Boolean(f.notchHz);
+    if (f.notchHz) { i.n50.checked = f.notchHz !== 60; i.n60.checked = f.notchHz === 60; }
+    i.harm.checked = Boolean(f.notchHarmonics);
+    for (const el of [i.n50, i.n60, i.harm]) el.disabled = this.filtersLocked || !f.notchHz;
   }
 
   _filtersLog() {
