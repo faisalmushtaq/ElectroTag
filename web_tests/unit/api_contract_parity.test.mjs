@@ -552,6 +552,11 @@ async function script(call) {
   await call('me, with the study\'s own words', (s) => s.b.me());
   await call('admin artifact_text_set (back to the original)', (s) => s.b.admin('artifact_text_set', { label: 'Eye-blink-artifact', fields: { description: null, shape: null, apart: null } }));
   // Before the study starts: the settings each confirmed with their values (electrotag/web/preregistration.py)
+  // Artifact types the study does not use, given to annotators with the other annotation settings
+  await call('admin settings_update (hidden artifact types)', (s) => s.b.admin('settings_update', { settings: { annotation: { quick_labels: ['EMG-artifact', 'Movement-artifact'], hidden_labels: ['Chewing-artifact', 'Eye-blink-artifact'] } } }));
+  await call('me (hidden artifact types)', (s) => s.b.me());
+  await call('admin training_types_get', (s) => s.b.admin('training_types_get', {}));
+  await call('admin settings_update (hidden artifact types back)', (s) => s.b.admin('settings_update', { settings: { annotation: { hidden_labels: [] } } }));
   await call('admin preregistration_get', (s) => s.b.admin('preregistration_get', {}));
   await call('admin preregistration_confirm (agreement not saved)', (s) => s.b.admin('preregistration_confirm', { item: 'agreement' }));
   await call('admin preregistration_confirm (no such group)', (s) => s.b.admin('preregistration_confirm', { item: 'everything' }));

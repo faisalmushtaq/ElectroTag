@@ -487,7 +487,7 @@ and Redo are greyed out when they have nothing to act on: Delete until an annota
 Undo and Redo when there is no change to take back or make again. Draw/edit is on while you
 annotate; pressed, it switches to view only, in which nothing can be drawn or changed by accident,
 and the second row reads "View only" until you press it again. The second chooses what you mark next: the numbered type buttons, 0 Uncertain and the menu of all
-types after "Draw as", then Whole montage or Selected channels with Channels… and Clear channel
+the types your study uses (it may have left some out) after "Draw as", then Whole montage or Selected channels with Channels… and Clear channel
 selection, Overlay, and the scales: Time, the seconds on the screen, and Amplitude, the height of a
 row of EEG, each with − and + beside it. Each type button shows its number and a short name (1
 Blink, 2 HEM, 3 EMG and so on). On a wide screen the toolbar keeps to one line: below 1,700 pixels

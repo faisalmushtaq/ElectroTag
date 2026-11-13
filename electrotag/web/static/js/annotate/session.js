@@ -9,6 +9,7 @@ import { confidenceMode } from './confidence.js';
 import { addInterval, fromDraft, toDraft, viewedFraction as coverageFraction } from '../viewer/coverage.js';
 import { local, newId, nowLocalIso, session as tabStorage } from '../util.js';
 import { DEFAULT_ANNOTATION, DEFAULT_HIDE, DEFAULT_SCALINGS } from '../api/demo_catalogue.js';
+import { withHiddenTypes } from './hidden_types.js';
 import { draftTime, localDraft, localDraftKey } from './local_drafts.js';
 
 export { draftTime, localDraft, localDraftKey };
@@ -93,7 +94,9 @@ export class AnnotationSession {
     this.mode = o.mode || 'standard';
     this.contextId = o.contextId || '';
     this.me = o.me;
-    this.catalogue = o.catalogue;
+    // the study's hidden types are left out of the lists a type is chosen from (marks that have one keep it)
+    const hiddenTypes = (o.me && o.me.study && o.me.study.annotation && o.me.study.annotation.hidden_labels) || [];
+    this.catalogue = o.catalogue ? withHiddenTypes(o.catalogue, hiddenTypes) : o.catalogue;
     this.sha256 = o.sha256 || '';
     this.readOnly = Boolean(o.readOnly);
     this.tryOut = this.mode === 'tryout';
