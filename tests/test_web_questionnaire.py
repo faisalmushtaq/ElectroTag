@@ -32,7 +32,8 @@ BLINK = ann("b" * 32, "Eye-blink-artifact", 500, 100, ["Fp1", "Fp2"])
 BLINK2 = ann("e" * 32, "Eye-blink-artifact", 510, 95, ["Fp1", "Fp2"])
 ANSWERS: dict[str, Any] = {
     "datasets_analysed": "11–30", "eeg_years": "6–10", "annotation_hours": "51–200", "artifact_training": "Other",
-    "eeg_systems": ["OpenBCI", "BioSemi"], "eeg_setting": "Both", "confidence": "4", "career_stage": "Postdoc",
+    "eeg_systems": ["OpenBCI", "BioSemi"], "eeg_density": "High", "preprocessing": "Not applicable",
+    "eeg_setting": "Both", "confidence": "4", "career_stage": "Postdoc",
     "discipline": "Engineering", "country": "Ghana", "age_band": PREFER_NOT, "gender": "Prefer to self-describe",
     "first_language": "Twi",
 }

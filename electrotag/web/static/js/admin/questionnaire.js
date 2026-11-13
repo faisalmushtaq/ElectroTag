@@ -94,11 +94,14 @@ export class QuestionnaireSection {
     const waiting = d.not_answered && d.not_answered.length
       ? h('p.caption', {}, `Not answered yet: ${d.not_answered.join(', ')}. Their recordings, training and expert work open once they have answered.`)
       : h('p.caption', {}, 'Everyone who is asked has answered.');
+    // questions added or changed since: asked at each person's next sign-in
+    const updating = d.to_update && d.to_update.length
+      ? h('p.caption.q-to-update', {}, `New or changed questions still to answer: ${d.to_update.join(', ')}. They are asked them at their next sign-in.`) : null;
     if (off) this.body.append(off);
     this.body.append(
       card('Answers',
         h('p.caption', {}, `Version ${d.version} of the questionnaire. ${PREFER_NOT_LABEL} counts as an answer. Each person's page in Annotators shows all their answers and the earlier versions; the results zip has the full history (questionnaire/answers.tsv).`),
-        people, waiting, h('div.btn-row', {}, csv)),
+        people, waiting, updating, h('div.btn-row', {}, csv)),
       card('Answers by question', counts),
       this._contactsCard(),
       card('The questions', h('p.caption', {}, 'Add, remove and reword questions, choose the options and the contact details asked, and switch the demographic questions off, in Study settings.'),
@@ -215,7 +218,9 @@ export function questionnaireEditor(block, changed = () => {}) {
     h('p.caption', {}, 'Asked with the questions, kept apart from the answers and seen only by the study team. The email address is filled in from the account where it has one.'),
     h('div.form-grid', {}, CONTACT_FIELDS.map((k) => field(CONTACT_TITLES[k], levels[k]))),
     h('h3', {}, 'Questions'),
-    h('p.caption', {}, 'Changing the wording or the options of a question starts a new version of the questionnaire: earlier answers keep the version they were given to, and the results say which it was.'),
+    h('p.caption', {}, 'Changing the wording or the options of a question starts a new version of the questionnaire: earlier answers keep the version they were given to, and the results say which it was. '
+      + 'Everyone who has answered already is asked each required question you add, or whose wording or options you change, at their next sign-in, before any other work; '
+      + 'their other answers are kept. Changing only a question\'s help, group or whether it is required asks nobody again.'),
     list,
     h('div.btn-row', {}, addButton, restoreHost));
   return {
@@ -248,10 +253,15 @@ function questionRow(q, { open, move, remove }) {
   const help = textInput({ value: q.help || '', maxlength: 500 });
   const required = checkbox('An answer is needed (Prefer not to say counts as one)', q.required !== false);
   const title = h('span.q-edit-title');
+  const optionsField = field('Options', options, { hint: `One per line. ${PREFER_NOT_LABEL} is added by itself.`, wide: true });
   const sync = () => {
     title.replaceChildren(h('span', {}, text.value.trim() || 'New question'), h('span.caption', {}, ` · ${GROUP_TITLES[group.value]} · ${TYPE_WORDS[type.value]}`));
     const choice = type.value !== 'text';
-    options.closest('.admin-field') && (options.closest('.admin-field').hidden = !choice);
+    // a short answer can offer up to five tick boxes instead of the text (None, Not applicable)
+    optionsField.querySelector('.form-label, label').firstChild.textContent = choice ? 'Options' : 'Tick boxes instead of the text (optional)';
+    const hint = optionsField.querySelector('.caption, .hint');
+    if (hint) hint.textContent = choice ? `One per line. ${PREFER_NOT_LABEL} is added by itself.`
+      : `One per line, up to five, such as None or Not applicable. Ticking one greys out the text and answers the question. ${PREFER_NOT_LABEL} is added by itself.`;
     other.closest('.admin-field') && (other.closest('.admin-field').hidden = !choice);
   };
   const removeHost = h('span.inline-host');
@@ -265,7 +275,7 @@ function questionRow(q, { open, move, remove }) {
     h('div.q-edit-body', {},
       field('Question', text, { wide: true }),
       h('div.form-grid', {}, field('Group', group), field('Answers', type), field('Name in the results', id, { hint: 'Lower-case letters, digits and _.' })),
-      field('Options', options, { hint: `One per line. ${PREFER_NOT_LABEL} is added by itself.`, wide: true }),
+      optionsField,
       field('Option that asks for their own words', other, { hint: 'Must be one of the options, written the same way; leave empty for none.' }),
       field('Help under the question', help, { wide: true }),
       required,
@@ -280,10 +290,11 @@ function questionRow(q, { open, move, remove }) {
     focus: () => text.focus(),
     read() {
       const out = { id: id.value.trim(), group: group.value, text: text.value, type: type.value, required: required.input.checked };
+      const opts = options.value.split('\n').map((x) => x.trim()).filter(Boolean);
       if (type.value !== 'text') {
-        out.options = options.value.split('\n').map((x) => x.trim()).filter(Boolean);
+        out.options = opts;
         if (other.value.trim()) out.other_option = other.value.trim();
-      }
+      } else if (opts.length) out.options = opts; // the tick boxes that answer instead of the text
       if (help.value.trim()) out.help = help.value.trim();
       return out;
     },

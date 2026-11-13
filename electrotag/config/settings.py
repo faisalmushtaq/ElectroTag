@@ -18,6 +18,9 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
+#: The uncertain type (electrotag/app/annotations/labels.py UNCERTAIN_LABEL), which a study cannot hide.
+UNCERTAIN_LABEL = "Data-artifact"
+
 CONFIG_DIR = Path(__file__).resolve().parent
 DEFAULT_SETTINGS_PATH = CONFIG_DIR / "default_settings.json"
 STUDY_CONFIG_FILENAME = "electrotag_study.json"
@@ -49,6 +52,15 @@ TRAINING_GATES = ("met", "completed", "off")
 
 class SettingsError(ValueError):
     """Raised when a settings or study configuration file is invalid."""
+
+
+def _label_list(value: Any, name: str) -> tuple[str, ...]:
+    """A list of artifact type names, each once (their names are checked against the study's catalogue when saved)."""
+    if not isinstance(value, list) or not all(isinstance(x, str) and x for x in value):
+        raise SettingsError(f"{name} must be a list of artifact type names")
+    if len(set(value)) != len(value):
+        raise SettingsError(f"{name} must not name an artifact type twice")
+    return tuple(value)
 
 
 def _minutes(value: Any, name: str) -> float:
@@ -506,6 +518,9 @@ class Settings:
     min_duration_samples: int
     # The artifact types on the number keys 1 to 9 (and the toolbar's quick buttons), in key order.
     quick_labels: tuple[str, ...] = DEFAULT_QUICK_LABELS
+    # annotation.hidden_labels: artifact types the study does not use, left out of every list annotators choose
+    # a type from (marks that already have one keep it). The uncertain type, Data-artifact, cannot be hidden.
+    hidden_labels: tuple[str, ...] = ()
     # channels.types: (name pattern, MNE channel type) pairs, applied in order when a recording is loaded.
     channel_type_patterns: tuple[tuple[str, str], ...] = ()
     # logging: the interaction log of each visit (research data; see docs/activity_logs.md).
@@ -592,6 +607,7 @@ class Settings:
                 register_lock_timeout_s=float(locks["register_lock_timeout_s"]),
                 min_duration_samples=int(ann["min_duration_samples"]),
                 quick_labels=tuple(str(x) for x in ann.get("quick_labels", DEFAULT_QUICK_LABELS)),
+                hidden_labels=_label_list(ann.get("hidden_labels", []), "annotation.hidden_labels"),
                 break_reminder_minutes=_minutes(ann.get("break_reminder_minutes", 50.0),
                                                 "annotation.break_reminder_minutes"),
                 idle_pause_minutes=_minutes(ann.get("idle_pause_minutes", 3.0), "annotation.idle_pause_minutes"),
@@ -661,6 +677,13 @@ class Settings:
             raise SettingsError("annotation.quick_labels can name at most 9 artifact types (keys 1 to 9)")
         if len(set(self.quick_labels)) != len(self.quick_labels):
             raise SettingsError("annotation.quick_labels must not name an artifact type twice")
+        if UNCERTAIN_LABEL in self.hidden_labels:
+            raise SettingsError(f"annotation.hidden_labels cannot hide {UNCERTAIN_LABEL}: it is the type for an "
+                                "artifact whose type cannot be told (key 0, Uncertain), and is always available")
+        on_keys = [q for q in self.quick_labels if q in self.hidden_labels]
+        if on_keys:
+            raise SettingsError(f"annotation.hidden_labels hides {on_keys[0]}, which is on a number key "
+                                "(annotation.quick_labels): take it off the keys, or keep it available")
         if not 0 <= self.break_reminder_minutes <= 240:
             raise SettingsError("annotation.break_reminder_minutes must be between 0 (no reminders) and 240 minutes")
         if not 0 <= self.idle_pause_minutes <= 60:

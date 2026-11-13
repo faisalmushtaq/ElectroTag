@@ -61,7 +61,7 @@ const SERVER_ONLY = {
 
 const bad = (message, code = 'bad_request', status = 400) => new ApiError(status, code, message);
 // datasets, collections, groups, hand-outs, tracking (demo_library.js, loaded when used), and what they change
-const LIBRARY_OP = /^(datasets?|collections?|groups?|handouts?|tracking|saved_work|probability|preregistration)_|^(recordings_move|notify_preview_get|recording_warnings_list|withdrawals_list)$/;
+const LIBRARY_OP = /^(datasets?|collections?|groups?|handouts?|tracking|saved_work|probability|preregistration|training_types)_|^(recordings_move|notify_preview_get|recording_warnings_list|withdrawals_list)$/;
 const LIBRARY_HOOK = /^(overview|recordings_(list|register)|recording_remove|user_remove)$/;
 // How long an invitation link lasts unless the administrator chooses otherwise, and the longest allowed.
 const INVITE_DAYS = 14;
@@ -392,7 +392,7 @@ export class DemoAdmin {
       display: { duration_s: st.display.duration_s, n_channels: st.display.n_channels, scalings: { ...st.display.scalings },
         channel_colours: st.display.channel_colours, topomap: st.display.topomap !== false,
         topomap_filters: st.display.topomap_filters || 'as_shown', topomap_reference: st.display.topomap_reference || 'as_recorded' },
-      annotation: Object.fromEntries(['min_duration_samples', 'quick_labels', ...Object.keys(DEFAULT_ANNOTATION), 'allow_revisions', 'allow_reviews',
+      annotation: Object.fromEntries(['min_duration_samples', 'quick_labels', 'hidden_labels', ...Object.keys(DEFAULT_ANNOTATION), 'allow_revisions', 'allow_reviews',
         'show_reviews_to_annotators'].map((k) => [k, deepCopy(st.annotation[k])])),
       gamification: { enabled: st.gamification.enabled !== false,
         leaderboard: st.gamification.enabled !== false && st.gamification.leaderboard !== false },
@@ -670,7 +670,7 @@ export class DemoAdmin {
       if (unknown) throw bad(`The settings block '${unknown}' cannot be changed here; these can: ${known.join(', ')}`, 'invalid_settings');
       const next = mergeSettings(this.s.settings, body.settings);
       const { expertSettingsProblems, settingChanges } = await loadPart('settingsChecks');
-      const problems = [...settingsProblems(next, LABEL_NAMES), ...expertSettingsProblems(next)];
+      const problems = [...settingsProblems(next, LABEL_NAMES), ...expertSettingsProblems(next, CATALOGUE.labels)];
       if (problems.length) throw bad(problems[0], 'invalid_settings');
       for (const [block, values] of Object.entries(body.settings)) {
         for (const [key, value] of Object.entries(values || {})) {

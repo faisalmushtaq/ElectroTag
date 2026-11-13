@@ -1533,7 +1533,8 @@ def test_hand_outs_on_firestore(service: StudyService, recordings: Path, monkeyp
 
 # ------------------------------------------------------------------ the sign-up questionnaire
 QUESTIONNAIRE = {"datasets_analysed": "0", "eeg_years": "Less than 1", "annotation_hours": "None",
-                 "artifact_training": "Other", "eeg_systems": ["Other"], "eeg_setting": "Research",
+                 "artifact_training": "Other", "eeg_systems": ["Other"], "eeg_density": "Both",
+                 "preprocessing": "Filtering, re-referencing and ICA", "eeg_setting": "Research",
                  "confidence": "prefer_not_to_say", "career_stage": "PhD", "discipline": "Psychology",
                  "country": "Wales", "age_band": "prefer_not_to_say", "gender": "Woman", "first_language": "Welsh"}
 

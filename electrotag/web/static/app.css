@@ -1548,6 +1548,11 @@ label.check.q-choice { margin: 0; padding: 4px 0; align-items: flex-start; }
 .q-choice input { margin-top: 4px; }
 .q-choices label.q-prefer { grid-column: 1 / -1; margin-top: 4px; color: var(--text-secondary); }
 .q-question > label.q-prefer { margin: 8px 0 0; color: var(--text-secondary); }
+/* A short answer's tick boxes that answer instead of the text (None, Not applicable), and a question added or changed
+   since the person last answered (marked New or changed). */
+.q-question > label.q-instead { margin: 8px 0 0; }
+.q-question > label.q-instead + label.q-instead, .q-question > label.q-instead + label.q-prefer { margin-top: 0; }
+.q-new { margin-right: 8px; vertical-align: 1px; }
 .q-question .q-answer, .q-question .q-other { max-width: 420px; }
 .q-question .q-other { margin-top: 8px; }
 .q-contacts .field { max-width: 420px; }

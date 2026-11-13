@@ -37,6 +37,7 @@ nothing after it on the line.
 - [The viewing filters](#the-viewing-filters)
 - [The display](#the-display)
   - [The types on the number keys](#the-types-on-the-number-keys)
+  - [Artifact types the study does not use](#artifact-types-the-study-does-not-use)
   - [Long sessions](#long-sessions)
 - [Which recording comes next](#which-recording-comes-next)
   - [Tracking who has rated what](#tracking-who-has-rated-what)
@@ -293,6 +294,31 @@ order, with up to nine names from the label catalogue:
 
 Names that are not in the label catalogue are left out, and the other types
 stay available from the menu and the searchable list (the / key).
+
+### Artifact types the study does not use
+
+`annotation.hidden_labels` (empty by default) names artifact types the study
+does not use. They are left out of every list an annotator chooses a type from:
+the numbered buttons and keys, the menu of all types, Find a type (the / key),
+Change type and the menus of a mark, for everyone who annotates in the study,
+experts and trainees included. A mark that already has a hidden type, made
+before it was hidden, keeps it, shows in its colour and can be changed to
+another type; the artifact reference guide still describes every type, and the
+analyses are unchanged. A type on a number key cannot be hidden until it is
+taken off the keys, Data-artifact (Uncertain / needs review, key 0) is always
+available, and at least one specific type must stay available. In the admin
+area this is the checklist at the top of Study settings, Annotation, where
+unticking a type takes it off its key at once.
+
+```json
+{"settings": {"annotation": {"hidden_labels": ["Chewing-artifact", "Rocking-patting-artifact"]}}}
+```
+
+Hiding a type changes what annotators can mark, so choose it before the study
+starts. A training set whose reference marks or quiz answers use a hidden type
+asks trainees for a type they can no longer choose: Study settings names each
+such set, with the type and how many marks and answers use it, as soon as the
+type is unticked.
 `annotation.min_duration_samples` (1 by default) is the shortest annotation
 that is accepted.
 
@@ -928,6 +954,9 @@ ElectroTag's default questionnaire (null means the same): the person's
 experience of EEG (EEG datasets analysed, in the log-like bands 0, 1–2, 3–10,
 11–30, 31–100 and over 100; years working with EEG; hours of artifact
 annotation; formal training in recognising artifacts; the EEG systems used;
+the density of EEG they are most comfortable working with, low, high, both,
+neither or other, in their own words; the pre-processing stages they usually
+complete before annotating, in their own words or None or Not applicable;
 clinical or research EEG; and confidence on a scale from 1 to 5), their career
 stage (undergraduate, master's, PhD, postdoc, faculty, clinician, EEG
 technologist, industry or other), discipline and country of work, and, in the
@@ -938,7 +967,13 @@ letters, digits and `_`, the column's name in the results), a `group`
 one answer, `multi` for several, `text` for a short answer on one line), its
 `options` (2 to 30, for `choice` and `multi`), optionally the `other_option`
 that asks for the person's own words and a line of `help`, and whether an
-answer is `required` (true by default). Every question offers "Prefer not to
+answer is `required` (true by default). A `text` question can also have
+`options`, up to 5: tick boxes that answer it instead of the text, such as
+`["None", "Not applicable"]`; ticking one greys out the text, and the answer
+is kept as the box's words. A required question added after people have
+answered, or one whose `text`, `type`, `options` or `other_option` changes, is
+asked again at each person's next sign-in, before anything else, with their
+other answers kept. Every question offers "Prefer not to
 say", which ElectroTag adds itself and which counts as an answer, so a
 definition never lists it. `demographics` false leaves out the demographic
 group: these are personal data of a more sensitive kind, so include them only

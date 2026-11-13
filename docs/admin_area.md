@@ -357,7 +357,8 @@ what they said. Answers lists each person's current answers by annotator ID, wit
 the first questions of the questionnaire and how many times they changed their answers; Open goes to
 their page in Annotators, which has every answer, the earlier versions and their contact details. The
 line under the table names the people who have not answered yet, whose work stays closed until they
-do. Download the answers (CSV) saves the table, a row for each person and a column for each question
+do, and the next line those who still have questions added or changed since they answered, which they
+are asked at their next sign-in. Download the answers (CSV) saves the table, a row for each person and a column for each question
 (with the words given with Other beside it). Answers by question counts how often each answer was
 given; Prefer not to say counts as an answer, and a question answered in the person's own words
 counts as answered. The answers are research data kept under annotator IDs, as the results zip keeps
@@ -367,7 +368,16 @@ Contact details gives Download the contacts list (CSV): each person's annotator 
 phone and institution, when they last changed them and whether their account is active. The file
 identifies people, so the page says so and asks before downloading it; keep it apart from the research
 data, share it only with the study team, and delete it when it is no longer needed. Each download is
-noted in the audit log. The questions themselves are edited in Study settings.
+noted in the audit log. The questions themselves are edited in Study settings, under Sign-up
+questionnaire: reword a question, change its options, add one with Add a question, move or remove one.
+A question answered in the person's own words (A short answer in their own words) can also offer up to
+five tick boxes, under Tick boxes instead of the text, such as None or Not applicable: ticking one
+greys out the text and answers the question, so a required question is answered without any text.
+When you add a required question, or change the wording or the options of one, after people have
+answered, each of them is asked it at their next sign-in, before anything else, with their other
+answers kept; their work stays open meanwhile, since they have answered once. A changed question is
+asked afresh, without the earlier answer. Changing only a question's help, its group or whether it is
+required asks nobody again, and adding a question that is not required asks nobody either.
 
 ## Datasets
 
@@ -1218,7 +1228,18 @@ a change to apply to it.
 **The next recording** chooses the order in which annotators are offered their recordings: at
 random among those they have not finished, in a reproducible order made from a seed and the
 annotator's ID, or in the order they were assigned. Unfinished work always comes first.
-**Annotation** chooses the artifact types on the number keys 1 to 9, in the order the toolbar shows
+**Annotation** opens with the checklist Artifact types annotators can choose, every type ticked at
+first. Untick a type the study does not use to take it out of every list annotators choose a type
+from: the type buttons and number keys, Find a type, Change type and the menus of a mark, for
+experts and trainees as well. A type you untick leaves its number key at once, with a line naming
+the keys emptied. A mark that already has the type keeps it and can still be changed, the artifact
+reference guide still describes it, and Data-artifact (Uncertain / needs review) is always available.
+At least one specific type must stay ticked. Since this changes what annotators can mark, settle it
+before the study starts. When a training set's reference marks or quiz answers use a type you
+untick, a warning under the checklist names each such set, the type and how many marks and answers
+use it, since trainees would be asked for a type they can no longer choose; change those in
+Training, or keep the type available. The warning does not stop you saving.
+Annotation then chooses the artifact types on the number keys 1 to 9, in the order the toolbar shows
 them, and the shortest annotation in samples. Data-artifact, the type for an artifact whose type
 cannot be told, always has the key 0 and its own Uncertain button, so it is left out of the numbered
 keys when it is chosen for one. **Join a mark that overlaps another of the same type**

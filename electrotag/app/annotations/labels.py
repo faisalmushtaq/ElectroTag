@@ -23,13 +23,14 @@ from pathlib import Path
 from typing import Any
 
 from electrotag.config.settings import CONFIG_DIR
+from electrotag.config.settings import UNCERTAIN_LABEL as SETTINGS_UNCERTAIN_LABEL
 
 DEFAULT_CATALOGUE_PATH = CONFIG_DIR / "artifact_labels.json"
 
 #: The type for an artifact that is visible but whose type cannot be told: HED's Data-artifact (code 130), the
 #: parent of every artifact term, shown to annotators as "Uncertain / needs review". A mark of this type needs an
 #: expert's review: the experts' Saved work and adjudication queue list it, and the analyses count it apart.
-UNCERTAIN_LABEL = "Data-artifact"
+UNCERTAIN_LABEL = SETTINGS_UNCERTAIN_LABEL
 
 
 def needs_review(label: str) -> bool:

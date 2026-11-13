@@ -2,7 +2,8 @@
 
 Annotators and experts answer a short questionnaire about their experience of EEG, their career
 stage and field and (where the study's ethics approval covers it) a few demographic questions,
-together with their full name and contact details, once, at their first sign-in. Until they have
+together with their full name and contact details, once, at their first sign-in, and again any required question
+added or changed after they answered, at their next sign-in (:func:`to_answer`; their work stays open). Until they have
 answered, the study refuses their recordings, training and expert work with 403
 ``questionnaire_required`` (:data:`GATED_OPERATIONS`, checked in ``StudyService.call``). An
 administrator who does not annotate is never asked; one who annotates, without the annotator role (an
@@ -45,6 +46,7 @@ from electrotag.config.questionnaire import (
     MAX_ANSWER,
     PREFER_NOT,
     PREFER_NOT_LABEL,
+    meaning_of,
     version_of,
 )
 from electrotag.web import audit
@@ -153,6 +155,26 @@ def check_answers(questions: list[dict[str, Any]], answers: Any, other: Any) -> 
     return out, words
 
 
+def to_answer(questions: list[dict[str, Any]], record: dict[str, Any] | None) -> list[str]:
+    """The required questions a person who has answered must answer again: those added since their latest answers,
+    and those whose wording or options have changed since (their earlier answer rests on other words). Empty for
+    someone who has not answered yet (they answer every question) and for someone up to date."""
+    history = (record or {}).get("history") or []
+    if not history:
+        return []
+    latest = history[-1]
+    given = latest.get("answers") or {}
+    then = {q["id"]: q for q in ((record or {}).get("definitions") or {}).get(latest.get("version"), [])}
+    out = []
+    for q in questions:
+        if not q.get("required", True):
+            continue
+        before = then.get(q["id"])
+        if q["id"] not in given or (before is not None and meaning_of(before) != meaning_of(q)):
+            out.append(q["id"])
+    return out
+
+
 def answers_at(record: dict[str, Any] | None, when: str) -> tuple[dict[str, Any] | None, bool]:
     """The entry of a person's history current at ``when`` (an ISO time), and whether it was given only after
     (no answers existed yet then, so the earliest is used: a study that began before the questionnaire)."""
@@ -256,14 +278,12 @@ class Questionnaire:
         rec = self.record(user.annotator_id) if asked or self.settings.enabled else None
         latest = ((rec or {}).get("history") or [None])[-1]
         current = self.version()
-        missing = 0
-        if latest is not None:
-            given = latest.get("answers") or {}
-            missing = sum(1 for q in self.questions() if q.get("required", True) and q["id"] not in given)
+        # the questions added or changed since the person answered, which they are asked at their next sign-in
+        due = to_answer(self.questions(), rec) if asked else []
         return {"enabled": bool(self.settings.enabled), "asked": asked, "answered": latest is not None,
                 "answered_at": latest.get("at") if latest else None,
                 "version": latest.get("version") if latest else None, "current_version": current,
-                "missing": missing}
+                "missing": len(due), "to_answer": due}
 
     # ------------------------------------------------------- the person's own
     def view(self, user: User) -> dict[str, Any]:
@@ -276,13 +296,17 @@ class Questionnaire:
         if not contacts:  # prefilled from the account
             acc = self.store.user_record(user.annotator_id) or {}
             values["email"] = str(acc.get("email") or "")
+        due = to_answer(self.questions(), rec)
+        # (a changed question's earlier answer rests on other words, so it is asked afresh, without it)
+        answers = {k: v for k, v in ((latest or {}).get("answers") or {}).items() if k not in due}
+        other = {k: v for k, v in ((latest or {}).get("other") or {}).items() if k not in due}
         return {
             "enabled": bool(s.enabled), "asked": self.asked(user),
             "groups": [{"key": g, "title": GROUP_TITLES[g]} for g in GROUPS
                        if any(q["group"] == g for q in self.questions())],
             "questions": self.questions(), "version": self.version(),
             "prefer_not": {"value": PREFER_NOT, "label": PREFER_NOT_LABEL},
-            "answers": dict((latest or {}).get("answers") or {}), "other": dict((latest or {}).get("other") or {}),
+            "answers": answers, "other": other, "to_answer": due,
             "answered_at": latest.get("at") if latest else None,
             "answered_version": latest.get("version") if latest else None,
             "n_versions": len((rec or {}).get("history") or []),
@@ -402,7 +426,7 @@ class Questionnaire:
         """``questionnaire_summary``: everyone's current answers, by annotator ID, and how often each was given."""
         questions = self.questions()
         records = {r.get("annotator_id"): r for r in self.store.records(ANSWERS_KIND)}
-        rows, waiting = [], []
+        rows, waiting, updating = [], [], []
         counts: dict[str, dict[str, int]] = {q["id"]: {} for q in questions}
         for acc in sorted(self.store.user_records(), key=lambda r: r["annotator_id"]):
             aid = acc["annotator_id"]
@@ -413,9 +437,12 @@ class Questionnaire:
                 if self.asked(person) and acc.get("status", "active") == "active":
                     waiting.append(aid)
                 continue
+            due = to_answer(questions, rec) if self.asked(person) else []
+            if due and acc.get("status", "active") == "active":
+                updating.append(aid)
             rows.append({"annotator_id": aid, "answered_at": latest.get("at"), "version": latest.get("version"),
                          "n_changes": len(rec["history"]) - 1, "answers": latest.get("answers") or {},
-                         "other": latest.get("other") or {}})
+                         "other": latest.get("other") or {}, "to_answer": due})
         for aid, rec in sorted(records.items()):  # people whose accounts were removed: their answers stay
             latest = ((rec or {}).get("history") or [None])[-1]
             if latest is not None and aid:
@@ -427,11 +454,12 @@ class Questionnaire:
                 if qid in counts:
                     for v in value if isinstance(value, list) else [value]:
                         key = PREFER_NOT_LABEL if v == PREFER_NOT else str(v)
-                        if next(q for q in questions if q["id"] == qid)["type"] == "text" and v != PREFER_NOT:
-                            key = "answered"
+                        q = next(q for q in questions if q["id"] == qid)
+                        if q["type"] == "text" and v != PREFER_NOT and v not in (q.get("options") or []):
+                            key = "answered"  # (in their own words; a tick-box answer is counted by itself)
                         counts[qid][key] = counts[qid].get(key, 0) + 1
         return {"questions": questions, "version": self.version(), "rows": rows, "counts": counts,
-                "not_answered": waiting, "enabled": bool(self.settings.enabled),
+                "not_answered": waiting, "to_update": updating, "enabled": bool(self.settings.enabled),
                 "demographics": bool(self.settings.demographics), "demographics_note": DEMOGRAPHICS_NOTE,
                 "prefer_not": {"value": PREFER_NOT, "label": PREFER_NOT_LABEL}}
 
@@ -664,7 +692,8 @@ def activity_table(store: Any, visits: list[dict[str, Any]]) -> dict[str, str]:
 #: (js/api/demo_questionnaire.js gives the sandbox's accounts the same).
 EXAMPLE_ANSWERS = {
     "datasets_analysed": "3–10", "eeg_years": "3–5", "annotation_hours": "10–50",
-    "artifact_training": "A course or workshop", "eeg_systems": ["Brain Products"], "eeg_setting": "Research",
+    "artifact_training": "A course or workshop", "eeg_systems": ["Brain Products"], "eeg_density": "Low",
+    "preprocessing": "Filtering and re-referencing", "eeg_setting": "Research",
     "confidence": "3", "career_stage": "PhD", "discipline": "Neuroscience", "country": "United Kingdom",
     "age_band": PREFER_NOT, "gender": PREFER_NOT, "first_language": PREFER_NOT,
 }

@@ -270,6 +270,15 @@ export class DemoLibrary {
 
   _audit(op, summary, details) { this.a._audit(op, summary, details); }
 
+  /** The artifact types each training set asks trainees for (admin.py op_training_types_get): its reference marks' and its quiz's. */
+  op_training_types_get() {
+    const count = (names) => Object.fromEntries([...names.reduce((m, n) => m.set(n, (m.get(n) || 0) + 1), new Map())].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+    const sets = [...this.a.s.sets].sort((x, y) => (x.set_id < y.set_id ? -1 : x.set_id > y.set_id ? 1 : 0));
+    return { sets: sets.map((set) => ({ set_id: set.set_id, name: set.name,
+      marks: count(set.recordings.flatMap((r) => this.a.b._truthOf(r.recording_id).map((a) => a.label))),
+      quiz: count(this.a._quizItems(set).map((it) => it.correct_label).filter((n) => n && n !== 'No artifact / none of these')) })) };
+  }
+
   // Before the study starts: the settings confirmed before the study (demo_preregistration.js, loaded when asked)
   async op_preregistration_get() { return (await import('./demo_preregistration.js')).status(this.a); }
 

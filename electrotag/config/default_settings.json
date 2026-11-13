@@ -67,6 +67,7 @@
     "idle_pause_minutes": 3,
     "coverage_check": "warn",
     "confidence": "optional",
+    "hidden_labels": [],
     "quick_labels": [
       "Eye-blink-artifact", "Horizontal-eye-movement-artifact", "EMG-artifact", "Movement-artifact",
       "Electrode-pops-artifact", "Chewing-artifact", "ECG-artifact", "Line-noise-artifact", "Data-artifact"
@@ -115,6 +116,8 @@
       {"id": "annotation_hours", "group": "experience", "text": "About how many hours have you spent marking artifacts in EEG?", "type": "choice", "required": true, "options": ["None", "Fewer than 10", "10–50", "51–200", "201–1000", "More than 1000"]},
       {"id": "artifact_training", "group": "experience", "text": "Have you had formal training in recognising EEG artifacts?", "type": "choice", "required": true, "options": ["No formal training", "Informal training from colleagues", "A course or workshop", "Clinical EEG training or accreditation", "Other"], "other_option": "Other"},
       {"id": "eeg_systems", "group": "experience", "text": "Which EEG systems have you used?", "type": "multi", "required": true, "options": ["BioSemi", "Brain Products", "EGI (Magstim EGI)", "ANT Neuro", "g.tec", "Neuroscan (Compumedics)", "A clinical system (such as Natus or Nihon Kohden)", "A consumer system (such as Emotiv or Muse)", "OpenBCI", "None yet", "Other"], "other_option": "Other", "help": "Choose all that apply."},
+      {"id": "eeg_density", "group": "experience", "text": "What density are you most comfortable working with?", "type": "choice", "required": true, "options": ["Low", "High", "Both", "Neither", "Other"], "other_option": "Other"},
+      {"id": "preprocessing", "group": "experience", "text": "What pre-processing stages do you typically complete before annotating?", "type": "text", "required": true, "options": ["None", "Not applicable"]},
       {"id": "eeg_setting", "group": "experience", "text": "Is your EEG experience clinical or research?", "type": "choice", "required": true, "options": ["Research", "Clinical", "Both", "Neither yet"]},
       {"id": "confidence", "group": "experience", "text": "How confident are you at recognising artifacts in EEG?", "type": "choice", "required": true, "options": ["1 (not at all confident)", "2", "3", "4", "5 (very confident)"]},
       {"id": "career_stage", "group": "career", "text": "What is your career stage?", "type": "choice", "required": true, "options": ["Undergraduate", "Master's", "PhD", "Postdoc", "Faculty", "Clinician", "EEG technologist", "Industry", "Other"], "other_option": "Other"},

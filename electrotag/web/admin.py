@@ -90,6 +90,9 @@ OPERATIONS += ("artifact_texts_list", "artifact_text_set")
 # The settings chosen before the study starts and their confirmations (electrotag/web/preregistration.py).
 READ_ONLY += ("preregistration_get",)
 OPERATIONS += ("preregistration_get", "preregistration_confirm")
+# The artifact types each training set uses, for Study settings' warning about hidden types.
+READ_ONLY += ("training_types_get",)
+OPERATIONS += ("training_types_get",)
 # The training path (electrotag/web/training_path.py): the snippets of a set, a trainee's path and the gate, and
 # what the study team does after an assessment that did not meet the criteria.
 # The study team also passes or fails a finished assessment, lets a trainee through without passing, finds the
@@ -408,6 +411,23 @@ def _numbers(value: Any, what: str, keys: tuple[str, ...]) -> dict[str, float]:
             raise ApiError(400, "invalid_set", f"{what}.{k} must be a number")
         out[k] = float(v)
     return out
+
+
+def _check_hidden_labels(value: Any, catalogue: Any) -> None:
+    """annotation.hidden_labels against the study's catalogue: known types only, and at least one specific type left
+    for annotators besides the uncertain one (the settings check the rest)."""
+    from electrotag.app.annotations.labels import UNCERTAIN_LABEL
+
+    if not isinstance(value, list):
+        return  # (the settings say what is wrong)
+    unknown = [x for x in value if not (isinstance(x, str) and catalogue.is_permitted(x))]
+    if unknown:
+        raise ApiError(400, "invalid_settings", f"annotation.hidden_labels: {unknown[0]!r} is not an artifact type of "
+                       "the catalogue")
+    left = [x for x in catalogue.specific_labels if x not in value and x != UNCERTAIN_LABEL]
+    if not left:
+        raise ApiError(400, "invalid_settings", "annotation.hidden_labels would hide every specific artifact type: "
+                       "keep at least one available to annotators")
 
 
 def _accepted(value: Any, catalogue: Any) -> dict[str, list[str]]:
@@ -759,6 +779,8 @@ class Admin:
             what.append(f"the study's name from {self.store.name} to {name}")
         if notice is not None and notice != (self.store.logging_notice or ""):
             what.append("the logging notice")
+        if overrides is not None and "hidden_labels" in (changes or {}).get("annotation", {}):
+            _check_hidden_labels(changes["annotation"]["hidden_labels"], self.store.catalogue)
         try:
             self.store.update_study(name=name, overrides=overrides, logging_notice=notice)
         except ValueError as exc:
@@ -1855,6 +1877,28 @@ class Admin:
 
     def op_artifact_text_set(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.artifact_texts.set(user, body)
+
+    def op_training_types_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """The artifact types each reference set asks trainees for: those of its reference marks (on its guided,
+        practice and assessment recordings) and the right answers of its quiz, with how many of each, so that
+        Study settings can name the sets that use a type it hides (annotation.hidden_labels)."""
+        out = []
+        for rs in sorted(self.store.reference_sets(), key=lambda r: r.set_id):
+            marks: dict[str, int] = {}
+            for rid in rs.recordings:
+                try:
+                    labels = [a.label for a in rs.reference_document(rid).annotations]
+                except (OSError, ValueError, ReferenceSetError, KeyError):
+                    continue  # (a reference that cannot be read uses no type here)
+                for lab in labels:
+                    marks[lab] = marks.get(lab, 0) + 1
+            quiz: dict[str, int] = {}
+            for it in rs.quiz_items:
+                if it.correct_label != NONE_OPTION:
+                    quiz[it.correct_label] = quiz.get(it.correct_label, 0) + 1
+            out.append({"set_id": rs.set_id, "name": rs.name, "marks": dict(sorted(marks.items())),
+                        "quiz": dict(sorted(quiz.items()))})
+        return {"sets": out}
 
     def op_preregistration_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.preregistration.get(user, body)

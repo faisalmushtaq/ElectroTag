@@ -13,11 +13,12 @@
 // page with unsaved changes asks first.
 
 import { h, clear } from '../ui/dom.js';
+import { UNCERTAIN_LABEL } from '../catalogue.js';
 import {
   CHANNEL_COLOUR_CHOICES, CHANNEL_TYPES, MATCH_CRITERIA, SCALING_TYPES, SELECTION, deepCopy, fromMicrovolts, mergeSettings, parseNumber, settingsProblems, toMicrovolts,
 } from './model.js';
 import { REASON_RULES, SKIPPABLE_STAGES, TOPOMAP_FILTER_CHOICES, TOPOMAP_REFERENCE_CHOICES, TRAINING_GATES, expertSettingsProblems } from './settings_checks.js';
-import { actionButton, card, checkbox, confirmInline, field, loading, messageArea, numberInput, radios, sectionHead, select, textArea, textInput } from './ui.js';
+import { actionButton, card, checkList, checkbox, confirmInline, field, loading, messageArea, numberInput, radios, sectionHead, select, textArea, textInput } from './ui.js';
 import { questionnaireEditor } from './questionnaire.js';
 import { K_MAX, K_MIN } from './tasks_model.js';
 
@@ -43,6 +44,25 @@ function changes(current, wanted) {
     }
   }
   return out;
+}
+
+/**
+ * The warning for hidden types that training sets still ask trainees for, or '' when none does: `sets` is the
+ * answer of training_types_get (each set's reference marks and quiz answers by type), `hidden` the types unticked.
+ */
+export function hiddenTypesInTraining(sets, hidden) {
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const lines = [];
+  for (const s of sets || []) {
+    const uses = [...hidden].filter((n) => (s.marks || {})[n] || (s.quiz || {})[n]).map((n) => {
+      const parts = [(s.marks || {})[n] ? plural(s.marks[n], 'reference mark', 'reference marks') : '', (s.quiz || {})[n] ? plural(s.quiz[n], 'quiz answer', 'quiz answers') : ''];
+      return `${n} (${parts.filter(Boolean).join(' and ')})`;
+    });
+    if (uses.length) lines.push(`${s.name || s.set_id}: ${uses.join(', ')}`);
+  }
+  if (!lines.length) return '';
+  return `${lines.length === 1 ? 'A training set uses' : 'Training sets use'} a type you are hiding, so trainees would be asked for a type they can no longer choose. `
+    + `${lines.join('; ')}. Change those marks and answers in Training, or keep the type available.`;
 }
 
 export class SettingsSection {
@@ -94,7 +114,9 @@ export class SettingsSection {
     clear(this.form);
     this.form.append(loading());
     try {
-      this.data = await this.area.read('settings_get');
+      // (with the types each training set uses, for the warning about hidden types; none when it cannot be read)
+      [this.data, this.trainingTypes] = await Promise.all([this.area.read('settings_get'),
+        this.area.read('training_types_get').catch(() => ({ sets: [] }))]);
     } catch (exc) {
       clear(this.form);
       this.msg.problem(exc);
@@ -172,6 +194,28 @@ export class SettingsSection {
       s.setAttribute('aria-label', `Key ${i + 1}`);
       return s;
     });
+    // The artifact types annotators can choose from (annotation.hidden_labels holds the others); the uncertain type
+    // is always available, and a type taken off the list is taken off its number key too.
+    const choosable = labels.filter((l) => l.label !== UNCERTAIN_LABEL);
+    const hiddenNow = new Set(an.hidden_labels || []);
+    const available = checkList(choosable.map((l) => ({ value: l.label, text: l.label, extra: `${l.section}${l.is_group ? ', a group term for an artifact whose exact type is unclear' : ''}` })),
+      { selected: choosable.filter((l) => !hiddenNow.has(l.label)).map((l) => l.label), legend: 'Artifact types annotators can choose', name: 'available-types' });
+    const keysNote = h('p.caption.keys-cleared', { role: 'status' });
+    const setsNote = h('div.types-in-training', { role: 'status' });
+    const syncKeys = () => {
+      const off = new Set(choosable.map((l) => l.label).filter((n) => !available.values().includes(n)));
+      clear(setsNote);
+      const warning = hiddenTypesInTraining((this.trainingTypes || {}).sets, off);
+      if (warning) setsNote.append(h('div.banner.training-types', {}, warning));
+      const cleared = [];
+      keys.forEach((k, i) => {
+        for (const o of k.querySelectorAll('option')) o.disabled = off.has(o.value);
+        if (off.has(k.value)) { cleared.push(`key ${i + 1} (${k.value})`); k.value = ''; }
+      });
+      if (cleared.length) keysNote.textContent = `Taken off the number keys, since annotators can no longer choose them: ${cleared.join(', ')}.`;
+    };
+    available.addEventListener('change', syncKeys);
+    syncKeys();
     const shortest = numberInput({ value: an.min_duration_samples ?? 1, min: 1, step: 1 });
     const breakAfter = numberInput({ value: an.break_reminder_minutes ?? 50, min: 0, max: 240, step: 1 });
     breakAfter.name = 'break_reminder_minutes';
@@ -251,7 +295,7 @@ export class SettingsSection {
         channels: { hide: hide.value.split('\n').map((x) => x.trim()).filter(Boolean), types },
         loading: { apply_channel_types_from_bids: bidsTypes.input.checked, show_bids_bad_channels: bidsBad.input.checked },
         selection: { strategy: strategy.value, seed: strategy.value === 'seeded' ? numberOf(seed, 'Seed', { min: 0, integer: true }) : (sel.seed ?? null) },
-        annotation: { quick_labels: chosen, min_duration_samples: numberOf(shortest, 'Shortest annotation', { min: 1, integer: true }),
+        annotation: { quick_labels: chosen, hidden_labels: choosable.map((l) => l.label).filter((n) => !available.values().includes(n)), min_duration_samples: numberOf(shortest, 'Shortest annotation', { min: 1, integer: true }),
           break_reminder_minutes: numberOf(breakAfter, 'Break reminder after', { min: 0, max: 240 }),
           idle_pause_minutes: numberOf(idlePause, 'Pause after', { min: 0, max: 60 }),
           coverage_check: coverage.input.checked ? 'warn' : 'off', allow_revisions: revisions.input.checked,
@@ -276,7 +320,7 @@ export class SettingsSection {
         questionnaire: questions.read(),
       };
       const merged = mergeSettings(st, wanted);
-      const problems = [...settingsProblems(merged, labels.map((l) => l.label)), ...expertSettingsProblems(merged)];
+      const problems = [...settingsProblems(merged, labels.map((l) => l.label)), ...expertSettingsProblems(merged, labels)];
       if (problems.length) throw new Error(problems[0]);
       return wanted;
     };
@@ -329,8 +373,13 @@ export class SettingsSection {
         h('div.form-grid', {}, field('How it is chosen', strategy), field('Seed', seed, { hint: 'For a reproducible order: the same seed gives the same order.' })),
         h('p.caption', {}, 'Random: a recording the annotator has not finished, chosen at random. Reproducible: an order made from the seed and the annotator ID. Assignment order: as the recordings were assigned. Unfinished work always comes first.')),
       card('Annotation',
+        h('p.caption', {}, 'Untick an artifact type the study does not use to take it out of every list annotators choose a type from: the type buttons, '
+          + 'the number keys, Find a type and Change type. A mark that already has the type keeps it, and the artifact reference guide still describes it. '
+          + `${UNCERTAIN_LABEL} (Uncertain / needs review, key 0) is always available.`),
+        available, setsNote,
         h('p.caption', {}, 'The artifact types on the number keys 1 to 9 (the toolbar shows them in this order).'),
         h('div.key-grid', {}, keys.map((k, i) => h('label.key-row', {}, h('kbd', {}, String(i + 1)), k))),
+        keysNote,
         field('Shortest annotation (samples)', shortest),
         mergeOverlapping,
         h('p.caption', {}, 'When a join happens the annotator is told, and Undo takes it back. Off, overlapping marks of one type stay as drawn, and Merge in the Annotations list still joins marks on request.'),
