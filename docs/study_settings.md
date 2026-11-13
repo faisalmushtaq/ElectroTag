@@ -315,8 +315,10 @@ unticking a type takes it off its key at once.
 ```
 
 Hiding a type changes what annotators can mark, so choose it before the study
-starts. A training set whose reference marks use a hidden type asks trainees for
-a type they can no longer choose, so check the training sets after hiding one.
+starts. A training set whose reference marks or quiz answers use a hidden type
+asks trainees for a type they can no longer choose: Study settings names each
+such set, with the type and how many marks and answers use it, as soon as the
+type is unticked.
 `annotation.min_duration_samples` (1 by default) is the shortest annotation
 that is accepted.
 

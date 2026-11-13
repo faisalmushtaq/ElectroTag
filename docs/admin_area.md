@@ -1225,7 +1225,10 @@ experts and trainees as well. A type you untick leaves its number key at once, w
 the keys emptied. A mark that already has the type keeps it and can still be changed, the artifact
 reference guide still describes it, and Data-artifact (Uncertain / needs review) is always available.
 At least one specific type must stay ticked. Since this changes what annotators can mark, settle it
-before the study starts, and check that no training set's reference marks use a type you hide.
+before the study starts. When a training set's reference marks or quiz answers use a type you
+untick, a warning under the checklist names each such set, the type and how many marks and answers
+use it, since trainees would be asked for a type they can no longer choose; change those in
+Training, or keep the type available. The warning does not stop you saving.
 Annotation then chooses the artifact types on the number keys 1 to 9, in the order the toolbar shows
 them, and the shortest annotation in samples. Data-artifact, the type for an artifact whose type
 cannot be told, always has the key 0 and its own Uncertain button, so it is left out of the numbered

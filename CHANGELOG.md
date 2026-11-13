@@ -9,8 +9,9 @@ Study settings, Annotation, opens with a checklist of the artifact types annotat
 does not use to take it out of the type buttons, the number keys, Find a type, Change type and the menus of a mark
 (for experts and trainees too). Marks that already have the type keep it, the artifact reference guide still
 describes every type, Data-artifact (Uncertain) is always available and at least one specific type must stay. A
-type unticked leaves its number key at once. The setting is `annotation.hidden_labels`, given to annotators with
-the study's other annotation settings.
+type unticked leaves its number key at once, and a warning names each training set whose reference marks or quiz
+answers use it, with how many. The setting is `annotation.hidden_labels`, given to annotators with the study's other
+annotation settings; the new read `training_types_get` gives the types each training set uses.
 
 Bin coverage is now worded as the share of a bin that it is: the Analyses field reads Bin coverage needed (share of the
 bin, 0 to 1), Before the study starts describes it as a bin counting when at least 50% of it is marked, and the

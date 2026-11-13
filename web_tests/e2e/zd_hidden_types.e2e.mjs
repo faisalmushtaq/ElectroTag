@@ -18,8 +18,12 @@ export const tests = [
       assert.equal(await settings.locator('input[data-name="available-types"][value="Data-artifact"]').count(), 0, 'the uncertain type is always available');
       assert.equal(await page.inputValue('select[aria-label="Key 1"]'), 'Eye-blink-artifact');
 
+      assert.equal(await settings.locator('.types-in-training .banner').count(), 0, 'no warning while nothing is hidden');
       await blink.uncheck();
       assert.equal(await page.inputValue('select[aria-label="Key 1"]'), '', 'taken off its key at once');
+      // the sandbox's training set has blinks among its reference marks and quiz answers
+      assert.match(await settings.locator('.types-in-training .banner').textContent(),
+        /A training set uses a type you are hiding.*Demonstration training set: Eye-blink-artifact \(\d+ reference marks and 1 quiz answer\)/);
       assert.match(await settings.locator('.keys-cleared').textContent(), /key 1 \(Eye-blink-artifact\)/);
       assert.equal(await page.locator('select[aria-label="Key 2"] option[value="Eye-blink-artifact"]').isDisabled(), true);
       await page.click('[data-log="settings-save"]');

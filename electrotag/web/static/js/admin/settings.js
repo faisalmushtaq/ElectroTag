@@ -46,6 +46,25 @@ function changes(current, wanted) {
   return out;
 }
 
+/**
+ * The warning for hidden types that training sets still ask trainees for, or '' when none does: `sets` is the
+ * answer of training_types_get (each set's reference marks and quiz answers by type), `hidden` the types unticked.
+ */
+export function hiddenTypesInTraining(sets, hidden) {
+  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+  const lines = [];
+  for (const s of sets || []) {
+    const uses = [...hidden].filter((n) => (s.marks || {})[n] || (s.quiz || {})[n]).map((n) => {
+      const parts = [(s.marks || {})[n] ? plural(s.marks[n], 'reference mark', 'reference marks') : '', (s.quiz || {})[n] ? plural(s.quiz[n], 'quiz answer', 'quiz answers') : ''];
+      return `${n} (${parts.filter(Boolean).join(' and ')})`;
+    });
+    if (uses.length) lines.push(`${s.name || s.set_id}: ${uses.join(', ')}`);
+  }
+  if (!lines.length) return '';
+  return `${lines.length === 1 ? 'A training set uses' : 'Training sets use'} a type you are hiding, so trainees would be asked for a type they can no longer choose. `
+    + `${lines.join('; ')}. Change those marks and answers in Training, or keep the type available.`;
+}
+
 export class SettingsSection {
   constructor(area) {
     this.area = area;
@@ -95,7 +114,9 @@ export class SettingsSection {
     clear(this.form);
     this.form.append(loading());
     try {
-      this.data = await this.area.read('settings_get');
+      // (with the types each training set uses, for the warning about hidden types; none when it cannot be read)
+      [this.data, this.trainingTypes] = await Promise.all([this.area.read('settings_get'),
+        this.area.read('training_types_get').catch(() => ({ sets: [] }))]);
     } catch (exc) {
       clear(this.form);
       this.msg.problem(exc);
@@ -180,8 +201,12 @@ export class SettingsSection {
     const available = checkList(choosable.map((l) => ({ value: l.label, text: l.label, extra: `${l.section}${l.is_group ? ', a group term for an artifact whose exact type is unclear' : ''}` })),
       { selected: choosable.filter((l) => !hiddenNow.has(l.label)).map((l) => l.label), legend: 'Artifact types annotators can choose', name: 'available-types' });
     const keysNote = h('p.caption.keys-cleared', { role: 'status' });
+    const setsNote = h('div.types-in-training', { role: 'status' });
     const syncKeys = () => {
       const off = new Set(choosable.map((l) => l.label).filter((n) => !available.values().includes(n)));
+      clear(setsNote);
+      const warning = hiddenTypesInTraining((this.trainingTypes || {}).sets, off);
+      if (warning) setsNote.append(h('div.banner.training-types', {}, warning));
       const cleared = [];
       keys.forEach((k, i) => {
         for (const o of k.querySelectorAll('option')) o.disabled = off.has(o.value);
@@ -351,7 +376,7 @@ export class SettingsSection {
         h('p.caption', {}, 'Untick an artifact type the study does not use to take it out of every list annotators choose a type from: the type buttons, '
           + 'the number keys, Find a type and Change type. A mark that already has the type keeps it, and the artifact reference guide still describes it. '
           + `${UNCERTAIN_LABEL} (Uncertain / needs review, key 0) is always available.`),
-        available,
+        available, setsNote,
         h('p.caption', {}, 'The artifact types on the number keys 1 to 9 (the toolbar shows them in this order).'),
         h('div.key-grid', {}, keys.map((k, i) => h('label.key-row', {}, h('kbd', {}, String(i + 1)), k))),
         keysNote,

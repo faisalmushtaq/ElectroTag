@@ -90,6 +90,9 @@ OPERATIONS += ("artifact_texts_list", "artifact_text_set")
 # The settings chosen before the study starts and their confirmations (electrotag/web/preregistration.py).
 READ_ONLY += ("preregistration_get",)
 OPERATIONS += ("preregistration_get", "preregistration_confirm")
+# The artifact types each training set uses, for Study settings' warning about hidden types.
+READ_ONLY += ("training_types_get",)
+OPERATIONS += ("training_types_get",)
 # The training path (electrotag/web/training_path.py): the snippets of a set, a trainee's path and the gate, and
 # what the study team does after an assessment that did not meet the criteria.
 # The study team also passes or fails a finished assessment, lets a trainee through without passing, finds the
@@ -1874,6 +1877,28 @@ class Admin:
 
     def op_artifact_text_set(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.artifact_texts.set(user, body)
+
+    def op_training_types_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        """The artifact types each reference set asks trainees for: those of its reference marks (on its guided,
+        practice and assessment recordings) and the right answers of its quiz, with how many of each, so that
+        Study settings can name the sets that use a type it hides (annotation.hidden_labels)."""
+        out = []
+        for rs in sorted(self.store.reference_sets(), key=lambda r: r.set_id):
+            marks: dict[str, int] = {}
+            for rid in rs.recordings:
+                try:
+                    labels = [a.label for a in rs.reference_document(rid).annotations]
+                except (OSError, ValueError, ReferenceSetError, KeyError):
+                    continue  # (a reference that cannot be read uses no type here)
+                for lab in labels:
+                    marks[lab] = marks.get(lab, 0) + 1
+            quiz: dict[str, int] = {}
+            for it in rs.quiz_items:
+                if it.correct_label != NONE_OPTION:
+                    quiz[it.correct_label] = quiz.get(it.correct_label, 0) + 1
+            out.append({"set_id": rs.set_id, "name": rs.name, "marks": dict(sorted(marks.items())),
+                        "quiz": dict(sorted(quiz.items()))})
+        return {"sets": out}
 
     def op_preregistration_get(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         return self.service.preregistration.get(user, body)

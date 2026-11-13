@@ -91,3 +91,30 @@ def test_at_least_one_specific_type_stays_available(study: StudyService) -> None
     assert "keep at least one available to annotators" in exc.value.message
     _save(study, quick_labels=[], hidden_labels=every[1:])
     assert study.study_info()["annotation"]["hidden_labels"] == every[1:]
+
+
+def test_the_types_each_training_set_asks_for(study: StudyService, monkeypatch: pytest.MonkeyPatch) -> None:
+    from types import SimpleNamespace as NS
+
+    from electrotag.training.reference import NONE_OPTION
+
+    assert study.call("admin", ADMIN, {"op": "training_types_get"}) == {"sets": []}
+    marks = {"a.edf": ["Eye-blink-artifact", "EMG-artifact", "Eye-blink-artifact"], "b.edf": ["Eye-blink-artifact"]}
+
+    def document(rid: str) -> NS:
+        if rid == "broken.edf":
+            raise OSError("missing")
+        return NS(annotations=[NS(label=x) for x in marks[rid]])
+
+    sets = [NS(set_id="pilot", name="Pilot set", recordings={"a.edf": {}, "b.edf": {}, "broken.edf": {}},
+               reference_document=document,
+               quiz_items=[NS(correct_label="Chewing-artifact"), NS(correct_label=NONE_OPTION)]),
+            NS(set_id="empty", name="Empty", recordings={}, reference_document=document, quiz_items=[])]
+    monkeypatch.setattr(study.store, "reference_sets", lambda: sets)
+    assert study.call("admin", ADMIN, {"op": "training_types_get"}) == {"sets": [
+        {"set_id": "empty", "name": "Empty", "marks": {}, "quiz": {}},
+        {"set_id": "pilot", "name": "Pilot set", "marks": {"EMG-artifact": 1, "Eye-blink-artifact": 3},
+         "quiz": {"Chewing-artifact": 1}}]}
+    with pytest.raises(ApiError) as exc:
+        study.call("admin", User("A01", "", role="annotator"), {"op": "training_types_get"})
+    assert exc.value.status == 403

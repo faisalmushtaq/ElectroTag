@@ -86,3 +86,28 @@ test('the sandbox saves the hidden types and gives them to annotators', async ()
   await b.admin('settings_update', { settings: { annotation: { quick_labels: ['EMG-artifact'], hidden_labels: ['Eye-blink-artifact'] } } });
   assert.deepEqual((await b.me()).study.annotation.hidden_labels, ['Eye-blink-artifact']);
 });
+
+test('the warning names the training sets that use a hidden type', async () => {
+  const { hiddenTypesInTraining } = await import('../../electrotag/web/static/js/admin/settings.js');
+  const sets = [{ set_id: 'pilot', name: 'Pilot set', marks: { 'Eye-blink-artifact': 6, 'EMG-artifact': 2 }, quiz: { 'Eye-blink-artifact': 1 } },
+    { set_id: 'q', name: 'Second set', marks: { 'Chewing-artifact': 1 }, quiz: {} }, { set_id: 'r', name: 'Unaffected', marks: { 'EMG-artifact': 1 }, quiz: {} }];
+  assert.equal(hiddenTypesInTraining(sets, new Set()), '');
+  assert.equal(hiddenTypesInTraining(sets, new Set(['Slow-eye-movement-artifact'])), '');
+  assert.equal(hiddenTypesInTraining(sets, new Set(['Eye-blink-artifact'])), 'A training set uses a type you are hiding, so trainees would be asked for a type '
+    + 'they can no longer choose. Pilot set: Eye-blink-artifact (6 reference marks and 1 quiz answer). Change those marks and answers in Training, or keep the type available.');
+  assert.match(hiddenTypesInTraining(sets, new Set(['Eye-blink-artifact', 'Chewing-artifact'])), /^Training sets use .* Pilot set: Eye-blink-artifact \(6 reference marks and 1 quiz answer\); Second set: Chewing-artifact \(1 reference mark\)\./);
+  assert.equal(hiddenTypesInTraining(undefined, new Set(['x'])), '');
+});
+
+test('the sandbox lists the types its training set asks for', async () => {
+  const b = new DemoBackend({ storage: memory(), tokens: memory() });
+  await b.login('ADMIN', 'demo');
+  const { sets } = await b.admin('training_types_get');
+  assert.deepEqual(sets.map((s) => s.set_id), (await b.admin('sets_list')).sets.map((s) => s.set_id).sort());
+  const total = (o) => Object.values(o).reduce((a, n) => a + n, 0);
+  const listed = (await b.admin('sets_list')).sets.find((s) => s.set_id === sets[0].set_id);
+  assert.equal(total(sets[0].marks), listed.recordings.reduce((a, r) => a + r.n_reference_events, 0), 'every reference mark, by type');
+  const { items } = await b.admin('quiz_items', { set_id: sets[0].set_id });
+  assert.equal(total(sets[0].quiz), items.filter((it) => it.correct_label !== 'No artifact / none of these').length, 'every quiz answer naming a type, by type');
+  assert.ok(sets[0].marks['Eye-blink-artifact'] > 0);
+});
