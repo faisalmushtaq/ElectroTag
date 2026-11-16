@@ -244,8 +244,9 @@ version its own section in the changelog and, if wanted, publish a GitHub releas
 section. [docs/developer_guide.md](docs/developer_guide.md) describes packaging and CI.
 
 **3. Decisions for the research team**, listed under "Decisions still open" in
-[docs/design_decisions.md](docs/design_decisions.md): the competency criteria, the copyright holder
-named in the licence notice, and whether Emotiv's contact-quality channels should be shown. The settings
+[docs/design_decisions.md](docs/design_decisions.md): the competency criteria and the copyright holder
+named in the licence notice. Emotiv's contact-quality (`CQ_*`) channels are settled: they are not used and
+stay hidden, because showing them would bias annotators (16 November 2026). The settings
 a study chooses before it starts (the agreement settings, the measure of working time, the repeat
 ratings and the training standards) are no longer open questions: the admin area's Overview lists them under Before the study
 starts until each is confirmed, and the results download keeps the confirmations (12 November 2026).

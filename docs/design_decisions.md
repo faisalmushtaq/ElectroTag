@@ -207,6 +207,11 @@ automatically; every HED-SCORE artifact term available, group terms included;
 stand-alone applications for Windows, macOS and Linux; free for research and
 other non-commercial use (PolyForm Noncommercial License 1.0.0); autosave.
 
+**Contact-quality channels are not used (16 November 2026).** Emotiv's `CQ_*`
+channels stay hidden with the other housekeeping channels, as `channels.hide`
+sets by default, and are not shown to annotators as a guide to poor electrode
+contact, because showing them would bias annotators. This closes the question that was open under "Decisions still open".
+
 ## Changes after a test on the group's own data (27 October 2026)
 
 ElectroTag was run over the group's low-density dataset (772 Emotiv
@@ -839,7 +844,3 @@ team's decision (below); the card makes sure they are chosen and recorded before
    study starts.
 2. **Copyright holder** for the licence notice (currently "The ElectroTag
    authors"), which may need to be agreed with the University.
-3. **Contact-quality channels.** Emotiv's `CQ_*` channels are hidden with the
-   other housekeeping channels. They could instead be shown (not annotated) as
-   a guide to poor electrode contact; this needs a decision on whether they
-   would help or bias annotators.
