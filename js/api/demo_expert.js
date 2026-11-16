@@ -55,7 +55,15 @@ export const OPEN_EXPERT = new Set([...CORRECTION_OPEN_OPS, ...OVERLAY_OPEN_OPS]
 export const FEEDBACK_PARTS = { ...CORRECTION_FEEDBACK };
 
 /** Operations of the expert area that the sandbox answers with needsServer (their part has no stand-in). */
-export const SERVER_ONLY_EXPERT = {};
+export const SERVER_ONLY_EXPERT = {
+  // looking through datasets for training recordings, with one's own marks, notes and ratings (candidates.py)
+  browse_datasets_list: 'look through datasets for training recordings',
+  browse_recordings_list: 'look through datasets for training recordings',
+  browse_recording_get: 'look through datasets for training recordings',
+  browse_save: 'keep your marks, notes and ratings of training recordings',
+  training_request: 'ask for recordings to be added to training',
+  training_request_withdraw: 'ask for recordings to be added to training',
+};
 
 /** Every operation of the registry, by name (a name is given once). */
 export function expertOps(parts = PARTS) {

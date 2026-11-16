@@ -15,6 +15,7 @@ export const EXPERT_SECTIONS = Object.freeze([
   { key: 'library', route: 'expert-library', title: 'Library', load: () => import('./library.js').then((m) => m.LibrarySection) },
   { key: 'planted', route: 'expert-planted', title: 'Correct the marks', load: () => import('./planted.js').then((m) => m.PlantedSection) },
   { key: 'training', route: 'expert-training', title: 'Training sets', load: () => import('./training.js').then((m) => m.ExpertTrainingSection) },
+  { key: 'browse', route: 'expert-browse', title: 'Find training recordings', load: () => import('./browse.js').then((m) => m.BrowseSection) },
 ]);
 
 export function expertSectionForRoute(route, sections = EXPERT_SECTIONS) {

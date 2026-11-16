@@ -17,6 +17,7 @@ import {
 } from './ui.js';
 import { snippetPreview, snippetsTab } from './snippets.js';
 import { artifactPicker } from './artifact_picker.js';
+import { coverageCard, requestsCard, waitingCard } from './candidates.js';
 
 const TABS = [
   { key: 'references', title: 'Recordings and references' },
@@ -58,12 +59,31 @@ export class TrainingSection {
       h('div.admin-grid.side-first', {},
         h('div.admin-stack', {}, card('Reference sets', this.setList), this._newSetCard(), this._exampleCard()),
         this.detail),
+      // the study team's own cards: the experts' requests for training recordings and the coverage of the artifact
+      // types that need training material (candidates.js); the expert area's Training sets has neither
+      this.teamHost = h('div.admin-stack.training-team'),
       artifactTextsCard(area)); // the study's own words for the artifact types (artifact_texts.js)
+  }
+
+  /** The experts' requests and the coverage of the types, drawn again with each visit (study team only). */
+  _teamCards() {
+    clear(this.teamHost);
+    if (this.area.forExperts) return;
+    this.requests = requestsCard(this);
+    this.teamHost.append(coverageCard(this.area), this.requests);
+  }
+
+  /** Requests approved into a set: the list of sets and the set's recordings awaiting annotation are read again. */
+  async afterApproval(setId) {
+    const keepTab = this.tab;
+    await this.reload();
+    if (this.setId === setId) { this.tab = keepTab; this._renderTab(); }
   }
 
   async show(params) {
     this.msg.clear();
     if (params.set) this.setId = params.set;
+    this._teamCards();
     await this.reload();
   }
 
@@ -174,7 +194,7 @@ export class TrainingSection {
       { title: '', render: (r) => (r.registered === false ? chip('No description', 'warning') : null) },
       { title: '', cls: 'actions', render: (r) => h('button.btn.small', { type: 'button', onclick: () => this._manageRecording(manage, s, r) }, 'Manage') },
     ], s.recordings, { empty: 'This set has no recordings yet. Add one below with its reference.', pageSize: 20, caption: 'Recordings of the set' });
-    return h('div.admin-stack', {}, card('Recordings of the set', table), manage, this._addReferenceCard(s));
+    return h('div.admin-stack', {}, card('Recordings of the set', table), this.area.forExperts ? null : waitingCard(this.area, s), manage, this._addReferenceCard(s));
   }
 
   _manageRecording(host, s, r) {
