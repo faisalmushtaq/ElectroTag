@@ -129,7 +129,7 @@ export const tests = [
       await card.locator('[data-log="requests-approve"]').click();
       await team.waitForFunction(() => /approved: the recordings await annotation in example/.test(document.querySelector('section.admin-section[data-section="training"]').textContent), null, { timeout: 15000 });
       await team.locator('.set-item', { hasText: 'example' }).first().click();
-      const waiting = team.locator('.card', { hasText: 'Awaiting annotation' });
+      const waiting = team.locator('.card', { hasText: 'Recordings approved into this set' });
       await waiting.locator('tbody tr', { hasText: file }).waitFor({ timeout: 15000 });
       assert.match(await waiting.textContent(), /E01 \(Yes\)/);
       await t.screenshot(team, 'training_awaiting_annotation');
