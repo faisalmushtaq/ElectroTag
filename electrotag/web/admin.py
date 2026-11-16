@@ -122,6 +122,14 @@ from electrotag.web.withdrawals import WRITES as WITHDRAWAL_WRITES  # noqa: E402
 
 READ_ONLY += WITHDRAWAL_READS
 OPERATIONS += WITHDRAWAL_READS + WITHDRAWAL_WRITES
+# Experts looking through datasets for training recordings (electrotag/web/candidates.py): who may look through which
+# dataset, the experts' requests for recordings to train with, and the recordings approved into a set awaiting
+# annotation.
+from electrotag.web.candidates import READS as CANDIDATE_READS  # noqa: E402
+from electrotag.web.candidates import WRITES as CANDIDATE_WRITES  # noqa: E402
+
+READ_ONLY += CANDIDATE_READS
+OPERATIONS += CANDIDATE_READS + CANDIDATE_WRITES
 # The probability maps of several raters' marks (electrotag/web/probability.py), for administrators only.
 from electrotag.web.probability import READS as PROBABILITY_READS  # noqa: E402
 
@@ -781,6 +789,13 @@ class Admin:
             what.append("the logging notice")
         if overrides is not None and "hidden_labels" in (changes or {}).get("annotation", {}):
             _check_hidden_labels(changes["annotation"]["hidden_labels"], self.store.catalogue)
+        if overrides is not None and isinstance((changes or {}).get("training"), dict) \
+                and isinstance(changes["training"].get("required_types"), list):
+            unknown = [x for x in changes["training"]["required_types"]
+                       if not (isinstance(x, str) and self.store.catalogue.is_permitted(x))]
+            if unknown:
+                raise ApiError(400, "invalid_settings", f"training.required_types: {unknown[0]!r} is not an artifact "
+                               "type of the catalogue")
         try:
             self.store.update_study(name=name, overrides=overrides, logging_notice=notice)
         except ValueError as exc:
@@ -2002,6 +2017,19 @@ def _probability_op(name: str) -> Any:
 
 for _name in PROBABILITY_READS:
     setattr(Admin, f"op_{_name}", _probability_op(_name))
+
+
+def _candidate_op(name: str) -> Any:
+    def op(self: Admin, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return getattr(self.service.candidates, f"op_{name}")(user, body)
+
+    op.__name__ = f"op_{name}"
+    op.__doc__ = f"``{name}``: :meth:`electrotag.web.candidates.Candidates.op_{name}`."
+    return op
+
+
+for _name in CANDIDATE_READS + CANDIDATE_WRITES:
+    setattr(Admin, f"op_{_name}", _candidate_op(_name))
 for _name in DATASET_READS + DATASET_WRITES:
     setattr(Admin, f"op_{_name}", _dataset_op(_name))
 for _name in TRACKING_READS:

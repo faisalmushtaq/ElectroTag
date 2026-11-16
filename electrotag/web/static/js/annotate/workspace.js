@@ -57,15 +57,19 @@ export { friendlyDuration, plural };
 /** The kinds of view that open again after a reload of the page (reopen.js). */
 const REOPENS = ['annotate', 'tryout'];
 const MODE_TEXT = { standard: 'Annotation', guided: 'Guided training', practice: 'Practice', assessment: 'Assessment', tryout: 'Try-out', tour: 'Platform tour', review: 'Practice review',
-  reviewing: 'Review', feedback: 'Feedback', correcting: 'Correction', replay: 'Replay', corrected: 'Corrected version', overlay: 'Everyone\'s marks' };
+  reviewing: 'Review', feedback: 'Feedback', correcting: 'Correction', replay: 'Replay', corrected: 'Corrected version', overlay: 'Everyone\'s marks',
+  browsing: 'Looking for training recordings' };
 /**
  * Views that only show annotations (no toolbar): a practice review, an administrator's review pass, the feedback on saved work,
  * a replay of a session, an annotator's view of a correction of their work and the overlay of everyone's marks
  * (js/expert/, js/replay/).
  */
 const VIEW_ONLY_KINDS = ['review', 'reviewing', 'feedback', 'replay', 'corrected', 'overlay'];
-/** Views of someone's work opened from the expert area or for its feedback, which their own part closes (opts.onLeave). */
-const PART_KINDS = ['correcting', 'replay', 'corrected', 'overlay'];
+/**
+ * Views of someone's work opened from the expert area or for its feedback, which their own part closes (opts.onLeave),
+ * and an expert looking at a recording for training with marks of their own (js/expert/browse_pass.js).
+ */
+const PART_KINDS = ['correcting', 'replay', 'corrected', 'overlay', 'browsing'];
 const DRAG_PX = 3;
 const DRAW_ON_TITLE = 'Draw/edit is on: drag across the EEG to mark artifacts and change annotations. Press it to switch to view only, where nothing can change.';
 const DRAWING_OFF = 'View only: annotations cannot be drawn or changed. Press Draw/edit to mark artifacts.';

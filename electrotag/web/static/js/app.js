@@ -511,7 +511,7 @@ export class App {
     document.body.dataset.route = route;
     logger.topWindow = route;
     if (ADMIN_ROUTE.test(route)) this._pauseLog();
-    else if (route === 'questionnaire') this._pauseLog(null); // its answers never reach the log
+    else if (route === 'questionnaire' || route === 'expert-browsing') this._pauseLog(null); // never logged
     else this._resumeLog();
     if (location.hash !== `#${route}`) {
       this._settingHash = true;

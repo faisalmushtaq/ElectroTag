@@ -23,7 +23,8 @@ export function trainingValues(settings, sets) {
   const tr = settings.training || {};
   return {
     policy: { skippable: [...(tr.skippable || ['tour', 'snippets', 'guided', 'practice'])], gate: tr.gate || 'met', tour: tr.tour !== false,
-      snippets_quiz_required: tr.snippets_quiz_required === true },
+      snippets_quiz_required: tr.snippets_quiz_required === true,
+      required_types: [...(Array.isArray(tr.required_types) ? tr.required_types : ((settings.annotation || {}).quick_labels || []))] },
     sets: [...(sets || [])].sort((a, b) => (a.set_id < b.set_id ? -1 : a.set_id > b.set_id ? 1 : 0)).map((x) => ({
       set_id: x.set_id, name: x.name, assessment_recordings: (x.recordings || []).filter((r) => r.use === 'assessment').length,
       practice_pass: x.practice_pass, assessment_matching: x.assessment_matching, criteria: x.criteria })),

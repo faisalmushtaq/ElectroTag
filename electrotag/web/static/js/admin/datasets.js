@@ -16,6 +16,7 @@ import {
   actionButton, card, checkbox, checkList, chip, confirmInline, dataTable, field, infoTable, messageArea, numberInput, put, recordingName,
   sectionHead, select, shareBar, tabBar, textArea, textInput, downloadText,
 } from './ui.js';
+import { accessCard } from './candidates.js';
 import {
   CELL_STATUS, DATASET_FIELDS, DEFAULT_DATASET_ID, MAX_COLLECTION, RATINGS_MIN, RATINGS_TARGET, STATUS_ORDER, TRACKING_COLUMNS, TRACK_KINDS,
   builtFrom, builtFromText, cellTitle, cellWord, channelsText, datasetBody, figuresText, filterForCollection, filterSummary, formatsText, hoursText,
@@ -218,7 +219,8 @@ export class DatasetsSection {
           onclick: () => this.area.go('recordings', { dataset: d.dataset_id }) }, 'Add recordings to it…'),
         h('button.btn', { type: 'button', 'data-log': 'dataset-track', onclick: () => { this.trackTarget = { kind: 'dataset', id: d.dataset_id }; this.tabs.select('tracking'); } }, 'Who has rated what')),
       msg);
-    pane.append(h('div.btn-row', {}, back), head, this._recordingsCard(d, rows), this._handoutsCard(handouts), this._detailsCard(d));
+    pane.append(h('div.btn-row', {}, back), head, this._recordingsCard(d, rows), this._handoutsCard(handouts),
+      accessCard(this.area, d), this._detailsCard(d)); // the experts who may look through it for training (candidates.js)
     if (note) msg.show(...note);
     const h2 = head.querySelector('h2');
     if (h2) { h2.tabIndex = -1; h2.focus({ preventScroll: true }); }

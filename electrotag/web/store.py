@@ -51,6 +51,9 @@ RECORD_KINDS += ("artifact_texts",)
 #: The confirmations of the settings chosen before the study starts, one record a group
 #: (electrotag/web/preregistration.py).
 RECORD_KINDS += ("preregistration",)
+#: Experts looking through datasets for training recordings: who may look through which dataset, each expert's own
+#: marks, notes and ratings (never exported or analysed), and their requests (electrotag/web/candidates.py).
+RECORD_KINDS += ("browse_access", "browse_notes", "training_requests")
 #: A record's ID: letters, digits, "_" and "-" (the browser makes 32 hexadecimal characters).
 RECORD_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,80}$")
 #: The roles a person can be given now. One person may hold several (an expert who also annotates).

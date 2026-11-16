@@ -41,6 +41,7 @@ another way, for example on an encrypted drive, and open them in their own brows
   - [Quiz](#quiz)
   - [Snippets](#snippets)
   - [Artifact type descriptions](#artifact-type-descriptions)
+  - [Looking for training recordings](#looking-for-training-recordings)
   - [The example training set](#the-example-training-set)
   - [Before the study starts](#before-the-study-starts)
 - [Analyses](#analyses)
@@ -898,6 +899,36 @@ field back. The example pictures of the guide stay as they are, and a descriptio
 Each change is written to the audit log with the words saved, under the name of whoever made it.
 Experts can do the same from the expert area's Training sets.
 
+### Looking for training recordings
+
+Experts can look through a whole dataset for the recordings that suit training, and ask for them to be
+added. Give an expert a dataset on its page under Data, Datasets: **Experts looking for training
+recordings** lists the study's experts, and ticking one lets them look through every recording of the
+dataset in use, from their own copy of the files, in the expert area's Find training recordings
+("The expert area" below); unticking takes it back, and each change is in the audit log.
+Administrators may look through every dataset without being given it. What an expert marks, writes and
+rates while looking is theirs alone: it is never saved as study work, never exported, never in the
+results zip or an analysis, and the view is not recorded in the interaction log.
+
+**Recordings the experts asked for**, below the reference sets in Training, lists the experts'
+requests, those waiting for a decision first (choose Approved, Declined or Every request to see the
+others), each with the recording, its dataset, who asked, their rating (Yes, Maybe or No) and the
+types of the marks they made while looking; their notes stay their own. Tick requests, choose a
+training set from the list and press Approve into the set; the last choice of the list, A new
+training set…, asks for the new set's identifier and name and creates it as it approves. Decline
+declines the requests ticked, with a reason the expert sees if you give one. A declined request may be
+made again.
+
+An approved recording waits in its set under **Awaiting annotation**, on the set's Recordings and
+references tab, with who asked for it and when it was approved. Give it to the experts to annotate
+properly (Giving out work), then add its reference as any other ("Recordings and references" above):
+once the set holds it, it leaves the list by itself. Take off the list takes it off sooner.
+
+**Artifact types that need training material**, also in Training, lists the types chosen in Study
+settings (under Training policy; the types on the number keys 1 to 9 until you choose), each with the
+number of the experts' reference marks of it in every training set, the quiz answers of it and the
+sets that hold it, and names the types that have none yet.
+
 ### The example training set
 
 Create the example training set makes ElectroTag's simulated set (two recordings to learn with the
@@ -1315,7 +1346,11 @@ never); an unticked stage stays on the path and must be done. It also chooses wh
 study work waits for (a passed assessment, by default, a finished one, or nothing; experts and
 administrators never wait), whether the path begins with a tour of the platform, and whether the
 snippets stage needs its recognition check finished. Every skip is noted in the trainee's progress
-and listed in their competency report. A change applies at once.
+and listed in their competency report. A change applies at once. Under **Artifact types that need
+training material**, tick the types the training sets should hold examples of, as many or as few as
+the study needs; until you choose they are the types on the number keys 1 to 9, and Use the types on
+the number keys ticks those again. Training shows how far the sets cover them ("Looking for training
+recordings" below).
 
 **Sign-up questionnaire** (the `questionnaire` block) chooses whether annotators and experts answer
 it before their first recording, training or expert work (on by default), whether it includes the
@@ -1385,7 +1420,8 @@ Experts, and administrators, open the expert area from the Expert work card on t
 recordings in the expert area's header leads back, and an administrator also has Admin there, which
 returns to the admin area in one press.
 Its menu lists the parts of the expert work the study offers, and its Overview says what the area is
-for. Expert work is logged like annotation work, while the admin area is not.
+for. Expert work is logged like annotation work, while the admin area is not, and nor is looking at a
+recording for training (Find training recordings, below).
 
 **Your sessions for teaching.** The study team can replay any annotator's session, step by step,
 from the record of how they worked. Trainees may watch an expert's sessions only when that expert
@@ -1404,6 +1440,24 @@ Training section ("Training" above), with its four tabs, its Snippets and the ar
 the study's audit log under their own ID. Registering recordings stays with the administrators, so a
 recording appears there once an administrator has added it and it has annotations;
 and where the admin area lists people with their names, an expert sees their IDs only.
+
+**Find training recordings.** Here an expert looks through the datasets the study team has given
+them ("Looking for training recordings" above): each is listed with its recordings in use, how many
+the expert has rated and how many they asked for, and Look through it lists its recordings. Each
+recording shows its length, the expert's own rating for training (Yes, Maybe or No, pressed here or
+while looking, and pressed again to take it back), their marks and note, and where their request
+stands (Asked for, Approved into a set, Declined or Taken back); filter the list by rating, by
+Asked for or by With a note. Open asks for the file on this computer, checks its fingerprint against
+the study's copy and opens it in the annotation view, with the expert's own marks, to mark what they
+see as they would annotate. Beside the EEG are Good for training? with the three ratings, Your note
+(up to 5000 characters) and Ask for it to be added to training, or Take the request back while it
+waits. The marks, the note and the rating are saved for the expert a moment after each change and
+when they leave; until the study has them the marks are kept in this browser too, and come back the
+next time the recording is opened here. They are the expert's alone, never study work: another
+expert never sees them, the study team sees only the rating and the types of the marks with a
+request, and nothing of them is exported, analysed or recorded in the interaction log. To ask for
+several recordings at once, tick them in the list (or tick the box at the top for every one shown)
+and press Ask for the chosen recordings.
 
 ### Saved work
 

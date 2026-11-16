@@ -60,6 +60,7 @@ allowed for the allowed origins.
   - [Adjudication and the library](#adjudication-and-the-library)
   - [The overlay of everyone's marks](#the-overlay-of-everyones-marks)
   - [Probability maps](#probability-maps)
+  - [Looking for training recordings](#looking-for-training-recordings)
   - [Derived versions in the analyses](#derived-versions-in-the-analyses)
 - [The same operations on Firebase](#the-same-operations-on-firebase)
 <!-- /contents -->
@@ -1345,8 +1346,11 @@ check the rest themselves: "Corrections and replay" below), and an `op` the
 study does not offer 404 `not_found`. An operation whose name ends in `_get` or `_list` only reads, and
 the browser may ask it once more after a failure; every other operation saves,
 is never repeated by the browser, gives the same state when the same request
-reaches the study twice, and writes an entry to the audit log. Expert work in
-the browser is logged like annotation work (the admin area's is not).
+reaches the study twice, and writes an entry to the audit log (apart from
+`browse_save`, an expert's own marks, note and rating while looking for training
+recordings, below). Expert work in the browser is logged like annotation work
+(the admin area's is not), apart from looking at a recording for training,
+which is not logged at all.
 
 The expert area's versions of someone's work are **derived versions**: an
 expert's correction of a saved attempt and the adjudicated version of a task
@@ -1854,6 +1858,57 @@ a category or a number it cannot use (in words that say which), 404 `unknown_rec
 `no_maps` when no recording has enough raters, and 413 `too_large` for a zip of more than 25 MB.
 The sandbox answers both over its own saved work (`js/api/demo_probability.js`); it has no reference
 sets, so no expert files, and answers a `set_id` with 501 `needs_server`.
+
+### Looking for training recordings
+
+An administrator gives an expert a whole source dataset to look through for recordings that suit training
+(`browse_access_set`, in the admin channel); administrators may look through every dataset without it. The expert
+opens any of its recordings in use from their own computer, checked against the study's copy as always, marks what
+they see if it helps them, keeps a note of their own and rates the recording `yes`, `maybe` or `no` for training
+(`browse_save`). These marks, notes and ratings are the expert's alone. They are kept in records of their own
+(`browse_notes`, one per expert and recording), never as anyone's draft, saved attempt or derived version, so they
+never reach the completion register, the results, the results zip, `electrotag web export` or any analysis; the
+browser pauses the interaction log while the recording is open (its route `expert-browsing`), and saving them writes
+nothing to the audit log. Another expert never sees them, and the study team sees only the rating and the types of the
+marks with a request, never the note.
+
+The expert asks for recordings to be added to the training material with `training_request`, for one recording or
+many at once (`training_requests`, one record per expert and recording). The study team sees the requests in
+Training (`training_requests_list`) and approves them into a reference set or declines them
+(`training_requests_decide`). An approved recording waits in its set, awaiting annotation
+(`training_waiting_list`), until its reference is added in the usual way (`set_add_reference`), when it leaves the
+list by itself; `training_waiting_remove` takes it off sooner. A request declined, taken back or taken off the list
+may be made again.
+
+Experts' operations (`POST /expert/{op}`, `et_expert`; each refuses a recording or dataset the caller has not been given with 403 `no_access`):
+
+| op | body | answer | saves? |
+| --- | --- | --- | --- |
+| `browse_datasets_list` | `{}` | `{"datasets": [{"dataset_id", "name", "description", "n_recordings", "n_rated", "n_requested"}], "everything": bool}`: the datasets the caller may look through (every one for an administrator, `everything` true), with the recordings in use, how many the caller has rated and how many they asked for (waiting or approved) | read |
+| `browse_recordings_list` | `{"dataset_id"}` | `{"dataset": {"dataset_id", "name", "description"}, "recordings": [{"recording_id", "file_name", "format", "duration_s", "n_channels", "rating", "has_note", "n_annotations", "labels": {type: n}, "updated_at", "request": Request \| null}]}`: the dataset's recordings in use, with the caller's own rating, note and marks. 404 `unknown_dataset` | read |
+| `browse_recording_get` | `{"recording_id"}` | `{"recording_id", "file_name", "dataset_id", "dataset_name", "manifest": Manifest, "mine": {"note", "rating", "annotations", "n_annotations", "labels", "updated_at"}, "request": Request \| null}`: what the browser needs to check the file and open it, with the caller's own marks, note and rating. 404 `unknown_recording` for a recording that is not the study's | read |
+| `browse_save` | `{"recording_id", "note"?, "rating"?: "yes" \| "maybe" \| "no" \| null, "annotations"?: [Annotation]}` | `{"recording_id", "mine": {…as above…}, "changed": bool}`: only the keys sent change; the same state again changes nothing. A note is at most 5000 characters; the marks are kept as sent, as a draft's are (at most 5000, each with its type and whole numbers of samples: 422 `invalid_annotations`; 413 `too_large` past about 600 kB). 400 `bad_request` for nothing to save or a rating that is none of these. Never audited | **save** |
+| `training_request` | `{"recording_ids": [1 to 500 recordings]}` | `{"requested": [recording IDs asked for now], "already": [those waiting or approved already], "requests": [Request]}`: each recording is checked before any is asked for; the caller's rating goes with the request. Audited when something was asked for | **save** |
+| `training_request_withdraw` | `{"recording_id"}` | `{"request": Request}`: takes back a request that waits for a decision. 404 `no_request`; 409 `decided` once the study team has decided on it | **save** |
+
+A Request is `{"request_id", "annotator_id", "recording_id", "file_name", "dataset_id", "status": "pending" | "approved" | "declined" | "withdrawn" | "removed", "rating", "requested_at", "set_id", "set_name", "decided_at", "decided_by", "reason"}`.
+
+The study team's operations (`POST /admin/{op}`, `et_admin`; administrators only, and audited when they change something):
+
+| op | body | answer | saves? |
+| --- | --- | --- | --- |
+| `browse_access_list` | `{"dataset_id"?}` | `{"grants": [{"dataset_id", "dataset_name", "annotator_id", "display_name", "granted_at", "granted_by", "still_expert"}], "experts": [{"annotator_id", "display_name"}]}`: who may look through which dataset (one dataset's when it is given), and the accounts with the expert role | read |
+| `browse_access_set` | `{"dataset_id", "annotator_id", "access": bool}` | as `browse_access_list` for the dataset, with `"changed": bool`; the same choice again changes nothing. 404 `unknown_dataset`; 409 `not_expert` for an account without the expert role | **save** |
+| `training_requests_list` | `{"status"?}` | `{"requests": [Request with "dataset_name", "rating_now", "n_annotations", "labels"]], "counts": {status: n}, "sets": [{"set_id", "name"}]}`: every expert's requests, newest first, with the expert's rating now and the types of the marks they made while looking (never their note), and the reference sets to approve into | read |
+| `training_requests_decide` | `{"request_ids": [1 to 500], "decision": "approve" \| "decline", "set_id"?, "reason"?}` | `{"decided": n, …as training_requests_list…}`: approving needs `set_id`, a reference set (404 `no_reference_set`); a reason (at most 1000 characters) is shown to the expert. A request decided the same way already is left as it is. 404 `no_request`; 409 `withdrawn` for one the expert took back | **save** |
+| `training_waiting_list` | `{"set_id"}` | `{"set_id", "waiting": [{"recording_id", "file_name", "dataset_id", "requested_by": [IDs], "ratings": {ID: rating}, "approved_at", "approved_by", "registered"}]}`: the recordings approved into the set whose reference is not in it yet | read |
+| `training_waiting_remove` | `{"set_id", "recording_id"}` | `{"removed": bool, …as training_waiting_list…}`: their requests are marked `removed`, and the experts may ask again | **save** |
+
+The artifact types the training material should hold examples of are the study setting `training.required_types`
+(a list of artifact types of the catalogue, or null for the types on the number keys, `annotation.quick_labels`:
+docs/study_settings.md). Training compares them with `training_types_get` to show which types the training sets have
+no reference marks of yet, and the training standards confirmed before the study starts include them
+(`policy.required_types`, the list in force).
 
 ### Derived versions in the analyses
 

@@ -142,6 +142,10 @@ export const PURPOSES = {
     if (!(await checkStudyCopy(app, o.recording, o.fp, o.view, o.target, { verb: 'Open', kind: 'assessment' }))) return;
     await openAssessment(app, o);
   },
+  browse: async (app, o) => { // an expert looking at a recording for training, with their own marks (js/expert/browse_pass.js)
+    if (!(await checkStudyCopy(app, o.recording, o.fp, o.view, o.target, { verb: 'Open', kind: 'browse' }))) return;
+    await (await import('../expert/browse_pass.js')).openBrowse(app, o);
+  },
   planted: async (app, o) => { // an expert trying a correct-the-marks exercise (js/training/correct.js)
     if (!(await checkStudyCopy(app, o.recording, o.fp, o.view, o.target, { verb: 'Try', kind: 'planted' }))) return;
     await (await import('../training/correct.js')).openPlantedTry(app, o);

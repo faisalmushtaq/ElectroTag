@@ -282,6 +282,9 @@ class TrainingPolicy:
     gate: str = "met"  # TRAINING_GATES
     tour: bool = True  # the training path begins with the platform tour
     snippets_quiz_required: bool = False  # the snippets stage is done only once its recognition check is finished
+    #: The artifact types the training material should hold examples of (Training's coverage); None means the
+    #: types on the number keys 1 to 9 (annotation.quick_labels), as they are at the time.
+    required_types: tuple[str, ...] | None = None
 
     @classmethod
     def from_dict(cls, block: dict[str, Any]) -> TrainingPolicy:
@@ -300,10 +303,18 @@ class TrainingPolicy:
         if gate not in TRAINING_GATES:
             raise SettingsError('training.gate must be "met" (study work waits until the assessment is passed), '
                                 '"completed" (until it is done) or "off"')
+        required = block.get("required_types")
+        if required is not None:
+            if not isinstance(required, list) or not all(isinstance(x, str) and x for x in required):
+                raise SettingsError("training.required_types must be a list of artifact types, or null for the types "
+                                    "on the number keys")
+            if len(set(required)) != len(required):
+                raise SettingsError("training.required_types must not name an artifact type twice")
         return cls(skippable=tuple(x for x in SKIPPABLE_STAGES if x in skippable), gate=str(gate),
                    tour=_flag(block, "training", "tour", d.tour),
                    snippets_quiz_required=_flag(block, "training", "snippets_quiz_required",
-                                                d.snippets_quiz_required))
+                                                d.snippets_quiz_required),
+                   required_types=None if required is None else tuple(required))
 
 
 @dataclass(frozen=True)
@@ -636,6 +647,13 @@ class Settings:
             raise SettingsError(f"Missing setting: {exc}") from exc
         settings.validate()
         return settings
+
+    @property
+    def training_required_types(self) -> tuple[str, ...]:
+        """The artifact types the training material should hold examples of: training.required_types, or the types
+        on the number keys when the study has not chosen (null)."""
+        chosen = self.training.required_types
+        return tuple(self.quick_labels) if chosen is None else tuple(chosen)
 
     def validate(self) -> None:
         if self.selection_strategy not in SELECTION_STRATEGIES:

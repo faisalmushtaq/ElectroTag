@@ -193,3 +193,13 @@
 .prob-value { text-align: right; font-variant-numeric: tabular-nums; }
 .prob-question { margin: 4px 0; }
 .prob-details summary { cursor: pointer; }
+
+/* ---------------------------------------------------------------- looking for training recordings (js/expert/browse.js, browse_pass.js) */
+.browse-pass { overflow-y: auto; min-height: 0; }
+.browse-pass h3 { margin: 16px 0 4px; }
+.browse-note { width: 100%; resize: vertical; font: var(--t-14); }
+.browse-status[data-state="failed"] { color: var(--destructive); }
+.browse-request .btn { margin-top: 4px; }
+@media (pointer: coarse) {
+  .browse-note { font: var(--t-16); }
+}

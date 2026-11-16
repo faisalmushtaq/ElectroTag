@@ -48,7 +48,9 @@ function trainingText(v) {
     const n = x.assessment_recordings ? plural(x.assessment_recordings, 'assessment recording') : 'no assessment recordings yet';
     return `${x.name || x.set_id}: practice passes at ${percent(pass.event_f1)} score and ${percent(pass.label_accuracy)} right type; ${n}; ${criteriaText(x.criteria)}.`;
   });
-  return `${each.join(' ')} ${GATE_WORDS[p.gate] || ''} Trainees may skip ${skip.length ? skip.join(', ') : 'no stage'}.`;
+  const types = Array.isArray(p.required_types)
+    ? ` The training material should hold examples of ${p.required_types.length ? `${plural(p.required_types.length, 'artifact type')}: ${p.required_types.join(', ')}` : 'no particular artifact type'}.` : '';
+  return `${each.join(' ')} ${GATE_WORDS[p.gate] || ''} Trainees may skip ${skip.length ? skip.join(', ') : 'no stage'}.${types}`;
 }
 
 const numbers = (xs) => (xs || []).map((x) => String(x)).join(', ');

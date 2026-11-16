@@ -14,7 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from electrotag.config.settings import PREREGISTERED_AGREEMENT_KEYS, Settings, SettingsError, load_default_settings_dict
+from electrotag.config.settings import (
+    DEFAULT_QUICK_LABELS, PREREGISTERED_AGREEMENT_KEYS, Settings, SettingsError, load_default_settings_dict,
+)
 from electrotag.web.errors import ApiError
 from electrotag.web.service import StudyService
 from electrotag.web.store import User
@@ -136,7 +138,8 @@ def test_training_standards_cover_every_set_and_the_policy_or_confirm_that_there
     st = _admin(empty, "preregistration_confirm", item="training")
     training = st["items"][3]
     assert training["values"] == {"policy": {"skippable": ["tour", "snippets", "guided", "practice"], "gate": "met",
-                                             "tour": True, "snippets_quiz_required": False}, "sets": []}
+                                             "tour": True, "snippets_quiz_required": False,
+                                             "required_types": list(DEFAULT_QUICK_LABELS)}, "sets": []}
     assert training["state"] == "confirmed", "no training, confirmed as such"
 
     # A new set is new training: its standards are to confirm.
