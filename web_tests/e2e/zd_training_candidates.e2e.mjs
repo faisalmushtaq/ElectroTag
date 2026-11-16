@@ -74,10 +74,10 @@ export const tests = [
       await signIn(page, 'E01', PASSWORD);
       await page.waitForFunction(() => { const a = globalThis.ElectroTag; return a && a.me && a.isExpert && /^(home|expert)/.test(a.route || ''); }, null, { timeout: 30000 });
       await page.evaluate(() => globalThis.ElectroTag.showExpert('expert-browse'));
-      await page.waitForSelector('[data-section="browse"] [data-log="browse-dataset"][data-dataset="study-recordings"]');
+      await page.waitForSelector('section[data-section="browse"] [data-log="browse-dataset"][data-dataset="study-recordings"]');
       assert.equal(await page.locator('.expert-nav a[aria-current="page"]').textContent(), 'Find training recordings');
       await page.click('[data-log="browse-dataset"][data-dataset="study-recordings"]');
-      await page.waitForSelector('[data-section="browse"] table');
+      await page.waitForSelector('section[data-section="browse"] table');
       await t.screenshot(page, 'find_training_recordings');
 
       // Open it from this computer, checked against the study's copy; the interaction log is paused from here on.
@@ -127,7 +127,7 @@ export const tests = [
       await requestRow.locator('input[type="checkbox"]').check();
       await card.locator('select[data-log="requests-set"]').selectOption('example');
       await card.locator('[data-log="requests-approve"]').click();
-      await team.waitForFunction(() => /approved: the recordings await annotation in example/.test(document.querySelector('[data-section="training"]').textContent), null, { timeout: 15000 });
+      await team.waitForFunction(() => /approved: the recordings await annotation in example/.test(document.querySelector('section.admin-section[data-section="training"]').textContent), null, { timeout: 15000 });
       await team.locator('.set-item', { hasText: 'example' }).first().click();
       const waiting = team.locator('.card', { hasText: 'Awaiting annotation' });
       await waiting.locator('tbody tr', { hasText: file }).waitFor({ timeout: 15000 });
@@ -170,7 +170,7 @@ export const tests = [
 
       // The expert area's section answers that it needs a study server too.
       await page.evaluate(() => globalThis.ElectroTag.showExpert('expert-browse'));
-      await page.waitForFunction(() => /needs a study server or Firebase/.test((document.querySelector('[data-section="browse"]') || {}).textContent || ''), null, { timeout: 15000 });
+      await page.waitForFunction(() => /needs a study server or Firebase/.test((document.querySelector('section.admin-section[data-section="browse"]') || {}).textContent || ''), null, { timeout: 15000 });
     },
   },
 ];

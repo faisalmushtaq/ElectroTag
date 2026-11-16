@@ -11,7 +11,7 @@
 // that it needs a study server or Firebase without asking (DEMO_NOTE); the coverage card works there too.
 
 import { h, clear } from '../ui/dom.js';
-import { whenText, checkSetId, plural } from './model.js';
+import { checkSetId, isNotOffered, plural, whenText } from './model.js';
 import { actionButton, card, chip, dataTable, field, loading, messageArea, recordingName, select, textInput } from './ui.js';
 import { RATING_WORDS, STATUS_WORDS, coverageRows, coverageSummary, marksText, requiredTypes } from '../expert/browse_model.js';
 
@@ -27,6 +27,16 @@ function loadingCard(title, ...intro) {
   const body = h('div.admin-stack', {}, loading());
   const msg = messageArea();
   return { el: card(title, ...intro, msg, body), body, msg };
+}
+
+/** A card whose reading failed: a study whose server predates these operations says so quietly, as a note. */
+function failed(c, exc) {
+  clear(c.body);
+  if (exc && (isNotOffered(exc) || (exc.status === 404 && exc.code === 'not_found'))) {
+    c.body.append(h('p.caption', {}, 'This study\'s server or functions do not offer this yet: they may need updating to the current version of ElectroTag.'));
+  } else {
+    c.msg.problem(exc);
+  }
 }
 
 /** In the sandbox: the card says what it needs instead of asking (true when it did). */
@@ -70,7 +80,7 @@ export function accessCard(area, dataset) {
         g ? h('span.caption.block', {}, `Since ${whenText(g.granted_at)}${g.granted_by ? `, given by ${g.granted_by}` : ''}`) : null)));
     }
   };
-  if (!demoOnly(area, c)) area.read('browse_access_list', { dataset_id: did }).then(draw, (exc) => { clear(c.body); c.msg.problem(exc); });
+  if (!demoOnly(area, c)) area.read('browse_access_list', { dataset_id: did }).then(draw, (exc) => failed(c, exc));
   return c.el;
 }
 
@@ -160,7 +170,7 @@ export function requestsCard(section) {
       h('div.row.controls.requests-actions', {}, reason, decline));
   };
   filter.addEventListener('change', () => { status = filter.value; if (data) draw(data); });
-  c.reload = () => area.read('training_requests_list').then(draw, (exc) => { clear(c.body); c.msg.problem(exc); });
+  c.reload = () => area.read('training_requests_list').then(draw, (exc) => failed(c, exc));
   if (!demoOnly(area, c)) c.reload();
   c.el.reload = c.reload;
   return c.el;
@@ -186,7 +196,7 @@ export function waitingCard(area, set) {
         } }, 'Take off the list') },
     ], rows, { pageSize: 25, sortable: true, rowKey: (r) => r.recording_id, caption: 'Recordings awaiting annotation' }));
   };
-  if (!demoOnly(area, c)) area.read('training_waiting_list', { set_id: set.set_id }).then(draw, (exc) => { clear(c.body); c.msg.problem(exc); });
+  if (!demoOnly(area, c)) area.read('training_waiting_list', { set_id: set.set_id }).then(draw, (exc) => failed(c, exc));
   return c.el;
 }
 
@@ -207,6 +217,6 @@ export function coverageCard(area) {
       { title: 'Quiz answers', num: true, sort: (r) => r.quiz, render: (r) => String(r.quiz) },
       { title: 'In the sets', render: (r) => h('span.caption', {}, r.sets.join(', ') || '–') },
     ], rows, { pageSize: 50, sortable: true, rowKey: (r) => r.label, caption: 'Coverage of the artifact types that need training material' }));
-  }, (exc) => { clear(c.body); c.msg.problem(exc); });
+  }, (exc) => failed(c, exc));
   return c.el;
 }
