@@ -5,6 +5,24 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Experts can look through a whole dataset for training recordings. An administrator ticks the experts who may look
+through a dataset on its page (Experts looking for training recordings); in the expert area's new Find training
+recordings, an expert opens any of its recordings from their own computer, marks what they see, keeps a note of their
+own and rates it Yes, Maybe or No, and asks for one recording, or every recording ticked, to be added to training.
+What an expert marks, writes and rates there is theirs alone: it is never saved as study work, exported, put in the
+results zip or analysed, and the view is not recorded in the interaction log. The study team sees the requests in
+Training (Recordings the experts asked for) and approves them into a training set chosen from a list that ends with
+A new training set…, or declines them; an approved recording waits on the set's page under Awaiting annotation until
+its reference is added. Study settings, Training policy, chooses the artifact types that need training material
+(`training.required_types`; the nine types on the number keys until a study chooses), and Training shows how many of
+the experts' reference marks the sets hold of each and names those with none; the training standards confirmed before
+the study starts include the list, so a study that had confirmed them sees them as changed until it confirms again.
+New operations: `browse_access_list`, `browse_access_set`, `training_requests_list`, `training_requests_decide`,
+`training_waiting_list` and `training_waiting_remove` (admin), and `browse_datasets_list`, `browse_recordings_list`,
+`browse_recording_get`, `browse_save`, `training_request` and `training_request_withdraw` (expert), which need a study
+server or Firebase: the demonstration says so where they would be used (docs/api.md, "Looking for training
+recordings").
+
 The annotation toolbar has two filter buttons, No high-pass and No notch: each shows the EEG without that
 filter while pressed and with it again when pressed once more. They and the side panel's viewing options are one
 setting, greyed out when the study fixes the filters. Each press is logged as a `state` event with the filters in

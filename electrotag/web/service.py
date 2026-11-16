@@ -331,6 +331,9 @@ class StudyService:
         from electrotag.web.probability import Probability
 
         self.probability = Probability(self)  # the probability maps of several raters' marks
+        from electrotag.web.candidates import Candidates
+
+        self.candidates = Candidates(self)  # experts looking through datasets for training recordings
         self.tracking = Tracking(self)
         from electrotag.web.questionnaire import Questionnaire
 

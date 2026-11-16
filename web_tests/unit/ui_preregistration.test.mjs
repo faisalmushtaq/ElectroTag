@@ -137,6 +137,8 @@ test('the training standards in words, and the study without training', () => {
     + 'Trainees may skip the tour, the snippets, learning with the experts, practice.');
   assert.match(preregText('training', { policy: { ...policy, skippable: [], gate: 'off' }, sets: [set({ criteria: [] }, 0)] }),
     /no assessment recordings yet; no competency criteria ticked, so its assessment reports results without a pass or fail\. Study work is open at once\. Trainees may skip no stage\.$/);
+  assert.match(preregText('training', { policy: { ...policy, required_types: ['Eye-blink-artifact', 'EMG-artifact'] }, sets: [set({ criteria: [] })] }),
+    /Trainees may skip the tour, the snippets, learning with the experts, practice\. The training material should hold examples of 2 artifact types: Eye-blink-artifact, EMG-artifact\.$/);
 });
 
 test('the study starts with its first research annotation, and confirmations after it say so', () => {

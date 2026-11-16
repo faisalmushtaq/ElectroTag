@@ -77,6 +77,12 @@ questions answered ("Prefer not to say" counts), and nothing else: no answer,
 no words typed beside Other, no name and no contact detail. The answers
 themselves are research data kept by annotator ID with the study's records
 ([file formats](file_formats.md), "The sign-up questionnaire").
+An expert looking at a recording for training (the expert area's Find
+training recordings, from 16 November 2026) is not logged either: from the
+moment the file is chosen until the expert leaves the recording, nothing of
+what they do reaches the log, and their marks, notes and ratings there are
+kept apart from every result ([the admin area](admin_area.md), "Looking for
+training recordings").
 
 ## Where the logs are
 

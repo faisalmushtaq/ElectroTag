@@ -263,6 +263,19 @@ export class SettingsSection {
     gate.name = 'training_gate';
     const tour = checkbox('Begin the training path with a tour of the platform on a practice recording', tr.tour !== false);
     const snippetsQuiz = checkbox('Count the snippets stage as done only once its recognition check is finished', tr.snippets_quiz_required === true);
+    // the artifact types the training material should hold examples of (training.required_types; null: the number keys)
+    const requiredNow = Array.isArray(tr.required_types) ? tr.required_types : null;
+    const keysNow = (an.quick_labels || []).filter(Boolean);
+    const required = checkList(choosable.map((l) => ({ value: l.label, text: l.label, extra: l.section })),
+      { selected: requiredNow || keysNow, legend: 'Artifact types that need training material', name: 'required-types' });
+    const requiredToKeys = h('button.btn.small', { type: 'button', 'data-log': 'required-types-keys',
+      onclick: () => { required.set(keys.map((k) => k.value).filter(Boolean)); this._setDirty(true); } }, 'Use the types on the number keys');
+    const requiredTypes = () => {
+      const ticked = required.values();
+      // untouched while the study follows the number keys: it goes on following them
+      if (requiredNow === null && ticked.length === keysNow.length && keysNow.every((x) => ticked.includes(x))) return null;
+      return ticked;
+    };
     // logging
     const interactions = checkbox('Record how annotators use ElectroTag (clicks, keys and what is on the screen; never what they type)', lg.interactions !== false);
     const pointer = numberInput({ value: lg.pointer_hz ?? 5, min: 0, max: 60, step: 1 });
@@ -313,7 +326,7 @@ export class SettingsSection {
           gold_min_items: numberOf(goldMin, 'Known-answer recordings before accuracy counts', { min: 1, max: 100, integer: true }) },
         replay: { enabled: replays.input.checked, trainees_watch_experts: traineesWatch.input.checked, trainees_see_crowd: traineesCrowd.input.checked },
         training: { skippable: skipBoxes.filter((b) => b.input.checked).map((b) => b.input.dataset.stage), gate: gate.value,
-          tour: tour.input.checked, snippets_quiz_required: snippetsQuiz.input.checked },
+          tour: tour.input.checked, snippets_quiz_required: snippetsQuiz.input.checked, required_types: requiredTypes() },
         logging: { interactions: interactions.input.checked, pointer_hz: numberOf(pointer, 'Pointer samples per second', { min: 0, max: 60 }),
           idle_after_s: numberOf(idle, 'Idle after', { min: 5, max: 3600 }) },
         preregistration: { working_time: workingTime.value },
@@ -425,6 +438,10 @@ export class SettingsSection {
         h('fieldset.admin-checks.skip-stages', {}, h('legend', {}, 'Trainees may skip'), h('div.radio-col', {}, skipBoxes)),
         field('Real study work waits', gate, { hint: 'Experts and administrators never wait.' }),
         tour, snippetsQuiz,
+        h('h3', {}, 'Artifact types that need training material'),
+        h('p.caption', {}, 'Training shows how many of the experts\' reference marks the training sets hold of each type ticked here, and names the types that have none yet. '
+          + 'Until you choose, these are the types on the number keys 1 to 9. Tick as many or as few as the study needs.'),
+        required, h('div.btn-row', {}, requiredToKeys),
         h('p.caption', {}, 'While study work waits, a trainee\'s study recordings are listed as locked, with the reason. After an '
           + 'assessment that does not meet the criteria, reopen the training or give a new assessment on the trainee\'s page in People.')),
       questions.el,

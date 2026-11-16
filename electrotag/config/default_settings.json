@@ -92,7 +92,8 @@
     "skippable": ["tour", "snippets", "guided", "practice"],
     "gate": "met",
     "tour": true,
-    "snippets_quiz_required": false
+    "snippets_quiz_required": false,
+    "required_types": null
   },
   "replay": {
     "enabled": true,

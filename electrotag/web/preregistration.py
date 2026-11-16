@@ -89,7 +89,8 @@ def training_values(store: Any) -> dict[str, Any]:
     sets = [{"set_id": rs.set_id, "name": rs.name, "assessment_recordings": len(rs.assessment_recordings),
              **set_standards(rs)} for rs in sorted(store.reference_sets(), key=lambda r: r.set_id)]
     return {"policy": {"skippable": list(tp.skippable), "gate": tp.gate, "tour": tp.tour,
-                       "snippets_quiz_required": tp.snippets_quiz_required}, "sets": sets}
+                       "snippets_quiz_required": tp.snippets_quiz_required,
+                       "required_types": list(store.settings.training_required_types)}, "sets": sets}
 
 
 def current_values(store: Any) -> dict[str, Any]:

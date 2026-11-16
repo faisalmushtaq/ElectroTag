@@ -28,6 +28,7 @@ research team.
 - [The sign-up questionnaire and contact details (30 October 2026)](#the-sign-up-questionnaire-and-contact-details-30-october-2026)
 - [Idle time (12 November 2026)](#idle-time-12-november-2026)
 - [Settings chosen before the study starts (12 November 2026)](#settings-chosen-before-the-study-starts-12-november-2026)
+- [Experts looking for training recordings (16 November 2026)](#experts-looking-for-training-recordings-16-november-2026)
 - [Decisions still open](#decisions-still-open)
 <!-- /contents -->
 
@@ -830,6 +831,30 @@ assessment matching and competency criteria, which the sets keep themselves, wit
 policy. A study without any set confirms that it uses no training, as one without repeats confirms them
 off, and creating a set later asks for the group again. The values of the criteria remain the research
 team's decision (below); the card makes sure they are chosen and recorded before the study starts.
+
+## Experts looking for training recordings (16 November 2026)
+
+The research team asked for experts to be able to look through a whole dataset, choose the recordings that suit
+training and ask for them to be added to the training sets, with notes of their own and a Yes, Maybe or No for each.
+Looking is not annotating, so nothing an expert does there may become research data. Their marks, notes and ratings
+are therefore kept in records of their own (`browse_notes`), never as a draft, a saved attempt or a derived version,
+which keeps them out of the completion register, the results, the exports and every analysis by construction rather
+than by a filter that could be forgotten. The browser pauses the interaction log while such a recording is open, as it
+does on the sign-up questionnaire's page, since the activity analysis would otherwise count the expert's looking as
+work on the recording. The marks are kept at all because an expert who comes back to a recording should find what
+they marked there; the study team sees the types of the marks and the rating with each request, which help it decide,
+and never the note, which the expert writes for themselves.
+
+An approved request does not make a reference: a set's recordings each need the experts' annotations and a use
+(guided, practice or assessment), and the use has no default because a recording used by mistake for assessment after
+practice would no longer be blinded. Approved recordings therefore wait in the set, awaiting annotation, and are
+given to the experts with the usual assignments; the list is worked out from the requests, so a recording leaves it
+as soon as its reference is in the set, and the reference set's own file is unchanged.
+
+The artifact types that need training material (`training.required_types`) default to the types on the number keys,
+the nine the study annotates most, as the research team asked; the setting is null until the study chooses, so a study
+that changes its keys is followed. It counts the experts' reference marks in the training sets, the material that
+trainees learn from and are assessed against.
 
 ## Decisions still open
 

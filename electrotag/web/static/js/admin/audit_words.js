@@ -57,6 +57,12 @@ export const AUDIT_OPS = Object.freeze({
   set_planted_make: 'Correct-the-marks exercise made',
   set_planted_from: 'Correct-the-marks exercise made from an expert\'s version',
   set_planted_remove: 'Correct-the-marks exercise removed',
+  // looking through datasets for training recordings (candidates.py)
+  browse_access_set: 'Dataset given to an expert to look through, or taken back',
+  training_request: 'Recordings asked for as training material',
+  training_request_withdraw: 'Request for a training recording taken back',
+  training_requests_decide: 'Requests for training recordings decided',
+  training_waiting_remove: 'Recording taken off a set\'s awaiting list',
   // the experts' work (corrections.py, adjudication.py, library.py)
   correction_save: 'Correction saved',
   adjudication_start: 'Adjudication started',

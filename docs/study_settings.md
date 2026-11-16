@@ -902,7 +902,7 @@ from 1 to 100, scored before a person's measured accuracy weighs their marks.
 
 The `training` block is the training path's policy:
 `{"skippable": ["tour", "snippets", "guided", "practice"], "gate": "met", "tour": true,
-"snippets_quiz_required": false}`. `skippable` lists the stages a trainee may
+"snippets_quiz_required": false, "required_types": null}`. `skippable` lists the stages a trainee may
 skip (the platform tour, the artifact snippets, learning with the experts and
 practice on their own); the blind competency assessment can never be skipped,
 and a setting that names it is refused. `gate` says what real study work waits
@@ -915,8 +915,15 @@ trainee through without any of it. `tour` begins the path with the
 platform tour, and offers the same tour once on the home page to everyone outside a training programme, and `snippets_quiz_required` counts the snippets stage as done
 only once its recognition check is finished. A change applies at once: a
 stage skipped while the policy allowed it stays skipped, and a gate switched
-off opens every trainee's study recordings. The admin area shows these under
-Study settings, Training policy.
+off opens every trainee's study recordings. `required_types` lists the artifact
+types the training material should hold examples of, as many or as few as the
+study needs, each a type of the catalogue and none twice; null, the default,
+means the types on the number keys 1 to 9 (`annotation.quick_labels`), as they
+are at the time, so a study that changes its keys and never chooses here follows
+them. Training shows how many of the experts' reference marks the training sets
+hold of each of these types and names those with none yet, and the training
+standards confirmed before the study starts include the list. The admin area
+shows these under Study settings, Training policy.
 
 The `replay` block, `{"enabled": true, "trainees_watch_experts": true,
 "trainees_see_crowd": false}`, says whether experts and administrators may
