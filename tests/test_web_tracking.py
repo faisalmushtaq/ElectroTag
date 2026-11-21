@@ -219,6 +219,8 @@ def test_n_rated_counts_people_across_hand_outs(app: Any, client: TestClient, ad
 # ------------------------------------------------------------------ paging and filters
 def test_the_recording_grid_pages_and_filters(app: Any, client: TestClient, admin: Api, recordings: Path,
                                               monkeypatch: pytest.MonkeyPatch) -> None:
+    # the hand-outs below are due on 20 November 2026: the clock is fixed the day before, so none is overdue yet
+    on(monkeypatch, "2026-11-19")
     extra = copies(app, 25, dataset_id="big")
     admin.admin_ok("dataset_create", {"request_id": rq(1), "dataset_id": "big", "name": "Big"})
     admin.admin_ok("recordings_move", {"recording_ids": [SUB1, SUB2], "dataset_id": "big"})

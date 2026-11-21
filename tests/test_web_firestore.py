@@ -1602,14 +1602,18 @@ def test_the_questionnaire_through_the_functions(template: Path) -> None:
 
 
 # ------------------------------------------- tracking and the datasets/ folder of the export (tracking.py)
-def test_tracking_and_its_export_on_firestore(service: StudyService, recordings: Path, tmp_path: Path) -> None:
+def test_tracking_and_its_export_on_firestore(service: StudyService, recordings: Path, tmp_path: Path,
+                                             monkeypatch: pytest.MonkeyPatch) -> None:
     """The statuses of tracking.py from Firestore's own records (the openings by field mask, the drafts, the
     reports of recordings that cannot be annotated), the cache an instance keeps, and datasets/ in the export."""
     import csv
     import io
 
+    from electrotag.web import datasets as datasets_mod
     from electrotag.web import tracking as tracking_mod
 
+    # the hand-outs below are due on 20 November 2026: the clock is fixed the day before, so none is overdue yet
+    monkeypatch.setattr(datasets_mod, "now_local_iso", lambda: "2026-11-19T09:00:00.000+00:00")
     assert service.tracking.cache_s == tracking_mod.TRACKING_CACHE_S, "Firestore keeps the figures for a while"
     service.store.put_user("A05", display_name="Annotator five")
     a05 = User("A05")

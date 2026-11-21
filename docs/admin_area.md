@@ -241,6 +241,14 @@ the link also names the study server. On Firebase the link comes from Firebase A
 which decides how long it lasts; it cannot be withdrawn, but switching the account off stops the
 person signing in.
 
+Every new link, and every link made by Reset the password on Firebase, comes with a warning of its
+time limit beside it. A link from the study server stops working on its expiry date. Firebase stops
+its links working an hour after they are made, a limit Firebase sets and does not give with the
+link, so the warning gives the time of day, about an hour from when the link was made, and asks you
+to send it at once; the email from Email the link then asks the person to open it as soon as it
+arrives. When several links are made together the warning gives the earliest limit among them. A
+link that has run out does nothing harmful: make a new one.
+
 ### Adding several people
 
 Add several makes many accounts at once. Paste one line for each person, or choose a CSV file saved
