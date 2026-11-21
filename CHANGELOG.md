@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+A link to choose a password now comes with a warning of when it stops working, wherever the admin
+area shows a new one (adding an account, a new invitation, Add several and the bulk New invitation
+links, and Reset the password on Firebase). On Firebase, whose links stop working an hour after
+they are made, the warning gives the time of day and asks the administrator to send the link at
+once, and Email the link asks the person to open it as soon as it arrives; on the study server it
+gives the invitation's expiry date.
+
 Experts can look through a whole dataset for training recordings. An administrator ticks the experts who may look
 through a dataset on its page (Experts looking for training recordings); in the expert area's new Find training
 recordings, an expert opens any of its recordings from their own computer, marks what they see, keeps a note of their

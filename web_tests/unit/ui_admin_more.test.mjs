@@ -68,6 +68,30 @@ test('the invitation\'s states and its friendly message', () => {
   assert.equal(decodeURIComponent(href.split('body=')[1]), text);
 });
 
+test('a new link to choose a password comes with its time limit as a warning', () => {
+  // Firebase's link lasts an hour from when it is made; the time of day is given
+  const made = Date.parse('2026-11-21T09:00:00Z');
+  const fb = m.linkLimit({ firebase: true, madeAt: made });
+  assert.deepEqual(fb, { at: '2026-11-21T10:00:00.000Z', short: true });
+  assert.equal(m.FIREBASE_LINK_MINUTES, 60);
+  const one = m.linkLimitText(fb);
+  assert.match(one, /^This link stops working an hour after it was made, at about \d\d:\d\d on 21 Nov 2026: Firebase sets this limit\./);
+  assert.match(one, /open it straight away; after that time, make a new link\.$/);
+  assert.match(m.linkLimitText(fb, { count: 3 }), /^These links stop working an hour after they were made.*Send each one now/);
+  // the server's invitation has its own expiry, given by date; it wins over Firebase's hour
+  const server = m.linkLimit({ expiresAt: '2026-12-05T09:00:00+00:00' });
+  assert.deepEqual(server, { at: '2026-12-05T09:00:00+00:00', short: false });
+  assert.equal(m.linkLimitText(server), 'This link stops working on 5 Dec 2026. If the person has not used it by then, make a new link.');
+  assert.deepEqual(m.linkLimit({ expiresAt: '2026-12-05T09:00:00+00:00', firebase: true }).short, false);
+  // no limit known: no warning
+  assert.equal(m.linkLimit({}), null);
+  assert.equal(m.linkLimitText(null), '');
+  // the email asks the person to open an hour-long link at once
+  const text = m.inviteMessage({ annotatorId: 'A11', link: 'https://x.org/r?oobCode=abc', within: fb.at });
+  assert.match(text, /The link works once and only until about \d\d:\d\d on 21 Nov 2026, so please open it as soon as this message arrives; please keep it to yourself\./);
+  assert.match(m.inviteMessage({ annotatorId: 'A11', link: 'https://x.org/' }), /The link works once; please keep it/);
+});
+
 test('"Add several": every line is checked before anything is made', () => {
   const ok = bulk.parseBulkPeople('annotator_id, name, email\nA11, Alex Smith, alex@example.org\n\na12\tSam Jones\tsam@example.org\nA13;Kim', { existing: ['A01'] });
   assert.deepEqual(ok.problems, []);

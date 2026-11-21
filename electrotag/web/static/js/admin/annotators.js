@@ -18,7 +18,7 @@ import { trainingGateCard } from './training_gate.js';
 import { answeredChip, questionnaireCard } from './questionnaire.js';
 import { icon } from '../views/common.js';
 import {
-  INVITE_STATES, MODES, ROLES, STATUS, checkAnnotatorId, checkEmail, csvText, dateText, invitationText, inviteLink, inviteMessage, mailtoHref,
+  INVITE_STATES, MODES, ROLES, STATUS, checkAnnotatorId, checkEmail, csvText, dateText, invitationText, inviteLink, inviteMessage, linkLimit, linkLimitText, mailtoHref,
   minutesText, plural, roleWords, rolesOf, setLabel, unassignQuestion, whenText,
 } from './model.js';
 import {
@@ -141,8 +141,19 @@ export class AnnotatorsSection {
 
   _remember(aid, r) {
     const link = this._linkOf(r);
-    if (link) this.links.set(aid, { link, expires_at: r.expires_at || null });
+    if (link) this.links.set(aid, { link, expires_at: r.expires_at || null, limit: this._limitOf(r) });
     return link;
+  }
+
+  /** When a link just made stops working (Firebase's hour, or the invitation's expiry), or null. */
+  _limitOf(r) {
+    return linkLimit({ expiresAt: r.expires_at || null, firebase: this.area.isFirebase });
+  }
+
+  /** The time limit of new links as a warning, shown with them; null when they have none. */
+  _limitWarning(limit, count = 1) {
+    const text = linkLimitText(limit, { count });
+    return text ? h('div.banner.link-limit', { role: 'status' }, h('p', {}, h('b', {}, 'Time limit. '), text)) : null;
   }
 
   // -------------------------------------------------------------- accounts
@@ -258,7 +269,11 @@ export class AnnotatorsSection {
       a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
     };
+    // the earliest limit, so the warning never promises more time than any one link has
+    const limits = made.map((m) => this.links.get(m.annotator_id)).filter((k) => k && k.limit).map((k) => k.limit);
+    const first = limits.sort((a, b) => String(a.at).localeCompare(String(b.at)))[0] || null;
     return h('div.success.links-made', { role: 'status' },
+      this._limitWarning(first, made.length),
       h('p', {}, h('b', {}, `${plural(made.length, 'private link')}`), ' Each lets one person choose their password and sign in. They are shown only now: copy them or download them before you leave this page, and send each to its person in a separate message.'),
       dataTable([
         { title: 'Person', render: (m) => h('span', {}, h('b', {}, m.annotator_id), m.display_name ? ` · ${m.display_name}` : '', m.email ? h('span.caption.block', {}, m.email) : null) },
@@ -349,8 +364,11 @@ export class AnnotatorsSection {
   _secret(who, r, email = null) {
     const link = this._linkOf(r);
     if (link) {
+      const known = this.links.get(who);
+      const limit = known && known.link === link ? known.limit : this._limitOf(r);
       return h('div', {}, secretBox({ title: `Invitation link for ${who}`, value: link,
-        note: `Send this link to the person: it lets them choose their own password${r.expires_at ? ` until ${dateText(r.expires_at)}` : ''}. It is shown only now.` }),
+        note: 'Send this link to the person: it lets them choose their own password. It is shown only now.' }),
+      this._limitWarning(limit),
       email ? h('div.btn-row', {}, this._mailButton(who, email)) : null);
     }
     if (r.temporary_password) {
@@ -426,6 +444,8 @@ export class AnnotatorsSection {
       await this.reload();
       const known = this.links.get(aid);
       this.inviteMsg.show('success', `A new private link for ${aid}${known && known.expires_at ? `, until ${dateText(known.expires_at)}` : ''}. Copy it or email it now: it is shown only on this page.`);
+      const warning = known && this._limitWarning(known.limit);
+      if (warning) this.inviteMsg.append(warning);
     } catch (exc) { this.inviteMsg.problem(exc); }
   }
 
@@ -442,7 +462,7 @@ export class AnnotatorsSection {
     const target = !this.detailView.hidden ? this.detailMail : { invitations: this.mailHost, several: this.severalMail }[this.tab] || this.accountsMail;
     clear(target);
     const subject = textInput({ value: `Your invitation to ${this.study || 'the study'}` });
-    const body = textArea({ rows: 12, value: inviteMessage({ annotatorId: aid, name: u.display_name || '', study: this.study, link: known.link, expiresAt: known.expires_at, from: me.display_name || '' }) });
+    const body = textArea({ rows: 12, value: inviteMessage({ annotatorId: aid, name: u.display_name || '', study: this.study, link: known.link, expiresAt: known.expires_at, within: known.limit && known.limit.short ? known.limit.at : null, from: me.display_name || '' }) });
     const to = textInput({ type: 'email', value: u.email || email || '' });
     const open = h('a.btn.primary', { 'data-log': 'mail-open', href: '#' }, 'Open in my email');
     const refresh = () => { open.href = mailtoHref(to.value.trim(), subject.value, body.value); };
