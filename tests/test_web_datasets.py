@@ -309,13 +309,16 @@ def test_groups_keep_the_history_of_who_joined_and_left(client: TestClient, admi
 
 # ------------------------------------------------------------------ hand-outs, everyone gets all of it
 def test_an_all_hand_out_gives_links_skips_retired_and_is_made_once(app: Any, client: TestClient,
-                                                                     admin: Api) -> None:
+                                                                     admin: Api,
+                                                                     monkeypatch: pytest.MonkeyPatch) -> None:
     from electrotag.training.reference import ReferenceSet
     from tests.web_helpers import PRACTICE1
 
     rs = ReferenceSet.load(app.state.store.reference_set("example").directory)
     rs.set_use(PRACTICE1, "assessment")  # so the trainee T01's study work waits for the assessment
     rs.save()
+    # the hand-outs below are due on 20 November 2026: the clock is fixed the day before, so none is overdue yet
+    monkeypatch.setattr(datasets_mod, "now_local_iso", lambda: "2026-11-19T09:00:00.000+00:00")
     extra = copies(app, 3, dataset_id="ds")
     make_dataset(admin, 1, dataset_id="ds")
     admin.admin_ok("recording_update", {"recording_id": extra[2], "retired": True})
