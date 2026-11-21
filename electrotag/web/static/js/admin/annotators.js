@@ -17,8 +17,9 @@ import { setAsideButton } from './assignments.js';
 import { trainingGateCard } from './training_gate.js';
 import { answeredChip, questionnaireCard } from './questionnaire.js';
 import { icon } from '../views/common.js';
+import { limitedInviteMessage, linkLimit, linkLimitText } from './link_limit.js';
 import {
-  INVITE_STATES, MODES, ROLES, STATUS, checkAnnotatorId, checkEmail, csvText, dateText, invitationText, inviteLink, inviteMessage, linkLimit, linkLimitText, mailtoHref,
+  INVITE_STATES, MODES, ROLES, STATUS, checkAnnotatorId, checkEmail, csvText, dateText, invitationText, inviteLink, mailtoHref,
   minutesText, plural, roleWords, rolesOf, setLabel, unassignQuestion, whenText,
 } from './model.js';
 import {
@@ -462,7 +463,7 @@ export class AnnotatorsSection {
     const target = !this.detailView.hidden ? this.detailMail : { invitations: this.mailHost, several: this.severalMail }[this.tab] || this.accountsMail;
     clear(target);
     const subject = textInput({ value: `Your invitation to ${this.study || 'the study'}` });
-    const body = textArea({ rows: 12, value: inviteMessage({ annotatorId: aid, name: u.display_name || '', study: this.study, link: known.link, expiresAt: known.expires_at, within: known.limit && known.limit.short ? known.limit.at : null, from: me.display_name || '' }) });
+    const body = textArea({ rows: 12, value: limitedInviteMessage({ annotatorId: aid, name: u.display_name || '', study: this.study, link: known.link, expiresAt: known.expires_at, from: me.display_name || '' }, known.limit) });
     const to = textInput({ type: 'email', value: u.email || email || '' });
     const open = h('a.btn.primary', { 'data-log': 'mail-open', href: '#' }, 'Open in my email');
     const refresh = () => { open.href = mailtoHref(to.value.trim(), subject.value, body.value); };

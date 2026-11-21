@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import * as m from '../../electrotag/web/static/js/admin/model.js';
+import * as ll from '../../electrotag/web/static/js/admin/link_limit.js';
 import * as bulk from '../../electrotag/web/static/js/admin/bulk_people.js';
 import { niceTicks } from '../../electrotag/web/static/js/admin/chart.js';
 import { DemoBackend } from '../../electrotag/web/static/js/api/demo.js';
@@ -71,25 +72,26 @@ test('the invitation\'s states and its friendly message', () => {
 test('a new link to choose a password comes with its time limit as a warning', () => {
   // Firebase's link lasts an hour from when it is made; the time of day is given
   const made = Date.parse('2026-11-21T09:00:00Z');
-  const fb = m.linkLimit({ firebase: true, madeAt: made });
+  const fb = ll.linkLimit({ firebase: true, madeAt: made });
   assert.deepEqual(fb, { at: '2026-11-21T10:00:00.000Z', short: true });
-  assert.equal(m.FIREBASE_LINK_MINUTES, 60);
-  const one = m.linkLimitText(fb);
+  assert.equal(ll.FIREBASE_LINK_MINUTES, 60);
+  const one = ll.linkLimitText(fb);
   assert.match(one, /^This link stops working an hour after it was made, at about \d\d:\d\d on 21 Nov 2026: Firebase sets this limit\./);
   assert.match(one, /open it straight away; after that time, make a new link\.$/);
-  assert.match(m.linkLimitText(fb, { count: 3 }), /^These links stop working an hour after they were made.*Send each one now/);
+  assert.match(ll.linkLimitText(fb, { count: 3 }), /^These links stop working an hour after they were made.*Send each one now/);
   // the server's invitation has its own expiry, given by date; it wins over Firebase's hour
-  const server = m.linkLimit({ expiresAt: '2026-12-05T09:00:00+00:00' });
+  const server = ll.linkLimit({ expiresAt: '2026-12-05T09:00:00+00:00' });
   assert.deepEqual(server, { at: '2026-12-05T09:00:00+00:00', short: false });
-  assert.equal(m.linkLimitText(server), 'This link stops working on 5 Dec 2026. If the person has not used it by then, make a new link.');
-  assert.deepEqual(m.linkLimit({ expiresAt: '2026-12-05T09:00:00+00:00', firebase: true }).short, false);
+  assert.equal(ll.linkLimitText(server), 'This link stops working on 5 Dec 2026. If the person has not used it by then, make a new link.');
+  assert.deepEqual(ll.linkLimit({ expiresAt: '2026-12-05T09:00:00+00:00', firebase: true }).short, false);
   // no limit known: no warning
-  assert.equal(m.linkLimit({}), null);
-  assert.equal(m.linkLimitText(null), '');
+  assert.equal(ll.linkLimit({}), null);
+  assert.equal(ll.linkLimitText(null), '');
   // the email asks the person to open an hour-long link at once
-  const text = m.inviteMessage({ annotatorId: 'A11', link: 'https://x.org/r?oobCode=abc', within: fb.at });
+  const text = ll.limitedInviteMessage({ annotatorId: 'A11', link: 'https://x.org/r?oobCode=abc' }, fb);
   assert.match(text, /The link works once and only until about \d\d:\d\d on 21 Nov 2026, so please open it as soon as this message arrives; please keep it to yourself\./);
-  assert.match(m.inviteMessage({ annotatorId: 'A11', link: 'https://x.org/' }), /The link works once; please keep it/);
+  assert.match(ll.limitedInviteMessage({ annotatorId: 'A11', link: 'https://x.org/' }, null), /The link works once; please keep it/);
+  assert.match(ll.limitedInviteMessage({ annotatorId: 'A11', link: 'https://x.org/' }, server), /The link works once and until 5 Dec 2026;/);
 });
 
 test('"Add several": every line is checked before anything is made', () => {
