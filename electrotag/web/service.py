@@ -453,7 +453,7 @@ class StudyService:
             key = (rid, mode, ctx)
             if key in seen:
                 return
-            m = self.store.manifest(self.scope_for(mode, ctx), rid)
+            m = manifests.get((self.scope_for(mode, ctx), rid))
             if m is None:
                 return  # not registered (yet): nothing the browser could match
             seen.add(key)
@@ -478,10 +478,16 @@ class StudyService:
             items.append(item)
 
         set_id = self.store.programme(aid)
-        if set_id:
-            for rid, mode, repeat in self.coach.programme_recordings(user, set_id):
-                add(rid, mode, set_id, 0, "programme", repeat)
-        for a in self.store.assignments(aid):
+        programme = list(self.coach.programme_recordings(user, set_id)) if set_id else []
+        assigned = self.store.assignments(aid)
+        # every manifest in one read (a study on Firebase would otherwise read them one after another)
+        wanted = [(rid, mode, set_id) for rid, mode, _ in programme] + [(a.recording_id, a.mode, a.context_id)
+                                                                       for a in assigned]
+        manifests = self.store.manifests_for([(self.scope_for(mode, ctx if mode != "standard" else ""), rid)
+                                              for rid, mode, ctx in wanted])
+        for rid, mode, repeat in programme:
+            add(rid, mode, set_id, 0, "programme", repeat)
+        for a in assigned:
             add(a.recording_id, a.mode, a.context_id, a.position, "assignment", task_id=a.task_id,
                 handout_id=a.handout_id)
         self._schedule_repeats(aid, items, saved, drafts)
@@ -1208,6 +1214,10 @@ class StudyService:
                   "admin_progress", "admin", "quiz", "achievements", "problem_report", "my_reviews", "expert",
                   "my_feedback", "training_stage", "training_snippets", "questionnaire", "my_results")
 
+    #: Operations that only read, whatever their body: the store may answer repeated reads within one of them
+    #: from memory (``Store.reading``).
+    READ_ONLY = frozenset({"me", "assignments", "my_reviews"})
+
     def call(self, operation: str, user: User, body: dict[str, Any] | None) -> dict[str, Any]:
         if operation not in self.OPERATIONS:
             raise ApiError(404, "not_found", f"Unknown operation {operation}")
@@ -1226,6 +1236,9 @@ class StudyService:
             return self.quiz(user, body.get("set_id"), {k: v for k, v in body.items() if k != "set_id"})
         if operation == "questionnaire":
             return self.questionnaire_op(user, body)
+        if operation in self.READ_ONLY:
+            with self.store.reading():
+                return getattr(self, operation)(user, body)
         return getattr(self, operation)(user, body)
 
 

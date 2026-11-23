@@ -49,6 +49,7 @@ functions and the administrator's command do, with the Admin SDK.
 from __future__ import annotations
 
 import base64
+import copy
 import hashlib
 import json
 import re
@@ -213,6 +214,17 @@ class FirestoreStore(Store):
         finally:
             if outer is None:
                 self._local.manifests = None
+
+    @contextmanager
+    def reading(self) -> Iterator[None]:
+        outer = getattr(self._local, "assignment_docs", None)
+        if outer is None:
+            self._local.assignment_docs = {}
+        try:
+            yield
+        finally:
+            if outer is None:
+                self._local.assignment_docs = None
 
     def _memo(self) -> dict[tuple[str, str], dict[str, Any]] | None:
         memo = getattr(self._local, "manifests", None)
@@ -402,6 +414,22 @@ class FirestoreStore(Store):
             return memo.get((scope, recording_id))
         snap = self.doc.collection("manifests").document(manifest_key(scope, recording_id)).get()
         return self._get_blob(snap) if snap.exists else None
+
+    def manifests_for(self, keys: list[tuple[str, str]]) -> dict[tuple[str, str], dict[str, Any] | None]:
+        """One batched read (``get_all``) for all the keys, in place of one read after another."""
+        keys = list(dict.fromkeys(keys))
+        memo = self._memo()
+        if memo is not None:
+            return {k: memo.get(k) for k in keys}
+        if not keys:
+            return {}
+        col = self.doc.collection("manifests")
+        ids = {manifest_key(*k): k for k in keys}
+        out: dict[tuple[str, str], dict[str, Any] | None] = dict.fromkeys(keys)
+        for snap in self.client.get_all([col.document(i) for i in ids]):
+            if snap.exists and snap.id in ids:
+                out[ids[snap.id]] = self._get_blob(snap)
+        return out
 
     def manifests(self) -> list[dict[str, Any]]:
         memo = self._memo()
@@ -689,8 +717,15 @@ class FirestoreStore(Store):
         ref.delete()
 
     def _assignment_doc(self, annotator_id: str) -> dict[str, Any]:
-        snap = self.doc.collection("assignments").document(str(annotator_id).upper()).get()
-        return (snap.to_dict() or {}) if snap.exists else {}
+        cache = getattr(self._local, "assignment_docs", None)  # within reading(): read once per request
+        aid = str(annotator_id).upper()
+        if cache is not None and aid in cache:
+            return copy.deepcopy(cache[aid])
+        snap = self.doc.collection("assignments").document(aid).get()
+        d = (snap.to_dict() or {}) if snap.exists else {}
+        if cache is not None:
+            cache[aid] = copy.deepcopy(d)
+        return d
 
     def assignments(self, annotator_id: str | None = None) -> list[Assignment]:
         if annotator_id is None:

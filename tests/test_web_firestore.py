@@ -149,6 +149,20 @@ def test_annotators_work_and_results_are_kept(service: StudyService, recordings:
     assert err(service, "admin_progress", A01, {}).code == "forbidden"
 
 
+def test_batched_reads_on_firestore(service: StudyService) -> None:
+    """The manifests read together (get_all) and the assignments read once within an operation that only reads
+    give the same answers as reading them one by one (tests/test_web_store_reads.py counts the reads)."""
+    store = service.store
+    keys = [("study", a.recording_id) for a in store.assignments("A01")] + [("study", "not/registered.edf")]
+    together = store.manifests_for(keys)
+    assert together == {k: store.manifest(*k) for k in keys}
+    assert together[("study", "not/registered.edf")] is None and sum(v is not None for v in together.values()) == 3
+    with store.reading():
+        assert store.programme("A01") == store.programme("a01")
+        assert [a.recording_id for a in store.assignments("A01")] == [k[1] for k in keys[:-1]]
+    assert ok(service, "assignments", A01)["items"]
+
+
 def test_revisions_and_achievements_on_firestore(service: StudyService, recordings: Path, tmp_path: Path) -> None:
     ok(service, "submit", A01, submission(recordings, SUB1, [BLINK]))
     first = service.store.saved_files("A01", SUB1, "standard", "")

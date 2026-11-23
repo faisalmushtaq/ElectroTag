@@ -13,6 +13,7 @@ records and receives the results.
 - [Who does what](#who-does-what)
 - [Folder layout](#folder-layout)
 - [Loading on demand](#loading-on-demand)
+  - [Signing in quickly](#signing-in-quickly)
   - [Purposes and the expert area](#purposes-and-the-expert-area)
 - [The Recording interface](#the-recording-interface)
 - [Reading recordings in the browser](#reading-recordings-in-the-browser)
@@ -289,6 +290,31 @@ never loads.
 `web_tests/e2e/v_loading.e2e.mjs` keeps the sign-in page within a budget of
 JavaScript set just above these figures, and checks that no later view's
 module loads with it; a view that creeps back into the sign-in page fails it.
+
+### Signing in quickly
+
+On Firebase each callable is a service of its own on Cloud Run, which stops
+its instances after a quiet spell and needs some seconds to start one again,
+so the first sign-in of the day would otherwise wait for several functions
+starting one after another. Four things shorten it. While the sign-in form is
+filled in, the backend sends a warm-up call to the functions a sign-in uses
+first (`connectFirebase` in `js/api/choose.js` creates it with `warm: true`;
+docs/api.md, "The same operations on Firebase"), and `connectFirebase` asks
+for the Firebase SDK's three files as soon as the study is known to be on
+Firebase, while `firebase.js` itself is still on its way. Once the password is accepted, the first view's
+code is fetched from the roles in the sign-in's answer (the admin area for an
+administrator, the home page otherwise), `GET /assignments` is asked for
+together with `GET /me`, which it does not need, and the visit is opened while
+the assignments, the game elements and the reviews are read: two waits for the
+study where there were three. On the server side, `StudyService.work_items`
+reads the manifests of all of a person's recordings at once
+(`Store.manifests_for`, one `get_all` on Firestore) and the operations that
+only read (`StudyService.READ_ONLY`: `me`, `assignments` and `my_reviews`)
+run inside `Store.reading()`, within which the Firestore store reads an
+annotator's assignments and programme once. For 40 assigned recordings,
+`GET /assignments` makes 11 calls to the store where it made 49
+(`tests/test_web_store_reads.py` counts them against a stand-in for
+Firestore).
 
 ### Purposes and the expert area
 

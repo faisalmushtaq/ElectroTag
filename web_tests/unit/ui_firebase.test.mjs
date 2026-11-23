@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { FirebaseBackend, toApiError, authError, isExpertRead, claimedRoles, onlyStudy, sdkMessage, NO_ANSWER_MESSAGE } from '../../electrotag/web/static/js/api/firebase.js';
+import { FirebaseBackend, WARM_FUNCTIONS, toApiError, authError, isExpertRead, claimedRoles, onlyStudy, sdkMessage, NO_ANSWER_MESSAGE } from '../../electrotag/web/static/js/api/firebase.js';
 
 class FakeHttpsError extends Error {
   constructor(code, message, details) { super(message); this.code = `functions/${code}`; this.details = details; }
@@ -76,6 +76,22 @@ test('operations call et_<operation> in europe-west2 with the study and the same
   assert.deepEqual(calls[2].data, { study: 'pilot', recording_id: 'sub-01/eeg/x.edf', mode: 'standard', context_id: '', draft: { annotations: [], elapsed_s: 2 } });
   assert.equal(calls[3].data.recording_id, 'sub-01/eeg/x.edf');
   assert.deepEqual(calls[4].data, { study: 'pilot', visit_id: 'v1', events: [{ t: 1, type: 'key' }] });
+});
+
+test('warm(): the first functions of a sign-in are started once, with {warm: true} only, and nothing waits for them', async () => {
+  const { sdk, calls } = fakeSdk(); // no handlers: every warm-up call fails, which must not matter
+  const quiet = await FirebaseBackend.create({ config: {}, study: 'pilot', sdk });
+  assert.equal(calls.length, 0, 'only the start-up asks for it (connectFirebase in choose.js)');
+  assert.equal(quiet.warm(), undefined);
+  quiet.warm(); // a second sign-in page in the same tab sends nothing more
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(calls.map((c) => c.name), [...WARM_FUNCTIONS]);
+  calls.length = 0;
+  await FirebaseBackend.create({ config: {}, study: 'pilot', sdk, warm: true });
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(calls.map((c) => c.name), [...WARM_FUNCTIONS]);
+  assert.ok(calls.every((c) => JSON.stringify(c.data) === '{"warm":true}'), 'no study, no sign-in and nothing else is sent');
+  assert.ok(WARM_FUNCTIONS.includes('et_me') && WARM_FUNCTIONS.includes('et_assignments'));
 });
 
 test('HttpsError becomes the same errors as the server gives', async () => {

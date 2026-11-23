@@ -132,9 +132,19 @@ export async function connectServer(address, opts = {}) {
   return new HttpBackend(server, { ...opts, health });
 }
 
+/** The Firebase SDK's address (SDK_BASE in firebase.js, kept equal by ui_choose.test.mjs). */
+export const FIREBASE_SDK = 'https://www.gstatic.com/firebasejs/12.19.0/';
+
 export async function connectFirebase(where, opts = {}) {
+  // the SDK downloads while firebase.js is fetched (the same files as loadFirebaseSdk there)
+  try {
+    for (const f of ['app', 'auth', 'functions']) {
+      document.head.append(Object.assign(document.createElement('link'),
+        { rel: 'modulepreload', href: `${where.sdkBase || FIREBASE_SDK}firebase-${f}.js`, crossOrigin: 'anonymous' }));
+    }
+  } catch { /* no document (tests) */ }
   const { FirebaseBackend } = await import('./firebase.js');
-  return FirebaseBackend.create({ ...where, ...opts });
+  return FirebaseBackend.create({ ...where, ...opts, warm: true });
 }
 
 export async function makeDemo() {
