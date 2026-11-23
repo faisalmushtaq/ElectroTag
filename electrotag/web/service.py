@@ -1154,8 +1154,8 @@ class StudyService:
         "unknown": (404, "This invitation link is not known to the study. It may have been replaced by a newer "
                          "link or withdrawn. To get a new link, contact the study team who invited you, for "
                          "example by replying to the email that brought you this one."),
-        "used": (409, "This invitation link has been used already. Sign in with your annotator ID and the "
-                      "password you chose, or ask the study team for a new link."),
+        "used": (409, "This invitation link has been used already. Sign in with the password you chose, or ask "
+                      "the study team for a new link."),
         "expired": (409, "This invitation link has expired. To get a new link, contact the study team who invited "
                          "you, for example by replying to the email that brought you this one."),
     }
@@ -1174,8 +1174,11 @@ class StudyService:
             raise self._invite_problem("used" if inv["state"] == "accepted" else "expired")
         if inv["state"] != "invited":
             raise self._invite_problem("unknown")
-        return {"annotator_id": inv["annotator_id"], "display_name": inv.get("display_name", ""),
-                "study_name": self.store.name, "expires_at": inv["expires_at"]}
+        out = {"annotator_id": inv["annotator_id"], "display_name": inv.get("display_name", ""),
+               "study_name": self.store.name, "expires_at": inv["expires_at"]}
+        if inv.get("email"):  # on Firebase the person signs in with it
+            out["email"] = inv["email"]
+        return out
 
     def invite_accept(self, body: dict[str, Any]) -> User:
         """``POST /invite/accept {token, password}`` (no sign-in): the person's own password, set once."""

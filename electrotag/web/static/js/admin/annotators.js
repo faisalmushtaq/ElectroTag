@@ -136,8 +136,16 @@ export class AnnotatorsSection {
     if (r.invite_link) return r.invite_link;
     if (!r.invite_token) return null;
     const b = this.area.backend;
-    return inviteLink(r.invite_token, { pageHref: location.href, server: b.server || '',
+    const link = inviteLink(r.invite_token, { pageHref: location.href, server: b.server || '',
       forcedDemo: Boolean(this.area.app.where && this.area.app.where.source === 'forced-demo') });
+    if (!this.area.isFirebase || !b.study) return link;
+    // a Firebase project can hold several studies: the link names its own (?study=<id>&invite=<token>)
+    const u = new URL(link);
+    const token = u.searchParams.get('invite');
+    u.searchParams.delete('invite');
+    u.searchParams.set('study', b.study);
+    u.searchParams.set('invite', token);
+    return u.href;
   }
 
   _remember(aid, r) {
@@ -237,8 +245,8 @@ export class AnnotatorsSection {
         offHost,
         run('Switch on', 'user_update', { status: 'active' }, (r) => (r.value && r.value.changed === false ? 'Switched on already: nothing changed.' : 'Switched on: they can sign in again.'), 'bulk-switch-on'),
         h('span.bulk-group', {},
-          run('New invitation links', 'user_invite', this.area.isFirebase ? {} : { get expires_days() { return Number(days.value); } }, () => 'A new link, below.', 'bulk-invite'),
-          this.area.isFirebase ? null : [h('label.form-label.inline', { for: days.id }, 'lasting'), days]),
+          run('New invitation links', 'user_invite', { get expires_days() { return Number(days.value); } }, () => 'A new link, below.', 'bulk-invite'),
+          [h('label.form-label.inline', { for: days.id }, 'lasting'), days]),
         h('button.btn.small.quiet', { type: 'button', onclick: () => this.table.clearSelection() }, 'Clear the choice')),
       progress, msg);
   }
@@ -339,6 +347,8 @@ export class AnnotatorsSection {
           body.password = password.value;
         }
         if (!fb && how.value === 'invite') body.invite = true;
+        // on Firebase an annotator or expert gets the study's invitation link, an administrator Firebase's own link
+        if (fb && !role.box('admin').checked) body.invite = true;
         const r = await this.area.write('user_add', body);
         const who = r.user ? r.user.annotator_id : body.annotator_id;
         this._remember(who, r);
@@ -353,7 +363,7 @@ export class AnnotatorsSection {
     const form = h('form.admin-form', { onsubmit: (e) => { e.preventDefault(); submit.click(); } }, h('div.form-grid.add-account', {},
       field('Annotator ID', id, { hint: 'Up to 32 letters, digits, hyphens or underscores, as in the study\'s records. It cannot be changed later.' }),
       field('Name', name),
-      field('Email address', email, { hint: fb ? 'They sign in with it, and the invitation link lets them choose a password.' : 'Needed to email them their invitation link.' }),
+      field('Email address', email, { hint: fb ? 'They sign in with it. An annotator or expert gets an invitation link (for 14 days) to choose a password; an administrator gets Firebase\'s own link, which lasts an hour.' : 'Needed to email them their invitation link.' }),
       fb ? null : howField,
       fb ? null : passwordField),
       role, h('p.caption', {}, 'As many roles as apply: an expert who also annotates has both. Administrators see this admin area and can annotate too.'),
@@ -395,16 +405,15 @@ export class AnnotatorsSection {
     return h('div.admin-stack', { role: 'tabpanel', 'data-panel': 'invitations' },
       card('Invitations',
         h('p', {}, 'A private link lets one person choose their own password and sign in. It works once, and it stops working when a newer link is made, when it is withdrawn and when the account is switched off.'),
-        h('p.caption', {}, fb ? 'On Firebase the link comes from Firebase Authentication, which decides how long it lasts; it cannot be withdrawn, but switching the account off stops the person signing in.'
-          : 'The study keeps only a fingerprint of each link, so a link is shown only when it is made: if one was not copied, make a new one (the old one stops working).'),
-        fb ? null : h('div.row.inline-form.invite-days', {}, h('label.form-label.inline', { for: 'invite-days' }, 'New links last'), this.inviteDays),
+        h('p.caption', {}, 'The study keeps only a fingerprint of each link, so a link is shown only when it is made: if one was not copied, make a new one (the old one stops working).'
+          + (fb ? ' On Firebase the person signs in afterwards with their email address and the password they chose.' : '')),
+        h('div.row.inline-form.invite-days', {}, h('label.form-label.inline', { for: 'invite-days' }, 'New links last'), this.inviteDays),
         this.inviteMsg, this.invites, this.mailHost));
   }
 
   _inviteActions(u) {
     const inv = u.invitation || { state: 'none' };
     const known = this.links.get(u.annotator_id);
-    const fb = this.area.isFirebase;
     const out = h('span.chips-inline.invite-actions');
     if (known && inv.state === 'invited') {
       out.append(copyButton(known.link, { label: 'Copy link' }));
@@ -413,7 +422,7 @@ export class AnnotatorsSection {
     if (u.status !== 'disabled' && inv.state !== 'accepted' && u.annotator_id !== this.area.annotatorId) {
       const host = h('span.inline-confirm');
       const make = h('button.btn.small', { type: 'button', 'data-invite': u.annotator_id, onclick: async () => {
-        if (inv.state === 'invited' && !fb && !(await confirmInline(host, { text: `Make a new link for ${u.annotator_id}? The link sent before stops working.`, yes: 'Make a new link', no: 'Keep it', destructive: false }))) return;
+        if (inv.state === 'invited' && !(await confirmInline(host, { text: `Make a new link for ${u.annotator_id}? The link sent before stops working.`, yes: 'Make a new link', no: 'Keep it', destructive: false }))) return;
         // Someone who already signs in needs no invitation: ask, since a link lets them choose a new password.
         if (inv.state === 'none' && u.last_seen && !(await confirmInline(host, { text: `${u.annotator_id} already signs in with a password. Make a link anyway? It lets them choose a new password; the present one works until they do.`, yes: 'Make a link', no: 'Cancel', destructive: false }))) return;
         await this._invite(u.annotator_id);
@@ -421,7 +430,7 @@ export class AnnotatorsSection {
       host.append(make);
       out.append(host);
     }
-    if (inv.state === 'invited' && !fb) {
+    if (inv.state === 'invited') {
       const host = h('span.inline-confirm');
       host.append(h('button.btn.small.destructive', { type: 'button', 'data-revoke': u.annotator_id, onclick: async () => {
         if (!(await confirmInline(host, { text: `Withdraw ${u.annotator_id}'s invitation link? It stops working at once.`, yes: 'Withdraw it', no: 'Keep it' }))) return;
@@ -440,7 +449,7 @@ export class AnnotatorsSection {
   async _invite(aid) {
     this.inviteMsg.clear();
     try {
-      const r = await this.area.write('user_invite', { annotator_id: aid, ...(this.area.isFirebase ? {} : { expires_days: Number(this.inviteDays.value) }) });
+      const r = await this.area.write('user_invite', { annotator_id: aid, expires_days: Number(this.inviteDays.value) });
       this._remember(aid, r);
       await this.reload();
       const known = this.links.get(aid);
@@ -557,7 +566,7 @@ export class AnnotatorsSection {
         // annotators and experts get a private invitation link; administrators a temporary password (or, on
         // Firebase, Firebase's own link to choose one), as when one account is added
         const results = await eachInTurn(rows, (r) => this.area.write('user_add', { annotator_id: r.annotator_id, display_name: r.display_name, email: r.email, ...rolesBody(r.roles),
-          ...(invited(r) ? { invite: true, ...(fb ? {} : { expires_days: Number(days.value) }) } : {}) }), { progress, words: (i, n, r) => `Creating ${r.annotator_id} (${i} of ${n})…` });
+          ...(invited(r) ? { invite: true, expires_days: Number(days.value) } : {}) }), { progress, words: (i, n, r) => `Creating ${r.annotator_id} (${i} of ${n})…` });
         clear(preview);
         checked = null;
         create.hidden = true;
@@ -594,7 +603,7 @@ export class AnnotatorsSection {
         field('People', text, { wide: true }),
         roles,
         h('p.caption', {}, 'Roles in a line (annotator, expert, administrator, several separated by spaces or semicolons) are given instead of these.'),
-        fb ? null : h('div.row.inline-form.invite-days', {}, h('label.form-label.inline', { for: days.id }, 'The links last'), days),
+        h('div.row.inline-form.invite-days', {}, h('label.form-label.inline', { for: days.id }, 'The links last'), days),
         h('div.btn-row', {}, check, create), progress, msg, preview, result, this.severalMail));
   }
 
@@ -647,6 +656,7 @@ export class AnnotatorsSection {
       onClick: async () => {
         clear(secret);
         const r = await this.area.write('user_reset_password', { annotator_id: u.annotator_id });
+        if (r.invite_token) this._remember(u.annotator_id, r); // on Firebase: an invitation, listed with the others
         secret.append(this._secret(u.annotator_id, r) || h('p.success', {}, 'The password has been reset.'));
       },
     });
@@ -732,7 +742,7 @@ export class AnnotatorsSection {
             field('Name', name), role, self ? h('p.caption', {}, 'You cannot take away your own administrator role; another administrator can.') : null,
             field('Notes', notes), h('div.btn-row', {}, save))),
         card('Account',
-          h('p.caption', {}, fb ? 'Resetting makes a new link that lets the person choose a new password.'
+          h('p.caption', {}, fb ? 'An invitation link lets the person choose their own password, once. Resetting makes one too (for 14 days), or for an administrator Firebase\'s own link, which lasts an hour; the old password works until the new one is chosen.'
             : 'An invitation link lets the person choose their own password, once; resetting makes a new temporary password instead. Either way the old password stops working when the new one is used or given.'),
           h('div.btn-row', {}, invite, reset, toggle), secret, this.detailMail,
           h('h3', {}, 'Training programme'),

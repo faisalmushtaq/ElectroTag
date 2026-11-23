@@ -77,7 +77,7 @@ const PACE_MIN_DAYS = 3;
 /** What a person is told when an invitation link cannot be used (electrotag/web/service.py, INVITE_PROBLEMS). */
 const INVITE_PROBLEMS = {
   unknown: [404, 'This invitation link is not known to the study. It may have been replaced by a newer link or withdrawn. To get a new link, contact the study team who invited you, for example by replying to the email that brought you this one.'],
-  used: [409, 'This invitation link has been used already. Sign in with your annotator ID and the password you chose, or ask the study team for a new link.'],
+  used: [409, 'This invitation link has been used already. Sign in with the password you chose, or ask the study team for a new link.'],
   expired: [409, 'This invitation link has expired. To get a new link, contact the study team who invited you, for example by replying to the email that brought you this one.'],
 };
 /** Why an administrator's account is not given an invitation link (electrotag/web/admin.py, ADMIN_NOT_INVITED). */

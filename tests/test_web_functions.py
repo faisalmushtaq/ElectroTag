@@ -95,6 +95,33 @@ def test_callers_must_be_signed_in_members_of_the_study(main) -> None:
     assert me["annotator_id"] == "A01" and me["study"]["study_id"] == "demo"
 
 
+def test_an_invitation_link_is_checked_and_accepted_without_signing_in(main) -> None:
+    """et_invite (docs/api.md, "Invitations"): the link's token is the proof, so nobody is signed in; "check"
+    says whose invitation it is and "accept" sets the password and answers the email address to sign in with."""
+    svc = main.service_for("demo")
+    token = svc.store.create_invitation("A01", days=14, by="ADMIN")["invite_token"]
+    info = call(main, "et_invite", {"study": "demo", "step": "check", "token": token}, None)
+    assert info["annotator_id"] == "A01" and info["expires_at"]
+    with pytest.raises(https_fn.HttpsError) as e:
+        call(main, "et_invite", {"study": "demo", "step": "accept", "token": token, "password": "short"}, None)
+    assert e.value.details["error"] == "bad_password"
+    out = call(main, "et_invite", {"study": "demo", "step": "accept", "token": token,
+                                   "password": "a-chosen-password"}, None)
+    assert out["annotator_id"] == "A01" and "email" in out
+    assert svc.store.db.authenticate("A01", "a-chosen-password") is not None
+    with pytest.raises(https_fn.HttpsError) as e:
+        call(main, "et_invite", {"study": "demo", "step": "check", "token": token}, None)
+    assert e.value.details["error"] == "invite_used"
+    with pytest.raises(https_fn.HttpsError) as e:
+        call(main, "et_invite", {"study": "demo", "step": "check", "token": "x" * 43}, None)
+    assert e.value.details["error"] == "invite_unknown"
+    for bad in ({"step": "check", "token": token}, {"study": "demo", "step": "other", "token": token}):
+        with pytest.raises(https_fn.HttpsError) as e:
+            call(main, "et_invite", bad, None)
+        assert e.value.code.value == "invalid-argument"
+    assert call(main, "et_invite", {"warm": True}, None)["warm"] is True
+
+
 def test_a_warm_up_call_starts_an_instance_and_reads_nothing(main, monkeypatch: pytest.MonkeyPatch) -> None:
     """The sign-in page sends {"warm": true} to the first functions of a sign-in (js/api/firebase.js, warm): it
     is answered before any sign-in check and never reaches a study; any other key makes it an ordinary call."""

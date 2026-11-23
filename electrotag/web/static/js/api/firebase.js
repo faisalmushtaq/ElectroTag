@@ -168,8 +168,20 @@ export class FirebaseBackend {
 
   get isDemo() { return false; }
 
-  /** Invitations on Firebase are Firebase Authentication's own links, not ?invite= links. */
-  get acceptsInvites() { return false; }
+  /** A study on Firebase takes private invitation links (?study=<id>&invite=<token>, docs/api.md). */
+  get acceptsInvites() { return true; }
+
+  /** et_invite, step "check": whose invitation a link's token is (no sign-in; a read, so asked again once). */
+  inviteCheck(token) { return this._call('et_invite', { step: 'check', token }, { retry: true }); }
+
+  /**
+   * et_invite, step "accept": the study sets the chosen password (never repeated by itself), then the
+   * person signs in with their email address and that password, as on the sign-in page.
+   */
+  async inviteAccept(token, password) {
+    const r = await this._call('et_invite', { step: 'accept', token, password });
+    return this.login(r.email, password);
+  }
 
   get server() { return ''; }
 

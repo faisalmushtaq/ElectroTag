@@ -283,8 +283,7 @@ always use the two-step download. Attaching a link to each registered recording,
 it without the annotator pasting anything, is the natural next step: `js/data/fetch_links.js`
 already takes a list of files and their links. The study default for channel colours
 (`display.channel_colours`) is set in Study settings. `electrotag-activity` does not
-yet put the time paused (`paused_s`, in the interaction log) in its tables. A Firebase invitation
-shows no expiry date, because Firebase does not give one. Keeping recordings on an iPad uses the
+yet put the time paused (`paused_s`, in the interaction log) in its tables. Keeping recordings on an iPad uses the
 faster storage from iPadOS 26 and the browser's database before it; check both on a real iPad. Two tabs that keep the same
 recording at the same moment can both write its files; on one heavily loaded test run the first
 tab read the copy back while the second was still writing and called it incomplete (it then

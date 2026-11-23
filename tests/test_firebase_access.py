@@ -73,7 +73,7 @@ def test_the_report_lists_closed_functions_with_the_command_that_opens_each():
     states = {n: access.OPEN for n in access.FUNCTION_NAMES}
     states["et_me"] = states["et_assignments"] = access.CLOSED
     text = access.report("my-eeg-study", states)
-    assert "24 open to the application" in text
+    assert "25 open to the application" in text
     assert "2 closed" in text and "et_me, et_assignments" in text
     for name in ("et_me", "et_assignments"):
         assert (f"gcloud functions add-invoker-policy-binding {name} --region=europe-west2 --member=allUsers "
@@ -84,7 +84,7 @@ def test_the_report_lists_closed_functions_with_the_command_that_opens_each():
 
 def test_the_report_of_a_healthy_project_says_so():
     text = access.report("p", {n: access.OPEN for n in access.FUNCTION_NAMES})
-    assert "26 open" in text and "Every function is open" in text and "gcloud" not in text
+    assert "27 open" in text and "Every function is open" in text and "gcloud" not in text
 
 
 def test_check_functions_asks_every_function_once():

@@ -15,6 +15,7 @@ import subprocess
 import sys
 import time
 import uuid
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -729,22 +730,65 @@ def test_accounts_with_firebase_authentication(study: str) -> None:
 
 
 def test_invitations_and_stats_on_firebase(study: str) -> None:
+    """The study's own invitation links on Firebase, as on the study server: a token lasting the days asked
+    for, checked and accepted on the application's welcome page (the password set in Firebase
+    Authentication), replaced by a newer link, withdrawn, expired, and made by Reset the password."""
     svc = firebase_service(study)
     email = f"a08-{study}@example.org"
-    out = admin_ok(svc, "user_add", {"annotator_id": "A08", "email": email, "invite": True})
-    assert out["temporary_password"] is None and "oobCode" in out["invite_link"] and out["invite_token"] is None
+    out = admin_ok(svc, "user_add", {"annotator_id": "A08", "email": email, "invite": True, "expires_days": 30})
+    assert out["temporary_password"] is None and out["invite_link"] is None and len(out["invite_token"]) > 30
+    assert out["expires_at"][:10] == (datetime.now().astimezone() + timedelta(days=30)).date().isoformat()
     states = {u["annotator_id"]: u["invitation"] for u in admin_ok(svc, "users_list")["users"]}
-    assert states["A08"]["state"] == "invited" and states["A08"]["expires_at"] is None
-    again = admin_ok(svc, "user_invite", {"annotator_id": "A08"})
-    assert "oobCode" in again["invite_link"] and again["invitation"]["state"] == "invited"
-    choose_password(again["invite_link"], "an-invited-password")
+    assert states["A08"]["state"] == "invited" and states["A08"]["expires_at"] == out["expires_at"]
+    first = out["invite_token"]
+    info = svc.invite_check({"token": first})
+    assert (info["annotator_id"], info["email"], info["expires_at"]) == ("A08", email, out["expires_at"])
+    # a newer link replaces it
+    again = admin_ok(svc, "user_invite", {"annotator_id": "A08", "expires_days": 7})
+    assert again["invite_link"] is None and again["invitation"]["state"] == "invited"
+    with pytest.raises(ApiError) as e:
+        svc.invite_check({"token": first})
+    assert e.value.code == "invite_unknown"
+    with pytest.raises(ApiError) as e:
+        svc.invite_accept({"token": again["invite_token"], "password": "short"})
+    assert e.value.code == "bad_password"
+    user = svc.invite_accept({"token": again["invite_token"], "password": "an-invited-password"})
+    assert user.annotator_id == "A08" and svc.store.account_email("A08") == email
     sign_in(email, "an-invited-password")
-    # A Firebase link cannot be withdrawn; an account without an email address gets none.
-    assert admin_err(svc, "user_invite_revoke", {"annotator_id": "A08"}).code == "cannot_revoke"
+    with pytest.raises(ApiError) as e:
+        svc.invite_accept({"token": again["invite_token"], "password": "another-password"})
+    assert e.value.code == "invite_used"
+    assert {u["annotator_id"]: u["invitation"] for u in admin_ok(svc, "users_list")["users"]}["A08"]["state"] == \
+        "accepted"
+    # withdrawn: the link stops working at once
+    third = admin_ok(svc, "user_invite", {"annotator_id": "A08"})
+    assert admin_ok(svc, "user_invite_revoke", {"annotator_id": "A08"})["invitation"]["state"] == "revoked"
+    assert admin_err(svc, "user_invite_revoke", {"annotator_id": "A08"}).code == "no_invitation"
+    with pytest.raises(ApiError) as e:
+        svc.invite_check({"token": third["invite_token"]})
+    assert e.value.code == "invite_unknown"
+    # past its expiry
+    fourth = admin_ok(svc, "user_invite", {"annotator_id": "A08"})
+    svc.store.doc.collection("users").document("A08").set({"invite": {"expires_epoch": time.time() - 1}}, merge=True)
+    with pytest.raises(ApiError) as e:
+        svc.invite_check({"token": fourth["invite_token"]})
+    assert e.value.code == "invite_expired"
+    # Reset the password makes an invitation for an annotator (an administrator keeps Firebase's own link)
+    reset = admin_ok(svc, "user_reset_password", {"annotator_id": "A08"})
+    assert reset["invite_link"] is None and reset["invite_token"] and reset["invitation"]["state"] == "invited"
+    svc.invite_accept({"token": reset["invite_token"], "password": "a-reset-password"})
+    sign_in(email, "a-reset-password")
+    # switched off: no new link, and an open one stops working
+    later = admin_ok(svc, "user_invite", {"annotator_id": "A08"})
     admin_ok(svc, "user_update", {"annotator_id": "A08", "status": "disabled"})
     assert admin_err(svc, "user_invite", {"annotator_id": "A08"}).code == "disabled"
-    log = admin_ok(svc, "audit", {"limit": 10})["entries"]
-    assert "user_invite" in {e["op"] for e in log} and "oobCode" not in json.dumps(log)
+    with pytest.raises(ApiError) as e:
+        svc.invite_check({"token": later["invite_token"]})
+    assert e.value.code == "invite_unknown"
+    log = admin_ok(svc, "audit", {"limit": 20})["entries"]
+    assert {"user_invite", "user_invite_revoke", "user_reset_password"} <= {e["op"] for e in log}
+    assert all(t not in json.dumps(log) for t in (first, again["invite_token"], reset["invite_token"]))
+    assert "an-invited-password" not in json.dumps(log)
     stats = admin_ok(svc, "stats")
     assert len(stats["days"]) == 30 and {"assigned", "done", "projection"} <= set(stats["totals"])
     assert "A08" in {p["annotator_id"] for p in stats["annotators"]}
@@ -914,6 +958,19 @@ def test_admin_and_quiz_callables(study: str) -> None:
     assert "oobCode" in body["result"]["invite_link"], body
     choose_password(body["result"]["invite_link"], "a-seventh-password")
     a07 = sign_in(email, "a-seventh-password")
+    # an invitation link through et_invite, with nobody signed in: whose it is, then the password chosen
+    email9 = f"a09-{study}@example.org"
+    _, body = callable_("et_admin", {"study": study, "op": "user_add", "annotator_id": "A09", "email": email9,
+                                     "invite": True, "expires_days": 7}, admin)
+    invite = body["result"]["invite_token"]
+    _, body = callable_("et_invite", {"study": study, "step": "check", "token": invite}, None)
+    assert body["result"]["annotator_id"] == "A09" and body["result"]["email"] == email9, body
+    _, body = callable_("et_invite", {"study": study, "step": "accept", "token": invite,
+                                      "password": "a-ninth-password"}, None)
+    assert body["result"] == {"annotator_id": "A09", "email": email9}, body
+    sign_in(email9, "a-ninth-password")
+    _, body = callable_("et_invite", {"study": study, "step": "check", "token": invite}, None)
+    assert body["error"]["details"]["error"] == "invite_used", body
     _, body = callable_("et_me", {"study": study}, a07)
     assert body["result"]["annotator_id"] == "A07" and body["result"]["quizzes"] == []
     # the sign-up questionnaire first, through its function, before the quiz opens

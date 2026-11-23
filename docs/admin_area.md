@@ -195,8 +195,9 @@ To add someone, use Add an account below the list: give their annotator ID (up t
 hyphens or underscores, as the study's records name them; it cannot be changed later), their name if
 you like, their email address and their roles: Annotator, Expert and Administrator, as many as
 apply (an expert who also annotates has both). On a study
-on Firebase people sign in with their email address, so it is needed, and the study answers with an
-invitation link that lets the person choose their own password. On a study server the person signs
+on Firebase people sign in with their email address, so it is needed, and the study answers with a
+private invitation link, lasting 14 days, that lets the person choose their own password (an
+administrator gets Firebase's own link, which lasts an hour). On a study server the person signs
 in with their annotator ID, and First sign-in chooses how they get in: a temporary password that
 the study makes, a private invitation link, or a password of at least eight characters that you
 choose; the line under First sign-in says what the choice does. An administrator is always given a
@@ -237,17 +238,20 @@ annotate on; Open in my email then starts a new message in your own email
 program, ready to send, and nothing is sent from the study itself. New link makes another link and
 Withdraw stops the open one at once. The page builds each link from its own address, so a link made
 on the study server's own page opens that page; when the application is served from another site,
-the link also names the study server. On Firebase the link comes from Firebase Authentication,
-which decides how long it lasts; it cannot be withdrawn, but switching the account off stops the
-person signing in.
+the link also names the study server. On Firebase the links work in the same way and last as long
+as New links last says; the link also names the study, and the welcome page shows the email address
+the person signs in with. Reset the password on Firebase makes such a link too, lasting 14 days,
+for an annotator or an expert.
 
-Every new link, and every link made by Reset the password on Firebase, comes with a warning of its
-time limit beside it. A link from the study server stops working on its expiry date. Firebase stops
-its links working an hour after they are made, a limit Firebase sets and does not give with the
-link, so the warning gives the time of day, about an hour from when the link was made, and asks you
-to send it at once; the email from Email the link then asks the person to open it as soon as it
-arrives. When several links are made together the warning gives the earliest limit among them. A
-link that has run out does nothing harmful: make a new one.
+Every new link comes with a warning of its time limit beside it, giving the date it stops working.
+An administrator on Firebase is the exception: Firebase Authentication makes their link to choose a
+password, and Firebase stops it working an hour after it is made, a limit Firebase sets and does
+not give with the link. For that link the warning gives the time of day, about an hour from when
+it was made, and asks you to send it at once, and the email from Email the link asks the person to
+open it as soon as it arrives. When several links are made together the warning gives the earliest
+limit among them. A link that has run out does nothing harmful: make a new one. On Firebase a
+person whose link has run out can also choose Forgot password? on the sign-in page, which emails
+them a link of Firebase's own.
 
 ### Adding several people
 

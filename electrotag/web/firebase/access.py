@@ -26,7 +26,7 @@ FUNCTION_NAMES: tuple[str, ...] = (
     "et_guided_get", "et_guided_check", "et_guided_continue", "et_guided_show_me", "et_visit_open",
     "et_visit_events", "et_visit_close", "et_admin_progress", "et_admin", "et_quiz", "et_expert",
     "et_my_feedback", "et_training_stage", "et_training_snippets", "et_achievements", "et_questionnaire",
-    "et_problem_report", "et_my_reviews", "et_my_results",
+    "et_problem_report", "et_my_reviews", "et_my_results", "et_invite",
 )
 
 OPEN, CLOSED, MISSING = "open", "closed", "missing"
