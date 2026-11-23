@@ -5,6 +5,15 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Invitation links on Firebase now last as long as the administrator chooses (New links last: 7, 14,
+30 or 90 days, 14 unless chosen) instead of Firebase's hour. They are the study's own private links,
+as on a study server: the person opens the welcome page, sees the email address they sign in with,
+chooses a password there (through the new function `et_invite`) and is signed in straight away. On
+Firebase a link can now be withdrawn, the Invitations tab shows each link's expiry date, and Reset
+the password makes such a link for an annotator or an expert. An administrator's link is still
+Firebase's own, which lasts an hour. A person whose link has run out is pointed to Forgot password?
+on the sign-in page. Deploy the functions to bring in `et_invite`.
+
 Signing in to a study on Firebase is quicker, most of all the first sign-in after a quiet spell. The study's
 functions are started while the sign-in form is filled in, the Firebase library downloads sooner, the assignments are
 asked for together with the account's details and the visit opens while they are read, and the code of the first page

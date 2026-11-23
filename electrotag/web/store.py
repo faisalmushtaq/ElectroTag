@@ -436,6 +436,11 @@ class Store(ABC):
         """Set the password from a valid invitation and end it (``POST /invite/accept``)."""
         raise AccountProblem("not_offered", "This study does not accept invitation links.", 404)
 
+    def account_email(self, annotator_id: str) -> str:
+        """The email address of an account ('' with none): on Firebase, what the person signs in with."""
+        aid = str(annotator_id or "").strip().upper()
+        return next((str(r.get("email") or "") for r in self.user_records() if r["annotator_id"] == aid), "")
+
     @abstractmethod
     def assignments(self, annotator_id: str | None = None) -> list[Assignment]: ...
 

@@ -53,6 +53,7 @@ import copy
 import hashlib
 import json
 import re
+import secrets
 import shutil
 import tempfile
 import threading
@@ -181,6 +182,20 @@ def _check_roles(roles: Any, role: str | None) -> tuple[str, ...]:
         raise AccountProblem("invalid_user", f"The role must be one of {', '.join(ROLES)}", 400)
     return parse_roles(given)
 
+
+
+def _invite_state(d: dict[str, Any]) -> str:
+    """The state of an account's latest invitation (``invite``): invited, accepted, expired or revoked. A
+    link made by Firebase Authentication before the study made its own has no ``state``: it counts as
+    accepted once the person has signed in after it."""
+    inv = d.get("invite") if isinstance(d.get("invite"), dict) else {}
+    state = inv.get("state")
+    if not state:
+        seen = str(d.get("last_seen") or "")
+        return "accepted" if seen and seen >= str(inv.get("invited_at") or "") else "invited"
+    if state == "invited" and float(inv.get("expires_epoch") or 0) < time.time():
+        return "expired"
+    return str(state)
 
 class FirestoreStore(Store):
     kind = "firestore"
@@ -660,17 +675,27 @@ class FirestoreStore(Store):
             ref.set(changes, merge=True)
 
     def reset_password(self, annotator_id: str) -> Credentials:
+        """An invitation (the study's own link, lasting INVITE_DAYS) for an annotator or expert; an
+        administrator, whom an invitation link must never sign in, gets Firebase Authentication's link."""
+        from electrotag.web.accounts import INVITE_DAYS
         from electrotag.web.firebase import password_link
 
-        _ref, d = self._user_doc(annotator_id)
+        ref, d = self._user_doc(annotator_id)
         if not d.get("email"):
             raise AccountProblem("no_email", f"{annotator_id} has no email address, so no link can be made")
-        return {"invite_link": password_link(self.auth_app, d["email"]), "temporary_password": None}
+        if "admin" in _roles(d):
+            return {"invite_link": password_link(self.auth_app, d["email"]), "temporary_password": None}
+        inv = self.create_invitation(ref.id, days=INVITE_DAYS, by="")
+        return {"invite_link": None, "temporary_password": None, "invite_token": inv["invite_token"],
+                "expires_at": inv["expires_at"]}
 
     def create_invitation(self, annotator_id: str, *, days: float, by: str) -> Invitation:
-        """A Firebase Authentication link with which the person chooses a password; its expiry is
-        Firebase's own, so none is given."""
-        from electrotag.web.firebase import password_link
+        """A private invitation, as on the study server: a token the browser makes a ``?invite=`` link
+        from, kept as its fingerprint with its expiry on the account (``invite``), replacing any earlier
+        one. The person chooses their password on the application's welcome page (accept_invitation)."""
+        from datetime import timedelta
+
+        from electrotag.web.accounts import INVITE_MAX_DAYS, token_hash
 
         ref, d = self._user_doc(annotator_id)
         if d.get("disabled"):
@@ -678,27 +703,95 @@ class FirestoreStore(Store):
                                  "them")
         if not d.get("email"):
             raise AccountProblem("no_email", f"{ref.id} has no email address, so no link can be made")
-        link = password_link(self.auth_app, d["email"])
-        ref.set({"invite": {"invited_at": now_local_iso(), "by": by}}, merge=True)
-        return {"invite_token": None, "invite_link": link, "expires_at": None}
+        if not 0 < days <= INVITE_MAX_DAYS:
+            raise AccountProblem("invalid_days", f"An invitation lasts from 1 to {INVITE_MAX_DAYS} days", 400)
+        token = secrets.token_urlsafe(32)
+        expires = (datetime.now().astimezone().replace(microsecond=0) + timedelta(days=days)).isoformat(
+            timespec="milliseconds")
+        ref.set({"invite": {"invited_at": now_local_iso(), "by": by, "token_hash": token_hash(token),
+                            "state": "invited", "expires_at": expires, "expires_epoch": time.time() + days * 86400,
+                            "ended_at": ""}}, merge=True)
+        return {"invite_token": token, "invite_link": None, "expires_at": expires}
 
     def revoke_invitation(self, annotator_id: str) -> bool:
-        raise AccountProblem("cannot_revoke", "On Firebase an invitation link cannot be withdrawn once it is made. "
-                             "Switch the account off to stop the person signing in.", 422)
+        ref, d = self._user_doc(annotator_id)
+        inv = d.get("invite")
+        if not isinstance(inv, dict) or _invite_state(d) != "invited" or not inv.get("token_hash"):
+            return False
+        ref.set({"invite": {"state": "revoked", "token_hash": "", "ended_at": now_local_iso()}}, merge=True)
+        return True
 
     def invitations(self) -> dict[str, dict[str, Any]]:
-        """Invited when a link was made; accepted once the person has signed in after it."""
+        """Each account's latest invitation, as on the study server. A link made by Firebase Authentication
+        before the study made its own (no ``state``) is invited until the person signs in after it."""
         out = {}
         for s in self.doc.collection("users").stream():
             d = s.to_dict() or {}
             inv = d.get("invite")
             if not isinstance(inv, dict) or not inv.get("invited_at"):
                 continue
+            state = _invite_state(d)
             seen = str(d.get("last_seen") or "")
-            accepted = bool(seen) and seen >= str(inv["invited_at"])
-            out[s.id] = {"state": "accepted" if accepted else "invited", "invited_at": inv["invited_at"],
-                         "expires_at": None, "ended_at": seen if accepted else None, "by": inv.get("by", "")}
+            ended = inv.get("ended_at") or (seen if state == "accepted" and not inv.get("state") else None)
+            out[s.id] = {"state": state, "invited_at": inv["invited_at"], "expires_at": inv.get("expires_at"),
+                         "ended_at": ended or None, "by": inv.get("by", "")}
         return out
+
+    def _invitation_doc(self, token: Any) -> tuple[Any, dict[str, Any]] | None:
+        """The account whose open or used invitation this token is (a study's own link), or None."""
+        from google.cloud.firestore_v1.base_query import FieldFilter
+
+        from electrotag.web.accounts import token_hash
+
+        if not isinstance(token, str) or not 20 <= len(token) <= 200:
+            return None
+        for snap in (self.doc.collection("users").where(filter=FieldFilter("invite.token_hash", "==",
+                                                                             token_hash(token))).limit(1).stream()):
+            d = snap.to_dict() or {}
+            if d.get("disabled") or "admin" in _roles(d):
+                return None
+            return snap.reference, d
+        return None
+
+    def invitation_for_token(self, token: str) -> dict[str, Any] | None:
+        """The invitation of a token with its account (``annotator_id``, ``display_name``, ``state``,
+        ``expires_at``, and ``email``, with which the person signs in on Firebase)."""
+        found = self._invitation_doc(token)
+        if found is None:
+            return None
+        ref, d = found
+        return {"annotator_id": ref.id, "display_name": d.get("display_name", ""), "state": _invite_state(d),
+                "expires_at": d["invite"].get("expires_at"), "email": d.get("email", "")}
+
+    def accept_invitation(self, token: str, password: str) -> User:
+        """Set the person's Firebase Authentication password from a valid invitation and end it; the
+        browser then signs in with their email address and that password."""
+        from electrotag.web.accounts import MIN_PASSWORD
+        from electrotag.web.firebase import AuthProblem, set_password
+
+        if not isinstance(password, str) or len(password) < MIN_PASSWORD:
+            raise AccountProblem("bad_password", f"The password must have at least {MIN_PASSWORD} characters", 400)
+        found = self._invitation_doc(token)
+        if found is None:
+            raise AccountProblem("invite_unknown", "", 404)
+        ref, d = found
+        state = _invite_state(d)
+        if state != "invited":
+            reason = {"accepted": "used", "expired": "expired"}.get(state, "unknown")
+            raise AccountProblem(f"invite_{reason}", "", 404 if reason == "unknown" else 409)
+        if not d.get("uid"):
+            raise AccountProblem("invite_unknown", "", 404)
+        try:
+            set_password(self.auth_app, d["uid"], password)
+        except AuthProblem as exc:
+            raise AccountProblem("bad_password", exc.message, 400) from exc
+        ref.set({"invite": {"state": "accepted", "ended_at": now_local_iso()}}, merge=True)
+        roles = _roles(d)
+        return User(ref.id, d.get("display_name", ""), primary_role(roles), roles)
+
+    def account_email(self, annotator_id: str) -> str:
+        """The email address an account signs in with."""
+        return str(self._user_doc(annotator_id)[1].get("email") or "")
 
     def remove_account(self, annotator_id: str) -> None:
         from google.cloud.firestore_v1.base_query import FieldFilter

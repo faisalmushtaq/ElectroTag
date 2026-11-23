@@ -300,11 +300,35 @@ async function main() {
       await form.locator('input[type="email"]').fill('a07@example.org');
       await page.click('[data-log="user-add"]');
       await page.waitForSelector('.secret-value', { timeout: 60000 });
-      assert.match(await page.textContent('.secret-value'), /^https?:\/\//);
+      const link = await page.textContent('.secret-value');
+      // the study's own invitation link, naming the study, and lasting the days chosen (14 here)
+      assert.match(link, /^https?:\/\/.*[?&]study=[^&]+&invite=[A-Za-z0-9_-]{20,}$/);
+      assert.match(await page.innerText('.made-here .link-limit'), /This link stops working on /);
       await page.waitForSelector('tr[data-key="A07"]', { timeout: 60000 });
-      // Firebase's own link counts as an invitation, and Progress reads the study through the function.
+      // the link counts as an invitation, with its expiry, and Progress reads the study through the function
       await page.click('.admin-section[data-section="annotators"] [data-tab="invitations"]');
       await page.waitForFunction(() => /Invited on/.test(document.querySelector('[data-panel="invitations"] tr[data-key="A07"]')?.innerText || ''), null, { timeout: 60000 });
+      assert.ok(await page.isVisible('[data-panel="invitations"] [data-revoke="A07"]'), 'a Firebase invitation can be withdrawn');
+      assert.ok(await page.isVisible('[data-panel="invitations"] #invite-days'), 'and its lifetime chosen');
+
+      // A07 opens the link in another browser: the welcome card, the password chosen, and signed in.
+      const invited = await (await browser.newContext({ viewport: { width: 1280, height: 800 }, locale: 'en-GB' })).newPage();
+      invited.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`));
+      await invited.goto(link);
+      await invited.waitForSelector('.invite-card[data-invite="welcome"]', { timeout: 60000 });
+      assert.match(await invited.innerText('.invite-card'), /a07@example\.org/);
+      await invited.fill('#invite-password', 'a seventh password');
+      await invited.fill('#invite-password-again', 'a seventh password');
+      await invited.click('.invite-form button[type="submit"]');
+      await invited.waitForFunction(() => globalThis.ElectroTag && globalThis.ElectroTag.route && globalThis.ElectroTag.route !== 'signin', null, { timeout: 120000 });
+      assert.equal(await invited.evaluate(() => globalThis.ElectroTag.backend.signedIn), true);
+      // used once: the same link now leads to the sign-in
+      await invited.context().close();
+      const again = await (await browser.newContext({ locale: 'en-GB' })).newPage();
+      await again.goto(link);
+      await again.waitForSelector('.invite-card[data-invite="problem"]', { timeout: 60000 });
+      assert.match(await again.innerText('.invite-card'), /used already/);
+      await again.context().close();
       await go('Progress', 'admin-progress');
       await page.waitForSelector('.admin-section[data-section="progress"] .stat-tile', { timeout: 120000 });
       await page.waitForSelector('.admin-section[data-section="progress"] svg.chart-svg');

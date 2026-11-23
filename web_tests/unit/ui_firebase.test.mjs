@@ -57,6 +57,31 @@ test('sign-in with email and password; the annotator ID comes from the token cla
   assert.equal(b.signedIn, false);
 });
 
+test('an invitation link: et_invite checks it, then sets the password once, and the person signs in with their email', async () => {
+  let accepts = 0;
+  const { sdk, calls, state } = fakeSdk({ handlers: {
+    et_invite: (d) => {
+      if (d.step === 'check') return { annotator_id: 'A07', email: 'ann@example.org', study_name: 'Pilot', expires_at: '2026-12-07T09:00:00+00:00' };
+      accepts += 1;
+      if (accepts === 1) throw new FakeHttpsError('unavailable', 'unavailable', {});
+      return { annotator_id: 'A07', email: 'ann@example.org' };
+    },
+  } });
+  const b = await FirebaseBackend.create({ config: {}, study: 'pilot', sdk });
+  assert.equal(b.acceptsInvites, true);
+  const info = await b.inviteCheck('t'.repeat(43));
+  assert.equal(info.email, 'ann@example.org');
+  assert.deepEqual(calls.at(-1).data, { study: 'pilot', step: 'check', token: 't'.repeat(43) });
+  // setting the password is never repeated by itself
+  await assert.rejects(() => b.inviteAccept('t'.repeat(43), 'right'), (e) => e.code === 'network');
+  assert.equal(accepts, 1);
+  assert.equal(state.currentUser, null);
+  const who = await b.inviteAccept('t'.repeat(43), 'right');
+  assert.deepEqual(calls.at(-1).data, { study: 'pilot', step: 'accept', token: 't'.repeat(43), password: 'right' });
+  assert.equal(who.annotator_id, 'A07');
+  assert.equal(b.signedIn, true);
+});
+
 test('operations call et_<operation> in europe-west2 with the study and the same body', async () => {
   const { sdk, calls } = fakeSdk({ handlers: {
     et_me: () => ({ annotator_id: 'A07' }),

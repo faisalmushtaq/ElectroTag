@@ -1,7 +1,8 @@
 // The welcome of a private invitation link (?invite=<token>): the study asks whose link it is
 // (POST /invite/check), the person sees the study and their annotator ID and chooses a password
 // twice; the study sets it and signs them in (POST /invite/accept), so they land on their
-// recordings. The passwords are never logged: the interaction log skips password fields, and it
+// recordings. On Firebase (et_invite) the person signs in with their email address, which the card
+// shows in place of the annotator ID. The passwords are never logged: the interaction log skips password fields, and it
 // starts only after signing in.
 
 import { h } from '../ui/dom.js';
@@ -28,9 +29,14 @@ export function inviteView(app, token, { info = null, problem = '', code = '', r
       h('h1', {}, retry ? 'The invitation could not be checked' : 'This link cannot be used'),
       h('div.banner', { role: 'alert' }, h('p', {}, problem || 'The invitation could not be checked. Try again in a moment.')),
       h('div.btn-row', {}, again, h(`button.btn${retry || !used ? '' : '.primary'}`, { type: 'button', onclick: () => app.leaveInvite() }, 'Go to sign in')),
-      retry || used ? null : h('p.caption', {}, 'Go to sign in if you have already chosen a password with an earlier link.'));
+      retry || used ? null : h('p.caption', {}, 'Go to sign in if you have already chosen a password with an earlier link.'),
+      // Firebase emails a new link itself: Forgot password? on the sign-in page
+      retry || !(app.backend && app.backend.signInWith === 'email') ? null
+        : h('p.caption.invite-forgot', {}, 'Or go to sign in, enter your email address and choose Forgot password? to be emailed a link to choose your password.'));
     return signinFrame(app, card);
   }
+  // on Firebase the person signs in with the email address the check gives
+  const byEmail = Boolean(info.email) && app.backend && app.backend.signInWith === 'email';
   const pw = h('input.field', { type: 'password', id: 'invite-password', name: 'new-password', autocomplete: 'new-password', required: true, minlength: '8' });
   const again = h('input.field', { type: 'password', id: 'invite-password-again', name: 'new-password-again', autocomplete: 'new-password', required: true });
   const err = h('p.error', { role: 'alert', hidden: true });
@@ -56,7 +62,7 @@ export function inviteView(app, token, { info = null, problem = '', code = '', r
     },
   },
   // For password managers: the account the new password belongs to.
-  h('input', { type: 'text', name: 'username', autocomplete: 'username', value: info.annotator_id, hidden: true, readonly: true, tabindex: '-1', 'aria-hidden': 'true' }),
+  h('input', { type: 'text', name: 'username', autocomplete: 'username', value: byEmail ? info.email : info.annotator_id, hidden: true, readonly: true, tabindex: '-1', 'aria-hidden': 'true' }),
   h('label.form-label', { for: 'invite-password' }, 'Choose a password'), pw,
   h('p.caption', {}, 'At least 8 characters. A short sentence is easy to remember and hard to guess.'),
   h('label.form-label', { for: 'invite-password-again' }, 'Type it again'), again,
@@ -64,13 +70,16 @@ export function inviteView(app, token, { info = null, problem = '', code = '', r
   const card = h('div.card.signin-card.invite-card', { 'data-invite': 'welcome' },
     h('h1', {}, 'Welcome'),
     h('p.subtitle', {}, `You are invited to take part in ${info.study_name || 'this study'}.`),
-    h('div.invite-id', {}, h('span.caption', {}, 'Your annotator ID'), h('span.invite-id-value', {}, info.annotator_id),
-      info.display_name ? h('span.caption', {}, info.display_name) : null),
-    h('p', {}, 'You sign in with this ID and the password you choose now. The link works once', info.expires_at ? `, until ${dateText(info.expires_at)}` : '', '.'),
+    byEmail
+      ? h('div.invite-id', {}, h('span.caption', {}, 'You sign in with'), h('span.invite-id-value', {}, info.email),
+        h('span.caption', {}, `Your annotator ID: ${info.annotator_id}${info.display_name ? ` · ${info.display_name}` : ''}`))
+      : h('div.invite-id', {}, h('span.caption', {}, 'Your annotator ID'), h('span.invite-id-value', {}, info.annotator_id),
+        info.display_name ? h('span.caption', {}, info.display_name) : null),
+    h('p', {}, `You sign in with ${byEmail ? 'this email address' : 'this ID'} and the password you choose now. The link works once`, info.expires_at ? `, until ${dateText(info.expires_at)}` : '', '.'),
     // On a phone (shown by app.css only there): told before the link is used up.
     h('div.note.phone-note.invite-phone', { role: 'note' },
       h('p', {}, h('b', {}, 'Annotating needs a tablet or a computer. '),
-        'You can choose your password here and then sign in on your tablet or computer with your annotator ID, ',
+        `You can choose your password here and then sign in on your tablet or computer with your ${byEmail ? 'email address' : 'annotator ID'}, `,
         'or open this link there instead: it works once.')),
     form);
   setTimeout(() => pw.focus(), 0);

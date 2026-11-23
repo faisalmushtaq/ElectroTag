@@ -582,7 +582,8 @@ published `config.json`).
 
 Firestore holds, for each study: the registrations of the recordings (checksums, timing, channel
 names, events; no EEG), the training sets' expert annotations, the annotators' IDs, names, email
-addresses, roles and the administrators' notes about them, their answers to the sign-up
+addresses, roles and the administrators' notes about them, the fingerprint (a SHA-256 hash) and
+expiry of each person's latest invitation link, their answers to the sign-up
 questionnaire (by annotator ID, with every earlier set) and, kept apart from them, the full name and
 contact details they gave (collections `questionnaires` and `contacts`), their drafts, their saved
 results, training progress and quiz answers, the interaction logs (times, clicks, keys and what was on

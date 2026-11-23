@@ -141,6 +141,16 @@ def password_link(app: Any, email: str) -> str:
     return auth.generate_password_reset_link(email, app=app)
 
 
+def set_password(app: Any, uid: str, password: str) -> None:
+    """Set the person's password (an invitation accepted on the application's welcome page)."""
+    from firebase_admin import auth
+
+    try:
+        auth.update_user(uid, password=password, app=app)
+    except ValueError as exc:
+        raise AuthProblem("bad_password", f"Firebase refused the password: {exc}") from exc
+
+
 def set_roles(app: Any, uid: str, annotator_id: str, study: str, roles: str | list[str] | tuple[str, ...]) -> None:
     """Write a person's roles in a study into their claims (other studies kept)."""
     from firebase_admin import auth

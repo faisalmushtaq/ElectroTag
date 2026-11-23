@@ -274,3 +274,44 @@ def et_my_reviews(req: https_fn.CallableRequest) -> Any:
 @https_fn.on_call()
 def et_my_results(req: https_fn.CallableRequest) -> Any:
     return handle("my_results", req)
+
+
+def handle_invite(req: https_fn.CallableRequest) -> Any:
+    """A private invitation link (no sign-in: the link's token is the proof). ``step`` "check" says whose
+    invitation it is (as ``POST /invite/check``); "accept" sets the chosen password (as ``POST
+    /invite/accept``) and answers the email address with which the browser then signs in."""
+    from electrotag.web.errors import ApiError
+    from electrotag.web.store import StoreError
+
+    data = req.data if isinstance(req.data, dict) else {}
+    if is_warm_up(data):
+        return warm_up()
+    study = data.get("study")
+    if not isinstance(study, str) or not STUDY_RE.match(study):
+        raise _fail("invalid-argument", "bad_request", "The request must name the study (\"study\")")
+    step = data.get("step")
+    if step not in ("check", "accept"):
+        raise _fail("invalid-argument", "bad_request", "step must be check or accept")
+    body = {k: v for k, v in data.items() if k in ("token", "password")}
+    try:
+        svc = service_for(study)
+        if step == "check":
+            return svc.invite_check(body)
+        user = svc.invite_accept(body)
+        return {"annotator_id": user.annotator_id, "email": svc.store.account_email(user.annotator_id)}
+    except ApiError as exc:
+        raise https_fn.HttpsError(https_fn.FunctionsErrorCode(exc.firebase_code), exc.message, exc.body()) from exc
+    except StoreError as exc:
+        raise _fail("not-found", "no_study", str(exc)) from exc
+    except https_fn.HttpsError:
+        raise
+    except Exception as exc:  # noqa: BLE001 - never send a stack trace to the browser
+        log.exception("Unexpected error in an invitation for study %s", study)
+        raise _fail("internal", "internal", "Something went wrong on the server. Please try again; if it happens "
+                    "again, tell the study administrator.") from exc
+
+
+# A private invitation link: whose it is, then the password chosen with it (docs/api.md, "Invitations").
+@https_fn.on_call()
+def et_invite(req: https_fn.CallableRequest) -> Any:
+    return handle_invite(req)

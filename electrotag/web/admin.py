@@ -926,9 +926,16 @@ class Admin:
         aid = _aid(body.get("annotator_id"))
         self._user_record(aid)
         creds = self.store.reset_password(aid)
-        how = "a link to choose a new password" if creds.get("invite_link") else "a new temporary password"
-        self._audit(user, "user_reset_password", f"Gave {aid} {how}", annotator_id=aid)
-        return {"invite_link": creds.get("invite_link"), "temporary_password": creds.get("temporary_password")}
+        until = f" (until {creds['expires_at'][:10]})" if creds.get("expires_at") else ""
+        how = (f"a link to choose a new password{until}" if creds.get("invite_link") or creds.get("invite_token")
+               else "a new temporary password")
+        self._audit(user, "user_reset_password", f"Gave {aid} {how}", annotator_id=aid,
+                    expires_at=creds.get("expires_at"))
+        out = {"invite_link": creds.get("invite_link"), "temporary_password": creds.get("temporary_password")}
+        if creds.get("invite_token"):  # on Firebase: an invitation, as user_invite makes
+            out.update(invite_token=creds["invite_token"], expires_at=creds.get("expires_at"),
+                       invitation=invitation_out(self.store.invitations().get(aid)))
+        return out
 
     def op_user_remove(self, user: User, body: dict[str, Any]) -> dict[str, Any]:
         aid = _aid(body.get("annotator_id"))
