@@ -222,7 +222,9 @@ export class App {
   }
 
   async signIn(id, password) {
-    await this.backend.login(id, password);
+    const s = (await this.backend.login(id, password)) || {};
+    // the first view's code comes while GET /me is asked
+    loadParts(...((s.roles || [s.role]).includes('admin') ? ['admin', 'adminModel'] : ['home'])).catch(() => {});
     try {
       await this._afterSignIn({ quiet: false });
     } catch (exc) {
@@ -233,11 +235,16 @@ export class App {
   }
 
   async _afterSignIn({ quiet }) {
-    this.me = await this.backend.me();
+    // asked with GET /me, which they do not need (read in loadAssignments)
+    this._assignmentsAsked = this.backend.assignments();
+    this._assignmentsAsked.catch(() => {});
+    try { this.me = await this.backend.me(); } catch (exc) { this._assignmentsAsked = null; throw exc; }
     this.catalogue = new Catalogue(this.me.catalogue);
     // The first view's part is fetched while the visit and the assignments are asked for.
     const first = this.isAdmin ? ['admin', 'adminModel'] : this.inTraining() ? ['training'] : ['home'];
     loadParts(...first).catch(() => {}); // tried again, with a message, when the view is shown
+    const assignments = this.loadAssignments(); // read while the visit opens
+    assignments.catch(() => {});
     try {
       const visit = await this.backend.openVisit({
         client: { app: 'web', backend: this.backend.kind, user_agent: navigator.userAgent,
@@ -260,7 +267,7 @@ export class App {
       await showDialog({ title: 'Before you start', body: h('div', {}, h('p.dialog-text', {}, study.logging_notice)),
         buttons: [{ label: 'Continue', value: true, kind: 'primary' }], cancelValue: true, className: 'logging-notice' });
     }
-    await this.loadAssignments();
+    await assignments;
     // In idle time: the readers (for a study; the demonstration's examples need none) and the
     // annotation view, so that opening a recording does not wait for them. A part that fails here is
     // tried again when it is needed.
@@ -311,7 +318,9 @@ export class App {
   async loadAssignments() {
     const games = this.loadAchievements();
     const reviews = this.loadReviews();
-    try { this.assignments = await this.backend.assignments(); } catch (exc) {
+    const asked = this._assignmentsAsked || this.backend.assignments();
+    this._assignmentsAsked = null;
+    try { this.assignments = await asked; } catch (exc) {
       if (exc.status === 401) throw exc;
       this.assignments = { items: [], next: null };
     }

@@ -47,6 +47,13 @@ export function studyNeededError(claims) {
     : 'Your account is not part of a study yet. Ask your study team for the link to your study.');
 }
 
+/**
+ * The functions a sign-in calls first. warm() sends each a call of {warm: true} while the sign-in form is
+ * filled in, so that their instances have started (a function that has been quiet takes some seconds to
+ * start) by the time the password is sent. The functions answer it before any sign-in check and read nothing.
+ */
+export const WARM_FUNCTIONS = Object.freeze(['et_me', 'et_assignments', 'et_visit_open', 'et_my_reviews', 'et_achievements', 'et_admin']);
+
 export const FIREBASE_VERSION = '12.19.0';
 export const SDK_BASE = `https://www.gstatic.com/firebasejs/${FIREBASE_VERSION}/`;
 export const DEFAULT_REGION = 'europe-west2';
@@ -151,10 +158,11 @@ export class FirebaseBackend {
     this.health.emulators = true;
   }
 
-  static async create({ config, study, region, sdkBase, sdk = null, onUnauthorized = null, emulators = null }) {
+  static async create({ config, study, region, sdkBase, sdk = null, onUnauthorized = null, emulators = null, warm = false }) {
     const modules = sdk || await loadFirebaseSdk(sdkBase || SDK_BASE);
     const backend = new FirebaseBackend({ config, study, region, sdk: modules, onUnauthorized, emulators });
     await backend.ready();
+    if (warm && !backend.signedIn) backend.warm(); // the sign-in page comes next: the functions start while it is filled in
     return backend;
   }
 
@@ -166,6 +174,17 @@ export class FirebaseBackend {
   get server() { return ''; }
 
   get signedIn() { return Boolean(this.auth && this.auth.currentUser); }
+
+  /** Starts the first functions of a sign-in (WARM_FUNCTIONS), once per page; nothing waits for them. */
+  warm() {
+    if (this._warmed) return;
+    this._warmed = true;
+    for (const name of WARM_FUNCTIONS) {
+      try {
+        this.sdk.functions.httpsCallable(this.functions, name)({ warm: true }).catch(() => {});
+      } catch { /* the real call starts it then */ }
+    }
+  }
 
   /** Waits until Firebase knows whether someone is signed in (after a reload of the tab). */
   async ready() {

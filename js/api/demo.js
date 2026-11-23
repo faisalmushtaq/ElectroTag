@@ -493,6 +493,7 @@ export class DemoBackend {
 
   async assignments() {
     const aid = this._aid();
+    await this._trainingPart(); // the gate (_gate) is open until its rules are loaded, which GET /me need not have done
     if ((this._admin.s.settings.repeats || {}).enabled) this._rpm = await import('./demo_repeats.js');
     const items = this._workItems(aid);
     const nxt = this._nextItem(aid, items);
