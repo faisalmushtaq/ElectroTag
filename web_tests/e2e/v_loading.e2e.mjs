@@ -24,9 +24,10 @@ import { signIn, waitForRoute, openExample } from './helpers.mjs';
  * sandbox's copy of the default settings carries, brought the demonstration to 481 KB on 13 November 2026.
  * Signing in quickly (23 November 2026: the assignments asked for with GET /me, the first view's code fetched
  * from the roles of the sign-in's answer, and the Firebase SDK's download started before firebase.js arrives)
- * added about 1 KB to app.js and choose.js, so the study server's budget is 144 KB.
+ * added about 1 KB to app.js and choose.js, so the budgets are 144 KB on a study server and 483 KB in the
+ * demonstration (whose assignments now load the training path's rules themselves, as GET /me does).
  */
-const SIGNIN_BUDGET_KB = { server: 144, demo: 482 };
+const SIGNIN_BUDGET_KB = { server: 144, demo: 483 };
 
 /**
  * Modules that belong to later views and must not load with the sign-in page (the demonstration's
