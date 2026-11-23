@@ -143,7 +143,7 @@ export class App {
       await this.showInvite(invite);
       return;
     }
-    if (invite) session.remove(INVITE_KEY); // Firebase's invitations are its own links
+    if (invite) session.remove(INVITE_KEY); // a backend that takes no invitation links
     if (this.backend.signedIn) {
       try {
         await this._afterSignIn({ quiet: true });
