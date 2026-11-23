@@ -197,7 +197,7 @@ services start. Wait a few minutes and run the same `deploy` line again; the fun
 place are skipped when nothing in them has changed, and the missing ones are created.
 
 When it ends, the deployment prints the **Hosting URL**, `https://my-eeg-study.web.app`, where the
-application now lives. Check three things in the console. The **Functions** page lists ElectroTag's twenty-six functions, whose names start with `et_`, all in europe-west2;
+application now lives. Check three things in the console. The **Functions** page lists ElectroTag's twenty-seven functions, whose names start with `et_`, all in europe-west2;
 `et_admin`, which answers the admin area, has more memory and time than the others for the
 analyses, and `et_expert`, which answers the expert area, a little more than the rest for saving
 experts' corrections. **Firestore Database**, **Rules**, shows ElectroTag's rules, which deny all
@@ -209,7 +209,7 @@ Finally, check that every function is open to the application:
 electrotag web check-functions --firebase-project my-eeg-study
 ```
 
-The command asks each of the twenty-six functions from outside, as a browser does, and lists any
+The command asks each of the twenty-seven functions from outside, as a browser does, and lists any
 that Google turns away. Every function must be open to the public, because each one checks for
 itself who is signed in and what they may do. Firebase's tool opens a function when it creates it,
 and later deployments leave that setting as it is, so a function that was created while Google was

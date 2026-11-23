@@ -108,7 +108,7 @@ def test_an_invitation_link_is_checked_and_accepted_without_signing_in(main) -> 
     out = call(main, "et_invite", {"study": "demo", "step": "accept", "token": token,
                                    "password": "a-chosen-password"}, None)
     assert out["annotator_id"] == "A01" and "email" in out
-    assert svc.store.authenticate("A01", "a-chosen-password") is not None
+    assert svc.store.db.authenticate("A01", "a-chosen-password") is not None
     with pytest.raises(https_fn.HttpsError) as e:
         call(main, "et_invite", {"study": "demo", "step": "check", "token": token}, None)
     assert e.value.details["error"] == "invite_used"

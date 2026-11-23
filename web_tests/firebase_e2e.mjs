@@ -320,8 +320,13 @@ async function main() {
       await invited.fill('#invite-password', 'a seventh password');
       await invited.fill('#invite-password-again', 'a seventh password');
       await invited.click('.invite-form button[type="submit"]');
-      await invited.waitForFunction(() => globalThis.ElectroTag && globalThis.ElectroTag.route && globalThis.ElectroTag.route !== 'signin', null, { timeout: 120000 });
+      // signed in: the study's logging notice comes first (the application waits for it), then the first view
+      await invited.waitForFunction(() => Boolean(document.querySelector('.dialog.logging-notice'))
+        || (globalThis.ElectroTag && globalThis.ElectroTag.route !== 'signin'), null, { timeout: 120000 });
       assert.equal(await invited.evaluate(() => globalThis.ElectroTag.backend.signedIn), true);
+      const notice = invited.locator('.dialog.logging-notice button', { hasText: 'Continue' });
+      if (await notice.count()) await notice.click();
+      await invited.waitForFunction(() => globalThis.ElectroTag.route !== 'signin', null, { timeout: 60000 });
       // used once: the same link now leads to the sign-in
       await invited.context().close();
       const again = await (await browser.newContext({ locale: 'en-GB' })).newPage();
