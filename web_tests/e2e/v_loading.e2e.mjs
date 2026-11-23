@@ -22,8 +22,11 @@ import { signIn, waitForRoute, openExample } from './helpers.mjs';
  * page moved into its part); the guide, the files and the questionnaire's page load when used.
  * The questionnaire's two new default questions (density, and pre-processing with its tick boxes), which the
  * sandbox's copy of the default settings carries, brought the demonstration to 481 KB on 13 November 2026.
+ * Signing in quickly (23 November 2026: the assignments asked for with GET /me, the first view's code fetched
+ * from the roles of the sign-in's answer, and the Firebase SDK's download started before firebase.js arrives)
+ * added about 1 KB to app.js and choose.js, so the study server's budget is 144 KB.
  */
-const SIGNIN_BUDGET_KB = { server: 142, demo: 481 };
+const SIGNIN_BUDGET_KB = { server: 144, demo: 482 };
 
 /**
  * Modules that belong to later views and must not load with the sign-in page (the demonstration's

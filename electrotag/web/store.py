@@ -275,6 +275,17 @@ class Store(ABC):
         """Within the block, a store may answer repeated reads (manifests) from memory."""
         yield
 
+    @contextmanager
+    def reading(self) -> Iterator[None]:
+        """Within the block the request only reads (``StudyService.READ_ONLY``): a store may answer repeated
+        reads of one annotator's assignments and programme from memory."""
+        yield
+
+    def manifests_for(self, keys: list[tuple[str, str]]) -> dict[tuple[str, str], dict[str, Any] | None]:
+        """The manifests of several ``(scope, recording_id)`` at once (None for one not registered); a store
+        may read them together rather than one after another."""
+        return {k: self.manifest(*k) for k in dict.fromkeys(keys)}
+
     def recover_interrupted(self) -> list[dict[str, Any]]:
         """Finish or undo what an interrupted save left behind (``{"action", "message", ...}`` for each)."""
         return []

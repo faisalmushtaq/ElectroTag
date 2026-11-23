@@ -5,6 +5,13 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Signing in to a study on Firebase is quicker, most of all the first sign-in after a quiet spell. The study's
+functions are started while the sign-in form is filled in, the Firebase library downloads sooner, the assignments are
+asked for together with the account's details and the visit opens while they are read, and the code of the first page
+comes as soon as the password is accepted. The study reads the details of all of a person's recordings in one go
+rather than one after another. Deploy the functions and the application again
+(`npx firebase-tools deploy --only "functions,firestore,hosting"`) to have it.
+
 A link to choose a password now comes with a warning of when it stops working, wherever the admin
 area shows a new one (adding an account, a new invitation, Add several and the bulk New invitation
 links, and Reset the password on Firebase). On Firebase, whose links stop working an hour after

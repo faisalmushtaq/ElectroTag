@@ -95,6 +95,25 @@ def test_callers_must_be_signed_in_members_of_the_study(main) -> None:
     assert me["annotator_id"] == "A01" and me["study"]["study_id"] == "demo"
 
 
+def test_a_warm_up_call_starts_an_instance_and_reads_nothing(main, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The sign-in page sends {"warm": true} to the first functions of a sign-in (js/api/firebase.js, warm): it
+    is answered before any sign-in check and never reaches a study; any other key makes it an ordinary call."""
+    monkeypatch.setattr(main, "service_for", lambda study: pytest.fail("a warm-up call reached a study"))
+    opened: list[str] = []
+    import electrotag.web.firebase as fb
+
+    monkeypatch.setattr(fb, "firestore_client", lambda project: opened.append(project))
+    for name in ("et_me", "et_assignments", "et_visit_open", "et_my_reviews", "et_achievements", "et_admin"):
+        assert call(main, name, {"warm": True}, None) == {"warm": True}
+        assert call(main, name, {"warm": True, "study": "demo"}, None) == {"warm": True}
+    assert len(opened) == 12  # the Firestore client is opened (and kept by firebase_admin), nothing read
+    for data in ({"warm": "yes"}, {"warm": True, "op": "overview"}, {"warm": False, "study": "demo"}):
+        with pytest.raises(https_fn.HttpsError) as e:
+            call(main, "et_me", data, None)
+        assert e.value.code.value in ("invalid-argument", "unauthenticated")
+    assert main.is_warm_up({"warm": True}) and not main.is_warm_up([True]) and not main.is_warm_up({})
+
+
 def test_the_same_json_as_the_server(main, template: Path) -> None:
     recordings = template / "recordings"
     a = call(main, "et_assignments", {"study": "demo"}, A01)

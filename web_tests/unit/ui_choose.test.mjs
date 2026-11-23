@@ -2,7 +2,8 @@
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { findBackend } from '../../electrotag/web/static/js/api/choose.js';
+import { findBackend, FIREBASE_SDK, connectFirebase } from '../../electrotag/web/static/js/api/choose.js';
+import { SDK_BASE } from '../../electrotag/web/static/js/api/firebase.js';
 
 const realFetch = globalThis.fetch;
 const realLocation = Object.getOwnPropertyDescriptor(globalThis, 'location');
@@ -68,4 +69,18 @@ test('with neither config.json nor Firebase Hosting, the demonstration starts', 
   const where = await findBackend();
   assert.equal(where.kind, 'demo');
   assert.deepEqual(asked, ['config.json', '/__/firebase/init.json']);
+});
+
+test('connecting to a Firebase study starts the SDK\'s download at once, from the address firebase.js loads it from', async () => {
+  assert.equal(FIREBASE_SDK, SDK_BASE);
+  const links = [];
+  const realDocument = globalThis.document;
+  globalThis.document = { createElement: () => ({}), head: { append: (l) => links.push(l) } };
+  try {
+    await connectFirebase({ sdkBase: 'https://sdk.example/' }, { sdk: null }).catch(() => {}); // no SDK here: fails after the hints
+  } finally {
+    if (realDocument === undefined) delete globalThis.document; else globalThis.document = realDocument;
+  }
+  assert.deepEqual(links.map((l) => [l.rel, l.href, l.crossOrigin]), ['app', 'auth', 'functions'].map((f) =>
+    ['modulepreload', `https://sdk.example/firebase-${f}.js`, 'anonymous']));
 });

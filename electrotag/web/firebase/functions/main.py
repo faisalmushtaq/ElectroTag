@@ -7,7 +7,8 @@ administrator's command (``electrotag-web add-user``). Errors are ``HttpsError``
 error code in ``details["error"]``.
 
 The work is done by :class:`electrotag.web.service.StudyService` with the Firestore store, the same
-code as the ElectroTag server. Only ``firebase_functions`` is imported when an instance starts;
+code as the ElectroTag server. A call of ``{"warm": true}`` (``warm_up``) only starts an instance and
+answers before any sign-in check. Only ``firebase_functions`` is imported when an instance starts;
 ElectroTag is imported on the first call, and the heavy libraries (pandas, SciPy, matplotlib) only
 by practice scoring, competency reports and the admin area's analyses, so guided checks answer
 quickly. ``et_admin`` (every operation of the admin area, by ``op``) is for administrators only and
@@ -66,6 +67,25 @@ def service_for(study: str) -> Any:
         return svc
 
 
+def warm_up() -> dict[str, Any]:
+    """Answer a warm-up call (``{"warm": true}``, sent by the sign-in page while the password is typed): load
+    ElectroTag and open the Firestore client, so that the first real call finds the instance ready. It reads
+    nothing of any study and needs no sign-in."""
+    try:
+        from electrotag.web import service, store_firestore  # noqa: F401 - imported for their load time
+        from electrotag.web.firebase import firestore_client
+
+        firestore_client(_project())
+    except Exception:  # noqa: BLE001 - a warm-up never fails; the real call reports any problem
+        log.warning("Warming up failed", exc_info=True)
+    return {"warm": True}
+
+
+def is_warm_up(data: Any) -> bool:
+    """A warm-up call carries ``warm: true`` and nothing else (an optional ``study`` aside)."""
+    return isinstance(data, dict) and data.get("warm") is True and set(data) <= {"warm", "study"}
+
+
 def _fail(code: str, error: str, message: str) -> https_fn.HttpsError:
     return https_fn.HttpsError(https_fn.FunctionsErrorCode(code), message, {"error": error, "message": message})
 
@@ -77,6 +97,8 @@ def handle(operation: str, req: https_fn.CallableRequest) -> Any:
     from electrotag.web.store import PRIVILEGED_ROLES, StoreError, User, primary_role
 
     data = req.data if isinstance(req.data, dict) else {}
+    if is_warm_up(data):
+        return warm_up()
     study = data.get("study")
     if not isinstance(study, str) or not STUDY_RE.match(study):
         raise _fail("invalid-argument", "bad_request", "The request must name the study (\"study\")")

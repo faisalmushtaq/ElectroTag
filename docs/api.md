@@ -2023,6 +2023,15 @@ study. Errors are raised as `HttpsError` with the same `error` code in
 Firestore directly, except as the security rules allow (nothing, by default):
 every read and write goes through the functions.
 
+A call whose data is `{"warm": true}` alone (with or without `study`) is a
+warm-up: the function answers `{"warm": true}` before any sign-in check, having
+loaded ElectroTag and opened its Firestore client, and reads nothing of any
+study. The sign-in page sends one to `et_me`, `et_assignments`,
+`et_visit_open`, `et_my_reviews`, `et_achievements` and `et_admin` while the
+form is filled in (`WARM_FUNCTIONS` in `js/api/firebase.js`), so that a
+function that has been quiet has started by the time the password is sent.
+Data with any other field is an ordinary call.
+
 The fields of each call:
 
 | function | data (besides `study`) |
