@@ -98,21 +98,25 @@ export const tests = [
     async run(t) {
       const page = await t.newPage();
       const isHome = (u) => u.pathname.endsWith('/js/views/home.js');
-      await page.route(isHome, (r) => r.abort('internetdisconnected'));
+      // One route throughout, first refusing the part and then holding it: with a gap between two routes, the parts
+      // preloaded in idle time after signing in (lazy.js preloadParts) could fetch it then, and Try again would find
+      // it loaded at once.
+      let connected = false;
+      let release;
+      let asked = '';
+      const held = new Promise((r) => { release = r; });
+      await page.route(isHome, async (r) => {
+        if (!connected) { await r.abort('internetdisconnected'); return; }
+        asked = r.request().url();
+        await held;
+        await r.continue();
+      });
       await signIn(page, 'A01');
       await page.waitForSelector('[data-view="load-failed"]');
       t.assert.match(await page.textContent('[data-view="load-failed"]'), /could not be loaded.*internet connection.*Try again/s);
       await t.screenshot(page, 'load_failed');
       // The connection is back, slowly: Try again shows Loading… until the home page is there.
-      await page.unroute(isHome);
-      let release;
-      let asked = '';
-      const held = new Promise((r) => { release = r; });
-      await page.route(isHome, async (r) => {
-        asked = r.request().url();
-        await held;
-        await r.continue();
-      });
+      connected = true;
       await page.click('[data-log="load-again"]');
       await page.waitForSelector('main.page.loading [role="status"]');
       t.assert.match(await page.textContent('main.page.loading'), /Loading…/);
