@@ -201,8 +201,8 @@ class LogDownload:
                 + "\ninteraction_logs/annotator-<ID>/<YYYYMMDDTHHMMSS>_<mode>.jsonl holds one visit's log, from "
                   "signing in to signing out, as JSON Lines: a header, then one event a line "
                   "(docs/interaction_logs.md, \"File format\"). A visit chosen for a recording keeps all its "
-                  "events. interaction_logs/visits.tsv lists the visits with the recordings each opened. 'electrotag activity interaction_logs' makes the "
-                  "activity tables and report from these files.\n")
+                  "events. interaction_logs/visits.tsv lists the visits with the recordings each opened. "
+                  "'electrotag activity interaction_logs' makes the activity tables and report from these files.\n")
 
 
 __all__ = ["MAX_ZIP_BYTES", "READS", "VISIT_COLUMNS", "LogDownload"]
