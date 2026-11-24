@@ -5,7 +5,7 @@ from signing in to signing out, whatever was opened in between; that whole-visit
 holds everything, including what happened outside any recording and visits that ended in an error.
 Beside each saved version of a recording, the study also keeps the part of those logs that belongs
 to it: ``<output basename>_interaction_log.jsonl`` in the folder of the version's result files
-(docs/file_formats.md, docs/activity_logs.md).
+(docs/file_formats.md, docs/interaction_logs.md).
 
 A saved version's log holds every **segment** (one recording opened in one browser window of a visit,
 from its ``recording_opened`` to its ``recording_finished``, ``closed_without_saving`` or the end of

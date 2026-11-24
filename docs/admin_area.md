@@ -1118,7 +1118,7 @@ file: every log when nothing is chosen, or those of the people ticked, of the ki
 ticked (annotation, guided training, practice and assessment), of the visits begun between two days
 and of the visits that opened any of the recordings ticked. A visit chosen for a recording keeps all
 of its events, so that its log stays whole; each saved version's own share of the logs is in the
-results zip. Each log is the JSON Lines file of the [interaction logs guide](activity_logs.md), under
+results zip. Each log is the JSON Lines file of the [interaction logs guide](interaction_logs.md), under
 `interaction_logs/annotator-<ID>/`, beside `interaction_logs/visits.tsv`, which lists the visits with
 the recordings each opened, and a `README.txt` that records what was chosen; `electrotag activity`
 makes the activity tables and report from the folder. The download is noted in the audit log with

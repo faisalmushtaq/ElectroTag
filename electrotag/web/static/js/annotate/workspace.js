@@ -893,7 +893,7 @@ export class Workspace {
     this._hiddenWhilePaused = false;
   }
 
-  /** The view is on screen: log recording_opened with its fields (docs/activity_logs.md). */
+  /** The view is on screen: log recording_opened with its fields (docs/interaction_logs.md). */
   logOpened(extra = {}) {
     const s = this.s;
     logger.event('recording_opened', {

@@ -722,7 +722,7 @@ segment is the item's interval with `context_s` around it, within the
 recording, shown read only in the usual viewer from the annotator's own copy of
 the recording with the item's interval shaded, after the copy has been checked
 against the fingerprint in the `recordings` manifests of `get`. The view logs
-the quiz events of docs/activity_logs.md (`quiz_item_shown`, `quiz_answer` with
+the quiz events of docs/interaction_logs.md (`quiz_item_shown`, `quiz_answer` with
 `response_time_s`, `quiz_finished`, each with `quiz_mode` "practice" when the
 feedback is immediate and "assessment" when it comes at the end) and also
 `quiz_opened`, `quiz_recording_checked`, `quiz_stopped` (Stop for now) and
@@ -895,7 +895,7 @@ reproduced.
 
 ## Interaction logs
 
-The browser records the events that docs/activity_logs.md describes
+The browser records the events that docs/interaction_logs.md describes
 (`mouse_press`, `key`, `shortcut`, `view`, `annotation_created`, `pointer`,
 `idle_start`, the training events ...) with `t` measured from the start of the
 visit, and sends them in batches. The server writes them as JSON Lines files in

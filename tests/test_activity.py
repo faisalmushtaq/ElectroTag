@@ -273,7 +273,7 @@ def test_the_logs_guide_lists_every_column_as_the_tables_describe_it():
 
     from electrotag.activity.summary import RECORDING_COLUMNS, VISIT_COLUMNS
 
-    guide = (Path(__file__).resolve().parents[1] / "docs" / "activity_logs.md").read_text(encoding="utf-8")
+    guide = (Path(__file__).resolve().parents[1] / "docs" / "interaction_logs.md").read_text(encoding="utf-8")
     for heading, columns in (("### visits.tsv", VISIT_COLUMNS), ("### recordings.tsv", RECORDING_COLUMNS)):
         section = guide[guide.index(heading):]
         table = section[section.index("| Column | Meaning |"):].split("\n\n", 1)[0].splitlines()[2:]
@@ -281,7 +281,7 @@ def test_the_logs_guide_lists_every_column_as_the_tables_describe_it():
 
 
 def expert_log(path):
-    """An expert's visit: a correction, an adjudication, a replay, and a trainee's skips (docs/activity_logs.md)."""
+    """An expert's visit: a correction, an adjudication, a replay, and a trainee's skips (docs/interaction_logs.md)."""
     b = LogBuilder(path, "E01", T0)
     b.context = {"recording": "r1", "window_no": 1}
     b.event(0.0, "correction_started", annotator_id="A01", recording_id="r1", attempt=1, n_annotations=3)

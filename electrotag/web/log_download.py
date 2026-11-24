@@ -2,7 +2,7 @@
 
 ``logs_zip`` gives the visits' interaction logs as one zip file, all of them or those chosen by person, by kind
 of session (mode), by the day the visit started and by the recordings it opened. Each visit's log is the whole
-JSON Lines file of docs/activity_logs.md, laid out as ``electrotag web export`` lays it out
+JSON Lines file of docs/interaction_logs.md, laid out as ``electrotag web export`` lays it out
 (``interaction_logs/annotator-<ID>/<YYYYMMDDTHHMMSS>_<mode>.jsonl``), with ``interaction_logs/visits.tsv``, one
 row a visit, and a ``README.txt`` that records what was chosen. A visit chosen for a recording keeps every event
 of that visit, so that the log stays complete; each saved version's own share of the logs is in the results zip.
@@ -199,9 +199,9 @@ class LogDownload:
                 + said("annotator_ids", "People") + said("modes", "Sessions") + said("from", "Visits begun from")
                 + said("to", "Visits begun up to") + said("recording_ids", "Visits that opened")
                 + "\ninteraction_logs/annotator-<ID>/<YYYYMMDDTHHMMSS>_<mode>.jsonl holds one visit's log, from "
-                  "signing in to signing out, as JSON Lines: a header, then one event a line (docs/activity_logs.md, "
-                  "\"File format\"). A visit chosen for a recording keeps all its events. interaction_logs/visits.tsv "
-                  "lists the visits with the recordings each opened. 'electrotag activity interaction_logs' makes the "
+                  "signing in to signing out, as JSON Lines: a header, then one event a line "
+                  "(docs/interaction_logs.md, \"File format\"). A visit chosen for a recording keeps all its "
+                  "events. interaction_logs/visits.tsv lists the visits with the recordings each opened. 'electrotag activity interaction_logs' makes the "
                   "activity tables and report from these files.\n")
 
 

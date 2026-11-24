@@ -534,7 +534,7 @@ class Settings:
     hidden_labels: tuple[str, ...] = ()
     # channels.types: (name pattern, MNE channel type) pairs, applied in order when a recording is loaded.
     channel_type_patterns: tuple[tuple[str, str], ...] = ()
-    # logging: the interaction log of each visit (research data; see docs/activity_logs.md).
+    # logging: the interaction log of each visit (research data; see docs/interaction_logs.md).
     logging_interactions: bool = True
     logging_pointer_hz: float = 5.0  # pointer samples per second over the EEG (0: none)
     logging_idle_after_s: float = 30.0  # seconds without input after which the annotator counts as idle

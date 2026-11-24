@@ -1,4 +1,4 @@
-// The interaction log's events for changes of the annotations (docs/activity_logs.md), made from one
+// The interaction log's events for changes of the annotations (docs/interaction_logs.md), made from one
 // change of the annotation store (annotate/store.js) and the annotations before and after it. The
 // annotation view logs them (annotate/workspace.js) and the replay rebuilds the annotations from
 // them (replay/model.js), so the two are kept in one place. Each annotation is summarised with its
