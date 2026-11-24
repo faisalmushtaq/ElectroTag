@@ -1,6 +1,6 @@
 """Interaction logs of browser visits, in the desktop application's format.
 
-A visit's log starts with the same header as a desktop visit (docs/activity_logs.md) plus
+A visit's log starts with the same header as a desktop visit (docs/interaction_logs.md) plus
 ``"client": "web"`` and what the browser said about itself; then come the events the browser sends
 in batches, numbered in the order received (``seq``), and a closing ``log_closed`` event. The
 files store writes them as ``interaction_logs/annotator-<ID>/<time>_<mode>.jsonl`` at once; the

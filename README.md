@@ -50,7 +50,7 @@ quiz and the keys. The study team, who run a study day to day, start with
 [the admin area](docs/admin_area.md); the
 [study settings guide](docs/study_settings.md) explains every setting and
 choice behind it, and the [reliability guide](docs/reliability_guide.md) and
-[interaction logs](docs/activity_logs.md) explain the agreement measures and
+[interaction logs](docs/interaction_logs.md) explain the agreement measures and
 the activity tables. Whoever sets up a real study on Firebase follows
 [Running a study on Firebase](docs/firebase.md) step by step, and
 [the ElectroTag server](docs/server.md) covers the demonstration on your
@@ -289,7 +289,7 @@ idle periods (never the text typed into fields or passwords). The admin area
 and `electrotag activity` turn the logs into tables (time, clicks and keys
 per recording, how much of each recording was seen) and a report with learning
 curves, to show for example whether annotators got faster. See
-[interaction logs](docs/activity_logs.md).
+[interaction logs](docs/interaction_logs.md).
 
 ## All the guides
 
@@ -301,7 +301,7 @@ curves, to show for example whether annotators got faster. See
 | [The ElectroTag server](docs/server.md) | The demonstration, and a study on your own server |
 | [Study settings](docs/study_settings.md) | What every setting and choice of a study means: channels, filters, allocation, reference sets, competency criteria, the training programme |
 | [Reliability analysis guide](docs/reliability_guide.md) | Agreement measures and their interpretation |
-| [Interaction logs](docs/activity_logs.md) | What is recorded about annotators' work, and the activity tables and learning curves |
+| [Interaction logs](docs/interaction_logs.md) | What is recorded about annotators' work, and the activity tables and learning curves |
 | [File formats](docs/file_formats.md) | Every output and configuration file |
 | [Architecture](docs/architecture.md) and [API](docs/api.md) | How the application works, and the contract between browser and server |
 | [Developer guide](docs/developer_guide.md) | The Python core, the save transaction, extension points |

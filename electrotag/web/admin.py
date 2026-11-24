@@ -135,6 +135,12 @@ from electrotag.web.probability import READS as PROBABILITY_READS  # noqa: E402
 
 READ_ONLY += PROBABILITY_READS
 OPERATIONS += PROBABILITY_READS
+# The interaction logs as one zip file, all of them or those chosen (electrotag/web/log_download.py); the download is
+# written to the audit log, as the results zip is.
+from electrotag.web.log_download import READS as LOG_DOWNLOAD_READS  # noqa: E402
+
+READ_ONLY += LOG_DOWNLOAD_READS
+OPERATIONS += LOG_DOWNLOAD_READS
 #: The operations of the Training section that the study's experts may use too, to set up reference sets as
 #: administrators do (the expert area's Training sets; docs/admin_area.md, "The expert area"). Their changes are audited
 #: under the expert's ID. users_list gives an expert the accounts' IDs and roles only.
@@ -2024,6 +2030,19 @@ def _probability_op(name: str) -> Any:
 
 for _name in PROBABILITY_READS:
     setattr(Admin, f"op_{_name}", _probability_op(_name))
+
+
+def _log_download_op(name: str) -> Any:
+    def op(self: Admin, user: User, body: dict[str, Any]) -> dict[str, Any]:
+        return getattr(self.service.log_download, f"op_{name}")(user, body)
+
+    op.__name__ = f"op_{name}"
+    op.__doc__ = f"``{name}``: :meth:`electrotag.web.log_download.LogDownload.op_{name}`."
+    return op
+
+
+for _name in LOG_DOWNLOAD_READS:
+    setattr(Admin, f"op_{_name}", _log_download_op(_name))
 
 
 def _candidate_op(name: str) -> Any:

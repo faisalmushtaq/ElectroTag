@@ -1,7 +1,7 @@
 """Tidy tables from interaction logs: one row per visit, and one per annotator × recording × visit.
 
 Every column is described in :data:`VISIT_COLUMNS` and :data:`RECORDING_COLUMNS` (also written next
-to the tables and in docs/activity_logs.md).
+to the tables and in docs/interaction_logs.md).
 
 Active time
     The time between two inputs (mouse, wheel, keys, pointer movement over the EEG) counts in full
@@ -39,7 +39,7 @@ TRAINING_PREFIXES = ("guided_", "practice_", "assessment_", "training_", "stage_
 #: Events of the gallery of artifact snippets (the training path's "Meet the artifacts"), outside any recording.
 SNIPPET_PREFIXES = ("snippet_", "snippets_")
 #: A stage of the training path skipped. The design named it training_stage_skipped; the training path logs
-#: stage_skipped (docs/activity_logs.md), and both are counted.
+#: stage_skipped (docs/interaction_logs.md), and both are counted.
 STAGE_SKIPPED = ("stage_skipped", "training_stage_skipped")
 #: The kind of a recording's segment, from an event in it (the first that applies; recording otherwise).
 SEGMENT_OF_EVENT = {"practice_review_opened": "review", "correction_started": "correction",
@@ -581,7 +581,7 @@ def segment_row(seg: Segment) -> dict[str, Any]:
         "quiz_mean_response_s": sum(rts) / len(rts) if rts else _nan(),
     }
     row["score"] = practice_score if not math.isnan(practice_score) else quiz_prop
-    # Expert work (docs/activity_logs.md, "Corrections and replays", "Adjudication and the library")
+    # Expert work (docs/interaction_logs.md, "Corrections and replays", "Adjudication and the library")
     submitted = [e for e in ev if e.get("type") == "correction_submitted" and not e.get("already")]
     decisions = [e for e in ev if e.get("type") == "adjudication_decision" and not e.get("already")]
     decision_s = [_num(e.get("seconds")) for e in decisions if not math.isnan(_num(e.get("seconds")))]
@@ -756,5 +756,5 @@ def columns_text() -> str:
     out += ["", "events.tsv (with --events): every event, with its own fields as JSON in 'data'", "",
             "Active time: the time between two inputs counts in full up to the idle threshold of the log",
             "(logging.idle_after_s, 30 s by default); a longer gap counts only that much. Time while",
-            "ElectroTag was not the active application does not count. See docs/activity_logs.md."]
+            "ElectroTag was not the active application does not count. See docs/interaction_logs.md."]
     return "\n".join(out) + "\n"

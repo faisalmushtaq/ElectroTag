@@ -353,7 +353,7 @@ The time worked on a recording, saved in the session file (`timing.elapsed_secon
 the `_time_viewed.txt` file and the completion register (`elapsed_s`), leaves out
 every pause: those the annotator chose, those after the minutes without input, and the time the page was out of sight for
 more than ten seconds. The interaction log records each pause and its length
-([activity logs](activity_logs.md)).
+([interaction logs](interaction_logs.md)).
 
 ## Which recording comes next
 
@@ -1030,7 +1030,7 @@ position over the EEG is recorded, and `logging.idle_after_s` (30 s) how long
 without input counts as idle. The admin area shows the tables and report of
 time, clicks, keys and learning curves, and `electrotag activity` makes them
 from exported results; every event and column is described in
-[interaction logs](activity_logs.md).
+[interaction logs](interaction_logs.md).
 
 ## Before a study starts
 

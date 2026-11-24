@@ -358,7 +358,7 @@ The file is JSON Lines. The first line is a header: `type` (`"header"`),
 what its own log's header says of the browser, screen, settings and logging).
 Every other line is one of the segments' events exactly as it is in the visit's
 log, with the `visit_id` added, since `seq` and `t` count from the start of each
-visit; [interaction logs](activity_logs.md) describes the events.
+visit; [interaction logs](interaction_logs.md) describes the events.
 
 The file is made from the visits' logs and the completion register, so it is
 always the same for the same logs: the ElectroTag server writes it as soon as the
@@ -646,7 +646,7 @@ recording IDs completed in standard mode by that annotator, one per line
 * `interaction_logs/annotator-<ID>/<YYYYMMDDTHHMMSS>_<mode>.jsonl`: one log per
   visit of everything the annotator did (JSON Lines: a header, then one event
   per line). The format, every event kind and the tables made from the logs
-  are described in [interaction logs](activity_logs.md). Each saved version's
+  are described in [interaction logs](interaction_logs.md). Each saved version's
   share of these logs is also kept beside its result files, as
   `…_interaction_log.jsonl` (above).
 

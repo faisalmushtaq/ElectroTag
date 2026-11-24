@@ -1,6 +1,6 @@
 // No high-pass and No notch in the annotation toolbar (docs/using.md, "The toolbar"): each shows the EEG
 // without that filter while pressed and with it again when pressed once more, the side panel's viewing options follow,
-// and each press is logged as a state event naming the filter and whether it is applied (docs/activity_logs.md).
+// and each press is logged as a state event naming the filter and whether it is applied (docs/interaction_logs.md).
 import { signIn, waitForRoute, openExample } from './helpers.mjs';
 
 export const tests = [

@@ -328,7 +328,7 @@ test('the audit log pages newest first; visits are listed', async () => {
 
 test('what needs a study server says so, and how to try it', async () => {
   const b = await demo();
-  for (const op of ['agreement', 'activity', 'competency', 'results_zip', 'set_example_create']) {
+  for (const op of ['agreement', 'activity', 'competency', 'results_zip', 'logs_zip', 'set_example_create']) {
     await assert.rejects(() => b.admin(op, {}), (e) => e.status === 501 && e.code === 'needs_server' && /study server or Firebase/.test(e.message) &&
       /electrotag-web demo/.test(e.message), op);
   }

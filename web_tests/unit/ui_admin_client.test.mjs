@@ -108,7 +108,7 @@ test('Firebase: the operations that only read', () => {
   for (const op of ['settings_update', 'user_add', 'user_update', 'user_reset_password', 'user_remove', 'assign', 'unassign',
     'programme_set', 'recordings_register', 'recording_update', 'recording_remove', 'set_create', 'set_update', 'set_delete',
     'set_add_reference', 'set_recording_update', 'set_remove_recording', 'set_guided_note', 'set_example_create', 'quiz_item_add',
-    'quiz_item_remove', 'agreement', 'activity', 'competency', 'results_zip']) assert.equal(isAdminRead(op), false, op);
+    'quiz_item_remove', 'agreement', 'activity', 'competency', 'results_zip', 'logs_zip']) assert.equal(isAdminRead(op), false, op);
 });
 
 test('Firebase: errors keep the code from details and the message for the administrator', async () => {

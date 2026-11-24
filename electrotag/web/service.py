@@ -331,6 +331,9 @@ class StudyService:
         from electrotag.web.probability import Probability
 
         self.probability = Probability(self)  # the probability maps of several raters' marks
+        from electrotag.web.log_download import LogDownload
+
+        self.log_download = LogDownload(self)  # the interaction logs as one zip file
         from electrotag.web.candidates import Candidates
 
         self.candidates = Candidates(self)  # experts looking through datasets for training recordings

@@ -545,7 +545,7 @@ guides. Any literature cited must be checked against the original source before 
 | [docs/api.md](docs/api.md) | The contract between browser and server, and the Firebase functions |
 | [docs/study_settings.md](docs/study_settings.md) | Every study setting, reference sets, competency criteria, the training programme |
 | [docs/reliability_guide.md](docs/reliability_guide.md) | The agreement measures and how to read them |
-| [docs/activity_logs.md](docs/activity_logs.md) | What the interaction logs record, and the activity analysis |
+| [docs/interaction_logs.md](docs/interaction_logs.md) | What the interaction logs record, and the activity analysis |
 | [docs/file_formats.md](docs/file_formats.md) | Every output and configuration file |
 | [docs/developer_guide.md](docs/developer_guide.md) | The Python core, conventions, packaging and CI |
 | [docs/testing_guide.md](docs/testing_guide.md) | Tests, synthetic data, checks that need a person |

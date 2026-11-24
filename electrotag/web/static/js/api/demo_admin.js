@@ -36,6 +36,7 @@ const SERVER_ONLY = {
   activity: 'run the activity analysis',
   competency: 'write competency reports',
   results_zip: 'put every result into one zip file',
+  logs_zip: 'put the interaction logs into one zip file',
   set_example_create: 'create the example training set (it already has one: the Demonstration training set)',
   set_create: 'create reference sets of your own (it has one: the Demonstration training set)',
   set_delete: 'delete reference sets',

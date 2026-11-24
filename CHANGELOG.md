@@ -5,6 +5,15 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Administrators can download the interaction logs from Results, every one or those of the people,
+kinds of session, days and recordings they choose, as one zip file. Each visit's log is the whole
+JSON Lines file, in the folders `electrotag web export` writes, with a list of the visits and the
+recordings each opened; the download is noted in the audit log. On Firebase, deploy the functions
+and the application again to have it.
+
+The guide to the interaction logs is now `docs/interaction_logs.md` (it was `docs/activity_logs.md`),
+named for what it describes; every link to it has moved with it.
+
 Invitation links on Firebase now last as long as the administrator chooses (New links last: 7, 14,
 30 or 90 days, 14 unless chosen) instead of Firebase's hour. They are the study's own private links,
 as on a study server: the person opens the welcome page, sees the email address they sign in with,
@@ -49,7 +58,7 @@ recordings").
 The annotation toolbar has two filter buttons, No high-pass and No notch: each shows the EEG without that
 filter while pressed and with it again when pressed once more. They and the side panel's viewing options are one
 setting, greyed out when the study fixes the filters. Each press is logged as a `state` event with the filters in
-force, `filter` (`highpass` or `notch`), `applied` and `via: button` (docs/activity_logs.md, "Viewing filters"). To keep the toolbar on one line at 1,920 pixels, the Time and Amplitude captions are now left out below 2,050 pixels rather than 1,700.
+force, `filter` (`highpass` or `notch`), `applied` and `via: button` (docs/interaction_logs.md, "Viewing filters"). To keep the toolbar on one line at 1,920 pixels, the Time and Amplitude captions are now left out below 2,050 pixels rather than 1,700.
 
 The sign-up questionnaire asks two more questions about experience: "What density are you most comfortable working
 with?" (Low, High, Both, Neither, or Other in their own words) and "What pre-processing stages do you typically
@@ -1443,7 +1452,7 @@ draft was last kept. A Comfort panel in the Recording tab offers thin, normal
 or thick traces, larger channel names and larger text in the side panel,
 kept per annotator in the browser. The interaction log records pauses,
 resumes, break reminders, the check before saving and the proportion of the
-recording viewed (docs/activity_logs.md).
+recording viewed (docs/interaction_logs.md).
 
 The annotator's home page shows their own progress: recordings done of those
 assigned with a thin bar, the time worked in all and the median per recording,

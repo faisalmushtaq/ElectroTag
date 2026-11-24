@@ -795,7 +795,7 @@ its length, and every pause of the working-time clock carries its reason (`idle`
 `active_s` (time with input, each gap counted up to the idle threshold), `inactive_s` (another
 program in front), `idle_s` (the rest) and `idle_periods`, so an analysis can use `active_s` to
 leave idle time out or `wall_s` to count it, and can test how much the choice matters
-([activity_logs.md](activity_logs.md), "Active time").
+([interaction_logs.md](interaction_logs.md), "Active time").
 
 **The admin area sets what the working-time clock shows.** "Pause after (minutes without input)"
 (`annotation.idle_pause_minutes`, 3 by default) pauses the clock the annotator sees; 0 keeps idle

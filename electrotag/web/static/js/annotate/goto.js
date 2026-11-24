@@ -1,6 +1,6 @@
 // Go to time (G): reading the time a person types, and where the view goes. Plain functions, so that
 // Node can test them; the field itself is in workspace.js. What is typed is never logged, only the
-// time it led to (docs/activity_logs.md, go_to_time).
+// time it led to (docs/interaction_logs.md, go_to_time).
 
 const FORMS = 'Type seconds (12.5), minutes and seconds (1:05) or hours, minutes and seconds (1:02:05).';
 

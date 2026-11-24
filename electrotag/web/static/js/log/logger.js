@@ -1,4 +1,4 @@
-// The interaction log: the same kinds of events as the desktop application (docs/activity_logs.md),
+// The interaction log: the same kinds of events as the desktop application (docs/interaction_logs.md),
 // with `t` in seconds from the start of the visit on a monotonic clock, sent to the study in
 // batches. Typed text and passwords are never recorded: key presses in text fields are skipped
 // and only the values of number fields are kept.

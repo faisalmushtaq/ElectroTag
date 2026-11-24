@@ -1,10 +1,11 @@
 // Results: everyone's progress (GET /admin/progress, the operation `progress`), and every result
 // of the study as one zip file (results_zip), or the command that exports them when they are too
-// large to send through the page.
+// large to send through the page; and the interaction logs, all of them or those chosen, as one zip
+// file (logs_zip, electrotag/web/log_download.py).
 
 import { h, clear } from '../ui/dom.js';
-import { MODES, STATUS, bytesText, csvText, programmeText, progressCounts, whenText } from './model.js';
-import { actionButton, card, checkbox, chip, dataTable, downloadBase64, downloadText, messageArea, recordingName, sectionHead } from './ui.js';
+import { MODES, STATUS, bytesText, csvText, fileParts, programmeText, progressCounts, whenText } from './model.js';
+import { actionButton, card, checkList, checkbox, chip, dataTable, downloadBase64, downloadText, field, messageArea, recordingName, sectionHead, textInput } from './ui.js';
 import { allReviewsCard, reviewButton, reviewCount } from './reviews.js';
 import { savedWorkButtons, withdrawnCard } from './saved_work.js';
 
@@ -12,6 +13,7 @@ export class ResultsSection {
   constructor(area) {
     this.area = area;
     this.rows = [];
+    this.recordings = [];
     this.msg = messageArea();
     this.note = h('p.caption', { role: 'status' });
     this.table = dataTable([
@@ -42,7 +44,81 @@ export class ResultsSection {
       card('All results',
           h('p', {}, 'The annotations (in ElectroTag\'s usual folders: _annotations.json, _events.tsv, _session.json for each recording and annotator), the interaction logs, the training progress and the reports, and the answers to the sign-up questionnaire by annotator ID, as one zip file.'),
           this.contacts, contactsWarning,
-          h('div.btn-row', {}, zip), this.zipMsg));
+          h('div.btn-row', {}, zip), this.zipMsg),
+      this.logsCard());
+  }
+
+  /** The interaction logs as one zip file: everyone's, or those of the people, sessions, days and recordings ticked. */
+  logsCard() {
+    this.logsMsg = messageArea();
+    this.logsPeople = h('div');
+    this.logsRecordings = h('div');
+    this.logsModes = Object.entries(MODES).map(([v, t]) => ({ v, box: checkbox(t, true) }));
+    for (const m of this.logsModes) m.box.input.dataset.log = `logs-mode-${m.v}`;
+    this.logsFrom = textInput({ type: 'date', name: 'logs-from' });
+    this.logsTo = textInput({ type: 'date', name: 'logs-to' });
+    const go = actionButton('Download the interaction logs (zip)', { working: 'Preparing the logs…', msg: this.logsMsg, log: 'logs-zip', onClick: () => this._logsZip() });
+    const el = card('Interaction logs',
+      h('p', {}, 'Each visit\'s log of clicks, keys and what was on screen, from signing in to signing out, as one zip file with a list of the visits (visits.tsv). Leave everything as it is for every log, or narrow it down: nobody ticked means everyone, and a visit chosen for a recording keeps all of its events.'),
+      h('div.admin-grid', {}, this.logsPeople, this.logsRecordings),
+      h('fieldset.admin-fieldset', {}, h('legend', {}, 'Sessions'), h('div.row.wrap', {}, this.logsModes.map((m) => m.box))),
+      h('div.form-grid', {}, field('Visits begun from', this.logsFrom, { hint: 'The first day, or empty for the first visit.' }),
+        field('Visits begun up to', this.logsTo, { hint: 'The last day, or empty for today.' })),
+      h('div.btn-row', {}, go), this.logsMsg);
+    el.dataset.card = 'logs';
+    return el;
+  }
+
+  /** The people and recordings to choose from, as they are now, keeping what was ticked. */
+  _fillLogChoices() {
+    const keepPeople = this.logsPeopleList ? this.logsPeopleList.values() : [];
+    const keepRecordings = this.logsRecordingList ? this.logsRecordingList.values() : [];
+    this.logsPeopleList = checkList(this.rows.map((r) => ({ value: r.annotator_id, text: r.annotator_id, extra: r.display_name || '' })),
+      { selected: keepPeople, legend: 'People (none ticked: everyone)', name: 'logs-people', empty: 'Nobody is in the study yet.' });
+    this.logsRecordingList = checkList(this.recordings.map((r) => ({ value: r.recording_id, text: r.file_name || fileParts(r.recording_id).name, extra: fileParts(r.recording_id).folder })),
+      { selected: keepRecordings, legend: 'Visits that opened (none ticked: any or none)', name: 'logs-recordings', empty: 'No recordings are in the study yet.' });
+    clear(this.logsPeople);
+    this.logsPeople.append(this.logsPeopleList);
+    clear(this.logsRecordings);
+    this.logsRecordings.append(this.logsRecordingList);
+  }
+
+  /** What is chosen, as logs_zip takes it (docs/api.md): only what narrows the logs is sent. */
+  logsBody() {
+    const body = {};
+    const people = this.logsPeopleList ? this.logsPeopleList.values() : [];
+    const recordings = this.logsRecordingList ? this.logsRecordingList.values() : [];
+    const modes = this.logsModes.filter((m) => m.box.input.checked).map((m) => m.v);
+    if (people.length) body.annotator_ids = people;
+    if (recordings.length) body.recording_ids = recordings;
+    if (modes.length < this.logsModes.length) body.modes = modes;
+    if (this.logsFrom.value) body.from = this.logsFrom.value;
+    if (this.logsTo.value) body.to = this.logsTo.value;
+    return body;
+  }
+
+  async _logsZip() {
+    this.logsMsg.clear();
+    const body = this.logsBody();
+    if (body.modes && !body.modes.length) { this.logsMsg.show('note', 'Tick at least one kind of session.'); return; }
+    if (body.from && body.to && body.from > body.to) { this.logsMsg.show('note', 'The first day comes after the last: swap them, or leave one empty.'); return; }
+    try { await this.area.app.flushLog?.(); } catch { /* the events not sent yet follow in the next download */ }
+    let r;
+    try {
+      r = await this.area.backend.admin('logs_zip', body);
+    } catch (exc) {
+      if (exc.code === 'no_logs') { this.logsMsg.show('note', exc.message); return; }
+      if (exc.code === 'too_large' || exc.status === 413) { this.logsMsg.show('note', exc.message, this._exportHelp()); return; }
+      if (exc.code === 'needs_server' && this.area.isDemo) {
+        this.logsMsg.show('note', exc.message, h('p', {}, 'The demonstration\'s results (JSON) hold its interaction logs.'),
+          h('div.btn-row', {}, h('button.btn', { type: 'button', onclick: () => this.area.app.downloadResults() }, 'Download the demonstration\'s results (JSON)')));
+        return;
+      }
+      throw exc;
+    }
+    downloadBase64(r.file_name || 'interaction_logs.zip', r.base64, 'application/zip');
+    const visits = r.visits === 1 ? '1 visit' : `${r.visits} visits`;
+    this.logsMsg.show('success', `Downloaded the logs of ${visits}${r.size_bytes ? ` (${bytesText(r.size_bytes)})` : ''}.`);
   }
 
   async show() {
@@ -52,6 +128,7 @@ export class ResultsSection {
       const p = await this.area.read('progress');
       this.rows = (p.annotators || []).map((a) => ({ ...a, c: progressCounts(a.items) }));
       this.note.textContent = p.generated_at ? `As of ${whenText(p.generated_at)}.` : '';
+      try { this.recordings = (await this.area.read('recordings_list', { scope: 'study' })).recordings || []; } catch { this.recordings = []; }
       this.area.read('reviews_list', {}).then((r) => this.reviews.update(r.reviews || [])).catch(() => this.reviews.update([]));
     } catch (exc) {
       this.note.textContent = '';
@@ -59,6 +136,7 @@ export class ResultsSection {
       return;
     }
     this.table.update(this.rows);
+    this._fillLogChoices();
   }
 
   async _showWork(r, said = null) {
