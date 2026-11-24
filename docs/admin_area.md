@@ -1113,6 +1113,18 @@ page gives the command to use instead: on a study server the results are already
 folder's `Annotated_Events`, and on Firebase `electrotag-web export` writes them into the same
 folders (docs/firebase.md).
 
+Interaction logs downloads the logs of the visits, each from signing in to signing out, as one zip
+file: every log when nothing is chosen, or those of the people ticked, of the kinds of session
+ticked (annotation, guided training, practice and assessment), of the visits begun between two days
+and of the visits that opened any of the recordings ticked. A visit chosen for a recording keeps all
+of its events, so that its log stays whole; each saved version's own share of the logs is in the
+results zip. Each log is the JSON Lines file of the [interaction logs guide](activity_logs.md), under
+`interaction_logs/annotator-<ID>/`, beside `interaction_logs/visits.tsv`, which lists the visits with
+the recordings each opened, and a `README.txt` that records what was chosen; `electrotag activity`
+makes the activity tables and report from the folder. The download is noted in the audit log with
+what was chosen. When nothing matches, the page says so; when the logs are larger than the page can
+send, it asks for fewer people, sessions or days, and gives the command that exports the whole study.
+
 ### One person's saved work
 
 A person's Work, here and on their page under Annotators, has two more buttons beside each recording

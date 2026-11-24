@@ -97,6 +97,8 @@ files:
 ```
 
 for example `Annotated_Events/interaction_logs/annotator-A01/20261027T140311_standard.jsonl`.
+In the admin area, Results downloads them in the same folders, every log or those of chosen people,
+kinds of session, days and recordings ([admin_area.md](admin_area.md), "Results").
 The analyses of annotations (agreement, competency) never read these files.
 
 Beside the result files of each saved version of a recording, the study also

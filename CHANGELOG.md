@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+Administrators can download the interaction logs from Results, every one or those of the people,
+kinds of session, days and recordings they choose, as one zip file. Each visit's log is the whole
+JSON Lines file, in the folders `electrotag web export` writes, with a list of the visits and the
+recordings each opened; the download is noted in the audit log. On Firebase, deploy the functions
+and the application again to have it.
+
 Invitation links on Firebase now last as long as the administrator chooses (New links last: 7, 14,
 30 or 90 days, 14 unless chosen) instead of Firebase's hour. They are the study's own private links,
 as on a study server: the person opens the welcome page, sees the email address they sign in with,

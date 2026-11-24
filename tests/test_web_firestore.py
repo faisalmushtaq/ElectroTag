@@ -150,6 +150,40 @@ def test_annotators_work_and_results_are_kept(service: StudyService, recordings:
     assert err(service, "admin_progress", A01, {}).code == "forbidden"
 
 
+def test_interaction_logs_download_on_firestore(service: StudyService, monkeypatch: pytest.MonkeyPatch) -> None:
+    """logs_zip reads the visits Firestore keeps (their batches of events, a page at a time), as on the server
+    (tests/test_web_log_download.py)."""
+    import base64
+    import csv
+    import io
+    import zipfile
+
+    import electrotag.web.log_download as log_download
+
+    def visit(user: User, rid: str | None, n: int) -> str:
+        v = ok(service, "visit_open", user, {"client": {"user_agent": "pytest"}})["visit_id"]
+        events = [{"t": 1.0, "type": "recording_opened", "recording": rid, "window_no": 1}] if rid else []
+        events += [{"t": 2.0 + i, "type": "key", "key": "ArrowRight"} for i in range(n)]
+        ok(service, "visit_events", user, {"visit_id": v, "events": events})
+        ok(service, "visit_close", user, {"visit_id": v, "reason": "signed_out"})
+        return v
+
+    v1, v2 = visit(A01, SUB1, 1500), visit(A02, SUB2, 3)
+    monkeypatch.setattr(log_download, "PAGE", 400)  # a visit read over several pages
+    r = ok(service, "admin", ADMIN, {"op": "logs_zip"})
+    z = zipfile.ZipFile(io.BytesIO(base64.b64decode(r["base64"])))
+    rows = {x["visit_id"]: x for x in csv.DictReader(io.StringIO(z.read("interaction_logs/visits.tsv").decode()),
+                                                     delimiter="\t")}
+    assert set(rows) == {v1, v2} and rows[v1]["recordings"] == SUB1
+    lines = [json.loads(x) for x in z.read(rows[v1]["file"]).decode().splitlines()]
+    assert lines[0]["visit_id"] == v1 and [e["seq"] for e in lines[1:]] == list(range(1, len(lines)))
+    assert len(lines) - 1 == int(rows[v1]["n_events"]) >= 1502
+    picked = ok(service, "admin", ADMIN, {"op": "logs_zip", "annotator_ids": ["A02"], "recording_ids": [SUB2]})
+    assert picked["visits"] == 1
+    assert err(service, "admin", ADMIN, {"op": "logs_zip", "recording_ids": [SUB3]}).code == "no_logs"
+    assert ok(service, "admin", ADMIN, {"op": "audit", "limit": 1})["entries"][0]["op"] == "logs_zip"
+
+
 def test_batched_reads_on_firestore(service: StudyService) -> None:
     """The manifests read together (get_all) and the assignments read once within an operation that only reads
     give the same answers as reading them one by one (tests/test_web_store_reads.py counts the reads)."""

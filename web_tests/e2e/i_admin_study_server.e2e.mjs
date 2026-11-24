@@ -191,6 +191,16 @@ export const tests = [
       assert.match(zip.suggestedFilename(), /\.zip$/);
       const saved = await zip.path();
       assert.ok(fs.statSync(saved).size > 1000);
+      // The interaction logs: the administrator's own visits (this page's), then a day with no visits.
+      const logsCard = page.locator('[data-card="logs"]');
+      await logsCard.locator('input[data-name="logs-people"][value="ADMIN"]').check();
+      const [logs] = await Promise.all([page.waitForEvent('download', { timeout: 120000 }), page.click('[data-log="logs-zip"]')]);
+      assert.match(logs.suggestedFilename(), /_interaction_logs\.zip$/);
+      assert.ok(fs.statSync(await logs.path()).size > 200);
+      await page.waitForSelector('text=/Downloaded the logs of \\d+ visits?/');
+      await logsCard.locator('input[name="logs-to"]').fill('2000-01-01');
+      await page.click('[data-log="logs-zip"]');
+      await page.waitForSelector('text=No interaction logs match what was chosen');
     },
   },
   {
