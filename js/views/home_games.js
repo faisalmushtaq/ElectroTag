@@ -82,7 +82,7 @@ function bar(share, label) {
     h('span.progress-bar', { style: { width: `${Math.round(share * 100)}%` } }));
 }
 
-/** Log each milestone that the last save reached (docs/activity_logs.md, milestone_reached), once. */
+/** Log each milestone that the last save reached (docs/interaction_logs.md, milestone_reached), once. */
 export function logMilestones(list) {
   for (const m of list) logger.event('milestone_reached', { milestone: m.id, kind: m.kind, name: m.name, target: m.target });
 }
