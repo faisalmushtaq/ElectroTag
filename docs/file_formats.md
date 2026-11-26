@@ -348,7 +348,8 @@ closed without saving in between, all come together here. Each such time is a
 of the visit.
 
 The file is JSON Lines. The first line is a header: `type` (`"header"`),
-`schema` (`"electrotag.recording_log"`), `schema_version` (`"1.0.0"`),
+`schema` (`"electrotag.recording_log"`), `schema_version` (`"1.1.0"`, which
+leaves out the visits' former `client` field),
 `annotator_id`, `recording_id`, `mode`, `context_id`, `attempt` (the version),
 `session_id` and `output_basename` (as in the completion register),
 `completed_at`, `elapsed_s` (the time worked, as in `_time_viewed.txt`),

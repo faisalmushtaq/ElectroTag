@@ -31,7 +31,7 @@ from typing import Any, TextIO
 from electrotag.app.common import now_local_iso
 
 SCHEMA = "electrotag.interaction_log"
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"  # 1.1.0: no "client": "web" in the header or in visit_started
 
 
 def _jsonable(value: Any) -> Any:

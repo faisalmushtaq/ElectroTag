@@ -257,7 +257,7 @@ export class App {
       // A study server and Firebase write the visit's first event themselves (docs/api.md).
       if (!this.backend.writesVisitStart) {
         logger.event('visit_started', { mode: this.me.programme ? 'training' : 'standard', programme: Boolean(this.me.programme),
-          reference_set: this.me.programme ? this.me.programme.set_id : '', client: 'web', backend: this.backend.kind, annotator_id: this.me.annotator_id });
+          reference_set: this.me.programme ? this.me.programme.set_id : '', backend: this.backend.kind, annotator_id: this.me.annotator_id });
       }
     } catch {
       this.visitId = null; // annotating still works without the log

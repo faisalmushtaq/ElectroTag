@@ -5,6 +5,12 @@ Each section below describes the changes in one version of ElectroTag;
 
 ## Unreleased
 
+The interaction logs no longer carry `"client": "web"`, which told the browser's
+logs apart from the desktop application's before it was retired. It is gone from
+each visit's header, from its `visit_started` event and from the visits listed in
+each saved version's `_interaction_log.jsonl`; the logs' `schema_version` is now
+1.1.0 (docs/interaction_logs.md, "File format"). Older logs are read as before.
+
 Administrators can download the interaction logs from Results, every one or those of the people,
 kinds of session, days and recordings they choose, as one zip file. Each visit's log is the whole
 JSON Lines file, in the folders `electrotag web export` writes, with a list of the visits and the

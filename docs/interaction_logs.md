@@ -118,7 +118,7 @@ line. Lines are written as they happen, so a log survives a crash up to its last
 event; the last line may then be cut short, which the analysis reports and skips.
 
 The **first line** is the header: `type` (`"header"`), `schema`
-(`"electrotag.interaction_log"`), `schema_version` (`"1.0.0"`), `started_at`
+(`"electrotag.interaction_log"`), `schema_version` (`"1.1.0"`), `started_at`
 (local time with its UTC offset), `visit_id`, `annotator_id`, `mode`
 (`standard`, `guided`, `practice` or `assessment`), `context_id` and
 `reference_set` (for training), `programme` (true for the training programme),
@@ -126,9 +126,15 @@ The **first line** is the header: `type` (`"header"`), `schema`
 back end and the browser's user agent), `os`, `screens` (the screen's width,
 height and device pixel ratio), `settings_sha256` (a checksum of the study
 settings in force), `filters` (the default viewing filters), `logging` (the
-pointer rate and idle threshold), `client` (`"web"`) and `browser` (what the
-page reported about itself: the back end, user agent, screen and window size).
-`dataset_root` and `output_root` are empty.
+pointer rate and idle threshold) and `browser` (what the page reported about
+itself: the back end, user agent, screen and window size). `dataset_root` and
+`output_root` are empty.
+
+Logs written before 26 November 2026 have `schema_version` `"1.0.0"` and also
+carry `client` (`"web"`) in the header and in `visit_started`. The field told the
+browser's logs apart from the desktop application's, and every log has come from
+the browser since the desktop application was retired, so version 1.1.0 leaves it
+out. Nothing else changed, and `electrotag activity` reads both versions alike.
 
 **Every other line** is an event with these fields, followed by the event's own:
 
@@ -144,7 +150,7 @@ page reported about itself: the back end, user agent, screen and window size).
 ### Event kinds
 
 **The visit.** `visit_started` (mode, whether the annotator chose the
-recording, reference set, and `client`: `web`);
+recording and reference set);
 `questionnaire_answered` (since 30 October 2026: the sign-up
 questionnaire was saved, at the first sign-in or when the answers were changed
 from the home page; `n_answered`, the number of questions answered, and nothing

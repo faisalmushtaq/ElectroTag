@@ -520,7 +520,8 @@ def test_interaction_logs_are_desktop_logs(client: TestClient, study: Path) -> N
     logs = find_logs([study / "Annotated_Events"])
     assert len(logs) == 1 and logs[0].parent.name == "annotator-A01" and logs[0].name.endswith("_standard.jsonl")
     log = read_visit_log(logs[0])
-    assert log.header["client"] == "web" and log.header["visit_id"] == vid and log.closed
+    assert log.header["visit_id"] == vid and log.closed and log.header["schema_version"] == "1.1.0"
+    assert "client" not in log.header and "client" not in log.events[0]
     assert log.close_reason == "page_hidden" and log.bad_lines == 0
     assert [e["seq"] for e in log.events] == list(range(1, len(log.events) + 1))
     assert [e["type"] for e in log.events] == ["visit_started", "recording_opened", "key", "annotation_created",
