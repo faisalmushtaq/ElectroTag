@@ -423,7 +423,7 @@ def test_export_writes_the_files_store_layout(service: StudyService, recordings:
     files.close()
     assert (layout.root / "training_progress" / "example" / "annotator-T01.json").is_file()
     logs = [read_visit_log(p) for p in find_logs([layout.root])]
-    assert logs and all(log.header["client"] == "web" for log in logs)
+    assert logs and all("client" not in log.header for log in logs)
     assert any(log.closed and [e["type"] for e in log.events] == ["visit_started", "key", "log_closed"]
                for log in logs)
     assert agreement([str(layout.root), "--out", str(tmp_path / "agreement"), "--no-html"]) == 0

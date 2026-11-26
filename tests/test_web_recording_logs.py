@@ -101,7 +101,7 @@ def test_the_version_log_is_written_beside_the_results_once_the_segment_ends(
         "electrotag.recording_log", 1, "1" * 32, BASE)
     assert [(s["visit_id"], s["window_no"], s["outcome"], s["open_s"]) for s in head["segments"]] == [
         (v, 1, "finished", 29.0)]
-    assert head["visits"][v]["client"] == "web" and head["elapsed_s"] == 61.5
+    assert "client" not in head["visits"][v] and head["elapsed_s"] == 61.5
     assert [e["type"] for e in events] == ["recording_opened", "viewer_ready", "view", "recording_finished"]
     assert all(e["visit_id"] == v for e in events) and "key" not in [e["type"] for e in events]
     before = log.read_bytes()

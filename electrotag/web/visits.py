@@ -1,7 +1,7 @@
 """Interaction logs of browser visits, in the desktop application's format.
 
-A visit's log starts with the same header as a desktop visit (docs/interaction_logs.md) plus
-``"client": "web"`` and what the browser said about itself; then come the events the browser sends
+A visit's log starts with the header of docs/interaction_logs.md, which includes what the browser
+said about itself; then come the events the browser sends
 in batches, numbered in the order received (``seq``), and a closing ``log_closed`` event. The
 files store writes them as ``interaction_logs/annotator-<ID>/<time>_<mode>.jsonl`` at once; the
 Firestore store keeps them as documents until ``electrotag-web export`` writes the same files.
@@ -101,13 +101,12 @@ class Visits:
             "settings_sha256": hashlib.sha256(json.dumps(s.raw, sort_keys=True, default=str).encode()).hexdigest(),
             "filters": s.filters.to_dict(),
             "logging": {"pointer_hz": s.logging_pointer_hz, "idle_after_s": s.logging_idle_after_s},
-            "client": "web",
             "browser": client,
         }
         self.store.visit_open(visit_id, user.annotator_id, mode, header["context_id"], header, started)
         self.store.visit_append(visit_id, [{"t": 0.0, "wall": header["started_at"], "type": "visit_started",
                                             "mode": mode, "choose_recording": True, "reference_set": context_id,
-                                            "assessment_kind": "", "client": "web"}])
+                                            "assessment_kind": ""}])
         return {"visit_id": visit_id, "logging": logging}
 
     def _visit(self, user: User, body: dict[str, Any]) -> tuple[str, dict[str, Any]]:

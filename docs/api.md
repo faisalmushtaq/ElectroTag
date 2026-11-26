@@ -858,8 +858,8 @@ These are the administrative operations of the training path (`POST /admin/{op}`
 `POST /visits` `{"client": {...}, "programme": false, "mode": "standard", "context_id": ""}` → `{"visit_id": "…",
 "logging": {"interactions": true, "pointer_hz": 5, "idle_after_s": 30}}` (the
 server opens the visit's log, `interaction_logs/annotator-<ID>/<time>_<mode>.jsonl`,
-with the header of docs/interaction_logs.md, which has `"client": "web"` and
-`"browser"`, the client object; `mode` and `context_id` are optional, and with
+with the header of docs/interaction_logs.md, whose `"browser"` is the client
+object; `mode` and `context_id` are optional, and with
 `"programme": true` the visit is the trainee's programme). When the study does
 not record interactions, `visit_id` is null and nothing is logged. The server
 writes the `visit_started` event itself (with `t` 0).

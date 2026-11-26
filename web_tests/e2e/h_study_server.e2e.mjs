@@ -117,7 +117,9 @@ export const tests = [
       await page.evaluate(() => globalThis.ElectroTag.flushLog());
       const [log] = logEvents(t.study.dir, 'A01');
       assert.equal(log[0].type, 'header');
-      assert.equal(log[0].client, 'web');
+      assert.equal(log[0].client, undefined);
+      assert.equal(log[1].type, 'visit_started');
+      assert.equal(log[1].client, undefined);
       const kinds = log.map((e) => e.type);
       assert.equal(kinds.filter((k) => k === 'visit_started').length, 1);
       for (const kind of ['recording_opened', 'key', 'shortcut', 'mouse_press', 'annotation_created', 'recording_finished']) {

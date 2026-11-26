@@ -45,10 +45,9 @@ from electrotag.web.store import attempt_of, index_rows
 log = logging.getLogger(__name__)
 
 SCHEMA = "electrotag.recording_log"
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"  # 1.1.0: the visits' headers no longer carry "client": "web"
 #: What a saved version's log keeps of each visit's header.
-HEADER_FIELDS = ("started_at", "versions", "os", "screens", "settings_sha256", "filters", "logging", "client",
-                 "browser")
+HEADER_FIELDS = ("started_at", "versions", "os", "screens", "settings_sha256", "filters", "logging", "browser")
 #: How many of a person's visits are read when the files are made (all of them, in practice).
 MAX_VISITS = 100_000
 OUTCOMES = {"finished": "finished", "closed_without_saving": "closed_without_saving", "": "not_finished"}

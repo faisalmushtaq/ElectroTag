@@ -20,7 +20,7 @@ def visit(vid: str, started: str, events: list[dict[str, Any]], aid: str = "A01"
     numbered = [{"seq": i + 1, "wall": started, **e} for i, e in enumerate(events)]
     header = {"type": "header", "visit_id": vid, "annotator_id": aid, "started_at": started,
               "versions": {"electrotag": "test"}, "screens": [{"width": 1920}], "logging": {"pointer_hz": 5},
-              "client": "web", "dataset_root": ""}
+              "browser": {"user_agent": "pytest"}, "dataset_root": ""}
     return {"visit_id": vid, "annotator_id": aid, "context_id": "", "started_at": started}, header, numbered
 
 
@@ -71,6 +71,7 @@ def test_a_saved_version_gets_its_segments_from_every_visit_since_the_last_save(
         ("a" * 32, 1, "closed_without_saving", 60.0, 3), ("b" * 32, 1, "finished", 98.0, 3)]
     assert head["segments"][0]["started_at"] == "2026-11-04T10:00:01.000+00:00"
     assert sorted(head["visits"]) == ["a" * 32, "b" * 32] and "dataset_root" not in head["visits"]["a" * 32]
+    assert head["visits"]["a" * 32]["browser"] == {"user_agent": "pytest"} and head["schema_version"] == "1.1.0"
     assert [(e["visit_id"][0], e["seq"], e["type"]) for e in events] == [
         ("a", 2, "recording_opened"), ("a", 3, "key"), ("a", 5, "closed_without_saving"),
         ("b", 2, "recording_opened"), ("b", 3, "view"), ("b", 4, "recording_finished")]
