@@ -1337,8 +1337,8 @@ export class DemoBackend {
     const mode = body && ['standard', 'guided', 'practice', 'assessment'].includes(body.mode) ? body.mode : programme ? 'guided' : 'standard';
     const context_id = programme ? TRAINING_SET.set_id : mode !== 'standard' ? String((body && body.context_id) || '') : '';
     this.visits.set(visit_id, {
-      header: { visit_id, annotator_id: aid, started_at, client: 'web', mode, context_id, programme, browser: body && body.client },
-      events: [{ seq: 1, t: 0, wall: started_at, type: 'visit_started', mode, client: 'web' }], closed: null,
+      header: { visit_id, annotator_id: aid, started_at, mode, context_id, programme, browser: body && body.client },
+      events: [{ seq: 1, t: 0, wall: started_at, type: 'visit_started', mode }], closed: null,
     });
     this._admin.visitOpened({ visit_id, annotator_id: aid, mode, context_id, started_at, closed_at: null, n_events: 1 });
     return { visit_id, logging };
